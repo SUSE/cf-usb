@@ -2,6 +2,7 @@ package driver
 
 import (
 	"fmt"
+	"log"
 )
 
 type dummyDriver struct {
@@ -13,6 +14,7 @@ func NewDummyDriver() Driver {
 }
 
 func (driver dummyDriver) Provision(request interface{}, response *interface{}) error {
+	log.Println("i am provisioning!!!!")
 	*response = fmt.Sprintf("I am provisioning with %s", request)
 	return nil
 

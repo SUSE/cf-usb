@@ -2,53 +2,50 @@ package lib
 
 import (
 	"fmt"
-	"log"
 	"net/rpc"
 	"net/rpc/jsonrpc"
 	"os"
 	"path/filepath"
 	"runtime"
 
+	"github.com/hpcloud/cf-usb/lib/config"
 	"github.com/natefinch/pie"
 )
 
-type Provider struct {
+type DriverProvider struct {
 	driverType string
 	client     *rpc.Client
+
+	DriverProperties config.DriverProperties
 }
 
-func NewDriverProvider(driverType string) error {
-	log.SetPrefix("[master log] ")
-
-	if runtime.GOOS == "windows" {
-		driverType = driverType + ".exe"
-	}
+func NewDriverProvider(driverType string, driverProperties config.DriverProperties) (DriverProvider, error) {
+	provider := DriverProvider{}
 
 	driverPath := filepath.Join("drivers", driverType)
+	if runtime.GOOS == "windows" {
+		driverPath = driverPath + ".exe"
+	}
 
 	client, err := pie.StartProviderCodec(jsonrpc.NewClientCodec, os.Stderr, driverPath)
 	if err != nil {
-		return err
+		return provider, err
 	}
 
-	defer client.Close()
+	provider.client = client
+	provider.DriverProperties = driverProperties
+	provider.driverType = driverType
 
-	p := Provider{driverType, client}
-	res, err := p.Provision("master")
-	if err != nil {
-		return err
-	}
-	log.Printf("Response from plugin: %q", res)
-	return nil
+	return provider, nil
 }
 
-func (p *Provider) Provision(provisonRequest string) (string, error) {
+func (p *DriverProvider) Provision(provisonRequest string) (string, error) {
 	var result string
 	err := p.client.Call(fmt.Sprintf("%s.Provision", p.driverType), provisonRequest, &result)
 	return result, err
 }
 
-func (p *Provider) GetCatalog() (string, error) {
+func (p *DriverProvider) GetCatalog() (string, error) {
 	var result string
 	err := p.client.Call(fmt.Sprintf("%s.GetCatalog", p.driverType), "", &result)
 	return result, err

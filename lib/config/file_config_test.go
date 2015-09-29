@@ -19,6 +19,36 @@ var configContent = `
    "require_app_guid_in_bind_requests":true,
    "listen":":54054",
    "db_encryption_key":"12345678901234567890123456789012",
+   "driver_configs":[  
+      {  
+         "driver_type":"mssql",
+         "configuration":{  
+            "brokerGoSqlDriver":"mssql",
+            "brokerMssqlConnection":{  
+               "server":"127.0.0.1",
+               "port":"38017",
+               "database":"master",
+               "user id":"sa",
+               "password":"password1234!"
+            },
+            "servedMssqlBindingHostname":"192.168.1.10",
+            "servedMssqlBindingPort":38017
+         },
+         "service_ids":[  
+            "83E94C97-C755-46A5-8653-461517EB442C"
+         ]
+      },
+      {  
+         "driver_type":"dummy",
+         "configuration":{  
+            "property_one":"one",
+            "property_two":"two"
+         },
+         "service_ids":[  
+            "83E94C97-C755-46A5-8653-461517EB442A"
+         ]
+      }
+   ],
    "services":[  
       {  
          "id":"83E94C97-C755-46A5-8653-461517EB442C",
@@ -30,17 +60,7 @@ var configContent = `
             "mssql"
          ],
          "metadata":{  
-            "providerDisplayName":"MSSQL Service Ltd.",
-            "brokerGoSqlDriver":"mssql",
-            "brokerMssqlConnection":{  
-               "server":"127.0.0.1",
-               "port":"38017",
-               "database":"master",
-               "user id":"sa",
-               "password":"password1234!"
-            },
-            "servedMssqlBindingHostname":"192.168.1.10",
-            "servedMssqlBindingPort":38017
+            "providerDisplayName":"MSSQL Service Ltd."
          },
          "plans":[  
             {  
@@ -66,9 +86,7 @@ var configContent = `
             "echo"
          ],
          "metadata":{  
-            "providerDisplayName":"Echo Service Ltd.",
-            "property_one":"one",
-            "property_two":"two"
+            "providerDisplayName":"Echo Service Ltd."
          },
          "plans":[  
             {  
@@ -100,53 +118,54 @@ type DummyServiceProperties struct {
 	PropTwo string `json:"property_two"`
 }
 
-func writeTempConfigFile() (Config, error) {
+func writeTempConfigFile() (Config, ConfigProvider, error) {
 	config := Config{}
 	file, err := ioutil.TempFile(os.TempDir(), "loadconfig")
 	if err != nil {
-		return config, err
+		return config, nil, err
 	}
+	defer os.Remove(file.Name())
 
 	_, err = file.WriteString(configContent)
 	if err != nil {
-		return config, err
+		return config, nil, err
 	}
 
 	fileConfig := NewFileConfig(file.Name())
 
 	config, err = fileConfig.LoadConfiguration()
 	if err != nil {
-		return config, err
+		return config, nil, err
 	}
-	defer os.Remove(file.Name())
 
-	return config, nil
+	return config, fileConfig, nil
 }
 
 func TestLoadConfig(t *testing.T) {
 	assert := assert.New(t)
 
-	config, err := writeTempConfigFile()
+	config, _, err := writeTempConfigFile()
 	if err != nil {
 		assert.Error(err, "Unable to load from temp config file")
 	}
 
 	assert.Equal("2.6", config.APIVersion)
 	assert.Equal(2, len(config.Services))
+	assert.Equal(2, len(config.DriverConfigs))
 }
 
 func TestLoadServiceConfig(t *testing.T) {
 	assert := assert.New(t)
 
-	config, err := writeTempConfigFile()
+	config, _, err := writeTempConfigFile()
 	if err != nil {
 		assert.Error(err, "Unable to load from temp config file")
 	}
 
-	for i := 0; i < len(config.Services); i++ {
-		if config.Services[i].ID == "83E94C97-C755-46A5-8653-461517EB442A" {
+	for i := 0; i < len(config.DriverConfigs); i++ {
+		if config.DriverConfigs[i].DriverType == "dummy" {
 			dsp := DummyServiceProperties{}
-			err := json.Unmarshal(*config.Services[i].Metadata, &dsp)
+			err := json.Unmarshal(config.DriverConfigs[i].Configuration, &dsp)
 			if err != nil {
 				assert.Error(err, "Exception unmarshaling properties")
 			}
@@ -155,4 +174,34 @@ func TestLoadServiceConfig(t *testing.T) {
 			break
 		}
 	}
+}
+
+func TestGetDriverConfig(t *testing.T) {
+	assert := assert.New(t)
+
+	_, configuration, err := writeTempConfigFile()
+	if err != nil {
+		assert.Error(err, "Unable to load from temp config file")
+	}
+
+	dummyProperties, err := configuration.GetDriverProperties("dummy")
+	if err != nil {
+		assert.Error(err, "Unable to get driver configuration")
+	}
+
+	assert.Equal(1, len(dummyProperties.Services))
+	assert.Equal("83E94C97-C755-46A5-8653-461517EB442A", dummyProperties.Services[0].ID)
+}
+
+func GetDriverTypes(t *testing.T) {
+	assert := assert.New(t)
+
+	_, configuration, err := writeTempConfigFile()
+	if err != nil {
+		assert.Error(err, "Unable to load from temp config file")
+	}
+
+	driverTypes, err := configuration.GetDriverTypes()
+
+	assert.Equal(2, len(driverTypes))
 }
