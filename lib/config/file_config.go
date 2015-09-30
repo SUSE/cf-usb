@@ -43,6 +43,7 @@ func (c *fileConfig) GetDriverProperties(driverType string) (DriverProperties, e
 			break
 		}
 	}
+	driverProperties.DriverConfiguration = driverConfig.Configuration
 
 	for _, serviceID := range driverConfig.ServiceIDs {
 		for _, service := range c.config.Services {

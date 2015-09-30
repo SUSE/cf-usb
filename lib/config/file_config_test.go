@@ -165,7 +165,8 @@ func TestLoadServiceConfig(t *testing.T) {
 	for i := 0; i < len(config.DriverConfigs); i++ {
 		if config.DriverConfigs[i].DriverType == "dummy" {
 			dsp := DummyServiceProperties{}
-			err := json.Unmarshal(config.DriverConfigs[i].Configuration, &dsp)
+			conf := (*json.RawMessage)(config.DriverConfigs[i].Configuration)
+			err := json.Unmarshal(*conf, &dsp)
 			if err != nil {
 				assert.Error(err, "Exception unmarshaling properties")
 			}
@@ -189,8 +190,18 @@ func TestGetDriverConfig(t *testing.T) {
 		assert.Error(err, "Unable to get driver configuration")
 	}
 
+	dsp := DummyServiceProperties{}
+	conf := (*json.RawMessage)(dummyProperties.DriverConfiguration)
+	err = json.Unmarshal(*conf, &dsp)
+	if err != nil {
+		assert.Error(err, "Exception unmarshaling properties")
+	}
+
 	assert.Equal(1, len(dummyProperties.Services))
 	assert.Equal("83E94C97-C755-46A5-8653-461517EB442A", dummyProperties.Services[0].ID)
+	assert.Equal("one", dsp.PropOne)
+	assert.Equal("two", dsp.PropTwo)
+
 }
 
 func GetDriverTypes(t *testing.T) {

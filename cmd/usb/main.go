@@ -9,7 +9,7 @@ import (
 )
 
 func runMain(writer io.Writer) {
-	log.SetPrefix("[dummydriver log] ")
+	log.SetPrefix("[master log] ")
 	usb := NewUsbApp()
 
 	app := cli.NewApp()

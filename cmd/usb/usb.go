@@ -55,8 +55,8 @@ func (usb *UsbApp) Run(configProvider config.ConfigProvider) {
 
 }
 
-func (usb *UsbApp) startDrivers(configProvider config.ConfigProvider) ([]lib.DriverProvider, error) {
-	var drivers []lib.DriverProvider
+func (usb *UsbApp) startDrivers(configProvider config.ConfigProvider) ([]*lib.DriverProvider, error) {
+	var drivers []*lib.DriverProvider
 	log.Println("Detecting drivers")
 	driverTypes, err := configProvider.GetDriverTypes()
 	if err != nil {
@@ -72,6 +72,7 @@ func (usb *UsbApp) startDrivers(configProvider config.ConfigProvider) ([]lib.Dri
 		}
 
 		driver, err := lib.NewDriverProvider(driverType, driverProp)
+
 		if err != nil {
 			return drivers, err
 		}
