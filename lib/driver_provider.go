@@ -2,6 +2,7 @@ package lib
 
 import (
 	"fmt"
+	"log"
 	"net/rpc"
 	"net/rpc/jsonrpc"
 	"os"
@@ -35,8 +36,20 @@ func NewDriverProvider(driverType string, driverProperties config.DriverProperti
 	provider.client = client
 	provider.DriverProperties = driverProperties
 	provider.driverType = driverType
+	response, err := provider.Init(driverProperties)
+	if err != nil {
+		return provider, err
+	}
+
+	log.Println("Init driver reponse:", response)
 
 	return provider, nil
+}
+
+func (p *DriverProvider) Init(driverProperties config.DriverProperties) (string, error) {
+	var result string
+	err := p.client.Call(fmt.Sprintf("%s.Init", p.driverType), driverProperties, &result)
+	return result, err
 }
 
 func (p *DriverProvider) Provision(provisonRequest string) (string, error) {

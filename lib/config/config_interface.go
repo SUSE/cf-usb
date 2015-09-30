@@ -7,13 +7,13 @@ import (
 )
 
 type DriverConfig struct {
-	DriverType    string          `json:"driver_type"`
-	Configuration json.RawMessage `json:"configuration"`
-	ServiceIDs    []string        `json:"service_ids"`
+	DriverType    string           `json:"driver_type"`
+	Configuration *json.RawMessage `json:"configuration"`
+	ServiceIDs    []string         `json:"service_ids"`
 }
 
 type DriverProperties struct {
-	DriverConfiguration json.RawMessage
+	DriverConfiguration *json.RawMessage
 	Services            []gocfbroker.Service
 }
 
