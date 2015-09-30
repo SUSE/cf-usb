@@ -2,7 +2,6 @@ package lib
 
 import (
 	"fmt"
-	"log"
 	"net/rpc"
 	"net/rpc/jsonrpc"
 	"os"
@@ -10,6 +9,8 @@ import (
 	"runtime"
 
 	"github.com/hpcloud/cf-usb/lib/config"
+	"github.com/hpcloud/cf-usb/lib/model"
+	"github.com/hpcloud/gocfbroker"
 	"github.com/natefinch/pie"
 )
 
@@ -20,7 +21,7 @@ type DriverProvider struct {
 	DriverProperties config.DriverProperties
 }
 
-func NewDriverProvider(driverType string, driverProperties config.DriverProperties) (DriverProvider, error) {
+func NewDriverProvider(driverType string, driverProperties config.DriverProperties) (*DriverProvider, error) {
 	provider := DriverProvider{}
 
 	driverPath := filepath.Join("drivers", driverType)
@@ -30,20 +31,16 @@ func NewDriverProvider(driverType string, driverProperties config.DriverProperti
 
 	client, err := pie.StartProviderCodec(jsonrpc.NewClientCodec, os.Stderr, driverPath)
 	if err != nil {
-		return provider, err
+		return &provider, err
 	}
 
 	provider.client = client
 	provider.DriverProperties = driverProperties
 	provider.driverType = driverType
-	response, err := provider.Init(driverProperties)
-	if err != nil {
-		return provider, err
-	}
 
-	log.Println("Init driver reponse:", response)
+	_, err = provider.Init(driverProperties)
 
-	return provider, nil
+	return &provider, err
 }
 
 func (p *DriverProvider) Init(driverProperties config.DriverProperties) (string, error) {
@@ -52,14 +49,32 @@ func (p *DriverProvider) Init(driverProperties config.DriverProperties) (string,
 	return result, err
 }
 
-func (p *DriverProvider) Provision(provisonRequest string) (string, error) {
+func (p *DriverProvider) Provision(provisonRequest model.DriverProvisionRequest) (string, error) {
 	var result string
 	err := p.client.Call(fmt.Sprintf("%s.Provision", p.driverType), provisonRequest, &result)
 	return result, err
 }
 
-func (p *DriverProvider) GetCatalog() (string, error) {
+func (p *DriverProvider) Deprovision(deprovisionRequest model.DriverDeprovisionRequest) (string, error) {
 	var result string
-	err := p.client.Call(fmt.Sprintf("%s.GetCatalog", p.driverType), "", &result)
+	err := p.client.Call(fmt.Sprintf("%s.Deprovision", p.driverType), deprovisionRequest, &result)
+	return result, err
+}
+
+func (p *DriverProvider) Update(updateRequest model.DriverUpdateRequest) (string, error) {
+	var result string
+	err := p.client.Call(fmt.Sprintf("%s.Update", p.driverType), updateRequest, &result)
+	return result, err
+}
+
+func (p *DriverProvider) Bind(bindRequest model.DriverBindRequest) (gocfbroker.BindingResponse, error) {
+	var result gocfbroker.BindingResponse
+	err := p.client.Call(fmt.Sprintf("%s.Bind", p.driverType), bindRequest, &result)
+	return result, err
+}
+
+func (p *DriverProvider) Unbind(unbindRequest model.DriverUnbindRequest) (string, error) {
+	var result string
+	err := p.client.Call(fmt.Sprintf("%s.Unbind", p.driverType), unbindRequest, &result)
 	return result, err
 }

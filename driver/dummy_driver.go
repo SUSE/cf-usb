@@ -6,6 +6,8 @@ import (
 	"log"
 
 	"github.com/hpcloud/cf-usb/lib/config"
+	"github.com/hpcloud/cf-usb/lib/model"
+	"github.com/hpcloud/gocfbroker"
 )
 
 type DummyServiceProperties struct {
@@ -49,21 +51,38 @@ func (driver *dummyDriver) Init(driverProperties config.DriverProperties, respon
 
 }
 
-func (driver *dummyDriver) Provision(request interface{}, response *interface{}) error {
-	log.Println("i am provisioning!!!!")
-	*response = fmt.Sprintf("I am provisioning with %s", request)
+func (driver *dummyDriver) Provision(request model.DriverProvisionRequest, response *string) error {
+	log.Println("Provisioning ", request.InstanceID)
+	log.Println("with plan id", request.BrokerProvisionRequest.PlanID)
+	*response = fmt.Sprintf("http://example-dashboard.com/9189kdfsk0vfnku")
 	return nil
 
 }
-func (driver *dummyDriver) Deprovision(request string, response *string) error {
+func (driver *dummyDriver) Deprovision(request model.DriverDeprovisionRequest, response *string) error {
+	log.Println("Deprovisioning ", request.InstanceID)
+	log.Println("with plan id ", request.PlanID)
+	*response = "Successfully deprovisoned"
 	return nil
 }
-func (driver *dummyDriver) Bind(request string, response *string) error {
+
+func (driver *dummyDriver) Update(request model.DriverUpdateRequest, response *string) error {
+	log.Println("Updating", request.InstanceID)
+	log.Println("with plan id ", request.BrokerUpdateRequest.PlanID)
 	return nil
 }
-func (driver *dummyDriver) Unbind(request string, response *string) error {
+
+func (driver *dummyDriver) Bind(request model.DriverBindRequest, response *gocfbroker.BindingResponse) error {
+	log.Println("Binding", request.InstanceID)
+	log.Println("using planID", request.BrokerBindRequest.PlanID)
+	log.Println("on appUD", request.BrokerBindRequest.AppGUID)
+
+	data := []byte(`{"user": "testuser","password":"testpassword"}`)
+	response.Credentials = (*json.RawMessage)(&data)
+	response.SyslogDrainURL = "don't think this is used"
 	return nil
 }
-func (driver *dummyDriver) Update(request string, response *string) error {
+func (driver *dummyDriver) Unbind(request model.DriverUnbindRequest, response *string) error {
+	log.Println("Unbinding ", request.BindingID)
+	log.Println("with planID", request.PlanID)
 	return nil
 }
