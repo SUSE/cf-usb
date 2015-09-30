@@ -1,14 +1,13 @@
 package main
 
 import (
-	"io"
 	"log"
 	"os"
 
 	"github.com/codegangsta/cli"
 )
 
-func runMain(writer io.Writer) {
+func main() {
 	log.SetPrefix("[master log] ")
 	usb := NewUsbApp()
 
