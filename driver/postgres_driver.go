@@ -49,7 +49,7 @@ func (driver *postgresDriver) Init(driverProperties config.DriverProperties, res
 	}
 	driver.driverConnParams = dsp
 
-	*response = "Sucessfully initialized driver"
+	*response = "Sucessfully initialized postgres driver"
 	return nil
 }
 
@@ -83,8 +83,8 @@ func (driver *postgresDriver) Update(request model.DriverUpdateRequest, response
 }
 
 func (driver *postgresDriver) Bind(request model.DriverBindRequest, response *gocfbroker.BindingResponse) error {
-	var username = request.InstanceID + "-user"
-	var password = secureRandomString(32)
+	username := request.InstanceID + request.BindingID
+	password := secureRandomString(32)
 
 	postgresprovisioner := postgresprovisioner.NewPostgresProvisioner(driver.driverConnParams.DefaultPostgresConnection)
 
@@ -93,14 +93,14 @@ func (driver *postgresDriver) Bind(request model.DriverBindRequest, response *go
 		return err
 	}
 
-	data := []byte(fmt.Sprintf(`{"username": "%s", "password": "%s"}`, username, password))
+	data := []byte(fmt.Sprintf(`{"username": "%v", "password": "%v"}`, username, password))
 	response.Credentials = (*json.RawMessage)(&data)
-	response.SyslogDrainURL = "don't think this is used"
+
 	return nil
 }
 
 func (driver *postgresDriver) Unbind(request model.DriverUnbindRequest, response *string) error {
-	var username = request.InstanceID + "-user"
+	username := request.InstanceID + request.BindingID
 
 	postgresprovisioner := postgresprovisioner.NewPostgresProvisioner(driver.driverConnParams.DefaultPostgresConnection)
 
