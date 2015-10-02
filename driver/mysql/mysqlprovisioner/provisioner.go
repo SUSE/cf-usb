@@ -27,7 +27,7 @@ func (e *MysqlProvisioner) CreateDatabase(databaseName string) error {
 		return err
 	}
 
-	err = e.executeTransaction([]string{fmt.Sprintf("CREATE DATABASE %s", databaseName)}, con)
+	err = e.executeTransaction(con, fmt.Sprintf("CREATE DATABASE %s", databaseName))
 	if err != nil {
 		log.Println(err)
 		return err
@@ -46,7 +46,7 @@ func (e *MysqlProvisioner) DeleteDatabase(databaseName string) error {
 		return err
 	}
 
-	err = e.executeTransaction([]string{fmt.Sprintf("DROP DATABASE %s", databaseName)}, con)
+	err = e.executeTransaction(con, fmt.Sprintf("DROP DATABASE %s", databaseName))
 	if err != nil {
 		log.Println(err)
 		return err
@@ -83,12 +83,11 @@ func (e *MysqlProvisioner) CreateUser(databaseName string, username string, pass
 		return err
 	}
 	log.Println("Connection open - executing transaction")
-	err = e.executeTransaction([]string{
+	err = e.executeTransaction(con,
 		fmt.Sprintf("CREATE USER '%s'@'localhost' IDENTIFIED BY '%s';", username, password),
 		fmt.Sprintf("CREATE USER '%s'@'%s' IDENTIFIED BY '%s';", username, e.Host, password),
-		fmt.Sprintf("GRANT ALL ON %s.* TO '%s'@'localhost'", databaseName, username)},
-		con)
-
+		fmt.Sprintf("GRANT ALL ON %s.* TO '%s'@'localhost'", databaseName, username))
+	log.Println("Transaction done")
 	if err != nil {
 		log.Println(err)
 		return err
@@ -106,7 +105,8 @@ func (e *MysqlProvisioner) DeleteUser(username string) error {
 	if err != nil {
 		return err
 	}
-	err = e.executeTransaction([]string{fmt.Sprintf("DROP USER '%s'@'%'", username)}, con)
+	err = e.executeTransaction(con, fmt.Sprintf("DROP USER '%s'@'localhost'", username),
+		fmt.Sprintf("DROP USER '%s'@'%s'", username, e.Host))
 
 	if err != nil {
 		log.Println(err)
@@ -120,12 +120,11 @@ func (e *MysqlProvisioner) openSqlConnection() (*sql.DB, error) {
 	con, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s)/mysql", e.User, e.Pass, e.Host))
 	if err != nil {
 		return nil, err
-	} else {
-		return con, nil
 	}
+	return con, nil
 }
 
-func (e *MysqlProvisioner) executeTransaction(querys []string, con *sql.DB) error {
+func (e *MysqlProvisioner) executeTransaction(con *sql.DB, querys ...string) error {
 	tx, err := con.Begin()
 	if err != nil {
 		log.Println(err)
