@@ -1,0 +1,46 @@
+{
+    "bolt_filename": "boltdb.db",
+    "bolt_bucket": "brokerbucket",
+
+    "api_version": "2.6",
+    "auth_user": "demouser",
+    "auth_password": "demopassword",
+    "require_app_guid_in_bind_requests": true,
+    "listen": ":54054",
+    "db_encryption_key": "12345678901234567890123456789012",
+    "services": [
+        {
+            "id": "83E94C97-C755-46A5-8653-461517EB442C",
+            "bindable": true,
+            "name": "echo",
+            "description": "Echo Service",
+            "tags": [
+                "echo",
+                "demo"
+            ],
+            "metadata": {
+                "providerDisplayName": "Echo Service Ltd."
+            },
+            "plans": [
+                {
+                    "name": "free",
+                    "id": "53425178-F731-49E7-9E53-5CF4BE9D807A",
+                    "description": "This is the first plan",
+                    "free": true
+                },
+                {
+                    "name": "secondary",
+                    "id": "888B59E0-C2A1-4AB6-9335-2E90114A8F07",
+                    "description": "This is the secondary plan",
+                    "free": false
+                }
+            ]
+        }
+    ],
+    "database": {
+        "parameters": {
+          "file": "boltdb.db",
+          "bucket": "brokerbucket"
+        }
+    }
+}

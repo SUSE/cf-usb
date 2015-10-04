@@ -1,0 +1,4 @@
+# Echo service binary & db file
+example/echo-service/echo-service
+example/echo-service/boltdb.db
+Godeps/_workspace

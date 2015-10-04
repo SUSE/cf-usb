@@ -1,0 +1,41 @@
+{
+	"ImportPath": "github.com/hpcloud/gocfbroker/example/echo-service",
+	"GoVersion": "go1.4.2",
+	"Deps": [
+		{
+			"ImportPath": "github.com/blang/semver",
+			"Comment": "v3.0.0",
+			"Rev": "2f3112b6f8f18f9df8743cc75ed51da08094ef6a"
+		},
+		{
+			"ImportPath": "github.com/boltdb/bolt",
+			"Comment": "v1.0-98-gafceb31",
+			"Rev": "afceb316b96ea97cbac6d23afbdf69543d80748a"
+		},
+		{
+			"ImportPath": "github.com/julienschmidt/httprouter",
+			"Rev": "8c199fb6259ffc1af525cc3ad52ee60ba8359669"
+		},
+		{
+			"ImportPath": "github.com/justinas/alice",
+			"Rev": "f4d49920e0f2bd6aa717fccd6cfae564ce09a697"
+		},
+		{
+			"ImportPath": "github.com/kat-co/vala",
+			"Comment": "v1-5-gccd1bd1",
+			"Rev": "ccd1bd126487c2526a0d3f22b65d14dde8594586"
+		},
+		{
+			"ImportPath": "github.com/oxtoacart/bpool",
+			"Rev": "754d38fccfc6e52083355014b6abc8d626445dfd"
+		},
+		{
+			"ImportPath": "github.com/unrolled/logger",
+			"Rev": "a93bc1731f1f864d92147340f00aeb761ed84027"
+		},
+		{
+			"ImportPath": "github.com/unrolled/recovery",
+			"Rev": "579dcd1fcff1093f11d5d62a326d5b21ffb6e3e0"
+		}
+	]
+}
