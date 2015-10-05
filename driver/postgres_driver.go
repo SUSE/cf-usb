@@ -84,11 +84,14 @@ func (driver *postgresDriver) Update(request model.DriverUpdateRequest, response
 
 func (driver *postgresDriver) Bind(request model.DriverBindRequest, response *gocfbroker.BindingResponse) error {
 	username := request.InstanceID + request.BindingID
-	password := secureRandomString(32)
+	password, err := secureRandomString(32)
+	if err != nil {
+		return err
+	}
 
 	postgresprovisioner := postgresprovisioner.NewPostgresProvisioner(driver.driverConnParams.DefaultPostgresConnection)
 
-	err := postgresprovisioner.CreateUser(request.InstanceID, username, password)
+	err = postgresprovisioner.CreateUser(request.InstanceID, username, password)
 	if err != nil {
 		return err
 	}
@@ -112,13 +115,13 @@ func (driver *postgresDriver) Unbind(request model.DriverUnbindRequest, response
 	return nil
 }
 
-func secureRandomString(bytesOfEntpry int) string {
+func secureRandomString(bytesOfEntpry int) (string, error) {
 	rb := make([]byte, bytesOfEntpry)
 	_, err := rand.Read(rb)
 
 	if err != nil {
-		log.Fatal("rng-failure", err)
+		return "", err
 	}
 
-	return base64.URLEncoding.EncodeToString(rb)
+	return base64.URLEncoding.EncodeToString(rb), nil
 }

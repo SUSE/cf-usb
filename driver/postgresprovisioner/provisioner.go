@@ -13,11 +13,11 @@ import (
 
 var createDatabaseQuery = "CREATE DATABASE {{.Database}} ENCODING 'UTF8'"
 var revokeOnDatabaseQuery = "REVOKE all on database {{.Database}} from public"
-var createRoleQuery = "CREATE ROLE {{.User}} LOGIN PASSWORD {{.Password}}"
+var createRoleQuery = "CREATE ROLE {{.User}} LOGIN PASSWORD '{{.Password}}'"
 var grantAllPrivToRoleQuery = "GRANT ALL PRIVILEGES ON DATABASE {{.Database}} TO {{.User}}"
 var revokeAllPrivFromRoleQuery = "REVOKE ALL PRIVILEGES ON DATABASE {{.Database}} FROM {{.User}}"
 var deleteRoleQuery = "DROP ROLE {{.User}}"
-var terminateDatabaseConnQuery = "SELECT pg_terminate_backend(pg_stat_activity.procpid) FROM pg_stat_activity WHERE pg_stat_activity.datname = {{.Database}} AND procpid <> pg_backend_pid()"
+var terminateDatabaseConnQuery = "SELECT pg_terminate_backend(pg_stat_activity.procpid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '{{.Database}}' AND procpid <> pg_backend_pid()"
 var deleteDatabaseQuery = "DROP DATABASE {{.Database}}"
 
 type PostgresProvisioner struct {
@@ -135,7 +135,7 @@ func (provisioner *PostgresProvisioner) DeleteUser(dbname string, username strin
 func buildConnectionString(connectionParams map[string]string) string {
 	var res string = ""
 	for k, v := range connectionParams {
-		res += k + "=" + v + ";"
+		res += k + "=" + v + " "
 	}
 	return res
 }
