@@ -3,11 +3,11 @@ package driver
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 
 	"github.com/hpcloud/cf-usb/lib/config"
 	"github.com/hpcloud/cf-usb/lib/model"
-	"github.com/hpcloud/gocfbroker"
+	"github.com/pivotal-cf/brokerapi"
+	"github.com/pivotal-golang/lager"
 )
 
 type DummyServiceProperties struct {
@@ -17,34 +17,32 @@ type DummyServiceProperties struct {
 
 type dummyDriver struct {
 	driverProperties config.DriverProperties
+	logger           lager.Logger
 	Driver
 }
 
-func NewDummyDriver() Driver {
-	return &dummyDriver{}
+func NewDummyDriver(logger lager.Logger) Driver {
+	return &dummyDriver{logger: logger}
 }
 func (driver *dummyDriver) Init(driverProperties config.DriverProperties, response *string) error {
 	driver.driverProperties = driverProperties
 
-	log.Println("Driver dummy initialized")
+	driver.logger.Info("Driver dummy initialized")
 	for _, service := range driverProperties.Services {
-		log.Println("Using serviceID:", service.ID)
-		log.Println("Service Description", service.Description)
+		driver.logger.Info("provision-service:", lager.Data{"serviceID": service.ID, "description": service.Description})
 		for _, plan := range service.Plans {
-			log.Println("PlanID:", plan.ID)
-			log.Println("PlanName:", plan.Name)
+			driver.logger.Info("pans", lager.Data{"PlanID": plan.ID, "PlanName": plan.Name})
 		}
 	}
 
 	conf := (*json.RawMessage)(driverProperties.DriverConfiguration)
-	log.Println(string(*conf))
+	driver.logger.Info(string(*conf))
 	dsp := DummyServiceProperties{}
 	err := json.Unmarshal(*conf, &dsp)
 	if err != nil {
 		return err
 	}
-	log.Println("property_one:", dsp.PropOne)
-	log.Println("property_two:", dsp.PropTwo)
+	driver.logger.Info("serviceProperties", lager.Data{"property_one": dsp.PropOne, "property_two": dsp.PropTwo})
 
 	*response = "Sucessfully initialized driver"
 	return nil
@@ -52,37 +50,31 @@ func (driver *dummyDriver) Init(driverProperties config.DriverProperties, respon
 }
 
 func (driver *dummyDriver) Provision(request model.DriverProvisionRequest, response *string) error {
-	log.Println("Provisioning ", request.InstanceID)
-	log.Println("with plan id", request.BrokerProvisionRequest.PlanID)
+	driver.logger.Info("Provisioning", lager.Data{"instance-id": request.InstanceID, "plan-id": request.ServiceDetails.PlanID})
 	*response = fmt.Sprintf("http://example-dashboard.com/9189kdfsk0vfnku")
+
+	if request.InstanceID == "exists" {
+		return brokerapi.ErrInstanceAlreadyExists
+	}
+
 	return nil
 
 }
 func (driver *dummyDriver) Deprovision(request model.DriverDeprovisionRequest, response *string) error {
-	log.Println("Deprovisioning ", request.InstanceID)
-	log.Println("with plan id ", request.PlanID)
+	driver.logger.Info("deprovision-request", lager.Data{"instance-id": request.InstanceID})
 	*response = "Successfully deprovisoned"
 	return nil
 }
 
-func (driver *dummyDriver) Update(request model.DriverUpdateRequest, response *string) error {
-	log.Println("Updating", request.InstanceID)
-	log.Println("with plan id ", request.BrokerUpdateRequest.PlanID)
-	return nil
-}
-
-func (driver *dummyDriver) Bind(request model.DriverBindRequest, response *gocfbroker.BindingResponse) error {
-	log.Println("Binding", request.InstanceID)
-	log.Println("using planID", request.BrokerBindRequest.PlanID)
-	log.Println("on appUD", request.BrokerBindRequest.AppGUID)
+func (driver *dummyDriver) Bind(request model.DriverBindRequest, response *json.RawMessage) error {
+	driver.logger.Info("bind-request", lager.Data{"instanceID": request.InstanceID,
+		"planID": request.BindDetails.PlanID, "appID": request.BindDetails.AppGUID})
 
 	data := []byte(`{"user": "testuser","password":"testpassword"}`)
-	response.Credentials = (*json.RawMessage)(&data)
-	response.SyslogDrainURL = "don't think this is used"
+	response = (*json.RawMessage)(&data)
 	return nil
 }
 func (driver *dummyDriver) Unbind(request model.DriverUnbindRequest, response *string) error {
-	log.Println("Unbinding ", request.BindingID)
-	log.Println("with planID", request.PlanID)
+	driver.logger.Info("unbind-request", lager.Data{"bindingID": request.BindingID, "InstanceID": request.InstanceID})
 	return nil
 }

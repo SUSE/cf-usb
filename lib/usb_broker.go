@@ -1,86 +1,71 @@
 package lib
 
 import (
-	"log"
-
+	"github.com/hpcloud/cf-usb/lib/config"
 	"github.com/hpcloud/cf-usb/lib/model"
-	"github.com/hpcloud/gocfbroker"
+	"github.com/pivotal-cf/brokerapi"
+	"github.com/pivotal-golang/lager"
 )
 
 var usbBroker UsbBroker
 
 type UsbBroker struct {
 	driverProverders []*DriverProvider
+	brokerConfig     *config.Config
+	logger           lager.Logger
 }
 
-func NewUsbBroker(drivers []*DriverProvider) *UsbBroker {
-	return &UsbBroker{driverProverders: drivers}
+func NewUsbBroker(drivers []*DriverProvider, config *config.Config, logger lager.Logger) *UsbBroker {
+	return &UsbBroker{driverProverders: drivers, brokerConfig: config, logger: logger}
 }
 
-func (broker *UsbBroker) Provision(instanceID string, request gocfbroker.ProvisionRequest) (gocfbroker.ProvisionResponse, error) {
+func (broker *UsbBroker) Services() []brokerapi.Service {
+	return broker.brokerConfig.ServiceCatalog
+}
 
-	response := gocfbroker.ProvisionResponse{}
+func (broker *UsbBroker) Provision(instanceID string, serviceDetails brokerapi.ProvisionDetails) error {
+	broker.logger.Info("provision", lager.Data{"instanceID": instanceID})
 
-	driver := broker.getDriver(request.ServiceID)
+	driver := broker.getDriver(serviceDetails.ID)
 
 	driverProvisionRequest := model.DriverProvisionRequest{
-		InstanceID:             instanceID,
-		BrokerProvisionRequest: request,
+		InstanceID:     instanceID,
+		ServiceDetails: serviceDetails,
 	}
 
 	driverResponse, err := driver.Provision(driverProvisionRequest)
 	if err != nil {
-		return response, err
+		return err
 	}
-	log.Println("Privision response:", driverResponse)
-	response.DashboardURL = driverResponse
+	broker.logger.Info("provision", lager.Data{"driver-response": driverResponse})
 
-	return response, nil
+	return nil
 }
 
-func (broker *UsbBroker) Deprovision(instanceID, serviceID, planID string) error {
-
-	driver := broker.getDriver(serviceID)
+func (broker *UsbBroker) Deprovision(instanceID string, deprovisionDetails brokerapi.DeprovisionDetails) error {
+	driver := broker.getDriver(deprovisionDetails.ServiceID)
 
 	driverDeprovisionRequest := model.DriverDeprovisionRequest{
 		InstanceID: instanceID,
-		PlanID:     planID,
 	}
 
 	response, err := driver.Deprovision(driverDeprovisionRequest)
 	if err != nil {
 		return err
 	}
-	log.Println("Deprovision response", response)
+	broker.logger.Info("deprovision", lager.Data{"driver-response": response})
 	return nil
 }
 
-func (broker *UsbBroker) Update(instanceID string, request gocfbroker.UpdateProvisionRequest) error {
-	driver := broker.getDriver(request.ServiceID)
+func (broker *UsbBroker) Bind(instanceID, bindingID string, details brokerapi.BindDetails) (interface{}, error) {
+	var response interface{}
 
-	driverUpdateRequest := model.DriverUpdateRequest{
-		InstanceID:          instanceID,
-		BrokerUpdateRequest: request,
-	}
-
-	response, err := driver.Update(driverUpdateRequest)
-	if err != nil {
-		return err
-	}
-
-	log.Println("Update response:", response)
-	return nil
-}
-
-func (broker *UsbBroker) Bind(instanceID, bindingID string, request gocfbroker.BindingRequest) (gocfbroker.BindingResponse, error) {
-	response := gocfbroker.BindingResponse{}
-
-	driver := broker.getDriver(request.ServiceID)
+	driver := broker.getDriver(details.ServiceID)
 
 	driverBindRequest := model.DriverBindRequest{
-		InstanceID:        instanceID,
-		BindingID:         bindingID,
-		BrokerBindRequest: request,
+		InstanceID:  instanceID,
+		BindingID:   bindingID,
+		BindDetails: details,
 	}
 
 	response, err := driver.Bind(driverBindRequest)
@@ -91,20 +76,20 @@ func (broker *UsbBroker) Bind(instanceID, bindingID string, request gocfbroker.B
 	return response, nil
 }
 
-func (broker *UsbBroker) Unbind(instanceID, bindingID, serviceID, planID string) error {
-	driver := broker.getDriver(serviceID)
+func (broker *UsbBroker) Unbind(instanceID, bindingID string, details brokerapi.UnbindDetails) error {
+	driver := broker.getDriver(details.ServiceID)
 
 	driverUnbindRequest := model.DriverUnbindRequest{
 		InstanceID: instanceID,
 		BindingID:  bindingID,
-		PlanID:     planID,
 	}
 
 	response, err := driver.Unbind(driverUnbindRequest)
 	if err != nil {
 		return err
 	}
-	log.Println("Unbind response:", response)
+	broker.logger.Info("unbind", lager.Data{"driver-response": response})
+
 	return nil
 
 }

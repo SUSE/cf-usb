@@ -1,14 +1,13 @@
 package main
 
 import (
-	"log"
+	"fmt"
 	"os"
 
 	"github.com/codegangsta/cli"
 )
 
 func main() {
-	log.SetPrefix("[master log] ")
 	usb := NewUsbApp()
 
 	app := cli.NewApp()
@@ -22,7 +21,7 @@ func main() {
 
 	err := app.Run(os.Args)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 		os.Exit(1)
 	}
 }

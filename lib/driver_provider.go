@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/rpc"
 	"net/rpc/jsonrpc"
@@ -10,7 +11,6 @@ import (
 
 	"github.com/hpcloud/cf-usb/lib/config"
 	"github.com/hpcloud/cf-usb/lib/model"
-	"github.com/hpcloud/gocfbroker"
 	"github.com/natefinch/pie"
 )
 
@@ -29,7 +29,7 @@ func NewDriverProvider(driverType string, driverProperties config.DriverProperti
 		driverPath = driverPath + ".exe"
 	}
 
-	client, err := pie.StartProviderCodec(jsonrpc.NewClientCodec, os.Stderr, driverPath)
+	client, err := pie.StartProviderCodec(jsonrpc.NewClientCodec, os.Stdout, driverPath)
 	if err != nil {
 		return &provider, err
 	}
@@ -61,14 +61,8 @@ func (p *DriverProvider) Deprovision(deprovisionRequest model.DriverDeprovisionR
 	return result, err
 }
 
-func (p *DriverProvider) Update(updateRequest model.DriverUpdateRequest) (string, error) {
-	var result string
-	err := p.client.Call(fmt.Sprintf("%s.Update", p.driverType), updateRequest, &result)
-	return result, err
-}
-
-func (p *DriverProvider) Bind(bindRequest model.DriverBindRequest) (gocfbroker.BindingResponse, error) {
-	var result gocfbroker.BindingResponse
+func (p *DriverProvider) Bind(bindRequest model.DriverBindRequest) (json.RawMessage, error) {
+	var result json.RawMessage
 	err := p.client.Call(fmt.Sprintf("%s.Bind", p.driverType), bindRequest, &result)
 	return result, err
 }
