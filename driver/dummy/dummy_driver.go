@@ -1,6 +1,7 @@
-package driver
+package dummydriver
 
 import (
+	"database/sql/driver"
 	"encoding/json"
 	"fmt"
 
@@ -18,10 +19,10 @@ type DummyServiceProperties struct {
 type dummyDriver struct {
 	driverProperties config.DriverProperties
 	logger           lager.Logger
-	Driver
+	driver.Driver
 }
 
-func NewDummyDriver(logger lager.Logger) Driver {
+func NewDummyDriver(logger lager.Logger) driver.Driver {
 	return &dummyDriver{logger: logger}
 }
 func (driver *dummyDriver) Init(driverProperties config.DriverProperties, response *string) error {
