@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/codegangsta/cli"
@@ -43,7 +42,7 @@ func fileConfigProviderCommand(app Usb) func(c *cli.Context) {
 
 		_, err := os.Stat(configFilePath)
 		if os.IsNotExist(err) {
-			log.Fatal(fmt.Sprintf("Configuration file %s does not exist", configFilePath))
+			fmt.Println(fmt.Sprintf("Configuration file %s does not exist", configFilePath))
 			os.Exit(1)
 		}
 

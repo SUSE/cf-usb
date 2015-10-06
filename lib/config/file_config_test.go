@@ -11,11 +11,12 @@ import (
 
 var configContent = `
 {  
-   "bolt_filename":"boltdb.db",
-   "bolt_bucket":"brokerbucket",
    "api_version":"2.6",
-   "auth_user":"demouser",
-   "auth_password":"demopassword",
+	"broker_credentials": {
+		"username": "username",
+		"password": "password"
+	},
+	"logLevel": "debug",
    "require_app_guid_in_bind_requests":true,
    "listen":":54054",
    "db_encryption_key":"12345678901234567890123456789012",
@@ -103,13 +104,7 @@ var configContent = `
             }
          ]
       }
-   ],
-   "database":{  
-      "parameters":{  
-         "file":"boltdb.db",
-         "bucket":"brokerbucket"
-      }
-   }
+   ]
 }
 	`
 
@@ -118,8 +113,8 @@ type DummyServiceProperties struct {
 	PropTwo string `json:"property_two"`
 }
 
-func writeTempConfigFile() (Config, ConfigProvider, error) {
-	config := Config{}
+func writeTempConfigFile() (*Config, ConfigProvider, error) {
+	config := &Config{}
 	file, err := ioutil.TempFile(os.TempDir(), "loadconfig")
 	if err != nil {
 		return config, nil, err
@@ -150,8 +145,12 @@ func TestLoadConfig(t *testing.T) {
 	}
 
 	assert.Equal("2.6", config.APIVersion)
-	assert.Equal(2, len(config.Services))
+	assert.Equal(2, len(config.ServiceCatalog))
 	assert.Equal(2, len(config.DriverConfigs))
+	assert.Equal(":54054", config.Listen)
+	assert.Equal("username", config.Crednetials.Username)
+	assert.Equal("password", config.Crednetials.Password)
+	assert.Equal("debug", config.LogLevel)
 }
 
 func TestLoadServiceConfig(t *testing.T) {

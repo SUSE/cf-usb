@@ -1,30 +1,23 @@
 package model
 
-import "github.com/hpcloud/gocfbroker"
+import "github.com/pivotal-cf/brokerapi"
 
 type DriverProvisionRequest struct {
-	InstanceID             string
-	BrokerProvisionRequest gocfbroker.ProvisionRequest
+	InstanceID     string
+	ServiceDetails brokerapi.ProvisionDetails
 }
 
 type DriverDeprovisionRequest struct {
 	InstanceID string
-	PlanID     string
-}
-
-type DriverUpdateRequest struct {
-	InstanceID          string
-	BrokerUpdateRequest gocfbroker.UpdateProvisionRequest
 }
 
 type DriverBindRequest struct {
-	InstanceID        string
-	BindingID         string
-	BrokerBindRequest gocfbroker.BindingRequest
+	InstanceID  string
+	BindingID   string
+	BindDetails brokerapi.BindDetails
 }
 
 type DriverUnbindRequest struct {
 	InstanceID string
 	BindingID  string
-	PlanID     string
 }
