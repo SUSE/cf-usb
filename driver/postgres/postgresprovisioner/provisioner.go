@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"database/sql"
 	"errors"
-	"log"
+	"fmt"
 	"strings"
 	"text/template"
 
 	_ "github.com/lib/pq"
+	"github.com/pivotal-golang/lager"
 )
 
 var createDatabaseQuery = "CREATE DATABASE {{.Database}} ENCODING 'UTF8'"
@@ -20,15 +21,26 @@ var deleteRoleQuery = "DROP ROLE {{.User}}"
 var terminateDatabaseConnQuery = "SELECT pg_terminate_backend(pg_stat_activity.procpid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '{{.Database}}' AND procpid <> pg_backend_pid()"
 var deleteDatabaseQuery = "DROP DATABASE {{.Database}}"
 
-type PostgresProvisioner struct {
-	pgClient          *sql.DB
-	defaultConnParams map[string]string
+type PostgresServiceProperties struct {
+	User     string `json:"user"`
+	Password string `json:"password"`
+	Host     string `json:"host"`
+	Port     string `json:"port"`
+	Dbname   string `json:"dbname"`
+	Sslmode  string `json:"sslmode"`
 }
 
-func NewPostgresProvisioner(defaultConnParams map[string]string) PostgresProvisionerInterface {
+type PostgresProvisioner struct {
+	pgClient          *sql.DB
+	defaultConnParams PostgresServiceProperties
+	logger            lager.Logger
+}
+
+func NewPostgresProvisioner(defaultConnParams PostgresServiceProperties, logger lager.Logger) PostgresProvisionerInterface {
 	return &PostgresProvisioner{
 		pgClient:          nil,
 		defaultConnParams: defaultConnParams,
+		logger:            logger,
 	}
 }
 
@@ -55,17 +67,8 @@ func (provisioner *PostgresProvisioner) Close() error {
 }
 
 func (provisioner *PostgresProvisioner) CreateDatabase(dbname string) error {
-	err := provisioner.Init()
+	err := provisioner.executeQueryNoTx([]string{createDatabaseQuery, revokeOnDatabaseQuery}, map[string]string{"Database": dbname})
 	if err != nil {
-		log.Println(err)
-		return err
-	}
-
-	defer provisioner.Close()
-
-	err = provisioner.executeQueryNoTx([]string{createDatabaseQuery, revokeOnDatabaseQuery}, map[string]string{"Database": dbname})
-	if err != nil {
-		log.Println(err)
 		return err
 	}
 
@@ -73,23 +76,13 @@ func (provisioner *PostgresProvisioner) CreateDatabase(dbname string) error {
 }
 
 func (provisioner *PostgresProvisioner) DeleteDatabase(dbname string) error {
-	err := provisioner.Init()
+	err := provisioner.executeQueryTx([]string{terminateDatabaseConnQuery}, map[string]string{"Database": dbname})
 	if err != nil {
-		log.Println(err)
-		return err
-	}
-
-	defer provisioner.Close()
-
-	err = provisioner.executeQueryTx([]string{terminateDatabaseConnQuery}, map[string]string{"Database": dbname})
-	if err != nil {
-		log.Println(err)
 		return err
 	}
 
 	err = provisioner.executeQueryNoTx([]string{deleteDatabaseQuery}, map[string]string{"Database": dbname})
 	if err != nil {
-		log.Println(err)
 		return err
 	}
 
@@ -97,17 +90,8 @@ func (provisioner *PostgresProvisioner) DeleteDatabase(dbname string) error {
 }
 
 func (provisioner *PostgresProvisioner) CreateUser(dbname string, username string, password string) error {
-	err := provisioner.Init()
+	err := provisioner.executeQueryTx([]string{createRoleQuery, grantAllPrivToRoleQuery}, map[string]string{"User": username, "Password": password, "Database": dbname})
 	if err != nil {
-		log.Println(err)
-		return err
-	}
-
-	defer provisioner.Close()
-
-	err = provisioner.executeQueryTx([]string{createRoleQuery, grantAllPrivToRoleQuery}, map[string]string{"User": username, "Password": password, "Database": dbname})
-	if err != nil {
-		log.Println(err)
 		return err
 	}
 
@@ -115,28 +99,18 @@ func (provisioner *PostgresProvisioner) CreateUser(dbname string, username strin
 }
 
 func (provisioner *PostgresProvisioner) DeleteUser(dbname string, username string) error {
-	err := provisioner.Init()
+	err := provisioner.executeQueryTx([]string{revokeAllPrivFromRoleQuery, deleteRoleQuery}, map[string]string{"User": username, "Database": dbname})
 	if err != nil {
-		log.Println(err)
-		return err
-	}
-
-	defer provisioner.Close()
-
-	err = provisioner.executeQueryTx([]string{revokeAllPrivFromRoleQuery, deleteRoleQuery}, map[string]string{"User": username, "Database": dbname})
-	if err != nil {
-		log.Println(err)
 		return err
 	}
 
 	return nil
 }
 
-func buildConnectionString(connectionParams map[string]string) string {
-	var res string = ""
-	for k, v := range connectionParams {
-		res += k + "=" + v + " "
-	}
+func buildConnectionString(connectionParams PostgresServiceProperties) string {
+	var res string = fmt.Sprintf("user=%v password=%v host=%v port=%v dbname=%v sslmode=%v",
+		connectionParams.User, connectionParams.Password, connectionParams.Host, connectionParams.Port, connectionParams.Sslmode)
+
 	return res
 }
 
@@ -157,12 +131,16 @@ func parametrizeQuery(query string, params map[string]string) (string, error) {
 func (provisioner *PostgresProvisioner) executeQueryNoTx(queries []string, params map[string]string) error {
 	for _, query := range queries {
 		pQuery, err := parametrizeQuery(query, params)
+
+		provisioner.logger.Debug("postgres-exec", lager.Data{"query": pQuery})
 		if err != nil {
+			provisioner.logger.Error("postgres-exec", err, lager.Data{"query": pQuery})
 			return err
 		}
 
 		_, err = provisioner.pgClient.Exec(pQuery)
 		if err != nil {
+			provisioner.logger.Error("postgres-exec", err, lager.Data{"query": pQuery})
 			return err
 		}
 	}
@@ -178,14 +156,16 @@ func (provisioner *PostgresProvisioner) executeQueryTx(queries []string, params 
 
 	for _, query := range queries {
 		pQuery, err := parametrizeQuery(query, params)
+		provisioner.logger.Debug("postgres-exec", lager.Data{"query": pQuery})
 		if err != nil {
+			provisioner.logger.Error("postgres-exec", err, lager.Data{"query": pQuery})
 			return err
 		}
 
 		_, err = tx.Exec(pQuery)
 		if err != nil {
 			tx.Rollback()
-
+			provisioner.logger.Error("postgres-exec", err, lager.Data{"query": pQuery})
 			return err
 		}
 	}

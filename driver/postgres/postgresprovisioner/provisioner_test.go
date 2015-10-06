@@ -7,16 +7,21 @@ import (
 	"testing"
 
 	_ "github.com/lib/pq"
+	"github.com/pivotal-golang/lager/lagertest"
 )
 
-var postgresDefaultConn = map[string]string{"user": "postgres", "password": "password1234!", "host": "localhost", "port": "5432", "dbname": "postgres", "sslmode": "disable"}
+var logger *lagertest.TestLogger = lagertest.NewTestLogger("postgres-provisioner")
+
+var postgresDefaultConn = PostgresServiceProperties{User: "postgres", Password: "password1234!", Host: "localhost", Port: "5432", Dbname: "postgres", Sslmode: "disable"}
 
 var userCountQuery = "SELECT COUNT(*) FROM pg_roles WHERE rolname = '%v'"
 
 func TestCreateDatabase(t *testing.T) {
 	newDbName := "testcreatedb"
+	fmt.Println("conn string: ", postgresDefaultConn)
 
-	testp := NewPostgresProvisioner(postgresDefaultConn)
+	testp := NewPostgresProvisioner(postgresDefaultConn, logger)
+	testp.Init()
 
 	err := testp.CreateDatabase(newDbName)
 	if err != nil {
@@ -28,7 +33,8 @@ func TestCreateUser(t *testing.T) {
 	newDbName := "testcreatedb"
 	newUser := "testuser"
 
-	testp := NewPostgresProvisioner(postgresDefaultConn)
+	testp := NewPostgresProvisioner(postgresDefaultConn, logger)
+	testp.Init()
 
 	err := testp.CreateUser(newDbName, newUser, "aPassw0rd")
 	if err != nil {
@@ -56,7 +62,8 @@ func TestDeleteUser(t *testing.T) {
 	newDbName := "testcreatedb"
 	newUser := "testuser"
 
-	testp := NewPostgresProvisioner(postgresDefaultConn)
+	testp := NewPostgresProvisioner(postgresDefaultConn, logger)
+	testp.Init()
 
 	err := testp.DeleteUser(newDbName, newUser)
 	if err != nil {
@@ -83,7 +90,8 @@ func TestDeleteUser(t *testing.T) {
 func TestDeleteDatabase(t *testing.T) {
 	newDbName := "testcreatedb"
 
-	testp := NewPostgresProvisioner(postgresDefaultConn)
+	testp := NewPostgresProvisioner(postgresDefaultConn, logger)
+	testp.Init()
 
 	err := testp.DeleteDatabase(newDbName)
 	if err != nil {
