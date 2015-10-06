@@ -3,6 +3,7 @@ package lib
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path"
 	"runtime"
@@ -43,9 +44,11 @@ func setupEnv() (*UsbBroker, error) {
 		fmt.Sprintf("%s-%s", runtime.GOOS, runtime.GOARCH))
 	os.Setenv("USB_DRIVER_PATH", buildDir)
 
-	configProperties := `{  
-            "property_one":"one",
-            "property_two":"two"
+	configProperties := `{
+			"configuration": {
+            	"property_one":"one",
+            	"property_two":"two"
+			}
          }`
 
 	data, err := json.Marshal(configProperties)
@@ -53,9 +56,11 @@ func setupEnv() (*UsbBroker, error) {
 		return nil, err
 	}
 
-	*testDriverConfig.Configuration = json.RawMessage(data)
+	testDriverConfig.Configuration = (*json.RawMessage)(&data)
 
-	driverProvider, err := NewDriverProvider("dummy", config.DriverProperties{})
+	_, pWriter := io.Pipe()
+
+	driverProvider, err := NewDriverProvider("dummy", config.DriverProperties{Output: pWriter})
 	if err != nil {
 		return nil, err
 	}
@@ -67,5 +72,7 @@ func setupEnv() (*UsbBroker, error) {
 func TestGetCatalog(t *testing.T) {
 	assert := assert.New(t)
 	broker, err := setupEnv()
+	assert.NotNil(broker)
+	assert.Nil(err)
 	assert.True(true)
 }
