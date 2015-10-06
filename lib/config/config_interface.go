@@ -3,7 +3,7 @@ package config
 import (
 	"encoding/json"
 
-	"github.com/hpcloud/gocfbroker"
+	"github.com/pivotal-cf/brokerapi"
 )
 
 type DriverConfig struct {
@@ -14,19 +14,20 @@ type DriverConfig struct {
 
 type DriverProperties struct {
 	DriverConfiguration *json.RawMessage
-	Services            []gocfbroker.Service
+	Services            []brokerapi.Service
 }
 
 type Config struct {
-	BoltFilename  string         `json:"bolt_filename"`
-	BoltBucket    string         `json:"bolt_bucket"`
-	DriverConfigs []DriverConfig `json:"driver_configs"`
-
-	gocfbroker.Options
+	Crednetials    brokerapi.BrokerCredentials `json:"broker_credentials"`
+	ServiceCatalog []brokerapi.Service         `json:"services"`
+	DriverConfigs  []DriverConfig              `json:"driver_configs"`
+	Listen         string                      `json:"listen"`
+	APIVersion     string                      `json:"api_version"`
+	LogLevel       string                      `json:logLevel`
 }
 
 type ConfigProvider interface {
-	LoadConfiguration() (Config, error)
+	LoadConfiguration() (*Config, error)
 	GetDriverProperties(driverType string) (DriverProperties, error)
 	GetDriverTypes() ([]string, error)
 }

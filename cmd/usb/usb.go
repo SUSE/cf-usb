@@ -1,24 +1,55 @@
 package main
 
 import (
-	"log"
+	"fmt"
+	"net/http"
+	"os"
 
 	"github.com/hpcloud/cf-usb/lib"
 	"github.com/hpcloud/cf-usb/lib/config"
-	"github.com/hpcloud/gocfbroker"
-	"github.com/hpcloud/gocfbroker/boltdb"
+	"github.com/pivotal-cf/brokerapi"
+	"github.com/pivotal-golang/lager"
 )
 
 type Usb interface {
 	GetCommands() []CLICommandProvider
 	Run(config.ConfigProvider)
 }
+
+var logger = lager.NewLogger("usb")
+
+const (
+	DEBUG = "debug"
+	INFO  = "info"
+	ERROR = "error"
+	FATAL = "fatal"
+)
+
+func getLogLevel(config *config.Config) lager.LogLevel {
+	var minLogLevel lager.LogLevel
+	switch config.LogLevel {
+	case DEBUG:
+		minLogLevel = lager.DEBUG
+	case INFO:
+		minLogLevel = lager.INFO
+	case ERROR:
+		minLogLevel = lager.ERROR
+	case FATAL:
+		minLogLevel = lager.FATAL
+	default:
+		panic(fmt.Errorf("invalid log level: %s", config.LogLevel))
+	}
+
+	return minLogLevel
+}
+
 type UsbApp struct {
-	config config.Config
+	config *config.Config
+	logger lager.Logger
 }
 
 func NewUsbApp() Usb {
-	return &UsbApp{config: config.Config{}}
+	return &UsbApp{config: &config.Config{}}
 }
 
 func (usb *UsbApp) GetCommands() []CLICommandProvider {
@@ -31,46 +62,51 @@ func (usb *UsbApp) Run(configProvider config.ConfigProvider) {
 	var err error
 	usb.config, err = configProvider.LoadConfiguration()
 	if err != nil {
-		log.Fatalf("Unable to load configuration %s", err.Error())
+		fmt.Println("Unable to load configuration", err.Error())
+		os.Exit(1)
 	}
 
-	//TODO: Use etcd if configured
-	db, err := boltdb.New(usb.config.BoltFilename, usb.config.BoltBucket)
-	if err != nil {
-		log.Fatalln("failed to open database:", err)
-	}
+	logger.RegisterSink(lager.NewWriterSink(os.Stdout, getLogLevel(usb.config)))
+
+	usb.logger = logger
 
 	drivers, err := usb.startDrivers(configProvider)
 	if err != nil {
-		log.Fatalln("Failed to start drivers", err)
+		logger.Error("start-drivers", err)
+		os.Exit(1)
 	}
-	log.Println("drivers started")
-	usbService := lib.NewUsbBroker(drivers)
-	broker, err := gocfbroker.New(usbService, db, usb.config.Options)
-	if err != nil {
-		log.Fatalln(err)
-	}
+	logger.Info("run", lager.Data{"action": "starting drivers"})
+	usbService := lib.NewUsbBroker(drivers, usb.config, logger)
+	brokerAPI := brokerapi.New(usbService, logger, usb.config.Crednetials)
 
-	broker.Start()
+	http.Handle("/", brokerAPI)
+
+	addr := usb.config.Listen
+
+	logger.Info("run", lager.Data{"addr": addr})
+	err = http.ListenAndServe(addr, nil)
+	if err != nil {
+		logger.Fatal("error-listening", err)
+	}
 
 }
 
 func (usb *UsbApp) startDrivers(configProvider config.ConfigProvider) ([]*lib.DriverProvider, error) {
 	var drivers []*lib.DriverProvider
-	log.Println("Detecting drivers")
 	driverTypes, err := configProvider.GetDriverTypes()
 	if err != nil {
 		return drivers, err
 	}
 
 	for _, driverType := range driverTypes {
-		log.Println("Starting Driver: ", driverType)
+		usb.logger.Info("start-driver ", lager.Data{"driver-type": driverType})
 
 		driverProp, err := configProvider.GetDriverProperties(driverType)
 		if err != nil {
 			return drivers, err
 		}
 
+		usb.logger.Info("start-driver", lager.Data{"driver-type": driverType})
 		driver, err := lib.NewDriverProvider(driverType, driverProp)
 
 		if err != nil {

@@ -1,28 +1,46 @@
 package config
 
-import "github.com/hpcloud/gocfbroker"
+import (
+	"encoding/json"
+	"io/ioutil"
+)
 
 type fileConfig struct {
 	ConfigProvider
 	path   string
 	loaded bool
-	config Config
+	config *Config
 }
 
 func NewFileConfig(path string) ConfigProvider {
 	return &fileConfig{path: path, loaded: false}
 }
 
-func (c *fileConfig) LoadConfiguration() (Config, error) {
-	var config Config
+func (c *fileConfig) LoadConfiguration() (*Config, error) {
+	var config *Config
 
-	err := gocfbroker.LoadConfig(c.path, &config)
+	jsonConf, err := ioutil.ReadFile(c.path)
 	if err != nil {
-		return config, err
+		return nil, err
+	}
+
+	config, err = ParseJson(jsonConf)
+	if err != nil {
+		return nil, err
 	}
 
 	c.loaded = true
 	c.config = config
+	return config, nil
+}
+
+func ParseJson(jsonConf []byte) (*Config, error) {
+	config := &Config{}
+
+	err := json.Unmarshal(jsonConf, &config)
+	if err != nil {
+		return config, err
+	}
 	return config, nil
 }
 
@@ -46,7 +64,7 @@ func (c *fileConfig) GetDriverProperties(driverType string) (DriverProperties, e
 	driverProperties.DriverConfiguration = driverConfig.Configuration
 
 	for _, serviceID := range driverConfig.ServiceIDs {
-		for _, service := range c.config.Services {
+		for _, service := range c.config.ServiceCatalog {
 			if service.ID == serviceID {
 				driverProperties.Services = append(driverProperties.Services, service)
 				break
