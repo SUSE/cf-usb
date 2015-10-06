@@ -8,13 +8,22 @@ import (
 )
 
 var mysqlConConfig = struct {
-	User string
-	Pass string
-	Host string
-}{
-	User: os.Getenv("MYSQL_USER"),
-	Pass: os.Getenv("MYSQL_PASSWORD"),
-	Host: os.Getenv("MYSQL_HOST"),
+	User            string
+	Pass            string
+	Host            string
+	TestProvisioner MysqlProvisionerInterface
+}{}
+
+func init() {
+	var err error
+	mysqlConConfig.User = os.Getenv("MYSQL_USER")
+	mysqlConConfig.Pass = os.Getenv("MYSQL_PASS")
+	mysqlConConfig.Host = os.Getenv("MYSQL_HOST")
+
+	mysqlConConfig.TestProvisioner, err = New(mysqlConConfig.User, mysqlConConfig.Pass, mysqlConConfig.Host)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func TestCreateDb(t *testing.T) {
@@ -23,12 +32,28 @@ func TestCreateDb(t *testing.T) {
 		t.Skip("Skipping test as not all env variables are set:'MYSQL_USER','MYSQL_PASS','MYSQL_HOST'(ip:port)")
 	}
 
-	tp := New(mysqlConConfig.User, mysqlConConfig.Pass, mysqlConConfig.Host)
 	log.Println("Creating test database")
-	err := tp.CreateDatabase(dbName)
+	err := mysqlConConfig.TestProvisioner.CreateDatabase(dbName)
 
 	if err != nil {
 		log.Fatalln("Error creating database ", err)
+	}
+}
+
+func TestCreateDbExists(t *testing.T) {
+	dbName := "test_createdb"
+	if mysqlConConfig.User == "" || mysqlConConfig.Pass == "" || mysqlConConfig.Host == "" {
+		t.Skip("Skipping test as not all env variables are set:'MYSQL_USER','MYSQL_PASS','MYSQL_HOST'(ip:port)")
+	}
+	log.Println("Testing if database exists")
+	created, err := mysqlConConfig.TestProvisioner.IsDatabaseCreated(dbName)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if created {
+		t.Log("Created true")
+	} else {
+		t.Log("Created false")
 	}
 }
 
@@ -39,11 +64,28 @@ func TestCreateUser(t *testing.T) {
 		t.Skip("Skipping test as not all env variables are set:'MYSQL_USER','MYSQL_PASS','MYSQL_HOST'(ip:port)")
 	}
 
-	tp := New(mysqlConConfig.User, mysqlConConfig.Pass, mysqlConConfig.Host)
 	log.Println("Creating test user")
-	err := tp.CreateUser(dbName, "mytestUser", "mytestPass")
+	err := mysqlConConfig.TestProvisioner.CreateUser(dbName, "mytestUser", "mytestPass")
 	if err != nil {
 		t.Errorf("Error creating user %v", err)
+	}
+}
+
+func TestCreateUserExists(t *testing.T) {
+
+	if mysqlConConfig.User == "" || mysqlConConfig.Pass == "" || mysqlConConfig.Host == "" {
+		t.Skip("Skipping test as not all env variables are set:'MYSQL_USER','MYSQL_PASS','MYSQL_HOST'(ip:port)")
+	}
+
+	log.Println("Testing if user exists")
+	created, err := mysqlConConfig.TestProvisioner.IsUserCreated("mytestUser")
+	if err != nil {
+		t.Errorf("Error verifying user %v", err)
+	}
+	if created {
+		t.Log("test user is created")
+	} else {
+		t.Log("test user was not created")
 	}
 }
 
@@ -52,9 +94,8 @@ func TestDeleteUser(t *testing.T) {
 		t.Skip("Skipping test as not all env variables are set:'MYSQL_USER','MYSQL_PASS','MYSQL_HOST'(ip:port)")
 	}
 
-	tp := New(mysqlConConfig.User, mysqlConConfig.Pass, mysqlConConfig.Host)
 	log.Println("Removing test user")
-	err := tp.DeleteUser("mytestUser")
+	err := mysqlConConfig.TestProvisioner.DeleteUser("mytestUser")
 	if err != nil {
 		t.Errorf("Error deleting user %v", err)
 	}
@@ -67,9 +108,8 @@ func TestDeleteTheDatabase(t *testing.T) {
 
 	dbName := "test_createdb"
 	log.Println("Removing test database")
-	tp := New(mysqlConConfig.User, mysqlConConfig.Pass, mysqlConConfig.Host)
 
-	err := tp.DeleteDatabase(dbName)
+	err := mysqlConConfig.TestProvisioner.DeleteDatabase(dbName)
 	if err != nil {
 		t.Errorf("Error deleting database %v", err)
 	}

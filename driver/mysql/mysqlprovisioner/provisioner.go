@@ -8,26 +8,118 @@ import (
 )
 
 type MysqlProvisioner struct {
-	User string
-	Pass string
-	Host string
+	User       string
+	Pass       string
+	Host       string
+	Connection *sql.DB
 }
 
-func New(username string, password string, host string) MysqlProvisionerInterface {
-	return &MysqlProvisioner{User: username, Pass: password, Host: host}
+func New(username string, password string, host string) (MysqlProvisionerInterface, error) {
+	var err error
+	provisioner := MysqlProvisioner{User: username, Pass: password, Host: host}
+
+	provisioner.Connection, err = provisioner.openSqlConnection()
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &provisioner, nil
+}
+
+func (e *MysqlProvisioner) Close() error {
+	err := e.Connection.Close()
+	return err
+}
+
+func (e *MysqlProvisioner) IsDatabaseCreated(databaseName string) (bool, error) {
+	rows, err := e.Query("SHOW DATABASES")
+	if err != nil {
+		return false, err
+	}
+
+	var (
+		result    [][]string
+		container []string
+		pointers  []interface{}
+	)
+
+	cols, err := rows.Columns()
+	if err != nil {
+		return false, err
+	}
+
+	length := len(cols)
+
+	for rows.Next() {
+		pointers = make([]interface{}, length)
+		container = make([]string, length)
+
+		for i := range pointers {
+			pointers[i] = &container[i]
+		}
+
+		err = rows.Scan(pointers...)
+		if err != nil {
+			return false, err
+		}
+
+		result = append(result, container)
+	}
+	for _, cont := range result {
+		if cont[0] == databaseName {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+func (e *MysqlProvisioner) IsUserCreated(userName string) (bool, error) {
+	rows, err := e.Query("SELECT user from mysql.user")
+	if err != nil {
+		return false, err
+	}
+
+	var (
+		result    [][]string
+		container []string
+		pointers  []interface{}
+	)
+
+	cols, err := rows.Columns()
+	if err != nil {
+		return false, err
+	}
+
+	length := len(cols)
+
+	for rows.Next() {
+		pointers = make([]interface{}, length)
+		container = make([]string, length)
+
+		for i := range pointers {
+			pointers[i] = &container[i]
+		}
+
+		err = rows.Scan(pointers...)
+		if err != nil {
+			return false, err
+		}
+
+		result = append(result, container)
+	}
+	for _, cont := range result {
+		if cont[0] == userName {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
 
 func (e *MysqlProvisioner) CreateDatabase(databaseName string) error {
-
-	con, err := e.openSqlConnection()
-
-	defer con.Close()
-
-	if err != nil {
-		return err
-	}
-
-	err = e.executeTransaction(con, fmt.Sprintf("CREATE DATABASE %s", databaseName))
+	err := e.executeTransaction(e.Connection, fmt.Sprintf("CREATE DATABASE %s", databaseName))
 	if err != nil {
 		log.Println(err)
 		return err
@@ -38,15 +130,7 @@ func (e *MysqlProvisioner) CreateDatabase(databaseName string) error {
 
 func (e *MysqlProvisioner) DeleteDatabase(databaseName string) error {
 
-	con, err := e.openSqlConnection()
-
-	defer con.Close()
-
-	if err != nil {
-		return err
-	}
-
-	err = e.executeTransaction(con, fmt.Sprintf("DROP DATABASE %s", databaseName))
+	err := e.executeTransaction(e.Connection, fmt.Sprintf("DROP DATABASE %s", databaseName))
 	if err != nil {
 		log.Println(err)
 		return err
@@ -56,15 +140,7 @@ func (e *MysqlProvisioner) DeleteDatabase(databaseName string) error {
 
 func (e *MysqlProvisioner) Query(query string) (*sql.Rows, error) {
 
-	con, err := e.openSqlConnection()
-
-	defer con.Close()
-
-	if err != nil {
-		return nil, err
-	}
-
-	result, err := con.Query(query)
+	result, err := e.Connection.Query(query)
 
 	if err != nil {
 		return nil, err
@@ -74,16 +150,8 @@ func (e *MysqlProvisioner) Query(query string) (*sql.Rows, error) {
 
 func (e *MysqlProvisioner) CreateUser(databaseName string, username string, password string) error {
 
-	con, err := e.openSqlConnection()
-
-	defer con.Close()
-
-	if err != nil {
-		log.Println(err)
-		return err
-	}
 	log.Println("Connection open - executing transaction")
-	err = e.executeTransaction(con,
+	err := e.executeTransaction(e.Connection,
 		fmt.Sprintf("CREATE USER '%s'@'localhost' IDENTIFIED BY '%s';", username, password),
 		fmt.Sprintf("CREATE USER '%s'@'%s' IDENTIFIED BY '%s';", username, e.Host, password),
 		fmt.Sprintf("GRANT ALL ON %s.* TO '%s'@'localhost'", databaseName, username))
@@ -98,14 +166,7 @@ func (e *MysqlProvisioner) CreateUser(databaseName string, username string, pass
 
 func (e *MysqlProvisioner) DeleteUser(username string) error {
 
-	con, err := e.openSqlConnection()
-
-	defer con.Close()
-
-	if err != nil {
-		return err
-	}
-	err = e.executeTransaction(con, fmt.Sprintf("DROP USER '%s'@'localhost'", username),
+	err := e.executeTransaction(e.Connection, fmt.Sprintf("DROP USER '%s'@'localhost'", username),
 		fmt.Sprintf("DROP USER '%s'@'%s'", username, e.Host))
 
 	if err != nil {

@@ -5,6 +5,8 @@ import (
 )
 
 type MysqlProvisionerInterface interface {
+	IsDatabaseCreated(string) (bool, error)
+	IsUserCreated(string) (bool, error)
 	CreateDatabase(string) error
 	DeleteDatabase(string) error
 	Query(string) (*sql.Rows, error)
