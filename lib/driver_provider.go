@@ -34,7 +34,7 @@ func NewDriverProvider(driverType string, driverProperties config.DriverProperti
 		driverPath = driverPath + ".exe"
 	}
 
-	client, err := pie.StartProviderCodec(jsonrpc.NewClientCodec, os.Stdout, driverPath)
+	client, err := pie.StartProviderCodec(jsonrpc.NewClientCodec, driverProperties.Output, driverPath)
 	if err != nil {
 		return &provider, err
 	}
