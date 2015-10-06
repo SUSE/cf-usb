@@ -28,9 +28,8 @@ func NewDummyDriver(logger lager.Logger) driver.Driver {
 func (driver *dummyDriver) Init(driverProperties config.DriverProperties, response *string) error {
 	driver.driverProperties = driverProperties
 
-	driver.logger.Info("Driver dummy initialized")
 	for _, service := range driverProperties.Services {
-		driver.logger.Info("provision-service:", lager.Data{"serviceID": service.ID, "description": service.Description})
+		driver.logger.Info("init-driver", lager.Data{"serviceID": service.ID, "description": service.Description})
 		for _, plan := range service.Plans {
 			driver.logger.Info("pans", lager.Data{"PlanID": plan.ID, "PlanName": plan.Name})
 		}
@@ -43,7 +42,7 @@ func (driver *dummyDriver) Init(driverProperties config.DriverProperties, respon
 	if err != nil {
 		return err
 	}
-	driver.logger.Info("serviceProperties", lager.Data{"property_one": dsp.PropOne, "property_two": dsp.PropTwo})
+	driver.logger.Info("init-driver", lager.Data{"property_one": dsp.PropOne, "property_two": dsp.PropTwo})
 
 	*response = "Sucessfully initialized driver"
 	return nil

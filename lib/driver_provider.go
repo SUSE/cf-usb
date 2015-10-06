@@ -24,7 +24,12 @@ type DriverProvider struct {
 func NewDriverProvider(driverType string, driverProperties config.DriverProperties) (*DriverProvider, error) {
 	provider := DriverProvider{}
 
-	driverPath := filepath.Join("drivers", driverType)
+	driverPath := os.Getenv("USB_DRIVER_PATH")
+
+	if driverPath == "" {
+		driverPath = "drivers"
+	}
+	driverPath = filepath.Join(driverPath, driverType)
 	if runtime.GOOS == "windows" {
 		driverPath = driverPath + ".exe"
 	}
