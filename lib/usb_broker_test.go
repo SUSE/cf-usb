@@ -102,7 +102,7 @@ func TestProvisionServiceExists(t *testing.T) {
 		assert.Fail(err.Error())
 	}
 
-	err = broker.Provision("exists", brokerapi.ProvisionDetails{
+	err = broker.Provision("instanceID", brokerapi.ProvisionDetails{
 		ID: "GUID",
 	})
 	assert.Equal(brokerapi.ErrInstanceAlreadyExists.Error(), err.Error())
@@ -122,7 +122,21 @@ func TestDeprovision(t *testing.T) {
 	assert.Nil(err)
 }
 
-//TODO: func TestDeprovisionDoesNotExist(t *testing)
+func TestDeprovisionDoesNotExist(t *testing.T) {
+
+	assert := assert.New(t)
+	broker, err := setupEnv()
+	if err != nil {
+		assert.Fail(err.Error())
+	}
+
+	err = broker.Deprovision("wrongInstanceID", brokerapi.DeprovisionDetails{
+		ServiceID: "GUID",
+	})
+
+	assert.NotNil(err)
+	assert.Equal(brokerapi.ErrInstanceDoesNotExist.Error(), err.Error())
+}
 
 func TestBind(t *testing.T) {
 	assert := assert.New(t)
@@ -131,11 +145,14 @@ func TestBind(t *testing.T) {
 		assert.Fail(err.Error())
 	}
 
-	bindResponse, err := broker.Bind("instanceID", "bindingId", brokerapi.BindDetails{
+	bindResponse, err := broker.Bind("instanceID", "newBindingID", brokerapi.BindDetails{
 		ServiceID: "GUID",
 	})
 
-	//TODO:Check response
+	response := bindResponse.(map[string]interface{})
+
+	assert.Equal("user", response["username"].(string))
+	assert.Equal("pass", response["password"].(string))
 	assert.NotNil(bindResponse)
 	assert.Nil(err)
 }
@@ -147,12 +164,40 @@ func TestUnbind(t *testing.T) {
 		assert.Fail(err.Error())
 	}
 
-	err = broker.Unbind("instanceID", "bindingId", brokerapi.UnbindDetails{
+	err = broker.Unbind("instanceID", "bindingID", brokerapi.UnbindDetails{
 		ServiceID: "GUID",
 	})
 
 	assert.Nil(err)
 }
 
-//TODO: func TestBindExists(t *testing)
-//TODO: func TestUnbindDoesNotExist(t *testing)
+func TestBindExists(t *testing.T) {
+	assert := assert.New(t)
+	broker, err := setupEnv()
+	if err != nil {
+		assert.Fail(err.Error())
+	}
+
+	bindResponse, err := broker.Bind("instanceID", "bindingID", brokerapi.BindDetails{
+		ServiceID: "GUID",
+	})
+
+	assert.Nil(bindResponse)
+	assert.NotNil(err)
+	assert.Equal(brokerapi.ErrBindingAlreadyExists.Error(), err.Error())
+}
+
+func TestUnbindDoesNotExist(t *testing.T) {
+	assert := assert.New(t)
+	broker, err := setupEnv()
+	if err != nil {
+		assert.Fail(err.Error())
+	}
+
+	err = broker.Unbind("instanceID", "wrongBindingID", brokerapi.UnbindDetails{
+		ServiceID: "GUID",
+	})
+
+	assert.NotNil(err)
+	assert.Equal(brokerapi.ErrBindingDoesNotExist.Error(), err.Error())
+}

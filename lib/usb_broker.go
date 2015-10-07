@@ -70,7 +70,7 @@ func (broker *UsbBroker) Bind(instanceID, bindingID string, details brokerapi.Bi
 
 	response, err := driver.Bind(driverBindRequest)
 	if err != nil {
-		return response, nil
+		return response, err
 	}
 
 	return response, nil

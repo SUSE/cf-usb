@@ -59,7 +59,7 @@ func (driver *dummyDriver) Provision(request model.DriverProvisionRequest, respo
 	driver.logger.Info("Provisioning", lager.Data{"instance-id": request.InstanceID, "plan-id": request.ServiceDetails.PlanID})
 	*response = fmt.Sprintf("http://example-dashboard.com/9189kdfsk0vfnku")
 
-	if request.InstanceID == "exists" {
+	if request.InstanceID == "instanceID" {
 		return brokerapi.ErrInstanceAlreadyExists
 	}
 
@@ -68,6 +68,11 @@ func (driver *dummyDriver) Provision(request model.DriverProvisionRequest, respo
 }
 func (driver *dummyDriver) Deprovision(request model.DriverDeprovisionRequest, response *string) error {
 	driver.logger.Info("deprovision-request", lager.Data{"instance-id": request.InstanceID})
+
+	if request.InstanceID != "instanceID" {
+		return brokerapi.ErrInstanceDoesNotExist
+	}
+
 	*response = "Successfully deprovisoned"
 	return nil
 }
@@ -75,6 +80,10 @@ func (driver *dummyDriver) Deprovision(request model.DriverDeprovisionRequest, r
 func (driver *dummyDriver) Bind(request model.DriverBindRequest, response *interface{}) error {
 	driver.logger.Info("bind-request", lager.Data{"instanceID": request.InstanceID,
 		"planID": request.BindDetails.PlanID, "appID": request.BindDetails.AppGUID})
+
+	if request.BindingID == "bindingID" {
+		return brokerapi.ErrBindingAlreadyExists
+	}
 
 	*response = DummyServiceBindResponse{
 		UserName: "user",
@@ -85,5 +94,9 @@ func (driver *dummyDriver) Bind(request model.DriverBindRequest, response *inter
 }
 func (driver *dummyDriver) Unbind(request model.DriverUnbindRequest, response *string) error {
 	driver.logger.Info("unbind-request", lager.Data{"bindingID": request.BindingID, "InstanceID": request.InstanceID})
+
+	if request.BindingID != "bindingID" {
+		return brokerapi.ErrBindingDoesNotExist
+	}
 	return nil
 }
