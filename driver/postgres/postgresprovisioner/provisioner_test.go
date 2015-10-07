@@ -1,8 +1,7 @@
 package postgresprovisioner
 
 import (
-	"database/sql"
-	"fmt"
+	"os"
 	"strings"
 	"testing"
 
@@ -12,20 +11,47 @@ import (
 
 var logger *lagertest.TestLogger = lagertest.NewTestLogger("postgres-provisioner")
 
-var postgresDefaultConn = PostgresServiceProperties{User: "postgres", Password: "password1234!", Host: "localhost", Port: "5432", Dbname: "postgres", Sslmode: "disable"}
+var testPostgresProv = struct {
+	postgresProvisioner PostgresProvisionerInterface
+	postgresDefaultConn PostgresServiceProperties
+}{}
 
-var userCountQuery = "SELECT COUNT(*) FROM pg_roles WHERE rolname = '%v'"
+//var userCountQuery = "SELECT COUNT(*) FROM pg_roles WHERE rolname = '%v'"
+
+func init() {
+	testPostgresProv.postgresDefaultConn = PostgresServiceProperties{
+		User:     os.Getenv("POSTGRES_USER"),
+		Password: os.Getenv("POSTGRES_PASSWORD"),
+		Host:     os.Getenv("POSTGRES_HOST"),
+		Port:     os.Getenv("POSTGRES_PORT"),
+		Dbname:   os.Getenv("POSTGRES_DBNAME"),
+		Sslmode:  os.Getenv("POSTGRES_SSLMODE")}
+
+	testPostgresProv.postgresProvisioner = NewPostgresProvisioner(testPostgresProv.postgresDefaultConn, logger)
+	testPostgresProv.postgresProvisioner.Init()
+}
 
 func TestCreateDatabase(t *testing.T) {
 	newDbName := "testcreatedb"
-	fmt.Println("conn string: ", postgresDefaultConn)
 
-	testp := NewPostgresProvisioner(postgresDefaultConn, logger)
-	testp.Init()
+	if !envVarsOk() {
+		t.Skip("Skipping test, not all env variables are set:'POSTGRES_USER','POSTGRES_PASSWORD','POSTGRES_HOST','POSTGRES_PORT','POSTGRES_DBNAME','POSTGRES_SSLMODE'")
+	}
 
-	err := testp.CreateDatabase(newDbName)
+	err := testPostgresProv.postgresProvisioner.CreateDatabase(newDbName)
 	if err != nil {
 		t.Errorf("Error creating database: ", err)
+	}
+
+	exist, err := testPostgresProv.postgresProvisioner.DatabaseExists(newDbName)
+	if err != nil {
+		t.Errorf("Error check database exists: ", err)
+	}
+
+	if !exist {
+		t.Errorf("Database was not created")
+	} else {
+		t.Log("Database created")
 	}
 }
 
@@ -33,28 +59,33 @@ func TestCreateUser(t *testing.T) {
 	newDbName := "testcreatedb"
 	newUser := "testuser"
 
-	testp := NewPostgresProvisioner(postgresDefaultConn, logger)
-	testp.Init()
+	if !envVarsOk() {
+		t.Skip("Skipping test, not all env variables are set:'POSTGRES_USER','POSTGRES_PASSWORD','POSTGRES_HOST','POSTGRES_PORT','POSTGRES_DBNAME','POSTGRES_SSLMODE'")
+	}
 
-	err := testp.CreateUser(newDbName, newUser, "aPassw0rd")
+	exist, err := testPostgresProv.postgresProvisioner.DatabaseExists(newDbName)
+	if err != nil {
+		t.Errorf("Error check database exists: ", err)
+	}
+
+	if !exist {
+		t.Errorf("Database does not exist: ", err)
+	}
+
+	err = testPostgresProv.postgresProvisioner.CreateUser(newDbName, newUser, "aPassw0rd")
 	if err != nil {
 		t.Errorf("Error creating user: ", err)
 	}
 
-	pgClient, err := sql.Open("postgres", buildConnectionString(postgresDefaultConn))
+	exist, err = testPostgresProv.postgresProvisioner.UserExists(newUser)
 	if err != nil {
-		t.Errorf("Error opening postgres client: ", err)
-	}
-	defer pgClient.Close()
-
-	userCount := 0
-	err = pgClient.QueryRow(fmt.Sprintf(userCountQuery, newUser)).Scan(&userCount)
-	if err != nil {
-		t.Errorf("Error executing query: ", err)
+		t.Errorf("Error check user exists: ", err)
 	}
 
-	if userCount == 0 {
-		t.Errorf("User was not created: ", err)
+	if !exist {
+		t.Errorf("User was not created")
+	} else {
+		t.Log("User created")
 	}
 }
 
@@ -62,40 +93,71 @@ func TestDeleteUser(t *testing.T) {
 	newDbName := "testcreatedb"
 	newUser := "testuser"
 
-	testp := NewPostgresProvisioner(postgresDefaultConn, logger)
-	testp.Init()
+	if !envVarsOk() {
+		t.Skip("Skipping test, not all env variables are set:'POSTGRES_USER','POSTGRES_PASSWORD','POSTGRES_HOST','POSTGRES_PORT','POSTGRES_DBNAME','POSTGRES_SSLMODE'")
+	}
 
-	err := testp.DeleteUser(newDbName, newUser)
+	exist, err := testPostgresProv.postgresProvisioner.DatabaseExists(newDbName)
+	if err != nil {
+		t.Errorf("Error check database exists: ", err)
+	}
+
+	if !exist {
+		t.Errorf("Database does not exist: ", err)
+	}
+
+	exist, err = testPostgresProv.postgresProvisioner.UserExists(newUser)
+	if err != nil {
+		t.Errorf("Error check user exists: ", err)
+	}
+
+	if !exist {
+		t.Errorf("User does not exist")
+	}
+
+	err = testPostgresProv.postgresProvisioner.DeleteUser(newDbName, newUser)
 	if err != nil {
 		t.Errorf("Error deleting user: ", err)
 	}
 
-	pgClient, err := sql.Open("postgres", buildConnectionString(postgresDefaultConn))
+	exist, err = testPostgresProv.postgresProvisioner.UserExists(newUser)
 	if err != nil {
-		t.Errorf("Error opening postgres client: ", err)
-	}
-	defer pgClient.Close()
-
-	userCount := 0
-	err = pgClient.QueryRow(fmt.Sprintf(userCountQuery, newUser)).Scan(&userCount)
-	if err != nil {
-		t.Errorf("Error executing query: ", err)
+		t.Errorf("Error check user exists: ", err)
 	}
 
-	if userCount > 0 {
-		t.Errorf("User was not created: ", err)
+	if !exist {
+		t.Log("User was deleted")
 	}
 }
 
 func TestDeleteDatabase(t *testing.T) {
 	newDbName := "testcreatedb"
 
-	testp := NewPostgresProvisioner(postgresDefaultConn, logger)
-	testp.Init()
+	if !envVarsOk() {
+		t.Skip("Skipping test, not all env variables are set:'POSTGRES_USER','POSTGRES_PASSWORD','POSTGRES_HOST','POSTGRES_PORT','POSTGRES_DBNAME','POSTGRES_SSLMODE'")
+	}
 
-	err := testp.DeleteDatabase(newDbName)
+	exist, err := testPostgresProv.postgresProvisioner.DatabaseExists(newDbName)
+	if err != nil {
+		t.Errorf("Error check database exists: ", err)
+	}
+
+	if !exist {
+		t.Errorf("Database does not exist: ", err)
+	}
+
+	err = testPostgresProv.postgresProvisioner.DeleteDatabase(newDbName)
 	if err != nil {
 		t.Errorf("Error deleting database: ", err)
+	}
+
+	exist, err = testPostgresProv.postgresProvisioner.DatabaseExists(newDbName)
+	if err != nil {
+		t.Errorf("Error check database exists: ", err)
+	}
+
+	if !exist {
+		t.Log("Database was deleted")
 	}
 }
 
@@ -105,4 +167,9 @@ func TestParametrizeQuery(t *testing.T) {
 	if !strings.Contains(err.Error(), "Invalid parameter passed to query") {
 		t.Errorf("Error parametrizing query: ", err)
 	}
+}
+
+func envVarsOk() bool {
+	return testPostgresProv.postgresDefaultConn.User != "" && testPostgresProv.postgresDefaultConn.Password != "" && testPostgresProv.postgresDefaultConn.Host != "" &&
+		testPostgresProv.postgresDefaultConn.Port != "" && testPostgresProv.postgresDefaultConn.Dbname != "" && testPostgresProv.postgresDefaultConn.Sslmode != ""
 }
