@@ -25,7 +25,7 @@ type Config struct {
 	DriverConfigs  []DriverConfig              `json:"driver_configs"`
 	Listen         string                      `json:"listen"`
 	APIVersion     string                      `json:"api_version"`
-	LogLevel       string                      `json:logLevel`
+	LogLevel       string                      `json:"logLevel"`
 }
 
 type ConfigProvider interface {

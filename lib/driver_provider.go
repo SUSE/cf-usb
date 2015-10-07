@@ -1,7 +1,6 @@
 package lib
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/rpc"
 	"net/rpc/jsonrpc"
@@ -34,11 +33,11 @@ func NewDriverProvider(driverType string, driverProperties config.DriverProperti
 		driverPath = driverPath + ".exe"
 	}
 
-	client, err := pie.StartProviderCodec(jsonrpc.NewClientCodec, driverProperties.Output, driverPath)
+	client, err := pie.StartProviderCodec(jsonrpc.NewClientCodec, os.Stderr, driverPath)
 	if err != nil {
+
 		return &provider, err
 	}
-
 	provider.client = client
 	provider.DriverProperties = driverProperties
 	provider.driverType = driverType
@@ -66,8 +65,8 @@ func (p *DriverProvider) Deprovision(deprovisionRequest model.DriverDeprovisionR
 	return result, err
 }
 
-func (p *DriverProvider) Bind(bindRequest model.DriverBindRequest) (json.RawMessage, error) {
-	var result json.RawMessage
+func (p *DriverProvider) Bind(bindRequest model.DriverBindRequest) (interface{}, error) {
+	var result interface{}
 	err := p.client.Call(fmt.Sprintf("%s.Bind", p.driverType), bindRequest, &result)
 	return result, err
 }
