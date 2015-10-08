@@ -42,7 +42,7 @@ func NewMysqlDriver(logger lager.Logger) driver.Driver {
 func (e *MysqlDriver) Init(configuration config.DriverProperties, response *string) error {
 	err := json.Unmarshal(*configuration.DriverConfiguration, &e)
 	e.logger.Info("Mysql Driver initializing")
-	e.db, err = mysqlprovisioner.New(e.User, e.Pass, e.Host+":"+e.Port)
+	e.db, err = mysqlprovisioner.New(e.User, e.Pass, e.Host+":"+e.Port, e.logger)
 	return err
 }
 

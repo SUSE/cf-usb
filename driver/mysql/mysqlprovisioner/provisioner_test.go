@@ -2,6 +2,7 @@ package mysqlprovisioner
 
 import (
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/pivotal-golang/lager"
 	"log"
 	"os"
 	"testing"
@@ -20,7 +21,11 @@ func init() {
 	mysqlConConfig.Pass = os.Getenv("MYSQL_PASS")
 	mysqlConConfig.Host = os.Getenv("MYSQL_HOST")
 
-	mysqlConConfig.TestProvisioner, err = New(mysqlConConfig.User, mysqlConConfig.Pass, mysqlConConfig.Host)
+	var logger = lager.NewLogger("test-provider")
+
+	logger.RegisterSink(lager.NewWriterSink(os.Stderr, lager.DEBUG))
+
+	mysqlConConfig.TestProvisioner, err = New(mysqlConConfig.User, mysqlConConfig.Pass, mysqlConConfig.Host, logger)
 	if err != nil {
 		log.Fatal(err)
 	}
