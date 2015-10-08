@@ -79,12 +79,15 @@ func (usb *UsbApp) Run(configProvider config.ConfigProvider) {
 	usbService := lib.NewUsbBroker(drivers, usb.config, logger)
 	brokerAPI := brokerapi.New(usbService, logger, usb.config.Crednetials)
 
-	http.Handle("/", brokerAPI)
-
 	addr := usb.config.Listen
+	mgmtaddr := usb.config.ManagementListen
 
+	go func() {
+		logger.Info("run", lager.Data{"mgmtadd": mgmtaddr})
+		http.ListenAndServe(mgmtaddr, nil)
+	}()
 	logger.Info("run", lager.Data{"addr": addr})
-	err = http.ListenAndServe(addr, nil)
+	err = http.ListenAndServe(addr, brokerAPI)
 	if err != nil {
 		logger.Fatal("error-listening", err)
 	}

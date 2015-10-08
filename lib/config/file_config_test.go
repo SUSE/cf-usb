@@ -19,6 +19,7 @@ var configContent = `
 	"logLevel": "debug",
    "require_app_guid_in_bind_requests":true,
    "listen":":54054",
+	"management_listen":":54053",
    "db_encryption_key":"12345678901234567890123456789012",
    "driver_configs":[  
       {  
@@ -148,6 +149,7 @@ func TestLoadConfig(t *testing.T) {
 	assert.Equal(2, len(config.ServiceCatalog))
 	assert.Equal(2, len(config.DriverConfigs))
 	assert.Equal(":54054", config.Listen)
+	assert.Equal(":54053", config.ManagementListen)
 	assert.Equal("username", config.Crednetials.Username)
 	assert.Equal("password", config.Crednetials.Password)
 	assert.Equal("debug", config.LogLevel)
