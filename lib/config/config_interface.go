@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"io"
 
 	"github.com/pivotal-cf/brokerapi"
 )
@@ -15,6 +16,7 @@ type DriverConfig struct {
 type DriverProperties struct {
 	DriverConfiguration *json.RawMessage
 	Services            []brokerapi.Service
+	Output              io.Writer
 }
 
 type Config struct {
@@ -23,7 +25,7 @@ type Config struct {
 	DriverConfigs  []DriverConfig              `json:"driver_configs"`
 	Listen         string                      `json:"listen"`
 	APIVersion     string                      `json:"api_version"`
-	LogLevel       string                      `json:logLevel`
+	LogLevel       string                      `json:"logLevel"`
 }
 
 type ConfigProvider interface {

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"path"
+	"path/filepath"
 	"runtime"
 	"testing"
 
@@ -15,7 +15,7 @@ import (
 )
 
 var testService = brokerapi.Service{
-	ID:          "GIUD",
+	ID:          "GUID",
 	Name:        "testService",
 	Description: "",
 	Bindable:    true,
@@ -38,24 +38,25 @@ var testConfig = config.Config{
 	LogLevel:       "debug",
 }
 
+var testDriverProperties = config.DriverProperties{
+	Services: []brokerapi.Service{testService},
+}
+
 func setupEnv() (*UsbBroker, error) {
-	buildDir := path.Join(os.Getenv("GOPATH"), "src", "github.com", "hpcloud", "cf-usb", "build",
-		fmt.Sprintf("%s-%s", runtime.GOOS, runtime.GOARCH))
-	os.Setenv("USB_DRIVER_PATH", buildDir)
-
-	configProperties := `{  
-            "property_one":"one",
-            "property_two":"two"
-         }`
-
-	data, err := json.Marshal(configProperties)
+	wd, err := os.Getwd()
 	if err != nil {
 		return nil, err
 	}
+	buildDir := filepath.Join(wd, "../build", fmt.Sprintf("%s-%s", runtime.GOOS, runtime.GOARCH))
+	os.Setenv("USB_DRIVER_PATH", buildDir)
 
-	*testDriverConfig.Configuration = json.RawMessage(data)
+	configProperties := []byte(`{"property_one":"one", "property_two":"two"}`)
 
-	driverProvider, err := NewDriverProvider("dummy", config.DriverProperties{})
+	testDriverConfig.Configuration = (*json.RawMessage)(&configProperties)
+
+	testDriverProperties.DriverConfiguration = testDriverConfig.Configuration
+
+	driverProvider, err := NewDriverProvider("dummy", testDriverProperties)
 	if err != nil {
 		return nil, err
 	}
@@ -67,5 +68,91 @@ func setupEnv() (*UsbBroker, error) {
 func TestGetCatalog(t *testing.T) {
 	assert := assert.New(t)
 	broker, err := setupEnv()
+	if err != nil {
+		assert.Fail(err.Error())
+	}
+
+	serviceCatalog := broker.Services()
+
+	assert.Equal(1, len(serviceCatalog))
+	assert.Equal("GUID", serviceCatalog[0].ID)
+	assert.Equal("testService", serviceCatalog[0].Name)
+
+	assert.Nil(err)
 	assert.True(true)
 }
+
+func TestProvisionService(t *testing.T) {
+	assert := assert.New(t)
+	broker, err := setupEnv()
+	if err != nil {
+		assert.Fail(err.Error())
+	}
+
+	err = broker.Provision("newInstance", brokerapi.ProvisionDetails{
+		ID: "GUID",
+	})
+	assert.Nil(err)
+}
+
+func TestProvisionServiceExists(t *testing.T) {
+	assert := assert.New(t)
+	broker, err := setupEnv()
+	if err != nil {
+		assert.Fail(err.Error())
+	}
+
+	err = broker.Provision("exists", brokerapi.ProvisionDetails{
+		ID: "GUID",
+	})
+	assert.Equal(brokerapi.ErrInstanceAlreadyExists.Error(), err.Error())
+}
+
+func TestDeprovision(t *testing.T) {
+
+	assert := assert.New(t)
+	broker, err := setupEnv()
+	if err != nil {
+		assert.Fail(err.Error())
+	}
+
+	err = broker.Deprovision("instanceID", brokerapi.DeprovisionDetails{
+		ServiceID: "GUID",
+	})
+	assert.Nil(err)
+}
+
+//TODO: func TestDeprovisionDoesNotExist(t *testing)
+
+func TestBind(t *testing.T) {
+	assert := assert.New(t)
+	broker, err := setupEnv()
+	if err != nil {
+		assert.Fail(err.Error())
+	}
+
+	bindResponse, err := broker.Bind("instanceID", "bindingId", brokerapi.BindDetails{
+		ServiceID: "GUID",
+	})
+
+	//TODO:Check response
+	assert.NotNil(bindResponse)
+	assert.Nil(err)
+}
+
+func TestUnbind(t *testing.T) {
+	assert := assert.New(t)
+	broker, err := setupEnv()
+	if err != nil {
+		assert.Fail(err.Error())
+	}
+
+	err = broker.Unbind("instanceID", "bindingId", brokerapi.UnbindDetails{
+		ServiceID: "GUID",
+	})
+
+	assert.Nil(err)
+}
+
+//TODO: func TestBindExists(t *testing)
+//TODO: func TestUnbindDoesNotExist(t *testing)

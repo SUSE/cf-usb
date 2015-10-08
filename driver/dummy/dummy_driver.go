@@ -16,6 +16,11 @@ type DummyServiceProperties struct {
 	PropTwo string `json:"property_two"`
 }
 
+type DummyServiceBindResponse struct {
+	UserName string `json:"username"`
+	Password string `json:"password"`
+}
+
 type dummyDriver struct {
 	driverProperties config.DriverProperties
 	logger           lager.Logger
@@ -26,6 +31,7 @@ func NewDummyDriver(logger lager.Logger) driver.Driver {
 	return &dummyDriver{logger: logger}
 }
 func (driver *dummyDriver) Init(driverProperties config.DriverProperties, response *string) error {
+	driver.logger.Info("init-driver")
 	driver.driverProperties = driverProperties
 
 	for _, service := range driverProperties.Services {
@@ -36,7 +42,7 @@ func (driver *dummyDriver) Init(driverProperties config.DriverProperties, respon
 	}
 
 	conf := (*json.RawMessage)(driverProperties.DriverConfiguration)
-	driver.logger.Info(string(*conf))
+	driver.logger.Info("init-driver", lager.Data{"configValue": string(*conf)})
 	dsp := DummyServiceProperties{}
 	err := json.Unmarshal(*conf, &dsp)
 	if err != nil {
@@ -66,12 +72,15 @@ func (driver *dummyDriver) Deprovision(request model.DriverDeprovisionRequest, r
 	return nil
 }
 
-func (driver *dummyDriver) Bind(request model.DriverBindRequest, response *json.RawMessage) error {
+func (driver *dummyDriver) Bind(request model.DriverBindRequest, response *interface{}) error {
 	driver.logger.Info("bind-request", lager.Data{"instanceID": request.InstanceID,
 		"planID": request.BindDetails.PlanID, "appID": request.BindDetails.AppGUID})
 
-	data := []byte(`{"user": "testuser","password":"testpassword"}`)
-	response = (*json.RawMessage)(&data)
+	*response = DummyServiceBindResponse{
+		UserName: "user",
+		Password: "pass",
+	}
+
 	return nil
 }
 func (driver *dummyDriver) Unbind(request model.DriverUnbindRequest, response *string) error {
