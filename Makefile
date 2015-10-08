@@ -11,8 +11,8 @@ BUILD:=$(shell echo `whoami`-`git rev-parse --short HEAD`-`date -u +%Y%m%d%H%M%S
 APP_VERSION=$(VERSION)-$(BUILD)
 DIST_FIND_BUILDS=find * -type d -not -path "forpatches" -exec
 
-.PHONY: all dist format lint vet build test tools bench clean patch generate patchserver cleangeneratedfiles cover
-.SILENT: all dist format lint vet build test tools bench clean patch generate patchserver cleangeneratedfiles cover
+.PHONY: all dist format lint vet build test tools bench clean generate cleangeneratedfiles
+.SILENT: all dist format lint vet build test tools bench clean generate cleangeneratedfiles
 
 all: clean format lint vet build test dist
 
@@ -59,13 +59,11 @@ cleangeneratedfiles:
 	rm -rf build/forpatches
 	rm -rf public
 
-test: generate #deps
+test:
 	@echo "$(OK_COLOR)==> Testing$(NO_COLOR)"
-	godep go test -short $(TEST_FLAGS) -ldflags -linkmode=external -covermode=count ./...
-
-integrationtest: generate #deps
-	@echo "$(OK_COLOR)==> Testing$(NO_COLOR)"
-	godep go test $(TEST_FLAGS) -ldflags -linkmode=external -covermode=count ./...
+	export GOPATH=$(shell godep path):$(shell echo $$GOPATH) &&\
+	gocov test ./... | gocov-xml > coverage.xml
+	@echo "$(NO_COLOR)\c"
 
 tools:
 	@echo "$(OK_COLOR)==> Installing tools$(NO_COLOR)"
@@ -91,10 +89,6 @@ tools:
 	go get github.com/axw/gocov/...
 	go get github.com/AlekSi/gocov-xml
 	go get gopkg.in/matm/v1/gocov-html
-
-cover:	clean format lint vet build
-	@echo "$(OK_COLOR)==> Running tests and determining code coverage$(NO_COLOR)"
-	scripts/code_coverage.sh coverage.xml
 
 clean: cleangeneratedfiles
 	@echo "$(OK_COLOR)==> Cleaning$(NO_COLOR)"
