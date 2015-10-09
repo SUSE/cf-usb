@@ -78,7 +78,9 @@ tools:
 	go get -u github.com/mitchellh/gox
 	go get -u github.com/vektra/mockery/cmd/mockery
 	go get -u github.com/axw/gocov/gocov
-
+	go get -u github.com/go-swagger/go-swagger/cmd/swagger
+	go get -u github.com/jteeuwen/go-bindata/...
+	
 	# gox -build-toolchain
 	#dependencies for project
 	go get gopkg.in/yaml.v2
@@ -94,4 +96,11 @@ clean: cleangeneratedfiles
 	@echo "$(OK_COLOR)==> Cleaning$(NO_COLOR)"
 	rm -rf build
 	rm -rf $(GOPATH)/pkg/*
-	rm -f $(GOPATH)/bin/als
+	rm -f $(GOPATH)/bin/usb
+
+genswagger:
+	@echo "$(OK_COLOR)==> Generationg management APIs using swagger$(NO_COLOR)"
+	rm -rf lib/operations lib/genmodel
+	swagger generate server -f swagger-spec/api.json -m genmodel -s "" -A usb-mgmt -t lib
+	rm -rf lib/cmd
+	go-bindata -pkg="data" -o lib/data/swagger.go swagger-spec/

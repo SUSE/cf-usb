@@ -5,8 +5,12 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/go-swagger/go-swagger/spec"
 	"github.com/hpcloud/cf-usb/lib"
 	"github.com/hpcloud/cf-usb/lib/config"
+	"github.com/hpcloud/cf-usb/lib/data"
+	"github.com/hpcloud/cf-usb/lib/mgmt"
+	"github.com/hpcloud/cf-usb/lib/operations"
 	"github.com/pivotal-cf/brokerapi"
 	"github.com/pivotal-golang/lager"
 )
@@ -75,17 +79,34 @@ func (usb *UsbApp) Run(configProvider config.ConfigProvider) {
 		logger.Error("start-drivers", err)
 		os.Exit(1)
 	}
+
 	logger.Info("run", lager.Data{"action": "starting drivers"})
 	usbService := lib.NewUsbBroker(drivers, usb.config, logger)
 	brokerAPI := brokerapi.New(usbService, logger, usb.config.Crednetials)
 
 	addr := usb.config.Listen
+
 	mgmtaddr := usb.config.ManagementListen
 
-	go func() {
-		logger.Info("run", lager.Data{"mgmtadd": mgmtaddr})
-		http.ListenAndServe(mgmtaddr, nil)
-	}()
+	if usb.config.StartMgmt {
+		swaggerJSON, err := data.Asset("swagger-spec/api.json")
+		if err != nil {
+			logger.Fatal("error-start-mgmt-api", err)
+		}
+
+		swaggerSpec, err := spec.New(swaggerJSON, "")
+		if err != nil {
+			logger.Fatal("error-start-mgmt-api", err)
+		}
+
+		mgmtAPI := operations.NewUsbMgmtAPI(swaggerSpec)
+		mgmt.ConfigureAPI(mgmtAPI)
+
+		go func() {
+			logger.Info("run", lager.Data{"mgmtadd": mgmtaddr})
+			http.ListenAndServe(mgmtaddr, mgmtAPI.Serve())
+		}()
+	}
 	logger.Info("run", lager.Data{"addr": addr})
 	err = http.ListenAndServe(addr, brokerAPI)
 	if err != nil {

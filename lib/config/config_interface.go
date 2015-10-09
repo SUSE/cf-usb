@@ -25,6 +25,7 @@ type Config struct {
 	DriverConfigs    []DriverConfig              `json:"driver_configs"`
 	Listen           string                      `json:"listen"`
 	ManagementListen string                      `json:"management_listen"`
+	StartMgmt        bool                        `json:"start_mgmt"`
 	APIVersion       string                      `json:"api_version"`
 	LogLevel         string                      `json:"logLevel"`
 }
