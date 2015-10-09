@@ -6,6 +6,16 @@
 	],
 	"Deps": [
 		{
+			"ImportPath": "github.com/PuerkitoBio/purell",
+			"Comment": "v0.1.0-23-gd69616f",
+			"Rev": "d69616f51cdfcd7514d6a380847a152dfc2a749d"
+		},
+		{
+			"ImportPath": "github.com/asaskevich/govalidator",
+			"Comment": "v2-31-gc219af1",
+			"Rev": "c219af1eafcdacdb7fbb6fa33b926cadd541ca19"
+		},
+		{
 			"ImportPath": "github.com/codegangsta/cli",
 			"Comment": "1.2.0-66-g6086d79",
 			"Rev": "6086d7927ec35315964d9fea46df6c04e6d697c1"
@@ -14,6 +24,42 @@
 			"ImportPath": "github.com/go-sql-driver/mysql",
 			"Comment": "v1.2-119-g527bcd5",
 			"Rev": "527bcd55aab2e53314f1a150922560174b493034"
+		},
+		{
+			"ImportPath": "github.com/go-swagger/go-swagger/errors",
+			"Rev": "2e74a8626dbd66f60ef5a47e1d0bfaebd2c2b080"
+		},
+		{
+			"ImportPath": "github.com/go-swagger/go-swagger/httpkit",
+			"Rev": "2e74a8626dbd66f60ef5a47e1d0bfaebd2c2b080"
+		},
+		{
+			"ImportPath": "github.com/go-swagger/go-swagger/internal/validate",
+			"Rev": "2e74a8626dbd66f60ef5a47e1d0bfaebd2c2b080"
+		},
+		{
+			"ImportPath": "github.com/go-swagger/go-swagger/jsonpointer",
+			"Rev": "2e74a8626dbd66f60ef5a47e1d0bfaebd2c2b080"
+		},
+		{
+			"ImportPath": "github.com/go-swagger/go-swagger/jsonreference",
+			"Rev": "2e74a8626dbd66f60ef5a47e1d0bfaebd2c2b080"
+		},
+		{
+			"ImportPath": "github.com/go-swagger/go-swagger/spec",
+			"Rev": "2e74a8626dbd66f60ef5a47e1d0bfaebd2c2b080"
+		},
+		{
+			"ImportPath": "github.com/go-swagger/go-swagger/strfmt",
+			"Rev": "2e74a8626dbd66f60ef5a47e1d0bfaebd2c2b080"
+		},
+		{
+			"ImportPath": "github.com/go-swagger/go-swagger/swag",
+			"Rev": "2e74a8626dbd66f60ef5a47e1d0bfaebd2c2b080"
+		},
+		{
+			"ImportPath": "github.com/golang/gddo/httputil",
+			"Rev": "eb8ffd449022800470e679f4fab8097122f1b9e3"
 		},
 		{
 			"ImportPath": "github.com/gorilla/context",
@@ -27,6 +73,10 @@
 			"ImportPath": "github.com/lib/pq",
 			"Comment": "go1.0-cutoff-60-gffe986a",
 			"Rev": "ffe986aba3e6cfcded8b06615965941408891ef0"
+		},
+		{
+			"ImportPath": "github.com/naoina/denco",
+			"Rev": "9af2ba0e24214bac003821f4a501b131b2e04c75"
 		},
 		{
 			"ImportPath": "github.com/natefinch/pie",
@@ -46,6 +96,10 @@
 			"ImportPath": "github.com/onsi/gomega/gbytes",
 			"Comment": "v1.0-67-gd6dbcad",
 			"Rev": "d6dbcadd097a94624226ca555d70a0d14d4d6181"
+		},
+		{
+			"ImportPath": "github.com/opennota/urlesc",
+			"Rev": "5fa9ff0392746aeae1c4b37fcc42c65afa7a9587"
 		},
 		{
 			"ImportPath": "github.com/pivotal-cf/brokerapi",
@@ -68,6 +122,10 @@
 			"ImportPath": "github.com/stretchr/testify/mock",
 			"Comment": "v1.0-17-g089c718",
 			"Rev": "089c7181b8c728499929ff09b62d3fdd8df8adff"
+		},
+		{
+			"ImportPath": "gopkg.in/yaml.v2",
+			"Rev": "53feefa2559fb8dfa8d81baad31be332c97d6c77"
 		}
 	]
 }
