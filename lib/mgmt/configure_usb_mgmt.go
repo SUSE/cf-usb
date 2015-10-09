@@ -2,6 +2,7 @@ package mgmt
 
 import (
 	"github.com/go-swagger/go-swagger/errors"
+	"github.com/go-swagger/go-swagger/httpkit"
 
 	"github.com/hpcloud/cf-usb/lib/genmodel"
 	. "github.com/hpcloud/cf-usb/lib/operations"
@@ -12,6 +13,10 @@ import (
 func ConfigureAPI(api *UsbMgmtAPI) {
 	// configure the api here
 	api.ServeError = errors.ServeError
+
+	api.JSONConsumer = httpkit.JSONConsumer()
+
+	api.JSONProducer = httpkit.JSONProducer()
 
 	api.DeleteDriverConfigHandler = DeleteDriverConfigHandlerFunc(func() error {
 		return errors.NotImplemented("operation deleteDriverConfig has not yet been implemented")
@@ -46,7 +51,8 @@ func ConfigureAPI(api *UsbMgmtAPI) {
 	})
 
 	api.GetInfoHandler = GetInfoHandlerFunc(func() (*genmodel.Info, error) {
-		return nil, errors.NotImplemented("operation getInfo has not yet been implemented")
+
+		return &genmodel.Info{Version: "0.0.1"}, nil
 	})
 
 	api.GetDriverConfigByIDHandler = GetDriverConfigByIDHandlerFunc(func() (*genmodel.DriverConfig, error) {

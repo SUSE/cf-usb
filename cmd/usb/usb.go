@@ -89,20 +89,20 @@ func (usb *UsbApp) Run(configProvider config.ConfigProvider) {
 	mgmtaddr := usb.config.ManagementListen
 
 	if usb.config.StartMgmt {
-		swaggerJSON, err := data.Asset("swagger-spec/api.json")
-		if err != nil {
-			logger.Fatal("error-start-mgmt-api", err)
-		}
-
-		swaggerSpec, err := spec.New(swaggerJSON, "")
-		if err != nil {
-			logger.Fatal("error-start-mgmt-api", err)
-		}
-
-		mgmtAPI := operations.NewUsbMgmtAPI(swaggerSpec)
-		mgmt.ConfigureAPI(mgmtAPI)
-
 		go func() {
+			swaggerJSON, err := data.Asset("swagger-spec/api.json")
+			if err != nil {
+				logger.Fatal("error-start-mgmt-api", err)
+			}
+
+			swaggerSpec, err := spec.New(swaggerJSON, "")
+			if err != nil {
+				logger.Fatal("error-start-mgmt-api", err)
+			}
+
+			mgmtAPI := operations.NewUsbMgmtAPI(swaggerSpec)
+			mgmt.ConfigureAPI(mgmtAPI)
+
 			logger.Info("run", lager.Data{"mgmtadd": mgmtaddr})
 			http.ListenAndServe(mgmtaddr, mgmtAPI.Serve())
 		}()
