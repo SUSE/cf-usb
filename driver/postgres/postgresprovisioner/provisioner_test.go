@@ -16,8 +16,6 @@ var testPostgresProv = struct {
 	postgresDefaultConn PostgresServiceProperties
 }{}
 
-//var userCountQuery = "SELECT COUNT(*) FROM pg_roles WHERE rolname = '%v'"
-
 func init() {
 	testPostgresProv.postgresDefaultConn = PostgresServiceProperties{
 		User:     os.Getenv("POSTGRES_USER"),
@@ -40,12 +38,12 @@ func TestCreateDatabase(t *testing.T) {
 
 	err := testPostgresProv.postgresProvisioner.CreateDatabase(newDbName)
 	if err != nil {
-		t.Errorf("Error creating database: ", err)
+		t.Errorf("Error creating database: %v", err)
 	}
 
 	exist, err := testPostgresProv.postgresProvisioner.DatabaseExists(newDbName)
 	if err != nil {
-		t.Errorf("Error check database exists: ", err)
+		t.Errorf("Error check database exists: %v", err)
 	}
 
 	if !exist {
@@ -65,21 +63,21 @@ func TestCreateUser(t *testing.T) {
 
 	exist, err := testPostgresProv.postgresProvisioner.DatabaseExists(newDbName)
 	if err != nil {
-		t.Errorf("Error check database exists: ", err)
+		t.Errorf("Error check database exists: %v", err)
 	}
 
 	if !exist {
-		t.Errorf("Database does not exist: ", err)
+		t.Errorf("Database does not exist: %v", err)
 	}
 
 	err = testPostgresProv.postgresProvisioner.CreateUser(newDbName, newUser, "aPassw0rd")
 	if err != nil {
-		t.Errorf("Error creating user: ", err)
+		t.Errorf("Error creating user: %v", err)
 	}
 
 	exist, err = testPostgresProv.postgresProvisioner.UserExists(newUser)
 	if err != nil {
-		t.Errorf("Error check user exists: ", err)
+		t.Errorf("Error check user exists: %v", err)
 	}
 
 	if !exist {
@@ -99,16 +97,16 @@ func TestDeleteUser(t *testing.T) {
 
 	exist, err := testPostgresProv.postgresProvisioner.DatabaseExists(newDbName)
 	if err != nil {
-		t.Errorf("Error check database exists: ", err)
+		t.Errorf("Error check database exists: %v", err)
 	}
 
 	if !exist {
-		t.Errorf("Database does not exist: ", err)
+		t.Errorf("Database does not exist: %v", err)
 	}
 
 	exist, err = testPostgresProv.postgresProvisioner.UserExists(newUser)
 	if err != nil {
-		t.Errorf("Error check user exists: ", err)
+		t.Errorf("Error check user exists: %v", err)
 	}
 
 	if !exist {
@@ -117,12 +115,12 @@ func TestDeleteUser(t *testing.T) {
 
 	err = testPostgresProv.postgresProvisioner.DeleteUser(newDbName, newUser)
 	if err != nil {
-		t.Errorf("Error deleting user: ", err)
+		t.Errorf("Error deleting user: %v", err)
 	}
 
 	exist, err = testPostgresProv.postgresProvisioner.UserExists(newUser)
 	if err != nil {
-		t.Errorf("Error check user exists: ", err)
+		t.Errorf("Error check user exists: %v", err)
 	}
 
 	if !exist {
@@ -139,21 +137,21 @@ func TestDeleteDatabase(t *testing.T) {
 
 	exist, err := testPostgresProv.postgresProvisioner.DatabaseExists(newDbName)
 	if err != nil {
-		t.Errorf("Error check database exists: ", err)
+		t.Errorf("Error check database exists: %v", err)
 	}
 
 	if !exist {
-		t.Errorf("Database does not exist: ", err)
+		t.Errorf("Database does not exist: %v", err)
 	}
 
 	err = testPostgresProv.postgresProvisioner.DeleteDatabase(newDbName)
 	if err != nil {
-		t.Errorf("Error deleting database: ", err)
+		t.Errorf("Error deleting database: %v", err)
 	}
 
 	exist, err = testPostgresProv.postgresProvisioner.DatabaseExists(newDbName)
 	if err != nil {
-		t.Errorf("Error check database exists: ", err)
+		t.Errorf("Error check database exists: %v", err)
 	}
 
 	if !exist {
@@ -165,7 +163,7 @@ func TestParametrizeQuery(t *testing.T) {
 	_, err := parametrizeQuery("SELECT COUNT(*) FROM pg_roles WHERE rolname = {{.User}}", map[string]string{"Username": "username"})
 
 	if !strings.Contains(err.Error(), "Invalid parameter passed to query") {
-		t.Errorf("Error parametrizing query: ", err)
+		t.Errorf("Error parametrizing query: %v", err)
 	}
 }
 

@@ -1,4 +1,4 @@
-package postgresdriver
+package postgres
 
 import (
 	"fmt"

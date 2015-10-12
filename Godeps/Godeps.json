@@ -1,6 +1,6 @@
 {
 	"ImportPath": "github.com/hpcloud/cf-usb",
-	"GoVersion": "go1.4.2",
+	"GoVersion": "go1.4.3",
 	"Packages": [
 		"./..."
 	],
@@ -24,8 +24,28 @@
 			"Rev": "e444e69cbd2e2e3e0749a2f3c717cec491552bbf"
 		},
 		{
+			"ImportPath": "github.com/lib/pq",
+			"Comment": "go1.0-cutoff-60-gffe986a",
+			"Rev": "ffe986aba3e6cfcded8b06615965941408891ef0"
+		},
+		{
 			"ImportPath": "github.com/natefinch/pie",
 			"Rev": "83bfd1821ee0ba96a47d98cbed424313fb60f57a"
+		},
+		{
+			"ImportPath": "github.com/onsi/ginkgo",
+			"Comment": "v1.2.0-14-g1b59c57",
+			"Rev": "1b59c57df76ede42c08590546916e6a18685857d"
+		},
+		{
+			"ImportPath": "github.com/onsi/gomega/format",
+			"Comment": "v1.0-67-gd6dbcad",
+			"Rev": "d6dbcadd097a94624226ca555d70a0d14d4d6181"
+		},
+		{
+			"ImportPath": "github.com/onsi/gomega/gbytes",
+			"Comment": "v1.0-67-gd6dbcad",
+			"Rev": "d6dbcadd097a94624226ca555d70a0d14d4d6181"
 		},
 		{
 			"ImportPath": "github.com/pivotal-cf/brokerapi",
