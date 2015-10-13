@@ -1,15 +1,3 @@
-.DS_Store
 build/
-/cf-mgmt
-public/
-*.yml
-.\#*
-.projectile
-cloudinit[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]
 *.test
-cf-mgmt_*
 coverage.xml
-profile.cov
-coverage.html
-tags
-*~
