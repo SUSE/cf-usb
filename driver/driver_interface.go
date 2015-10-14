@@ -7,8 +7,13 @@ import (
 
 type Driver interface {
 	Init(config.DriverProperties, *string) error
-	Provision(model.DriverProvisionRequest, *string) error
-	Deprovision(model.DriverDeprovisionRequest, *string) error
-	Bind(model.DriverBindRequest, *interface{}) error
-	Unbind(model.DriverUnbindRequest, *string) error
+	Ping(string, *bool) error
+	GetDailsSchema(string, *string) error
+	GetConfigSchema(string, *string) error
+	ProvisionInstance(model.ProvisionInstanceRequest, *bool) error
+	InstanceExists(string, *bool) error
+	GenerateCredentials(model.CredentialsRequest, *interface{}) error
+	CredentialsExist(model.CredentialsRequest, *bool) error
+	RevokeCredentials(model.CredentialsRequest, *interface{}) error
+	DeprovisionInstance(string, *interface{}) error
 }
