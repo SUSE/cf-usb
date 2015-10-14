@@ -18,7 +18,7 @@ func main() {
 	logger.RegisterSink(lager.NewWriterSink(os.Stderr, lager.DEBUG))
 
 	p := pie.NewProvider()
-	if err := p.RegisterName("mysql", driver.NewMongoDriver(logger)); err != nil {
+	if err := p.RegisterName("mongo", driver.NewMongoDriver(logger)); err != nil {
 		log.Fatalf("failed to register Plugin: %s", err)
 	}
 

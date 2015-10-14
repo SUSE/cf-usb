@@ -41,7 +41,7 @@ func NewMongoDriver(logger lager.Logger) driver.Driver {
 
 func (e *MongoDriver) Init(configuration config.DriverProperties, response *string) error {
 	err := json.Unmarshal(*configuration.DriverConfiguration, &e)
-	e.logger.Info("Mysql Driver initializing")
+	e.logger.Info("Mongo Driver initializing")
 	e.db, err = mongoprovisioner.New(e.User, e.Pass, e.Host+":"+e.Port, e.logger)
 	return err
 }
@@ -101,7 +101,18 @@ func (e *MongoDriver) Bind(request model.DriverBindRequest, response *json.RawMe
 		if err != nil {
 			return err
 		}
-		//TO DO: Add response object
+		data := MongoBindingCredentials{
+			Host:             e.Host,
+			Port:             e.Port,
+			Username:         username,
+			Password:         password,
+			ConnectionString: generateConnectionString(e.Host, e.Port, request.InstanceID, username, password),
+		}
+		marhsaled, err := json.Marshal(data)
+		if err != nil {
+			return err
+		}
+		response = (*json.RawMessage)(&marhsaled)
 	}
 	return nil
 }
