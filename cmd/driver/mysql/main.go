@@ -18,7 +18,10 @@ func main() {
 	logger.RegisterSink(lager.NewWriterSink(os.Stderr, lager.DEBUG))
 
 	p := pie.NewProvider()
-	if err := p.RegisterName("mysql", driver.NewMysqlDriver(logger)); err != nil {
+
+	mysqldriver := driver.NewMysqlDriver(logger)
+
+	if err := p.RegisterName("mysql", mysqldriver); err != nil {
 		log.Fatalf("failed to register Plugin: %s", err)
 	}
 

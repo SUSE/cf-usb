@@ -16,7 +16,9 @@ func main() {
 
 	p := pie.NewProvider()
 
-	if err := p.RegisterName("postgres", postgres.NewPostgresDriver(logger)); err != nil {
+	postgresDriver := postgres.NewPostgresDriver(logger)
+
+	if err := p.RegisterName("postgres", postgresDriver); err != nil {
 		logger.Fatal("register-plugin", err)
 	}
 
