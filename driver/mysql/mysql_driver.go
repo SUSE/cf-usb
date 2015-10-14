@@ -8,7 +8,6 @@ import (
 
 	"github.com/hpcloud/cf-usb/driver"
 	"github.com/hpcloud/cf-usb/driver/mysql/mysqlprovisioner"
-	"github.com/hpcloud/cf-usb/lib/config"
 	"github.com/hpcloud/cf-usb/lib/data"
 	"github.com/hpcloud/cf-usb/lib/model"
 	"github.com/pivotal-golang/lager"
@@ -38,8 +37,8 @@ func NewMysqlDriver(logger lager.Logger) driver.Driver {
 	return &MysqlDriver{logger: logger}
 }
 
-func (e *MysqlDriver) Init(configuration config.DriverProperties, response *string) error {
-	err := json.Unmarshal(*configuration.DriverConfiguration, &e)
+func (e *MysqlDriver) Init(configuration model.DriverInitRequest, response *string) error {
+	err := json.Unmarshal(*configuration.DriverConfig, &e)
 	e.logger.Info("Mysql Driver initializing")
 	e.db, err = mysqlprovisioner.New(e.User, e.Pass, e.Host+":"+e.Port, e.logger)
 	return err

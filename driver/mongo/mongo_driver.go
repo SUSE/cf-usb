@@ -8,7 +8,6 @@ import (
 
 	"github.com/hpcloud/cf-usb/driver"
 	"github.com/hpcloud/cf-usb/driver/mongo/mongoprovisioner"
-	"github.com/hpcloud/cf-usb/lib/config"
 	"github.com/hpcloud/cf-usb/lib/data"
 	"github.com/hpcloud/cf-usb/lib/model"
 	"github.com/pivotal-golang/lager"
@@ -38,8 +37,8 @@ func NewMongoDriver(logger lager.Logger) driver.Driver {
 	return &MongoDriver{logger: logger}
 }
 
-func (e *MongoDriver) Init(configuration config.DriverProperties, response *string) error {
-	err := json.Unmarshal(*configuration.DriverConfiguration, &e)
+func (e *MongoDriver) Init(configuration model.DriverInitRequest, response *string) error {
+	err := json.Unmarshal(*configuration.DriverConfig, &e)
 	e.logger.Info("Mongo Driver initializing")
 	e.db, err = mongoprovisioner.New(e.User, e.Pass, e.Host+":"+e.Port, e.logger)
 	return err

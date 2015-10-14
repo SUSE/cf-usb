@@ -7,14 +7,13 @@ import (
 
 	"github.com/hpcloud/cf-usb/driver"
 	"github.com/hpcloud/cf-usb/driver/postgres/postgresprovisioner"
-	"github.com/hpcloud/cf-usb/lib/config"
 	"github.com/hpcloud/cf-usb/lib/data"
 	"github.com/hpcloud/cf-usb/lib/model"
 	"github.com/pivotal-golang/lager"
 )
 
 type postgresDriver struct {
-	driverProperties    config.DriverProperties
+	driverProperties    model.DriverInitRequest
 	defaultConnParams   postgresprovisioner.PostgresServiceProperties
 	logger              lager.Logger
 	postgresProvisioner postgresprovisioner.PostgresProvisionerInterface
@@ -24,10 +23,10 @@ func NewPostgresDriver(logger lager.Logger) driver.Driver {
 	return &postgresDriver{logger: logger}
 }
 
-func (driver *postgresDriver) Init(driverProperties config.DriverProperties, response *string) error {
+func (driver *postgresDriver) Init(driverProperties model.DriverInitRequest, response *string) error {
 	driver.driverProperties = driverProperties
 
-	conf := (*json.RawMessage)(driverProperties.DriverConfiguration)
+	conf := (*json.RawMessage)(driverProperties.DriverConfig)
 	dsp := postgresprovisioner.PostgresServiceProperties{}
 	err := json.Unmarshal(*conf, &dsp)
 	if err != nil {
