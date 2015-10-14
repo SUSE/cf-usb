@@ -131,7 +131,7 @@ func (usb *UsbApp) startDrivers(configProvider config.ConfigProvider) ([]*lib.Dr
 		}
 
 		usb.logger.Info("start-driver", lager.Data{"driver-type": driverType})
-		driver, err := lib.NewDriverProvider(driverType, driverProp)
+		driver, err := lib.NewDriverProvider(driverType, driverProp, usb.logger)
 
 		if err != nil {
 			return drivers, err

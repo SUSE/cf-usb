@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"errors"
 	"fmt"
 	"net/rpc"
 	"net/rpc/jsonrpc"
@@ -11,6 +12,8 @@ import (
 	"github.com/hpcloud/cf-usb/lib/config"
 	"github.com/hpcloud/cf-usb/lib/model"
 	"github.com/natefinch/pie"
+	"github.com/pivotal-golang/lager"
+	"github.com/xeipuuv/gojsonschema"
 )
 
 type DriverProvider struct {
@@ -20,7 +23,7 @@ type DriverProvider struct {
 	DriverProperties config.DriverProperties
 }
 
-func NewDriverProvider(driverType string, driverProperties config.DriverProperties) (*DriverProvider, error) {
+func NewDriverProvider(driverType string, driverProperties config.DriverProperties, logger lager.Logger) (*DriverProvider, error) {
 	provider := DriverProvider{}
 
 	driverPath := os.Getenv("USB_DRIVER_PATH")
@@ -42,14 +45,40 @@ func NewDriverProvider(driverType string, driverProperties config.DriverProperti
 	provider.DriverProperties = driverProperties
 	provider.driverType = driverType
 
-	_, err = provider.Init(driverProperties)
+	configSchema, err := provider.GetConfigSchema()
+	if err != nil {
+		return &provider, err
+	}
+
+	schemaLoader := gojsonschema.NewStringLoader(configSchema)
+	configLoader := gojsonschema.NewGoLoader(driverProperties.DriverConfiguration)
+
+	result, err := gojsonschema.Validate(schemaLoader, configLoader)
+	if err != nil {
+		return &provider, err
+	}
+	if !result.Valid() {
+		err = errors.New("Invalid configuration schema")
+
+		errData := lager.Data{}
+		for _, e := range result.Errors() {
+			errData[e.Field()] = e.Description()
+		}
+		logger.Error("driver-init", err, errData)
+		return &provider, err
+	}
+
+	initRequest := model.DriverInitRequest{}
+	initRequest.DriverConfig = driverProperties.DriverConfiguration
+	//TODO: Implement dails
+	_, err = provider.Init(initRequest)
 
 	return &provider, err
 }
 
-func (p *DriverProvider) Init(driverProperties config.DriverProperties) (string, error) {
+func (p *DriverProvider) Init(request model.DriverInitRequest) (string, error) {
 	var result string
-	err := p.client.Call(fmt.Sprintf("%s.Init", p.driverType), driverProperties, &result)
+	err := p.client.Call(fmt.Sprintf("%s.Init", p.driverType), request, &result)
 	return result, err
 }
 

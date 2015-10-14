@@ -11,3 +11,8 @@ type CredentialsRequest struct {
 	InstanceID    string
 	CredentialsID string
 }
+
+type DriverInitRequest struct {
+	DriverConfig *json.RawMessage
+	Dials        *json.RawMessage
+}

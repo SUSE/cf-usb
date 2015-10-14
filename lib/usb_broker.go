@@ -30,7 +30,6 @@ func (broker *UsbBroker) Provision(instanceID string, serviceDetails brokerapi.P
 
 	driver := broker.getDriver(serviceDetails.ID)
 
-	//TODO: Check schema
 	driverProvisionRequest := model.ProvisionInstanceRequest{
 		InstanceID: instanceID,
 		Dails:      json.RawMessage{},

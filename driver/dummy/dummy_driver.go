@@ -4,14 +4,13 @@ import (
 	"encoding/json"
 
 	"github.com/hpcloud/cf-usb/driver"
-	"github.com/hpcloud/cf-usb/lib/config"
-	"github.com/hpcloud/cf-usb/lib/data"
+	"github.com/hpcloud/cf-usb/driver/dummy/driverdata"
 	"github.com/hpcloud/cf-usb/lib/model"
 	"github.com/pivotal-cf/brokerapi"
 	"github.com/pivotal-golang/lager"
 )
 
-type DummyServiceProperties struct {
+type DummyServiceConfig struct {
 	PropOne string `json:"property_one"`
 	PropTwo string `json:"property_two"`
 }
@@ -22,31 +21,25 @@ type DummyServiceBindResponse struct {
 }
 
 type dummyDriver struct {
-	driverProperties config.DriverProperties
+	driverProperties DummyServiceConfig
 	logger           lager.Logger
 }
 
 func NewDummyDriver(logger lager.Logger) driver.Driver {
 	return &dummyDriver{logger: logger}
 }
-func (driver *dummyDriver) Init(driverProperties config.DriverProperties, response *string) error {
+func (driver *dummyDriver) Init(driverInitRequest model.DriverInitRequest, response *string) error {
 	driver.logger.Info("init-driver")
-	driver.driverProperties = driverProperties
 
-	for _, service := range driverProperties.Services {
-		driver.logger.Info("init-driver", lager.Data{"serviceID": service.ID, "description": service.Description})
-		for _, plan := range service.Plans {
-			driver.logger.Info("pans", lager.Data{"PlanID": plan.ID, "PlanName": plan.Name})
-		}
-	}
-
-	conf := (*json.RawMessage)(driverProperties.DriverConfiguration)
+	conf := (*json.RawMessage)(driverInitRequest.DriverConfig)
 	driver.logger.Info("init-driver", lager.Data{"configValue": string(*conf)})
-	dsp := DummyServiceProperties{}
+	dsp := DummyServiceConfig{}
 	err := json.Unmarshal(*conf, &dsp)
 	if err != nil {
 		return err
 	}
+	driver.driverProperties = dsp
+
 	driver.logger.Info("init-driver", lager.Data{"property_one": dsp.PropOne, "property_two": dsp.PropTwo})
 
 	*response = "Sucessfully initialized driver"
@@ -63,7 +56,7 @@ func (driver *dummyDriver) Ping(request string, response *bool) error {
 }
 
 func (driver *dummyDriver) GetDailsSchema(request string, response *string) error {
-	dailsSchema, err := data.Asset("schemas/dails.json")
+	dailsSchema, err := driverdata.Asset("schemas/dails.json")
 	if err != nil {
 		return err
 	}
@@ -74,7 +67,8 @@ func (driver *dummyDriver) GetDailsSchema(request string, response *string) erro
 }
 
 func (driver *dummyDriver) GetConfigSchema(request string, response *string) error {
-	configSchema, err := data.Asset("scehmas/config.json")
+	driver.logger.Info("driver-get-config-schema")
+	configSchema, err := driverdata.Asset("schemas/config.json")
 	if err != nil {
 		return err
 	}

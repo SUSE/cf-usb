@@ -1,12 +1,9 @@
 package driver
 
-import (
-	"github.com/hpcloud/cf-usb/lib/config"
-	"github.com/hpcloud/cf-usb/lib/model"
-)
+import "github.com/hpcloud/cf-usb/lib/model"
 
 type Driver interface {
-	Init(config.DriverProperties, *string) error
+	Init(model.DriverInitRequest, *string) error
 	Ping(string, *bool) error
 	GetDailsSchema(string, *string) error
 	GetConfigSchema(string, *string) error
