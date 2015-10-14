@@ -32,6 +32,12 @@ vet:
 	@echo $(GOPKGS) | tr ' ' '\n' | xargs -I '{p}' -n1 go tool vet -composites=false {p} | sed "s/^/Failed: /"
 	@echo "$(NO_COLOR)\c"
 
+driversbindata:
+	@echo "$(OK_COLOR)==> Embedding JSON schemas into drivers$(NO_COLOR)"
+	find driver/ -maxdepth 1 -type d \( ! -name driver \) -exec \
+	bash -c "(cd '{}' && go-bindata -pkg="data" -o data/schemas.go schemas/ )" \;
+	
+
 build: generate #deps
 	@echo "$(OK_COLOR)==> Building$(NO_COLOR)"
 	export GOPATH=$(shell godep path):$(shell echo $$GOPATH) &&\
