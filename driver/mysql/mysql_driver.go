@@ -7,8 +7,8 @@ import (
 	"fmt"
 
 	"github.com/hpcloud/cf-usb/driver"
+	"github.com/hpcloud/cf-usb/driver/mysql/driverdata"
 	"github.com/hpcloud/cf-usb/driver/mysql/mysqlprovisioner"
-	"github.com/hpcloud/cf-usb/lib/data"
 	"github.com/hpcloud/cf-usb/lib/model"
 	"github.com/pivotal-golang/lager"
 )
@@ -50,7 +50,7 @@ func (e *MysqlDriver) Ping(empty string, result *bool) error {
 }
 
 func (e *MysqlDriver) GetDailsSchema(empty string, response *string) error {
-	dailsSchema, err := data.Asset("schemas/dails.json")
+	dailsSchema, err := driverdata.Asset("schemas/dials.json")
 	if err != nil {
 		return err
 	}
@@ -61,7 +61,7 @@ func (e *MysqlDriver) GetDailsSchema(empty string, response *string) error {
 }
 
 func (e *MysqlDriver) GetConfigSchema(request string, response *string) error {
-	configSchema, err := data.Asset("scehmas/config.json")
+	configSchema, err := driverdata.Asset("schemas/config.json")
 	if err != nil {
 		return err
 	}
@@ -84,7 +84,7 @@ func (e *MysqlDriver) InstanceExists(instanceID string, result *bool) error {
 	if err != nil {
 		return err
 	}
-	result = &created
+	*result = created
 	return nil
 }
 
@@ -115,7 +115,7 @@ func (e *MysqlDriver) CredentialsExist(request model.CredentialsRequest, respons
 	if err != nil {
 		return err
 	}
-	response = &created
+	*response = created
 	return nil
 }
 

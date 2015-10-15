@@ -6,8 +6,8 @@ import (
 	"encoding/json"
 
 	"github.com/hpcloud/cf-usb/driver"
+	"github.com/hpcloud/cf-usb/driver/postgres/driverdata"
 	"github.com/hpcloud/cf-usb/driver/postgres/postgresprovisioner"
-	"github.com/hpcloud/cf-usb/lib/data"
 	"github.com/hpcloud/cf-usb/lib/model"
 	"github.com/pivotal-golang/lager"
 )
@@ -51,7 +51,7 @@ func (driver *postgresDriver) Ping(request string, response *bool) error {
 }
 
 func (driver *postgresDriver) GetDailsSchema(request string, response *string) error {
-	dailsSchema, err := data.Asset("schemas/dails.json")
+	dailsSchema, err := driverdata.Asset("schemas/dials.json")
 	if err != nil {
 		return err
 	}
@@ -62,7 +62,7 @@ func (driver *postgresDriver) GetDailsSchema(request string, response *string) e
 }
 
 func (driver *postgresDriver) GetConfigSchema(request string, response *string) error {
-	configSchema, err := data.Asset("scehmas/config.json")
+	configSchema, err := driverdata.Asset("schemas/config.json")
 	if err != nil {
 		return err
 	}
@@ -88,7 +88,7 @@ func (driver *postgresDriver) InstanceExists(instanceID string, response *bool) 
 	if err != nil {
 		driver.logger.Fatal("provision-error", err)
 	}
-	response = &exist
+	*response = exist
 	return nil
 }
 
@@ -125,7 +125,7 @@ func (driver *postgresDriver) CredentialsExist(request model.CredentialsRequest,
 	if err != nil {
 		driver.logger.Fatal("provision-error", err)
 	}
-	response = &exist
+	*response = exist
 	return nil
 }
 
