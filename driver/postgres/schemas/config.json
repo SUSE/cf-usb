@@ -1,36 +1,29 @@
-{
-   "type": "object",
-  "properties": {
-    "brokerGoPostgresDriver": {
-      "type": "string"
-    },
-    "brokerPostgresConnection": {
-      "type": "object",
-      "properties": {
-        "host": {
-          "type": "string"
-        },
-        "port": {
-          "type": "string"
-        },
-        "dbname": {
-          "type": "string"
-        },
-        
-		"user": {
-          "type": "string"
-        },
-        "password": {
-          "type": "string"
-        },
-		"sslmode": {
-          "type": "string"
-        }
-      }
-    }
-  },
-  "required": [
-    "brokerGoPostgresDriver",
-    "brokerPostgresConnection"
-  ]
+{  
+   "type":"object",
+   "properties":{  
+      "server":{  
+         "type":"string"
+      },
+      "port":{  
+         "type":"string"
+      },
+      "user":{  
+         "type":"string"
+      },
+      "password":{  
+         "type":"string"
+      },
+	  "dbname":{
+		 "type":"string"
+   	  },
+	  "sslmode":{
+		 "type":"string"
+	  }
+   },
+   "required":[  
+      "server",
+      "port",
+	  "userid",
+	  "password"
+   ]
 }

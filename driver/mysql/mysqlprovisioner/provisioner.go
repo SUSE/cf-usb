@@ -154,9 +154,9 @@ func (e *MysqlProvisioner) CreateUser(databaseName string, username string, pass
 
 	e.logger.Info("Connection open - executing transaction")
 	err := e.executeTransaction(e.Connection,
-		fmt.Sprintf("CREATE USER '%s'@'localhost' IDENTIFIED BY '%s';", username, password),
-		fmt.Sprintf("CREATE USER '%s'@'%s' IDENTIFIED BY '%s';", username, e.Host, password),
-		fmt.Sprintf("GRANT ALL ON %s.* TO '%s'@'localhost'", databaseName, username))
+		fmt.Sprintf("CREATE USER '%s' IDENTIFIED BY '%s';", username, password),
+		fmt.Sprintf("GRANT ALL PRIVILEGES ON %s.* TO '%s'@'%';", databaseName, username),
+		"FLUSH PRIVILEGES;")
 	e.logger.Info("Transaction done")
 	if err != nil {
 		e.logger.Error("create user", err)
@@ -168,8 +168,7 @@ func (e *MysqlProvisioner) CreateUser(databaseName string, username string, pass
 
 func (e *MysqlProvisioner) DeleteUser(username string) error {
 
-	err := e.executeTransaction(e.Connection, fmt.Sprintf("DROP USER '%s'@'localhost'", username),
-		fmt.Sprintf("DROP USER '%s'@'%s'", username, e.Host))
+	err := e.executeTransaction(e.Connection, fmt.Sprintf("DROP USER '%s'", username))
 
 	if err != nil {
 		e.logger.Error("delete user", err)
