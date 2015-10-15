@@ -4,7 +4,7 @@
 // schemas/dials.json
 // DO NOT EDIT!
 
-package data
+package driverdata
 
 import (
 	"bytes"
@@ -69,7 +69,7 @@ func (fi bindataFileInfo) Sys() interface{} {
 	return nil
 }
 
-var _schemasConfigJson = []byte("\x1f\x8b\x08\x00\x00\x09\x6e\x88\x00\xff\xaa\xae\xe5\x02\x04\x00\x00\xff\xff\x06\xb0\xa1\xdd\x03\x00\x00\x00")
+var _schemasConfigJson = []byte("\x1f\x8b\x08\x00\x00\x09\x6e\x88\x00\xff\xaa\xae\x05\x04\x00\x00\xff\xff\x43\xbf\xa6\xa3\x02\x00\x00\x00")
 
 func schemasConfigJsonBytes() ([]byte, error) {
 	return bindataRead(
@@ -84,7 +84,7 @@ func schemasConfigJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "schemas/config.json", size: 3, mode: os.FileMode(420), modTime: time.Unix(1444732756, 0)}
+	info := bindataFileInfo{name: "schemas/config.json", size: 2, mode: os.FileMode(420), modTime: time.Unix(1444830444, 0)}
 	a := &asset{bytes: bytes, info:  info}
 	return a, nil
 }
@@ -104,7 +104,7 @@ func schemasDialsJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "schemas/dials.json", size: 2, mode: os.FileMode(420), modTime: time.Unix(1444732758, 0)}
+	info := bindataFileInfo{name: "schemas/dials.json", size: 2, mode: os.FileMode(420), modTime: time.Unix(1444830448, 0)}
 	a := &asset{bytes: bytes, info:  info}
 	return a, nil
 }

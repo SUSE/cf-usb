@@ -2,33 +2,31 @@ package postgres
 
 import (
 	"crypto/rand"
-	"database/sql/driver"
 	"encoding/base64"
 	"encoding/json"
 
+	"github.com/hpcloud/cf-usb/driver"
+	"github.com/hpcloud/cf-usb/driver/postgres/driverdata"
 	"github.com/hpcloud/cf-usb/driver/postgres/postgresprovisioner"
-	"github.com/hpcloud/cf-usb/lib/config"
 	"github.com/hpcloud/cf-usb/lib/model"
-	"github.com/pivotal-cf/brokerapi"
 	"github.com/pivotal-golang/lager"
 )
 
 type postgresDriver struct {
-	driverProperties    config.DriverProperties
+	driverProperties    model.DriverInitRequest
 	defaultConnParams   postgresprovisioner.PostgresServiceProperties
 	logger              lager.Logger
 	postgresProvisioner postgresprovisioner.PostgresProvisionerInterface
-	driver.Driver
 }
 
 func NewPostgresDriver(logger lager.Logger) driver.Driver {
 	return &postgresDriver{logger: logger}
 }
 
-func (driver *postgresDriver) Init(driverProperties config.DriverProperties, response *string) error {
+func (driver *postgresDriver) Init(driverProperties model.DriverInitRequest, response *string) error {
 	driver.driverProperties = driverProperties
 
-	conf := (*json.RawMessage)(driverProperties.DriverConfiguration)
+	conf := (*json.RawMessage)(driverProperties.DriverConfig)
 	dsp := postgresprovisioner.PostgresServiceProperties{}
 	err := json.Unmarshal(*conf, &dsp)
 	if err != nil {
@@ -48,76 +46,58 @@ func (driver *postgresDriver) Init(driverProperties config.DriverProperties, res
 	return nil
 }
 
-func (driver *postgresDriver) Provision(request model.DriverProvisionRequest, response *string) error {
-	driver.logger.Info("provision-request", lager.Data{"instance-id": request.InstanceID, "plan-id": request.ServiceDetails.PlanID})
+func (driver *postgresDriver) Ping(request string, response *bool) error {
+	return nil
+}
 
-	exist, err := driver.postgresProvisioner.DatabaseExists(request.InstanceID)
+func (driver *postgresDriver) GetDailsSchema(request string, response *string) error {
+	dailsSchema, err := driverdata.Asset("schemas/dials.json")
 	if err != nil {
-		driver.logger.Fatal("provision-error", err)
+		return err
 	}
 
-	if exist {
-		return brokerapi.ErrInstanceAlreadyExists
+	*response = string(dailsSchema)
+
+	return nil
+}
+
+func (driver *postgresDriver) GetConfigSchema(request string, response *string) error {
+	configSchema, err := driverdata.Asset("schemas/config.json")
+	if err != nil {
+		return err
 	}
 
-	err = driver.postgresProvisioner.CreateDatabase(request.InstanceID)
+	*response = string(configSchema)
+
+	return nil
+}
+
+func (driver *postgresDriver) ProvisionInstance(request model.ProvisionInstanceRequest, response *bool) error {
+	err := driver.postgresProvisioner.CreateDatabase(request.InstanceID)
 	if err != nil {
 		driver.logger.Fatal("provision-error", err)
 		return err
 	}
 
-	*response = ""
+	*response = true
 	return nil
 }
 
-func (driver *postgresDriver) Deprovision(request model.DriverDeprovisionRequest, response *string) error {
-	driver.logger.Info("deprovision-request", lager.Data{"instance-id": request.InstanceID})
-
-	exist, err := driver.postgresProvisioner.DatabaseExists(request.InstanceID)
+func (driver *postgresDriver) InstanceExists(instanceID string, response *bool) error {
+	exist, err := driver.postgresProvisioner.DatabaseExists(instanceID)
 	if err != nil {
 		driver.logger.Fatal("provision-error", err)
 	}
-
-	if !exist {
-		return brokerapi.ErrInstanceDoesNotExist
-	}
-
-	err = driver.postgresProvisioner.DeleteDatabase(request.InstanceID)
-	if err != nil {
-		driver.logger.Fatal("provision-error", err)
-		return err
-	}
-
-	*response = "Successfully deprovisoned"
+	*response = exist
 	return nil
 }
 
-func (driver *postgresDriver) Bind(request model.DriverBindRequest, response *json.RawMessage) error {
-	driver.logger.Info("bind-request", lager.Data{"instanceID": request.InstanceID,
-		"planID": request.BindDetails.PlanID, "appID": request.BindDetails.AppGUID})
+func (driver *postgresDriver) GenerateCredentials(request model.CredentialsRequest, response *interface{}) error {
 
-	username := request.InstanceID + request.BindingID
+	username := request.InstanceID + request.CredentialsID
 	password, err := secureRandomString(32)
 	if err != nil {
 		return err
-	}
-
-	exist, err := driver.postgresProvisioner.DatabaseExists(request.InstanceID)
-	if err != nil {
-		driver.logger.Fatal("provision-error", err)
-	}
-
-	if !exist {
-		return brokerapi.ErrInstanceDoesNotExist
-	}
-
-	exist, err = driver.postgresProvisioner.UserExists(username)
-	if err != nil {
-		driver.logger.Fatal("provision-error", err)
-	}
-
-	if exist {
-		return brokerapi.ErrBindingAlreadyExists
 	}
 
 	err = driver.postgresProvisioner.CreateUser(request.InstanceID, username, password)
@@ -134,45 +114,44 @@ func (driver *postgresDriver) Bind(request model.DriverBindRequest, response *js
 		Username:         username,
 		ConnectionString: generateConnectionString(driver.defaultConnParams.Host, driver.defaultConnParams.Port, request.InstanceID, username, password),
 	}
-
-	marshaled, err := json.Marshal(data)
-	if err != nil {
-		driver.logger.Fatal("serialize-error", err)
-		return err
-	}
-
-	response = (*json.RawMessage)(&marshaled)
+	*response = data
 	return nil
 }
 
-func (driver *postgresDriver) Unbind(request model.DriverUnbindRequest, response *string) error {
-	driver.logger.Info("unbind-request", lager.Data{"bindingID": request.BindingID, "InstanceID": request.InstanceID})
-	username := request.InstanceID + request.BindingID
+func (driver *postgresDriver) CredentialsExist(request model.CredentialsRequest, response *bool) error {
+	username := request.InstanceID + request.CredentialsID
 
-	exist, err := driver.postgresProvisioner.DatabaseExists(request.InstanceID)
+	exist, err := driver.postgresProvisioner.UserExists(username)
 	if err != nil {
 		driver.logger.Fatal("provision-error", err)
 	}
+	*response = exist
+	return nil
+}
 
-	if !exist {
-		return brokerapi.ErrInstanceDoesNotExist
-	}
+func (driver *postgresDriver) RevokeCredentials(request model.CredentialsRequest, response *interface{}) error {
+	driver.logger.Info("unbind-request", lager.Data{"credentialsID": request.CredentialsID, "InstanceID": request.InstanceID})
+	username := request.InstanceID + request.CredentialsID
 
-	exist, err = driver.postgresProvisioner.UserExists(username)
+	err := driver.postgresProvisioner.DeleteUser(request.InstanceID, username)
 	if err != nil {
 		driver.logger.Fatal("provision-error", err)
+		return err
 	}
+	*response = ""
 
-	if !exist {
-		return brokerapi.ErrBindingDoesNotExist
-	}
+	return nil
+}
+func (driver *postgresDriver) DeprovisionInstance(instanceID string, response *interface{}) error {
+	driver.logger.Info("deprovision-request", lager.Data{"instance-id": instanceID})
 
-	err = driver.postgresProvisioner.DeleteUser(request.InstanceID, username)
+	err := driver.postgresProvisioner.DeleteDatabase(instanceID)
 	if err != nil {
 		driver.logger.Fatal("provision-error", err)
 		return err
 	}
 
+	*response = "Successfully deprovisoned"
 	return nil
 }
 

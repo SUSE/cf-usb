@@ -1,23 +1,18 @@
 package model
 
-import "github.com/pivotal-cf/brokerapi"
+import "encoding/json"
 
-type DriverProvisionRequest struct {
-	InstanceID     string
-	ServiceDetails brokerapi.ProvisionDetails
-}
-
-type DriverDeprovisionRequest struct {
+type ProvisionInstanceRequest struct {
 	InstanceID string
+	Dails      json.RawMessage
 }
 
-type DriverBindRequest struct {
-	InstanceID  string
-	BindingID   string
-	BindDetails brokerapi.BindDetails
+type CredentialsRequest struct {
+	InstanceID    string
+	CredentialsID string
 }
 
-type DriverUnbindRequest struct {
-	InstanceID string
-	BindingID  string
+type DriverInitRequest struct {
+	DriverConfig *json.RawMessage
+	Dials        *json.RawMessage
 }

@@ -56,7 +56,11 @@ func setupEnv() (*UsbBroker, error) {
 
 	testDriverProperties.DriverConfiguration = testDriverConfig.Configuration
 
-	driverProvider, err := NewDriverProvider("dummy", testDriverProperties)
+	var logger = lager.NewLogger("test")
+
+	logger.RegisterSink(lager.NewWriterSink(os.Stderr, lager.DEBUG))
+
+	driverProvider, err := NewDriverProvider("dummy", testDriverProperties, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +93,7 @@ func TestProvisionService(t *testing.T) {
 		assert.Fail(err.Error())
 	}
 
-	err = broker.Provision("newInstance", brokerapi.ProvisionDetails{
+	err = broker.Provision("newInstanceID", brokerapi.ProvisionDetails{
 		ID: "GUID",
 	})
 	assert.Nil(err)
@@ -164,7 +168,7 @@ func TestUnbind(t *testing.T) {
 		assert.Fail(err.Error())
 	}
 
-	err = broker.Unbind("instanceID", "bindingID", brokerapi.UnbindDetails{
+	err = broker.Unbind("instanceID", "credentialsID", brokerapi.UnbindDetails{
 		ServiceID: "GUID",
 	})
 
@@ -178,7 +182,7 @@ func TestBindExists(t *testing.T) {
 		assert.Fail(err.Error())
 	}
 
-	bindResponse, err := broker.Bind("instanceID", "bindingID", brokerapi.BindDetails{
+	bindResponse, err := broker.Bind("instanceID", "credentialsID", brokerapi.BindDetails{
 		ServiceID: "GUID",
 	})
 

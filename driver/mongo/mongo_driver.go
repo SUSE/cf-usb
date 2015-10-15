@@ -2,15 +2,14 @@ package driver
 
 import (
 	"crypto/rand"
-	"database/sql/driver"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
 
+	"github.com/hpcloud/cf-usb/driver"
+	"github.com/hpcloud/cf-usb/driver/mongo/driverdata"
 	"github.com/hpcloud/cf-usb/driver/mongo/mongoprovisioner"
-	"github.com/hpcloud/cf-usb/lib/config"
 	"github.com/hpcloud/cf-usb/lib/model"
-	"github.com/pivotal-cf/brokerapi"
 	"github.com/pivotal-golang/lager"
 )
 
@@ -21,7 +20,6 @@ type MongoDriver struct {
 	Port   string `json:"port"`
 	db     mongoprovisioner.MongoProvisionerInterface
 	logger lager.Logger
-	driver.Driver
 }
 
 func (e *MongoDriver) secureRandomString(bytesOfEntpry int) string {
@@ -39,98 +37,104 @@ func NewMongoDriver(logger lager.Logger) driver.Driver {
 	return &MongoDriver{logger: logger}
 }
 
-func (e *MongoDriver) Init(configuration config.DriverProperties, response *string) error {
-	err := json.Unmarshal(*configuration.DriverConfiguration, &e)
+func (e *MongoDriver) Init(configuration model.DriverInitRequest, response *string) error {
+	err := json.Unmarshal(*configuration.DriverConfig, &e)
 	e.logger.Info("Mongo Driver initializing")
 	e.db, err = mongoprovisioner.New(e.User, e.Pass, e.Host+":"+e.Port, e.logger)
 	return err
 }
 
-func (e *MongoDriver) Provision(request model.DriverProvisionRequest, response *string) error {
-	created, err := e.db.IsDatabaseCreated(request.InstanceID)
+func (*MongoDriver) Ping(empty string, result *bool) error {
+	return nil
+}
 
+func (e *MongoDriver) GetDailsSchema(empty string, response *string) error {
+	dailsSchema, err := driverdata.Asset("schemas/dials.json")
 	if err != nil {
 		return err
 	}
 
-	if created {
-		return brokerapi.ErrInstanceAlreadyExists
-	} else {
-		err := e.db.CreateDatabase(request.InstanceID)
-		if err != nil {
-			return err
-		}
+	*response = string(dailsSchema)
+
+	return nil
+}
+
+func (e *MongoDriver) GetConfigSchema(request string, response *string) error {
+	configSchema, err := driverdata.Asset("schemas/config.json")
+	if err != nil {
+		return err
+	}
+
+	*response = string(configSchema)
+
+	return nil
+}
+
+func (e *MongoDriver) ProvisionInstance(request model.ProvisionInstanceRequest, result *bool) error {
+	err := e.db.CreateDatabase(request.InstanceID)
+	if err != nil {
+		return err
 	}
 
 	return nil
 }
 
-func (e *MongoDriver) Deprovision(request model.DriverDeprovisionRequest, response *string) error {
-	created, err := e.db.IsDatabaseCreated(request.InstanceID)
-
+func (e *MongoDriver) InstanceExists(instanceID string, result *bool) error {
+	created, err := e.db.IsDatabaseCreated(instanceID)
 	if err != nil {
 		return err
 	}
-	if created {
-		err := e.db.DeleteDatabase(request.InstanceID)
-		if err != nil {
-			return err
-		}
-		*response = fmt.Sprintf("Deprovisioned %s", request.InstanceID)
-	} else {
-		return brokerapi.ErrInstanceDoesNotExist
-	}
+	*result = created
 	return nil
 }
 
-func (e *MongoDriver) Bind(request model.DriverBindRequest, response *json.RawMessage) error {
-
-	username := request.InstanceID + "-" + request.BindingID
+func (e *MongoDriver) GenerateCredentials(request model.CredentialsRequest, response *interface{}) error {
+	username := request.InstanceID + "-" + request.CredentialsID
 	password := e.secureRandomString(32)
 
-	created, err := e.db.IsUserCreated(request.InstanceID, username)
+	err := e.db.CreateUser(request.InstanceID, username, password)
 	if err != nil {
 		return err
 	}
-
-	if created {
-		return brokerapi.ErrBindingAlreadyExists
-	} else {
-
-		err := e.db.CreateUser(request.InstanceID, username, password)
-		if err != nil {
-			return err
-		}
-		data := MongoBindingCredentials{
-			Host:             e.Host,
-			Port:             e.Port,
-			Username:         username,
-			Password:         password,
-			ConnectionString: generateConnectionString(e.Host, e.Port, request.InstanceID, username, password),
-		}
-		marhsaled, err := json.Marshal(data)
-		if err != nil {
-			return err
-		}
-		response = (*json.RawMessage)(&marhsaled)
+	data := MongoBindingCredentials{
+		Host:             e.Host,
+		Port:             e.Port,
+		Username:         username,
+		Password:         password,
+		ConnectionString: generateConnectionString(e.Host, e.Port, request.InstanceID, username, password),
 	}
+
+	*response = data
 	return nil
 }
 
-func (e *MongoDriver) Unbind(request model.DriverUnbindRequest, response *string) error {
-	username := request.InstanceID + "-" + request.BindingID
+func (e *MongoDriver) CredentialsExist(request model.CredentialsRequest, response *bool) error {
+	username := request.InstanceID + "-" + request.CredentialsID
+
 	created, err := e.db.IsUserCreated(request.InstanceID, username)
 	if err != nil {
 		return err
 	}
-	if created {
-		err := e.db.DeleteUser(request.InstanceID, username)
-		if err != nil {
-			return err
-		}
-	} else {
-		return brokerapi.ErrBindingDoesNotExist
+	*response = created
+	return nil
+}
+
+func (e *MongoDriver) RevokeCredentials(request model.CredentialsRequest, response *interface{}) error {
+	username := request.InstanceID + "-" + request.CredentialsID
+	err := e.db.DeleteUser(request.InstanceID, username)
+	if err != nil {
+		return err
 	}
-	*response = fmt.Sprintf("Unbound %s", username)
+	*response = fmt.Sprintf("Credentials for %s revoked", username)
+	return nil
+}
+
+func (e *MongoDriver) DeprovisionInstance(instanceID string, response *interface{}) error {
+	err := e.db.DeleteDatabase(instanceID)
+	if err != nil {
+		return err
+	}
+	*response = fmt.Sprintf("Deprovisioned %s", instanceID)
+
 	return nil
 }

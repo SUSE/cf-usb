@@ -1,0 +1,29 @@
+{
+  "type": "object",
+  "properties": {
+    "brokerGoMysqlDriver": {
+      "type": "string"
+    },
+    "brokerMysqlConnection": {
+      "type": "object",
+      "properties": {
+        "server": {
+          "type": "string"
+        },
+        "port": {
+          "type": "string"
+        },
+        "user id": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "required": [
+    "brokerGoMysqlDriver",
+    "brokerMysqlConnection"
+  ]
+}
