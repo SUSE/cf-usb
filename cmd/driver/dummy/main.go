@@ -4,7 +4,6 @@ import (
 	"net/rpc/jsonrpc"
 	"os"
 
-	"github.com/hpcloud/cf-usb/driver"
 	"github.com/hpcloud/cf-usb/driver/dummy"
 	"github.com/natefinch/pie"
 	"github.com/pivotal-golang/lager"
@@ -12,13 +11,12 @@ import (
 
 func main() {
 	var logger = lager.NewLogger("dummy-driver")
-	var driver driver.Driver
 
 	logger.RegisterSink(lager.NewWriterSink(os.Stderr, lager.DEBUG))
 
 	p := pie.NewProvider()
 
-	driver = dummydriver.NewDummyDriver(logger)
+	driver := dummydriver.NewDummyDriver(logger)
 	if err := p.RegisterName("dummy", driver); err != nil {
 		logger.Fatal("register-plugin", err)
 	}

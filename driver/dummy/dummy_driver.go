@@ -79,7 +79,7 @@ func (driver *dummyDriver) GetConfigSchema(request string, response *string) err
 }
 
 func (driver *dummyDriver) ProvisionInstance(request model.ProvisionInstanceRequest, response *bool) error {
-	driver.logger.Info("Provisioning", lager.Data{"instance-id": request.InstanceID})
+	driver.logger.Info("provision-instance-request", lager.Data{"instance-id": request.InstanceID})
 	*response = true
 
 	if request.InstanceID == "instanceID" {
@@ -90,10 +90,11 @@ func (driver *dummyDriver) ProvisionInstance(request model.ProvisionInstanceRequ
 }
 
 func (driver *dummyDriver) InstanceExists(request string, response *bool) error {
+	driver.logger.Info("credentials-exists-request", lager.Data{"instanceID": request})
+	*response = false
 	if request == "instanceID" {
 		*response = true
 	}
-	*response = false
 
 	return nil
 }
@@ -111,13 +112,13 @@ func (driver *dummyDriver) GenerateCredentials(request model.CredentialsRequest,
 }
 
 func (driver *dummyDriver) CredentialsExist(request model.CredentialsRequest, response *bool) error {
+	*response = false
 	driver.logger.Info("credentials-exists-request", lager.Data{"instanceID": request.InstanceID,
 		"credentialsID": request.CredentialsID})
 	if request.CredentialsID == "credentialsID" {
 		*response = true
 	}
 
-	*response = false
 	return nil
 }
 

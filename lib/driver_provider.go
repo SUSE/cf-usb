@@ -101,9 +101,9 @@ func (p *DriverProvider) GetConfigSchema() (string, error) {
 	return result, err
 }
 
-func (p *DriverProvider) ProvisionInstance(provisonRequest model.ProvisionInstanceRequest) (string, error) {
-	var result string
-	err := p.client.Call(fmt.Sprintf("%s.Provision", p.driverType), provisonRequest, &result)
+func (p *DriverProvider) ProvisionInstance(provisonRequest model.ProvisionInstanceRequest) (bool, error) {
+	var result bool
+	err := p.client.Call(fmt.Sprintf("%s.ProvisionInstance", p.driverType), provisonRequest, &result)
 	return result, err
 }
 

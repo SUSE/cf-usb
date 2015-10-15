@@ -30,22 +30,38 @@ func (broker *UsbBroker) Provision(instanceID string, serviceDetails brokerapi.P
 
 	driver := broker.getDriver(serviceDetails.ID)
 
+	exists, err := driver.InstanceExists(instanceID)
+	if err != nil {
+		return err
+	}
+	if exists {
+		return brokerapi.ErrInstanceAlreadyExists
+	}
+
 	driverProvisionRequest := model.ProvisionInstanceRequest{
 		InstanceID: instanceID,
 		Dails:      json.RawMessage{},
 	}
 
-	driverResponse, err := driver.ProvisionInstance(driverProvisionRequest)
+	created, err := driver.ProvisionInstance(driverProvisionRequest)
 	if err != nil {
 		return err
 	}
-	broker.logger.Info("provision", lager.Data{"driver-response": driverResponse})
+	broker.logger.Info("provision", lager.Data{"provisioned": created})
 
 	return nil
 }
 
 func (broker *UsbBroker) Deprovision(instanceID string, deprovisionDetails brokerapi.DeprovisionDetails) error {
 	driver := broker.getDriver(deprovisionDetails.ServiceID)
+
+	exists, err := driver.InstanceExists(instanceID)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return brokerapi.ErrInstanceDoesNotExist
+	}
 
 	response, err := driver.DeprovisionInstance(instanceID)
 	if err != nil {
@@ -65,7 +81,15 @@ func (broker *UsbBroker) Bind(instanceID, bindingID string, details brokerapi.Bi
 		CredentialsID: bindingID,
 	}
 
-	response, err := driver.GenerateCredentials(driverCredentialsRequest)
+	exists, err := driver.CredentialsExist(driverCredentialsRequest)
+	if err != nil {
+		return response, err
+	}
+	if exists {
+		return response, brokerapi.ErrBindingAlreadyExists
+	}
+
+	response, err = driver.GenerateCredentials(driverCredentialsRequest)
 	if err != nil {
 		return response, err
 	}
@@ -79,6 +103,14 @@ func (broker *UsbBroker) Unbind(instanceID, bindingID string, details brokerapi.
 	driverCredentialsRequest := model.CredentialsRequest{
 		InstanceID:    instanceID,
 		CredentialsID: bindingID,
+	}
+
+	exists, err := driver.CredentialsExist(driverCredentialsRequest)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return brokerapi.ErrBindingDoesNotExist
 	}
 
 	response, err := driver.RevokeCredentials(driverCredentialsRequest)
