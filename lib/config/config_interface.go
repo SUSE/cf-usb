@@ -20,12 +20,14 @@ type DriverProperties struct {
 }
 
 type Config struct {
-	Crednetials    brokerapi.BrokerCredentials `json:"broker_credentials"`
-	ServiceCatalog []brokerapi.Service         `json:"services"`
-	DriverConfigs  []DriverConfig              `json:"driver_configs"`
-	Listen         string                      `json:"listen"`
-	APIVersion     string                      `json:"api_version"`
-	LogLevel       string                      `json:"logLevel"`
+	Crednetials      brokerapi.BrokerCredentials `json:"broker_credentials"`
+	ServiceCatalog   []brokerapi.Service         `json:"services"`
+	DriverConfigs    []DriverConfig              `json:"driver_configs"`
+	Listen           string                      `json:"listen"`
+	ManagementListen string                      `json:"management_listen"`
+	StartMgmt        bool                        `json:"start_mgmt"`
+	APIVersion       string                      `json:"api_version"`
+	LogLevel         string                      `json:"logLevel"`
 }
 
 type ConfigProvider interface {
