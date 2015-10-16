@@ -70,7 +70,31 @@ func NewDriverProvider(driverType string, driverProperties config.DriverProperti
 
 	initRequest := model.DriverInitRequest{}
 	initRequest.DriverConfig = driverProperties.DriverConfiguration
-	//TODO: Implement dails
+
+	dialSchema, err := provider.GetDailsSchema()
+	if err != nil {
+		return &provider, err
+	}
+
+	dialsSchemaLoader := gojsonschema.NewStringLoader(dialSchema)
+	for _, dialDetails := range driverProperties.DriverDialsConfiguration {
+		dialsConfigLoader := gojsonschema.NewGoLoader(dialDetails.Configuration)
+		result, err := gojsonschema.Validate(dialsSchemaLoader, dialsConfigLoader)
+		if err != nil {
+			return &provider, err
+		}
+		if !result.Valid() {
+			err = errors.New("Invalid dials configuration schema")
+
+			errData := lager.Data{}
+			for _, e := range result.Errors() {
+				errData[e.Field()] = e.Description()
+			}
+			logger.Error("driver-init", err, errData)
+			return &provider, err
+		}
+	}
+
 	_, err = provider.Init(initRequest)
 
 	return &provider, err
