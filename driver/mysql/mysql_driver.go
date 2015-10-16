@@ -14,7 +14,7 @@ import (
 )
 
 type MysqlDriver struct {
-	User   string `json:"user id"`
+	User   string `json:"userid"`
 	Pass   string `json:"password"`
 	Host   string `json:"server"`
 	Port   string `json:"port"`

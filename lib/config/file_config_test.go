@@ -47,6 +47,20 @@ var configContent = `
             "property_one":"one",
             "property_two":"two"
          },
+		 "dials": [
+        {
+            "planId": "53425178-F731-49E7-9E53-5CF4BE9D807A",
+            "configuration": {
+                "max_dbsize_mb": 2
+            }
+        },
+        {
+            "planId": "888B59E0-C2A1-4AB6-9335-2E90114A8F07",
+            "configuration": {
+                "max_dbsize_mb": 100
+            }
+        }
+		],
          "service_ids":[  
             "83E94C97-C755-46A5-8653-461517EB442A"
          ]
@@ -113,6 +127,10 @@ var configContent = `
 type DummyServiceProperties struct {
 	PropOne string `json:"property_one"`
 	PropTwo string `json:"property_two"`
+}
+
+type DummyServiceDials struct {
+	MAXDB int `json:"max_dbsize_mb"`
 }
 
 func writeTempConfigFile() (*Config, ConfigProvider, error) {
@@ -196,6 +214,7 @@ func TestGetDriverConfig(t *testing.T) {
 	dsp := DummyServiceProperties{}
 	conf := (*json.RawMessage)(dummyProperties.DriverConfiguration)
 	err = json.Unmarshal(*conf, &dsp)
+
 	if err != nil {
 		assert.Error(err, "Exception unmarshaling properties")
 	}
@@ -205,6 +224,34 @@ func TestGetDriverConfig(t *testing.T) {
 	assert.Equal("one", dsp.PropOne)
 	assert.Equal("two", dsp.PropTwo)
 
+}
+
+func TestGetDriverDials(t *testing.T) {
+	assert := assert.New(t)
+
+	_, configuration, err := writeTempConfigFile()
+	if err != nil {
+		assert.Error(err, "Unable to load from temp config file")
+	}
+
+	dummyProperties, err := configuration.GetDriverProperties("dummy")
+	if err != nil {
+		assert.Error(err, "Unable to get driver configuration")
+	}
+
+	var dials []DummyServiceDials
+
+	for _, dial := range dummyProperties.DriverDialsConfiguration {
+		var dialDetails DummyServiceDials
+		err = json.Unmarshal(*dial.Configuration, &dialDetails)
+		if err != nil {
+			assert.Error(err, "Exception unmarshaling dial configuration")
+		}
+		dials = append(dials, dialDetails)
+	}
+
+	assert.Equal(2, dials[0].MAXDB)
+	assert.Equal(100, dials[1].MAXDB)
 }
 
 func GetDriverTypes(t *testing.T) {
