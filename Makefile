@@ -35,7 +35,7 @@ vet:
 driversbindata:
 	@echo "$(OK_COLOR)==> Embedding JSON schemas into drivers$(NO_COLOR)"
 	find driver/ -maxdepth 1 -type d \( ! -name driver \) -exec \
-	bash -c "(cd '{}' && go-bindata -pkg="data" -o data/schemas.go schemas/ )" \;
+	bash -c "(cd '{}' && go-bindata -pkg="driverdata" -o driverdata/schemas.go schemas/ )" \;
 	
 
 build: generate #deps

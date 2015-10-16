@@ -1,6 +1,6 @@
 {
 	"ImportPath": "github.com/hpcloud/cf-usb",
-	"GoVersion": "go1.4.2",
+	"GoVersion": "go1.4",
 	"Packages": [
 		"./..."
 	],
@@ -124,13 +124,25 @@
 			"Rev": "089c7181b8c728499929ff09b62d3fdd8df8adff"
 		},
 		{
-			"ImportPath": "gopkg.in/yaml.v2",
-			"Rev": "53feefa2559fb8dfa8d81baad31be332c97d6c77"
+			"ImportPath": "github.com/xeipuuv/gojsonpointer",
+			"Rev": "636edb2500d21f2ed09ea96a00deb36bbd07cf70"
+		},
+		{
+			"ImportPath": "github.com/xeipuuv/gojsonreference",
+			"Rev": "e02fc20de94c78484cd5ffb007f8af96be030a45"
+		},
+		{
+			"ImportPath": "github.com/xeipuuv/gojsonschema",
+			"Rev": "ac452913faa25c08bb78810d3e6f88b8a39f8f25"
 		},
 		{
 			"ImportPath": "gopkg.in/mgo.v2",
 			"Comment": "r2015.10.05",
 			"Rev": "f402e3a216db333ae6b3ba68b9152a34a0bc6984"
+		},
+		{
+			"ImportPath": "gopkg.in/yaml.v2",
+			"Rev": "53feefa2559fb8dfa8d81baad31be332c97d6c77"
 		}
 	]
 }

@@ -1,1 +1,12 @@
-{}
+{
+	"type" : "object",
+	"properties" : {
+		"property_one": {
+			"type" : "string"
+		},
+		"property_two": {
+			"type" : "string"
+		}
+	},
+	"required" : ["property_one", "property_two"]
+}

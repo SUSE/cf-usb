@@ -1,0 +1,29 @@
+{
+  "type": "object",
+  "properties": {
+    "brokerGoMongoDriver": {
+      "type": "string"
+    },
+    "brokerMongoConnection": {
+      "type": "object",
+      "properties": {
+        "server": {
+          "type": "string"
+        },
+        "port": {
+          "type": "string"
+        },
+        "user id": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "required": [
+    "brokerGoMongoDriver",
+    "brokerMongoConnection"
+  ]
+}

@@ -1,7 +1,6 @@
 package postgres
 
 import (
-	"encoding/json"
 	"testing"
 
 	"github.com/hpcloud/cf-usb/driver/postgres/postgresprovisioner"
@@ -21,42 +20,18 @@ func Test_Provision(t *testing.T) {
 	mockProv := new(postgresprovisioner.PostgresProvisionerMock)
 	mockProv.On("Init").Return(nil)
 	mockProv.On("CreateDatabase", "testId").Return(nil)
-	mockProv.On("DatabaseExists", "testId").Return(false, nil)
 	driver.postgresProvisioner = mockProv
 
 	driver.postgresProvisioner.Init()
 
-	var req model.DriverProvisionRequest
+	var req model.ProvisionInstanceRequest
 
 	req.InstanceID = "testId"
 
-	var response string
-	err := driver.Provision(req, &response)
+	var response bool
+	err := driver.ProvisionInstance(req, &response)
 
 	assert.NoError(err)
-}
-
-func Test_ProvisionExists(t *testing.T) {
-	assert := assert.New(t)
-
-	driver := postgresDriver{}
-	driver.logger = logger
-	mockProv := new(postgresprovisioner.PostgresProvisionerMock)
-	mockProv.On("Init").Return(nil)
-	mockProv.On("CreateDatabase", "testId").Return(nil)
-	mockProv.On("DatabaseExists", "testId").Return(true, nil)
-	driver.postgresProvisioner = mockProv
-
-	driver.postgresProvisioner.Init()
-
-	var req model.DriverProvisionRequest
-
-	req.InstanceID = "testId"
-
-	var response string
-	err := driver.Provision(req, &response)
-
-	assert.Error(err)
 }
 
 func Test_Deprovision(t *testing.T) {
@@ -66,48 +41,21 @@ func Test_Deprovision(t *testing.T) {
 	driver.logger = logger
 	mockProv := new(postgresprovisioner.PostgresProvisionerMock)
 	mockProv.On("Init").Return(nil)
-	mockProv.On("DatabaseExists", "testId").Return(true, nil)
 	mockProv.On("DeleteDatabase", "testId").Return(nil)
 
 	driver.postgresProvisioner = mockProv
 
 	driver.postgresProvisioner.Init()
 
-	var req model.DriverDeprovisionRequest
+	req := "testId"
 
-	req.InstanceID = "testId"
-
-	var response string
-	err := driver.Deprovision(req, &response)
+	var response interface{}
+	err := driver.DeprovisionInstance(req, &response)
 
 	assert.NoError(err)
 }
 
-func Test_DeprovisionNotExists(t *testing.T) {
-	assert := assert.New(t)
-
-	driver := postgresDriver{}
-	driver.logger = logger
-	mockProv := new(postgresprovisioner.PostgresProvisionerMock)
-	mockProv.On("Init").Return(nil)
-	mockProv.On("DatabaseExists", "testId").Return(false, nil)
-	mockProv.On("DeleteDatabase", "testId").Return(nil)
-
-	driver.postgresProvisioner = mockProv
-
-	driver.postgresProvisioner.Init()
-
-	var req model.DriverDeprovisionRequest
-
-	req.InstanceID = "testId"
-
-	var response string
-	err := driver.Deprovision(req, &response)
-
-	assert.Error(err)
-}
-
-func Test_Bind(t *testing.T) {
+func Test_InstanceExists(t *testing.T) {
 	assert := assert.New(t)
 
 	driver := postgresDriver{}
@@ -115,142 +63,106 @@ func Test_Bind(t *testing.T) {
 	mockProv := new(postgresprovisioner.PostgresProvisionerMock)
 	mockProv.On("Init").Return(nil)
 	mockProv.On("DatabaseExists", "testId").Return(true, nil)
-	mockProv.On("UserExists", "testIduser").Return(false, nil)
+
+	driver.postgresProvisioner = mockProv
+
+	driver.postgresProvisioner.Init()
+
+	req := "testId"
+
+	var response bool
+	err := driver.InstanceExists(req, &response)
+	assert.True(response)
+	assert.NoError(err)
+}
+
+func Test_GetDialsSchema(t *testing.T) {
+	assert := assert.New(t)
+	driver := postgresDriver{}
+
+	var response string
+	err := driver.GetDailsSchema("", &response)
+	assert.NoError(err)
+}
+
+func Test_GetConfigSchema(t *testing.T) {
+	assert := assert.New(t)
+	driver := postgresDriver{}
+
+	var response string
+	err := driver.GetConfigSchema("", &response)
+	assert.NoError(err)
+}
+
+func Test_CredentialsExist(t *testing.T) {
+	assert := assert.New(t)
+
+	driver := postgresDriver{}
+	driver.logger = logger
+	mockProv := new(postgresprovisioner.PostgresProvisionerMock)
+	mockProv.On("Init").Return(nil)
+	mockProv.On("UserExists", "testIduser", mock.Anything).Return(true, nil)
+
+	driver.postgresProvisioner = mockProv
+
+	driver.postgresProvisioner.Init()
+
+	var req model.CredentialsRequest
+
+	req.InstanceID = "testId"
+	req.CredentialsID = "user"
+
+	var response bool
+	err := driver.CredentialsExist(req, &response)
+
+	assert.True(response)
+	assert.NoError(err)
+
+}
+
+func Test_GenerateCredentials(t *testing.T) {
+	assert := assert.New(t)
+
+	driver := postgresDriver{}
+	driver.logger = logger
+	mockProv := new(postgresprovisioner.PostgresProvisionerMock)
+	mockProv.On("Init").Return(nil)
 	mockProv.On("CreateUser", "testId", "testIduser", mock.Anything).Return(nil)
 
 	driver.postgresProvisioner = mockProv
 
 	driver.postgresProvisioner.Init()
 
-	var req model.DriverBindRequest
+	var req model.CredentialsRequest
 
 	req.InstanceID = "testId"
-	req.BindingID = "user"
+	req.CredentialsID = "user"
 
-	var response json.RawMessage
-	err := driver.Bind(req, &response)
+	var response interface{}
+	err := driver.GenerateCredentials(req, &response)
 
 	assert.NoError(err)
 }
 
-func Test_BindNoDb(t *testing.T) {
+func Test_RevokeCredentials(t *testing.T) {
 	assert := assert.New(t)
 
 	driver := postgresDriver{}
 	driver.logger = logger
 	mockProv := new(postgresprovisioner.PostgresProvisionerMock)
 	mockProv.On("Init").Return(nil)
-	mockProv.On("DatabaseExists", "testId").Return(false, nil)
-
-	driver.postgresProvisioner = mockProv
-
-	driver.postgresProvisioner.Init()
-
-	var req model.DriverBindRequest
-
-	req.InstanceID = "testId"
-	req.BindingID = "user"
-
-	var response json.RawMessage
-	err := driver.Bind(req, &response)
-
-	assert.Error(err)
-}
-
-func Test_BindExists(t *testing.T) {
-	assert := assert.New(t)
-
-	driver := postgresDriver{}
-	driver.logger = logger
-	mockProv := new(postgresprovisioner.PostgresProvisionerMock)
-	mockProv.On("Init").Return(nil)
-	mockProv.On("DatabaseExists", "testId").Return(true, nil)
-	mockProv.On("UserExists", "testIduser").Return(true, nil)
-	mockProv.On("CreateUser", "testId", "testIduser", mock.Anything).Return(nil)
-
-	driver.postgresProvisioner = mockProv
-
-	driver.postgresProvisioner.Init()
-
-	var req model.DriverBindRequest
-
-	req.InstanceID = "testId"
-	req.BindingID = "user"
-
-	var response json.RawMessage
-	err := driver.Bind(req, &response)
-
-	assert.Error(err)
-}
-
-func Test_Unbind(t *testing.T) {
-	assert := assert.New(t)
-
-	driver := postgresDriver{}
-	driver.logger = logger
-	mockProv := new(postgresprovisioner.PostgresProvisionerMock)
-	mockProv.On("Init").Return(nil)
-	mockProv.On("DatabaseExists", "testId").Return(true, nil)
-	mockProv.On("UserExists", "testIduser").Return(true, nil)
 	mockProv.On("DeleteUser", "testId", "testIduser").Return(nil)
 
 	driver.postgresProvisioner = mockProv
 
 	driver.postgresProvisioner.Init()
 
-	var req model.DriverUnbindRequest
+	var req model.CredentialsRequest
 
 	req.InstanceID = "testId"
-	req.BindingID = "user"
-	var response string
-	err := driver.Unbind(req, &response)
+	req.CredentialsID = "user"
+	var response interface{}
+	err := driver.RevokeCredentials(req, &response)
 
 	assert.NoError(err)
-}
-
-func Test_UnbindNoDb(t *testing.T) {
-	assert := assert.New(t)
-
-	driver := postgresDriver{}
-	driver.logger = logger
-	mockProv := new(postgresprovisioner.PostgresProvisionerMock)
-	mockProv.On("Init").Return(nil)
-	mockProv.On("DatabaseExists", "testId").Return(false, nil)
-
-	driver.postgresProvisioner = mockProv
-
-	driver.postgresProvisioner.Init()
-
-	var req model.DriverUnbindRequest
-
-	req.InstanceID = "testId"
-	req.BindingID = "user"
-	var response string
-	err := driver.Unbind(req, &response)
-
-	assert.Error(err)
-}
-
-func Test_UnbindNotExists(t *testing.T) {
-	assert := assert.New(t)
-
-	driver := postgresDriver{}
-	driver.logger = logger
-	mockProv := new(postgresprovisioner.PostgresProvisionerMock)
-	mockProv.On("Init").Return(nil)
-	mockProv.On("DatabaseExists", "testId").Return(true, nil)
-	mockProv.On("UserExists", "testIduser").Return(false, nil)
-
-	driver.postgresProvisioner = mockProv
-
-	driver.postgresProvisioner.Init()
-
-	var req model.DriverUnbindRequest
-
-	req.InstanceID = "testId"
-	req.BindingID = "user"
-	var response string
-	err := driver.Unbind(req, &response)
-
-	assert.Error(err)
 }

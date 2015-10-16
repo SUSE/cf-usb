@@ -16,7 +16,8 @@ func main() {
 
 	p := pie.NewProvider()
 
-	if err := p.RegisterName("dummy", dummydriver.NewDummyDriver(logger)); err != nil {
+	driver := dummydriver.NewDummyDriver(logger)
+	if err := p.RegisterName("dummy", driver); err != nil {
 		logger.Fatal("register-plugin", err)
 	}
 
