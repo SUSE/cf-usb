@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/hpcloud/cf-usb/driver"
 	"github.com/hpcloud/cf-usb/driver/mysql/driverdata"
@@ -71,7 +72,7 @@ func (e *MysqlDriver) GetConfigSchema(request string, response *string) error {
 	return nil
 }
 func (e *MysqlDriver) ProvisionInstance(request model.ProvisionInstanceRequest, result *bool) error {
-	err := e.db.CreateDatabase(request.InstanceID)
+	err := e.db.CreateDatabase(strings.Replace(request.InstanceID, "-", "", -1))
 	if err != nil {
 		return err
 	}
@@ -80,7 +81,7 @@ func (e *MysqlDriver) ProvisionInstance(request model.ProvisionInstanceRequest, 
 }
 
 func (e *MysqlDriver) InstanceExists(instanceID string, result *bool) error {
-	created, err := e.db.IsDatabaseCreated(instanceID)
+	created, err := e.db.IsDatabaseCreated(strings.Replace(instanceID, "-", "", -1))
 	if err != nil {
 		return err
 	}
@@ -89,10 +90,13 @@ func (e *MysqlDriver) InstanceExists(instanceID string, result *bool) error {
 }
 
 func (e *MysqlDriver) GenerateCredentials(request model.CredentialsRequest, response *interface{}) error {
-	username := request.InstanceID + "-" + request.CredentialsID
+	username := strings.Replace(request.CredentialsID, "-", "", -1)
+	if len(username) > 16 {
+		username = username[:16]
+	}
 	password := e.secureRandomString(32)
 
-	err := e.db.CreateUser(request.InstanceID, username, password)
+	err := e.db.CreateUser(strings.Replace(request.InstanceID, "-", "", -1), username, password)
 	if err != nil {
 		return err
 	}
@@ -101,7 +105,7 @@ func (e *MysqlDriver) GenerateCredentials(request model.CredentialsRequest, resp
 		Port:             e.Port,
 		Username:         username,
 		Password:         password,
-		ConnectionString: generateConnectionString(e.Host, e.Port, request.InstanceID, username, password),
+		ConnectionString: generateConnectionString(e.Host, e.Port, strings.Replace(request.InstanceID, "-", "", -1), username, password),
 	}
 
 	*response = data
@@ -109,8 +113,10 @@ func (e *MysqlDriver) GenerateCredentials(request model.CredentialsRequest, resp
 }
 
 func (e *MysqlDriver) CredentialsExist(request model.CredentialsRequest, response *bool) error {
-	username := request.InstanceID + "-" + request.CredentialsID
-
+	username := strings.Replace(request.CredentialsID, "-", "", -1)
+	if len(username) > 16 {
+		username = username[:16]
+	}
 	created, err := e.db.IsUserCreated(username)
 	if err != nil {
 		return err
@@ -120,7 +126,10 @@ func (e *MysqlDriver) CredentialsExist(request model.CredentialsRequest, respons
 }
 
 func (e *MysqlDriver) RevokeCredentials(request model.CredentialsRequest, response *interface{}) error {
-	username := request.InstanceID + "-" + request.CredentialsID
+	username := strings.Replace(request.CredentialsID, "-", "", -1)
+	if len(username) > 16 {
+		username = username[:16]
+	}
 	err := e.db.DeleteUser(username)
 	if err != nil {
 		return err
@@ -130,7 +139,7 @@ func (e *MysqlDriver) RevokeCredentials(request model.CredentialsRequest, respon
 }
 
 func (e *MysqlDriver) DeprovisionInstance(instanceID string, response *interface{}) error {
-	err := e.db.DeleteDatabase(instanceID)
+	err := e.db.DeleteDatabase(strings.Replace(instanceID, "-", "", -1))
 	if err != nil {
 		return err
 	}

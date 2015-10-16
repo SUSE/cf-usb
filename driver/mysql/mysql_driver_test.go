@@ -65,7 +65,7 @@ func Test_CredentialsExist(t *testing.T) {
 	assert := assert.New(t)
 	driver := MysqlDriver{}
 	mockProv := new(mysqlprovisioner.MysqlProvisionerMock)
-	mockProv.On("IsUserCreated", "testId-user").Return(true, nil)
+	mockProv.On("IsUserCreated", "user").Return(true, nil)
 
 	driver.db = mockProv
 
@@ -83,7 +83,7 @@ func Test_GenerateCredentials(t *testing.T) {
 	assert := assert.New(t)
 	driver := MysqlDriver{}
 	mockProv := new(mysqlprovisioner.MysqlProvisionerMock)
-	mockProv.On("CreateUser", "testId", "testId-user", mock.Anything).Return(nil)
+	mockProv.On("CreateUser", "testId", "user", mock.Anything).Return(nil)
 
 	driver.db = mockProv
 
@@ -101,7 +101,7 @@ func Test_RevokeCredentials(t *testing.T) {
 
 	driver := MysqlDriver{}
 	mockProv := new(mysqlprovisioner.MysqlProvisionerMock)
-	mockProv.On("DeleteUser", "testId-user").Return(nil)
+	mockProv.On("DeleteUser", "user").Return(nil)
 
 	driver.db = mockProv
 
