@@ -56,7 +56,7 @@ func (driver *dummyDriver) Ping(request string, response *bool) error {
 }
 
 func (driver *dummyDriver) GetDailsSchema(request string, response *string) error {
-	dailsSchema, err := driverdata.Asset("schemas/dails.json")
+	dailsSchema, err := driverdata.Asset("schemas/dials.json")
 	if err != nil {
 		return err
 	}

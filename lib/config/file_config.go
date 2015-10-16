@@ -54,7 +54,6 @@ func (c *fileConfig) GetDriverProperties(driverType string) (DriverProperties, e
 			return driverProperties, err
 		}
 	}
-
 	for _, dc := range c.config.DriverConfigs {
 		if dc.DriverType == driverType {
 			driverConfig = dc
@@ -62,6 +61,7 @@ func (c *fileConfig) GetDriverProperties(driverType string) (DriverProperties, e
 		}
 	}
 	driverProperties.DriverConfiguration = driverConfig.Configuration
+	driverProperties.DriverDialsConfiguration = driverConfig.Dails
 
 	for _, serviceID := range driverConfig.ServiceIDs {
 		for _, service := range c.config.ServiceCatalog {

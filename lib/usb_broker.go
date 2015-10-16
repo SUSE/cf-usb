@@ -38,9 +38,17 @@ func (broker *UsbBroker) Provision(instanceID string, serviceDetails brokerapi.P
 		return brokerapi.ErrInstanceAlreadyExists
 	}
 
+	var dialDetails json.RawMessage
+	for _, dial := range driver.DriverProperties.DriverDialsConfiguration {
+		if dial.PlanID == serviceDetails.PlanID {
+			dialDetails = *dial.Configuration
+			break
+		}
+	}
+
 	driverProvisionRequest := model.ProvisionInstanceRequest{
 		InstanceID: instanceID,
-		Dails:      json.RawMessage{},
+		Dails:      dialDetails,
 	}
 
 	created, err := driver.ProvisionInstance(driverProvisionRequest)

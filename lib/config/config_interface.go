@@ -10,13 +10,20 @@ import (
 type DriverConfig struct {
 	DriverType    string           `json:"driver_type"`
 	Configuration *json.RawMessage `json:"configuration"`
+	Dails         []DialsConfig    `json:"dials"`
 	ServiceIDs    []string         `json:"service_ids"`
 }
 
+type DialsConfig struct {
+	PlanID        string           `json:"planId"`
+	Configuration *json.RawMessage `json:"configuration"`
+}
+
 type DriverProperties struct {
-	DriverConfiguration *json.RawMessage
-	Services            []brokerapi.Service
-	Output              io.Writer
+	DriverConfiguration      *json.RawMessage
+	DriverDialsConfiguration []DialsConfig
+	Services                 []brokerapi.Service
+	Output                   io.Writer
 }
 
 type Config struct {
