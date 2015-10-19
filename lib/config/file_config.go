@@ -2,11 +2,12 @@ package config
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io/ioutil"
 )
 
 type fileConfig struct {
-	ConfigProvider
 	path   string
 	loaded bool
 	config *Config
@@ -24,17 +25,46 @@ func (c *fileConfig) LoadConfiguration() (*Config, error) {
 		return nil, err
 	}
 
-	config, err = ParseJson(jsonConf)
+	config, err = parseJson(jsonConf)
 	if err != nil {
 		return nil, err
 	}
-
 	c.loaded = true
 	c.config = config
 	return config, nil
 }
 
-func ParseJson(jsonConf []byte) (*Config, error) {
+func (c *fileConfig) GetDriverInstanceConfig(instanceID string) (*DriverInstance, error) {
+
+	var instance DriverInstance
+	exists := false
+
+	if !c.loaded {
+		_, err := c.LoadConfiguration()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	for _, d := range c.config.Drivers {
+		for _, di := range d.DriverInstances {
+			if di.ID == instanceID {
+				instance = *di
+				exists = true
+				break
+			}
+		}
+	}
+
+	if !exists {
+		return nil, errors.New(fmt.Sprintf("Cannot find instanceID : %s", instanceID))
+	}
+
+	return &instance, nil
+
+}
+
+func parseJson(jsonConf []byte) (*Config, error) {
 	config := &Config{}
 
 	err := json.Unmarshal(jsonConf, &config)
@@ -42,51 +72,4 @@ func ParseJson(jsonConf []byte) (*Config, error) {
 		return config, err
 	}
 	return config, nil
-}
-
-func (c *fileConfig) GetDriverProperties(driverType string) (DriverProperties, error) {
-	var driverProperties DriverProperties
-	var driverConfig DriverConfig
-
-	if !c.loaded {
-		_, err := c.LoadConfiguration()
-		if err != nil {
-			return driverProperties, err
-		}
-	}
-	for _, dc := range c.config.DriverConfigs {
-		if dc.DriverType == driverType {
-			driverConfig = dc
-			break
-		}
-	}
-	driverProperties.DriverConfiguration = driverConfig.Configuration
-	driverProperties.DriverDialsConfiguration = driverConfig.Dails
-
-	for _, serviceID := range driverConfig.ServiceIDs {
-		for _, service := range c.config.ServiceCatalog {
-			if service.ID == serviceID {
-				driverProperties.Services = append(driverProperties.Services, service)
-				break
-			}
-		}
-	}
-
-	return driverProperties, nil
-}
-
-func (c *fileConfig) GetDriverTypes() ([]string, error) {
-	var driverTypes []string
-
-	if !c.loaded {
-		_, err := c.LoadConfiguration()
-		if err != nil {
-			return driverTypes, err
-		}
-	}
-
-	for _, dc := range c.config.DriverConfigs {
-		driverTypes = append(driverTypes, dc.DriverType)
-	}
-	return driverTypes, nil
 }

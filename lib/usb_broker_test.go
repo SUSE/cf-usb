@@ -1,7 +1,6 @@
 package lib
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -14,58 +13,39 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var testService = brokerapi.Service{
-	ID:          "GUID",
-	Name:        "testService",
-	Description: "",
-	Bindable:    true,
-	Plans:       []brokerapi.ServicePlan{},
-	Metadata:    brokerapi.ServiceMetadata{},
-	Tags:        []string{},
-}
-
-var testDriverConfig = config.DriverConfig{
-	DriverType: "dummy",
-	ServiceIDs: []string{"GUID"},
-}
-
-var testConfig = config.Config{
-	Crednetials:    brokerapi.BrokerCredentials{},
-	ServiceCatalog: []brokerapi.Service{testService},
-	DriverConfigs:  []config.DriverConfig{testDriverConfig},
-	Listen:         ":5580",
-	APIVersion:     "2.6",
-	LogLevel:       "debug",
-}
-
-var testDriverProperties = config.DriverProperties{
-	Services: []brokerapi.Service{testService},
-}
-
 func setupEnv() (*UsbBroker, error) {
-	wd, err := os.Getwd()
+	workDir, err := os.Getwd()
 	if err != nil {
 		return nil, err
 	}
-	buildDir := filepath.Join(wd, "../build", fmt.Sprintf("%s-%s", runtime.GOOS, runtime.GOARCH))
+	buildDir := filepath.Join(workDir, "../build", fmt.Sprintf("%s-%s", runtime.GOOS, runtime.GOARCH))
 	os.Setenv("USB_DRIVER_PATH", buildDir)
-
-	configProperties := []byte(`{"property_one":"one", "property_two":"two"}`)
-
-	testDriverConfig.Configuration = (*json.RawMessage)(&configProperties)
-
-	testDriverProperties.DriverConfiguration = testDriverConfig.Configuration
 
 	var logger = lager.NewLogger("test")
 
 	logger.RegisterSink(lager.NewWriterSink(os.Stderr, lager.DEBUG))
 
-	driverProvider, err := NewDriverProvider("dummy", testDriverProperties, logger)
+	configFile := filepath.Join(workDir, "../test-assets/file-config/dummy_config.json")
+
+	configProvider := config.NewFileConfig(configFile)
+
+	testDriverProperties, err := configProvider.GetDriverInstanceConfig("A0000000-0000-0000-0000-000000000002")
 	if err != nil {
 		return nil, err
 	}
 
-	broker := NewUsbBroker([]*DriverProvider{driverProvider}, &testConfig, lager.NewLogger("brokerTests"))
+	driverProvider, err := NewDriverProvider("dummy", *testDriverProperties, logger)
+	if err != nil {
+		return nil, err
+	}
+
+	testConfig, err := configProvider.LoadConfiguration()
+	if err != nil {
+		return nil, err
+	}
+
+	broker := NewUsbBroker([]*DriverProvider{driverProvider},
+		testConfig, lager.NewLogger("brokerTests"))
 	return broker, nil
 }
 
