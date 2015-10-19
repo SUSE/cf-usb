@@ -1,4 +1,4 @@
-package authentication
+package uaaauthentication
 
 import (
 	"fmt"
@@ -36,36 +36,31 @@ var invalidToken = `bearer eyJhbGciOiJSUzI1NiJ9.eyJqdGkiOiTmMDNhYzJhNS02OTBiLTQx
 
 func TestDecodeExpiredToken(t *testing.T) {
 	assert := assert.New(t)
-	accessToken := NewAccessToken(uaaPublicKey)
 
-	err := accessToken.CheckPublicToken()
+	uaaauth, err := NewUaaAuth(uaaPublicKey, "usb.management.admin")
 	if err != nil {
-		t.Errorf("Error checking public key: %v", err)
+		t.Errorf("Error initialising uaa auth: %v", err)
 	}
 
-	err = accessToken.DecodeToken(expiredToken, UsbAdminScope)
+	err = uaaauth.IsAuthenticated(expiredToken)
 	assert.Error(err, "token is expired")
 }
 
 func TestDecodeInvalidToken(t *testing.T) {
 	assert := assert.New(t)
-	accessToken := NewAccessToken(uaaPublicKey)
-
-	err := accessToken.CheckPublicToken()
+	uaaauth, err := NewUaaAuth(uaaPublicKey, "usb.management.admin")
 	if err != nil {
-		t.Errorf("Error checking public key: %v", err)
+		t.Errorf("Error initialising uaa auth: %v", err)
 	}
 
-	err = accessToken.DecodeToken(invalidToken, UsbAdminScope)
+	err = uaaauth.IsAuthenticated(invalidToken)
 	assert.Error(err, "invalid character '$' looking for beginning of value")
 }
 
 func TestCodeDecodeToken(t *testing.T) {
-	accessToken := NewAccessToken(uaaPublicKey)
-
-	err := accessToken.CheckPublicToken()
+	uaaauth, err := NewUaaAuth(uaaPublicKey, "usb.management.admin")
 	if err != nil {
-		t.Errorf("Error checking public key: %v", err)
+		t.Errorf("Error initialising uaa auth: %v", err)
 	}
 
 	header := map[string]interface{}{
@@ -89,19 +84,17 @@ func TestCodeDecodeToken(t *testing.T) {
 	}
 	signedKey = "bearer " + signedKey
 
-	err = accessToken.DecodeToken(signedKey, UsbAdminScope)
-
+	err = uaaauth.IsAuthenticated(signedKey)
 	if err != nil {
 		t.Errorf("Error decoding token: %v", err)
 	}
 }
 
 func TestCodeDecodeWrongScopeToken(t *testing.T) {
-	accessToken := NewAccessToken(uaaPublicKey)
-
-	err := accessToken.CheckPublicToken()
+	testScope := "a.scope"
+	uaaauth, err := NewUaaAuth(uaaPublicKey, testScope)
 	if err != nil {
-		t.Errorf("Error checking public key: %v", err)
+		t.Errorf("Error initialising uaa auth: %v", err)
 	}
 
 	header := map[string]interface{}{
@@ -125,7 +118,6 @@ func TestCodeDecodeWrongScopeToken(t *testing.T) {
 	}
 	signedKey = "bearer " + signedKey
 
-	testScope := "a.scope"
-	err = accessToken.DecodeToken(signedKey, testScope)
+	err = uaaauth.IsAuthenticated(signedKey)
 	assert.Error(t, err, fmt.Sprintf("Token does not have %v scope", testScope))
 }
