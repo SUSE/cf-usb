@@ -46,7 +46,12 @@ func (e *MysqlDriver) Init(configuration model.DriverInitRequest, response *stri
 }
 
 func (e *MysqlDriver) Ping(empty string, result *bool) error {
-
+	_, err := mysqlprovisioner.New(e.User, e.Pass, e.Host+":"+e.Port, e.logger)
+	if err != nil {
+		*result = false
+		return err
+	}
+	*result = true
 	return nil
 }
 

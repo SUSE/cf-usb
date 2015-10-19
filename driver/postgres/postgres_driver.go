@@ -47,6 +47,10 @@ func (driver *postgresDriver) Init(driverProperties model.DriverInitRequest, res
 }
 
 func (driver *postgresDriver) Ping(request string, response *bool) error {
+	err := driver.postgresProvisioner.Ping()
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
