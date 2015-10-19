@@ -11,7 +11,7 @@ It uses plugins (drivers) to connect to different services.
 
 ## Unamaged USB
 
-Unmanaged USB provides provides a limited number of features and implments the basic functionality of a Cloud Foundry Service Broker.
+Unmanaged USB provides provides a limited number of features and implements the basic functionality of a Cloud Foundry Service Broker.
 
 Constraints:
 - it does not provide functionality for upgrading drivers, services, plans, etc.
@@ -54,15 +54,7 @@ Basic auth can be used when making calls to the USB management API.
 #### API Definition
 TODO: add api definitions for the management API.
 
-###Deployment strategies
-
-#### 1. Cloud Foundry application
-
-In order to deploy to Cloud Foundry, two apps must be pushed.
-- first app exposes the broker API
-- secound app exposes the managent API 
-
-#### 2. fissile
+### fissile
 
 TODO:
 
@@ -82,18 +74,10 @@ To start the broker with a file configuration provider you must provide the foll
 
 `driver_configs`
 
-### MySQL configuration provider###
-The state and the configuration of USB can be stored in a MySQL database
-
-
-#### Database Schema ###
-
-TODO: add schema
+### Consul configuration provider###
+The state and the configuration of USB can be stored in consul
 
 ## Drivers
-
-### Driver-USB Relationship
-
 
 ### Folder structure
 ```
