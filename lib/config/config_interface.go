@@ -2,43 +2,50 @@ package config
 
 import (
 	"encoding/json"
-	"io"
 
 	"github.com/pivotal-cf/brokerapi"
 )
 
-type DriverConfig struct {
-	DriverType    string           `json:"driver_type"`
-	Configuration *json.RawMessage `json:"configuration"`
-	Dails         []DialsConfig    `json:"dials"`
-	ServiceIDs    []string         `json:"service_ids"`
+type BrokerAPI struct {
+	Listen      string                      `json:"listen"`
+	Credentials brokerapi.BrokerCredentials `json:"credentials"`
 }
 
-type DialsConfig struct {
-	PlanID        string           `json:"planId"`
-	Configuration *json.RawMessage `json:"configuration"`
+type ManagementAPI struct {
+	Listen         string           `json:"listen"`
+	UaaClient      string           `json:"uaa_client"`
+	UaaSecret      string           `json:"uaa_secret"`
+	Authentication *json.RawMessage `json:"authentication"`
 }
 
-type DriverProperties struct {
-	DriverConfiguration      *json.RawMessage
-	DriverDialsConfiguration []DialsConfig
-	Services                 []brokerapi.Service
-	Output                   io.Writer
+type Dial struct {
+	ID            string                `json:"id"`
+	Configuration *json.RawMessage      `json:"configuration,omitempty"`
+	Plan          brokerapi.ServicePlan `json:"plan"`
+}
+type DriverInstance struct {
+	ID            string            `json:"id"`
+	Name          string            `json:"name"`
+	Configuration *json.RawMessage  `json:"configuration"`
+	Dials         []Dial            `json:"dials"`
+	Service       brokerapi.Service `json:"service"`
+}
+
+type Driver struct {
+	ID              string            `json:"id"`
+	DriverType      string            `json:"driver_type"`
+	DriverInstances []*DriverInstance `json:"driver_instances,omitempty"`
 }
 
 type Config struct {
-	Crednetials      brokerapi.BrokerCredentials `json:"broker_credentials"`
-	ServiceCatalog   []brokerapi.Service         `json:"services"`
-	DriverConfigs    []DriverConfig              `json:"driver_configs"`
-	Listen           string                      `json:"listen"`
-	ManagementListen string                      `json:"management_listen"`
-	StartMgmt        bool                        `json:"start_mgmt"`
-	APIVersion       string                      `json:"api_version"`
-	LogLevel         string                      `json:"logLevel"`
+	APIVersion    string         `json:"api_version"`
+	LogLevel      string         `json:"logLevel"`
+	BrokerAPI     BrokerAPI      `json:"broker_api"`
+	ManagementAPI *ManagementAPI `json:"management_api,omitempty"`
+	Drivers       []Driver       `json:"drivers"`
 }
 
 type ConfigProvider interface {
 	LoadConfiguration() (*Config, error)
-	GetDriverProperties(driverType string) (DriverProperties, error)
-	GetDriverTypes() ([]string, error)
+	GetDriverInstanceConfig(driverInstanceID string) (*DriverInstance, error)
 }

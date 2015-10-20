@@ -3,6 +3,7 @@ package mysqlprovisioner
 import (
 	"database/sql"
 	"fmt"
+
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/pivotal-golang/lager"
 )
@@ -155,7 +156,7 @@ func (e *MysqlProvisioner) CreateUser(databaseName string, username string, pass
 	e.logger.Info("Connection open - executing transaction")
 	err := e.executeTransaction(e.Connection,
 		fmt.Sprintf("CREATE USER '%s' IDENTIFIED BY '%s';", username, password),
-		fmt.Sprintf("GRANT ALL PRIVILEGES ON %s.* TO '%s'@'%';", databaseName, username),
+		fmt.Sprintf("GRANT ALL PRIVILEGES ON %s.* TO '%s'@'%%';", databaseName, username),
 		"FLUSH PRIVILEGES;")
 	e.logger.Info("Transaction done")
 	if err != nil {

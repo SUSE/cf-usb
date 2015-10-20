@@ -20,10 +20,10 @@ type DriverProvider struct {
 	driverType string
 	client     *rpc.Client
 
-	DriverProperties config.DriverProperties
+	Instance config.DriverInstance
 }
 
-func NewDriverProvider(driverType string, driverProperties config.DriverProperties, logger lager.Logger) (*DriverProvider, error) {
+func NewDriverProvider(driverType string, instance config.DriverInstance, logger lager.Logger) (*DriverProvider, error) {
 	provider := DriverProvider{}
 
 	driverPath := os.Getenv("USB_DRIVER_PATH")
@@ -42,7 +42,7 @@ func NewDriverProvider(driverType string, driverProperties config.DriverProperti
 		return &provider, err
 	}
 	provider.client = client
-	provider.DriverProperties = driverProperties
+	provider.Instance = instance
 	provider.driverType = driverType
 
 	configSchema, err := provider.GetConfigSchema()
@@ -51,7 +51,7 @@ func NewDriverProvider(driverType string, driverProperties config.DriverProperti
 	}
 
 	schemaLoader := gojsonschema.NewStringLoader(configSchema)
-	configLoader := gojsonschema.NewGoLoader(driverProperties.DriverConfiguration)
+	configLoader := gojsonschema.NewGoLoader(instance.Configuration)
 
 	result, err := gojsonschema.Validate(schemaLoader, configLoader)
 	if err != nil {
@@ -69,7 +69,7 @@ func NewDriverProvider(driverType string, driverProperties config.DriverProperti
 	}
 
 	initRequest := model.DriverInitRequest{}
-	initRequest.DriverConfig = driverProperties.DriverConfiguration
+	initRequest.DriverConfig = instance.Configuration
 
 	dialSchema, err := provider.GetDailsSchema()
 	if err != nil {
@@ -77,14 +77,14 @@ func NewDriverProvider(driverType string, driverProperties config.DriverProperti
 	}
 
 	dialsSchemaLoader := gojsonschema.NewStringLoader(dialSchema)
-	for _, dialDetails := range driverProperties.DriverDialsConfiguration {
-		dialsConfigLoader := gojsonschema.NewGoLoader(dialDetails.Configuration)
-		result, err := gojsonschema.Validate(dialsSchemaLoader, dialsConfigLoader)
+	for _, dial := range instance.Dials {
+		dialLoader := gojsonschema.NewGoLoader(dial.Configuration)
+		result, err := gojsonschema.Validate(dialsSchemaLoader, dialLoader)
 		if err != nil {
 			return &provider, err
 		}
 		if !result.Valid() {
-			err = errors.New("Invalid dials configuration schema")
+			err = errors.New("Invalid dials configuration")
 
 			errData := lager.Data{}
 			for _, e := range result.Errors() {
