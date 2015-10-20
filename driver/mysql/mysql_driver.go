@@ -1,10 +1,13 @@
 package driver
 
 import (
+	"crypto/md5"
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/hpcloud/cf-usb/driver"
@@ -32,6 +35,16 @@ func (e *MysqlDriver) secureRandomString(bytesOfEntpry int) string {
 	}
 
 	return base64.URLEncoding.EncodeToString(rb)
+}
+
+func (e *MysqlDriver) getMD5Hash(text string) (string, error) {
+	hasher := md5.New()
+	hasher.Write([]byte(text))
+	generated := hex.EncodeToString(hasher.Sum(nil))
+
+	reg := regexp.MustCompile("[^A-Za-z0-9]+")
+
+	return reg.ReplaceAllString(generated, ""), nil
 }
 
 func NewMysqlDriver(logger lager.Logger) driver.Driver {
@@ -95,13 +108,16 @@ func (e *MysqlDriver) InstanceExists(instanceID string, result *bool) error {
 }
 
 func (e *MysqlDriver) GenerateCredentials(request model.CredentialsRequest, response *interface{}) error {
-	username := strings.Replace(request.CredentialsID, "-", "", -1)
+	username, err := e.getMD5Hash(request.CredentialsID)
+	if err != nil {
+		return err
+	}
 	if len(username) > 16 {
 		username = username[:16]
 	}
 	password := e.secureRandomString(32)
 
-	err := e.db.CreateUser(strings.Replace(request.InstanceID, "-", "", -1), username, password)
+	err = e.db.CreateUser(strings.Replace(request.InstanceID, "-", "", -1), username, password)
 	if err != nil {
 		return err
 	}
@@ -118,7 +134,10 @@ func (e *MysqlDriver) GenerateCredentials(request model.CredentialsRequest, resp
 }
 
 func (e *MysqlDriver) CredentialsExist(request model.CredentialsRequest, response *bool) error {
-	username := strings.Replace(request.CredentialsID, "-", "", -1)
+	username, err := e.getMD5Hash(request.CredentialsID)
+	if err != nil {
+		return err
+	}
 	if len(username) > 16 {
 		username = username[:16]
 	}
@@ -131,11 +150,14 @@ func (e *MysqlDriver) CredentialsExist(request model.CredentialsRequest, respons
 }
 
 func (e *MysqlDriver) RevokeCredentials(request model.CredentialsRequest, response *interface{}) error {
-	username := strings.Replace(request.CredentialsID, "-", "", -1)
+	username, err := e.getMD5Hash(request.CredentialsID)
+	if err != nil {
+		return err
+	}
 	if len(username) > 16 {
 		username = username[:16]
 	}
-	err := e.db.DeleteUser(username)
+	err = e.db.DeleteUser(username)
 	if err != nil {
 		return err
 	}
