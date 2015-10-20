@@ -16,9 +16,18 @@
 			"Rev": "c219af1eafcdacdb7fbb6fa33b926cadd541ca19"
 		},
 		{
+			"ImportPath": "github.com/cloudfoundry-incubator/routing-api/authentication",
+			"Rev": "857e95689af0290973c84a892e7bc135be44097f"
+		},
+		{
 			"ImportPath": "github.com/codegangsta/cli",
 			"Comment": "1.2.0-66-g6086d79",
 			"Rev": "6086d7927ec35315964d9fea46df6c04e6d697c1"
+		},
+		{
+			"ImportPath": "github.com/dgrijalva/jwt-go",
+			"Comment": "v2.3.0-6-gf62f64e",
+			"Rev": "f62f64ea222e5e6d6d86421b5507b0862a3ebf7f"
 		},
 		{
 			"ImportPath": "github.com/fsouza/go-dockerclient",
