@@ -63,6 +63,13 @@ func (provisioner *PostgresProvisioner) Init() error {
 	return nil
 }
 
+func (provisioner *PostgresProvisioner) Ping() error {
+	err := provisioner.pgClient.Ping()
+	if err != nil {
+		return err
+	}
+	return nil
+}
 func (provisioner *PostgresProvisioner) Close() error {
 	err := provisioner.pgClient.Close()
 	return err

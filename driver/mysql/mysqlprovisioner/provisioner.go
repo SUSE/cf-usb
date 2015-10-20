@@ -194,6 +194,7 @@ func (e *MysqlProvisioner) executeTransaction(con *sql.DB, querys ...string) err
 		return err
 	} else {
 		for _, query := range querys {
+			e.logger.Info(query)
 			_, err = tx.Exec(query)
 			if err != nil {
 				e.logger.Error("execute transaction query", err)
@@ -202,6 +203,9 @@ func (e *MysqlProvisioner) executeTransaction(con *sql.DB, querys ...string) err
 			}
 		}
 		tx.Commit()
+	}
+	if err != nil {
+		return err
 	}
 	return nil
 }
