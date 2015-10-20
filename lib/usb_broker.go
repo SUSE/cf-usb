@@ -29,7 +29,7 @@ func (broker *UsbBroker) Services() []brokerapi.Service {
 		for _, dial := range driverProvider.Instance.Dials {
 			service.Plans = append(service.Plans, dial.Plan)
 		}
-		catalog = append(catalog, driverProvider.Instance.Service)
+		catalog = append(catalog, service)
 	}
 	return catalog
 }

@@ -38,7 +38,7 @@
                                 "max_dbsize_mb": 2
                             },
                             "plan": {
-                                "name": "free",
+                                "name": "planone",
                                 "id": "53425178-F731-49E7-9E53-5CF4BE9D807A",
                                 "description": "This is the first plan",
                                 "free": true
@@ -50,7 +50,7 @@
                                 "max_dbsize_mb": 100
                             },
                             "plan": {
-                                "name": "secondary",
+                                "name": "plantwo",
                                 "id": "888B59E0-C2A1-4AB6-9335-2E90114A8F07",
                                 "description": "This is the secondary plan",
                                 "free": false

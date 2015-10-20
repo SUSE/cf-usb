@@ -44,7 +44,13 @@ func (e *MongoDriver) Init(configuration model.DriverInitRequest, response *stri
 	return err
 }
 
-func (*MongoDriver) Ping(empty string, result *bool) error {
+func (e *MongoDriver) Ping(empty string, result *bool) error {
+	_, err := mongoprovisioner.New(e.User, e.Pass, e.Host+":"+e.Port, e.logger)
+	if err != nil {
+		*result = false
+		return err
+	}
+	*result = true
 	return nil
 }
 

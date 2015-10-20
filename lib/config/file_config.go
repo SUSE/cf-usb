@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"os"
 )
 
 type fileConfig struct {
@@ -31,6 +32,9 @@ func (c *fileConfig) LoadConfiguration() (*Config, error) {
 	}
 	c.loaded = true
 	c.config = config
+	if os.Getenv("PORT") != "" {
+		c.config.BrokerAPI.Listen = ":" + os.Getenv("PORT")
+	}
 	return config, nil
 }
 

@@ -18,6 +18,11 @@ func (_m *PostgresProvisionerMock) Init() error {
 
 	return r0
 }
+
+func (_m *PostgresProvisionerMock) Ping() error {
+	return nil
+}
+
 func (_m *PostgresProvisionerMock) CreateDatabase(_a0 string) error {
 	ret := _m.Called(_a0)
 
