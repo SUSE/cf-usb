@@ -82,14 +82,13 @@ func (usb *UsbApp) Run(configProvider config.ConfigProvider) {
 
 	logger.Info("run", lager.Data{"action": "starting drivers"})
 	usbService := lib.NewUsbBroker(drivers, usb.config, logger)
-	brokerAPI := brokerapi.New(usbService, logger, usb.config.Crednetials)
+	brokerAPI := brokerapi.New(usbService, logger, usb.config.BrokerAPI.Credentials)
 
-	addr := usb.config.Listen
+	addr := usb.config.BrokerAPI.Listen
 
-	mgmtaddr := usb.config.ManagementListen
-
-	if usb.config.StartMgmt {
+	if usb.config.ManagementAPI != nil {
 		go func() {
+			mgmtaddr := usb.config.ManagementAPI.Listen
 			swaggerJSON, err := data.Asset("swagger-spec/api.json")
 			if err != nil {
 				logger.Fatal("error-start-mgmt-api", err)
@@ -117,26 +116,21 @@ func (usb *UsbApp) Run(configProvider config.ConfigProvider) {
 
 func (usb *UsbApp) startDrivers(configProvider config.ConfigProvider) ([]*lib.DriverProvider, error) {
 	var drivers []*lib.DriverProvider
-	driverTypes, err := configProvider.GetDriverTypes()
-	if err != nil {
-		return drivers, err
-	}
-
-	for _, driverType := range driverTypes {
-		usb.logger.Info("start-driver ", lager.Data{"driver-type": driverType})
-
-		driverProp, err := configProvider.GetDriverProperties(driverType)
-		if err != nil {
-			return drivers, err
+	//TODO: should not fail if a driver fails to start
+	for _, driver := range usb.config.Drivers {
+		for _, driverInstance := range driver.DriverInstances {
+			usb.logger.Info("start-driver ", lager.Data{"driver-type": driver.DriverType,
+				"driver-instance": driverInstance.Name})
+			instanceConfig, err := configProvider.GetDriverInstanceConfig(driverInstance.ID)
+			if err != nil {
+				return drivers, err
+			}
+			driver, err := lib.NewDriverProvider(driver.DriverType, *instanceConfig, usb.logger)
+			if err != nil {
+				return drivers, err
+			}
+			drivers = append(drivers, driver)
 		}
-
-		usb.logger.Info("start-driver", lager.Data{"driver-type": driverType})
-		driver, err := lib.NewDriverProvider(driverType, driverProp, usb.logger)
-
-		if err != nil {
-			return drivers, err
-		}
-		drivers = append(drivers, driver)
 	}
 
 	return drivers, nil

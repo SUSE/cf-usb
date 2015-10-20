@@ -1,5 +1,7 @@
 # Universal service broker
 
+[TOC]
+
 ## Summary
 The cf-usb project implements and exposes the Cloud Foundry [Service Broker API](http://docs.cloudfoundry.org/services/api.html). 
 
@@ -7,16 +9,73 @@ It uses plugins (drivers) to connect to different services.
 
 ![cf-usb](https://region-b.geo-1.objects.hpcloudsvc.com/v1/11899734124432/imgs/usb.png)
 
+## Unamaged USB
+
+Unmanaged USB provides provides a limited number of features and implements the basic functionality of a Cloud Foundry Service Broker.
+
+Constraints:
+- it does not provide functionality for upgrading drivers, services, plans, etc.
+- does not automatically register to the Cloud Controller.
+- only `fileConfigProvider` can be used as a configuration provider.
+- it does not expose a management API.
+- if a `driver` fails to start, the connection between the `driver` and the server cannot be establised or if the configuration/dials schema can not be validated, the USB exists with an exitcode != 0.
+
+### Deployment strategies
+
+#### 1. Cloud Foundry application
+
+The unmanaged USB can be deployed as an app to a Cloud Foundry deploymenet. All the services managed must be external services.
+
+#### 2. fissile
+
+TODO.
+
+## Managed USB
+
+The managed USB provides a management API for configuration and update.
+
+Constraints:
+- it can not use `fileConfigProvider` as a configuration provider
+
+###Management API
+
+####Authorization
+
+##### 1. UAA
+USB uses UAA as an authorization provider. It requires the `cc_usb_management` OAuth client to be configured with the following properties:
+- secret: {clientsecret}
+- scope: cloud_controller.write,openid,cloud_controller.read,cloud_controller_service_permissions.read, cloud_controller_service_permissions.write
+- authorities: usb.management.admin
+- authorized-grant-types: client_credentials 
+
+##### 2. Basic auth
+Basic auth can be used when making calls to the USB management API.
+
+#### API Definition
+TODO: add api definitions for the management API.
+
+### fissile
+
+TODO:
+
 ## Configuration
 
 **cf-usb** works with multiple configuration providers:
 
-- **file configuration provider** - cf-usb can take it's configuration from a .json file. The json file format is similar to a standard broker configuration file. To start the broker with a file configuration provider you must provide the following cli options:
+###File configuration provider## 
+**cf-usb** can take it's configuration from a .json file. The json file format is similar to a standard broker configuration file. 
+To start the broker with a file configuration provider you must provide the following cli options:
 
 ```sh
  ./usb fileConfigProvider --path {path_to_jsonfile}
 ```
 
+`dials`
+
+`driver_configs`
+
+### Consul configuration provider###
+The state and the configuration of USB can be stored in consul
 
 ## Drivers
 

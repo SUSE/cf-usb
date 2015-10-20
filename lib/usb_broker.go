@@ -22,7 +22,16 @@ func NewUsbBroker(drivers []*DriverProvider, config *config.Config, logger lager
 }
 
 func (broker *UsbBroker) Services() []brokerapi.Service {
-	return broker.brokerConfig.ServiceCatalog
+	var catalog []brokerapi.Service
+	// TODO: advertise only services that have a driver running
+	for _, driverProvider := range broker.driverProverders {
+		service := driverProvider.Instance.Service
+		for _, dial := range driverProvider.Instance.Dials {
+			service.Plans = append(service.Plans, dial.Plan)
+		}
+		catalog = append(catalog, driverProvider.Instance.Service)
+	}
+	return catalog
 }
 
 func (broker *UsbBroker) Provision(instanceID string, serviceDetails brokerapi.ProvisionDetails) error {
@@ -39,8 +48,8 @@ func (broker *UsbBroker) Provision(instanceID string, serviceDetails brokerapi.P
 	}
 
 	var dialDetails json.RawMessage
-	for _, dial := range driver.DriverProperties.DriverDialsConfiguration {
-		if dial.PlanID == serviceDetails.PlanID {
+	for _, dial := range driver.Instance.Dials {
+		if dial.Plan.ID == serviceDetails.PlanID {
 			dialDetails = *dial.Configuration
 			break
 		}
@@ -134,10 +143,8 @@ func (broker *UsbBroker) Unbind(instanceID, bindingID string, details brokerapi.
 func (broker *UsbBroker) getDriver(serviceID string) *DriverProvider {
 
 	for _, driverProvider := range broker.driverProverders {
-		for _, s := range driverProvider.DriverProperties.Services {
-			if serviceID == s.ID {
-				return driverProvider
-			}
+		if driverProvider.Instance.Service.ID == serviceID {
+			return driverProvider
 		}
 	}
 	return nil
