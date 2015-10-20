@@ -61,6 +61,21 @@ func TestGetCatalog(t *testing.T) {
 	assert.Equal(1, len(serviceCatalog))
 	assert.Equal("GUID", serviceCatalog[0].ID)
 	assert.Equal("testService", serviceCatalog[0].Name)
+	assert.Equal(2, len(serviceCatalog[0].Plans))
+
+	for _, plan := range serviceCatalog[0].Plans {
+		if plan.Name == "planone" {
+			assert.Equal("53425178-F731-49E7-9E53-5CF4BE9D807A", plan.ID)
+			assert.Equal("This is the first plan", plan.Description)
+			continue
+		}
+		if plan.Name == "plantwo" {
+			assert.Equal("888B59E0-C2A1-4AB6-9335-2E90114A8F07", plan.ID)
+			assert.Equal("This is the secondary plan", plan.Description)
+			continue
+		}
+		assert.Fail("Plans are not parsed correctly")
+	}
 
 	assert.Nil(err)
 	assert.True(true)
