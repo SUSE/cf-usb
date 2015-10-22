@@ -131,37 +131,7 @@ func Test_CredentialsExist(t *testing.T) {
 
 	driver := redisDriver{}
 	driver.logger = logger
-
-	mockProv := new(redisprovisioner.RedisProvisionerMock)
-	mockProv.On("Init").Return(nil)
-	mockProv.On("ContainerExists", "testContainer").Return(true, nil)
-	driver.redisProvisioner = mockProv
-
-	driver.redisProvisioner.Init()
-
-	var req model.CredentialsRequest
-	req.InstanceID = "testContainer"
-
-	var response bool
-	err := driver.CredentialsExist(req, &response)
-
-	assert.NoError(err)
-	assert.True(response)
-}
-
-func Test_CredentialNotExist(t *testing.T) {
-	assert := assert.New(t)
-
-	driver := redisDriver{}
-	driver.logger = logger
-
-	mockProv := new(redisprovisioner.RedisProvisionerMock)
-	mockProv.On("Init").Return(nil)
-	mockProv.On("ContainerExists", "testContainer").Return(false, nil)
-	driver.redisProvisioner = mockProv
-
-	driver.redisProvisioner.Init()
-
+	
 	var req model.CredentialsRequest
 	req.InstanceID = "testContainer"
 
