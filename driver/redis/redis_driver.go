@@ -92,11 +92,7 @@ func (driver *redisDriver) RevokeCredentials(request model.CredentialsRequest, r
 }
 
 func (driver *redisDriver) CredentialsExist(request model.CredentialsRequest, response *bool) error {
-	exists, err := driver.redisProvisioner.ContainerExists(request.InstanceID)
-	if err != nil {
-		return err
-	}
-	*response = exists
+	*response = false
 	return nil
 }
 
