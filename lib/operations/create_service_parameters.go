@@ -8,12 +8,16 @@ import (
 
 	"github.com/go-swagger/go-swagger/errors"
 	"github.com/go-swagger/go-swagger/httpkit/middleware"
+	"github.com/go-swagger/go-swagger/httpkit/validate"
+	"github.com/go-swagger/go-swagger/strfmt"
 	"github.com/hpcloud/cf-usb/lib/genmodel"
 )
 
 // CreateServiceParams contains all the bound params for the create service operation
 // typically these are obtained from a http.Request
 type CreateServiceParams struct {
+	// Authorization token
+	Authorization string
 	// Add service definition
 	Service genmodel.Service
 }
@@ -22,6 +26,10 @@ type CreateServiceParams struct {
 // for simple values it will use straight method calls
 func (o *CreateServiceParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
+
+	if err := o.bindAuthorization(r.Header.Get("authorization"), route.Formats); err != nil {
+		res = append(res, err)
+	}
 
 	if err := route.Consumer.Consume(r.Body, &o.Service); err != nil {
 		res = append(res, errors.NewParseError("service", "body", "", err))
@@ -35,5 +43,15 @@ func (o *CreateServiceParams) BindRequest(r *http.Request, route *middleware.Mat
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (o *CreateServiceParams) bindAuthorization(raw string, formats strfmt.Registry) error {
+	if err := validate.RequiredString("authorization", "header", raw); err != nil {
+		return err
+	}
+
+	o.Authorization = raw
+
 	return nil
 }

@@ -20,15 +20,19 @@ type Plan struct {
 	 */
 	Description string `json:"description,omitempty"`
 
+	/* DialID dial id
+
+	Required: true
+	*/
+	DialID string `json:"dial_id"`
+
 	/* Free free
 	 */
 	Free bool `json:"free,omitempty"`
 
 	/* ID id
-
-	Required: true
-	*/
-	ID string `json:"id"`
+	 */
+	ID string `json:"id,omitempty"`
 
 	/* Name name
 
@@ -42,7 +46,7 @@ func (m *Plan) Validate(formats strfmt.Registry) error {
 
 	var res []error
 
-	if err := m.validateID(formats); err != nil {
+	if err := m.validateDialID(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -57,9 +61,9 @@ func (m *Plan) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *Plan) validateID(formats strfmt.Registry) error {
+func (m *Plan) validateDialID(formats strfmt.Registry) error {
 
-	if err := validate.Required("id", "body", string(m.ID)); err != nil {
+	if err := validate.Required("dial_id", "body", string(m.DialID)); err != nil {
 		return err
 	}
 

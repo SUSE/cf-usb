@@ -1,8 +1,17 @@
 {
     "swagger": "2.0",
     "info": {
+        "description": "Universal service broker management API",
         "version": "0.0.1",
-        "title": "USB management api"
+        "title": "USB management api",
+        "termsOfService": "https://github.com/hpcloud/cf-usb",
+        "contact": {
+            "email": "hcf-dev@hpe.com"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        }
     },
     "consumes": [
         "application/json"
@@ -11,15 +20,112 @@
         "application/json"
     ],
     "paths": {
+        "/broker": {
+            "get": {
+                "description": "Gets the broker api connection info\n",
+                "operationId": "getBrokerInfo",
+                "parameters": [
+                    {
+                        "name": "authorization",
+                        "description": "Authorization token",
+                        "in": "header",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "schema": {
+                            "$ref": "#/definitions/broker"
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Sets the broker api connection info\n",
+                "operationId": "updateBrokerInfo",
+                "parameters": [
+                    {
+                        "name": "authorization",
+                        "description": "Authorization token",
+                        "in": "header",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Successful response",
+                        "schema": {
+                            "$ref": "#/definitions/broker"
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
+                    }
+                }
+            }
+        },
+        "/broker/update_catalog": {
+            "post": {
+                "description": "Updates the broker catalog\n",
+                "operationId": "updateCatalog",
+                "parameters": [
+                    {
+                        "name": "authorization",
+                        "description": "Authorization token",
+                        "in": "header",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response"
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
+                    }
+                }
+            }
+        },
         "/info": {
             "get": {
                 "description": "Gets information about the USB.\n",
                 "operationId": "getInfo",
+                "parameters": [
+                    {
+                        "name": "authorization",
+                        "description": "Authorization token",
+                        "in": "header",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Successful response",
                         "schema": {
                             "$ref": "#/definitions/info"
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
                         }
                     }
                 }
@@ -27,106 +133,466 @@
         },
         "/drivers": {
             "get": {
-                "description": "Gets information about the available `driver`\n",
+                "description": "Gets information about the available `drivers`\n",
                 "operationId": "getDrivers",
+                "parameters": [
+                    {
+                        "name": "authorization",
+                        "description": "Authorization token",
+                        "in": "header",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Successful response",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "type": "string"
+                                "$ref": "#/definitions/driver"
                             }
                         }
-                    }
-                }
-            }
-        },
-        "/driver_configs": {
-            "get": {
-                "description": "Gets all driver configurations\n",
-                "operationId": "getDriverConfigs",
-                "responses": {
-                    "200": {
-                        "description": "OK",
+                    },
+                    "default": {
+                        "description": "Unexpected error",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/driver_config"
-                            }
+                            "$ref": "#/definitions/error"
                         }
                     }
                 }
             },
             "post": {
                 "description": "Create a new driver\n",
-                "operationId": "createDriverConfig",
+                "operationId": "createDriver",
                 "parameters": [
                     {
-                        "name": "driver_config",
+                        "name": "authorization",
+                        "description": "Authorization token",
+                        "in": "header",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "driver",
                         "in": "body",
-                        "description": "Add driver_config",
+                        "description": "Driver to be created",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/driver_config"
+                            "$ref": "#/definitions/driver"
                         }
                     }
                 ],
                 "responses": {
                     "201": {
-                        "description": "Sucessfull response"
+                        "description": "Driver created"
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
                     }
                 }
             }
         },
-        "/driver_configs/{driver_config_id}": {
-            "parameters": [
-                {
-                    "name": "driver_config_id",
-                    "in": "path",
-                    "description": "ID of the service",
-                    "required": true,
-                    "type": "string"
-                }
-            ],
+        "/drivers/{driver_id}": {
             "get": {
-                "description": "Gets a `driver` configuration\n",
-                "operationId": "getDriverConfigByID",
+                "description": "Get driver",
+                "operationId": "getDriver",
+                "parameters": [
+                    {
+                        "name": "authorization",
+                        "description": "Authorization token",
+                        "in": "header",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "driver_id",
+                        "in": "path",
+                        "description": "Driver ID",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
                 "responses": {
-                    "200": {
-                        "description": "Sucessfull response",
+                    "201": {
+                        "description": "Driver updated",
                         "schema": {
-                            "$ref": "#/definitions/driver_config"
+                            "$ref": "#/definitions/driver"
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
                         }
                     }
                 }
             },
             "put": {
-                "description": "Updates the driver config with the id **driver_config_id**",
-                "operationId": "updateDriverConfig",
+                "description": "Update driver",
+                "operationId": "updateDriver",
                 "parameters": [
+                    {
+                        "name": "authorization",
+                        "description": "Authorization token",
+                        "in": "header",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "driver_id",
+                        "in": "path",
+                        "description": "Driver ID",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "driver",
+                        "in": "body",
+                        "description": "Driver to be updated",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/driver"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Driver updated"
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Update driver",
+                "operationId": "deleteDriver",
+                "parameters": [
+                    {
+                        "name": "authorization",
+                        "description": "Authorization token",
+                        "in": "header",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "driver_id",
+                        "in": "path",
+                        "description": "Driver ID",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Driver deleted"
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
+                    }
+                }
+            }
+        },
+        "/drivers/{driver_id}/bits": {
+            "put": {
+                "description": "Upload driver bits",
+                "operationId": "uploadDriver",
+                "parameters": [
+                    {
+                        "name": "authorization",
+                        "description": "Authorization token",
+                        "in": "header",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "driver_id",
+                        "in": "path",
+                        "description": "Driver ID",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "sha",
+                        "in": "formData",
+                        "description": "file sha",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "file",
+                        "in": "formData",
+                        "description": "Driver executable",
+                        "required": true,
+                        "type": "file"
+                    }
+                ],
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Driver updated"
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
+                    }
+                }
+            }
+        },
+        "/drivers/{driver_id}/schema": {
+            "get": {
+                "description": "Get driver config schema",
+                "operationId": "getDriverSchema",
+                "parameters": [
+                    {
+                        "name": "authorization",
+                        "description": "Authorization token",
+                        "in": "header",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "driver_id",
+                        "in": "path",
+                        "description": "Driver ID",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/driver_schema"
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
+                    }
+                }
+            }
+        },
+        "/drivers_instances": {
+            "get": {
+                "description": "Gets all driver configurations\n",
+                "operationId": "getDriverInstances",
+                "parameters": [
+                    {
+                        "name": "authorization",
+                        "description": "Authorization token",
+                        "in": "header",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "driver_id",
+                        "description": "Driver ID",
+                        "in": "query",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/driver_instance"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Create a driver instance",
+                "operationId": "createDriverInstance",
+                "parameters": [
+                    {
+                        "name": "authorization",
+                        "description": "Authorization token",
+                        "in": "header",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "driver_instance",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/driver_instance"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Instance created",
+                        "schema": {
+                            "$ref": "#/definitions/driver_instance"
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
+                    }
+                }
+            }
+        },
+        "/drivers_instances/{driver_instance_id}": {
+            "get": {
+                "description": "Gets driver configurations\n",
+                "operationId": "getDriverInstance",
+                "parameters": [
+                    {
+                        "name": "authorization",
+                        "description": "Authorization token",
+                        "in": "header",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "driver_instance_id",
+                        "in": "path",
+                        "description": "Driver Instance ID",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/driver_instance"
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Update a driver instance\n",
+                "operationId": "updateDriverInstance",
+                "parameters": [
+                    {
+                        "name": "authorization",
+                        "description": "Authorization token",
+                        "in": "header",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "driver_instance_id",
+                        "in": "path",
+                        "description": "Driver Instance ID",
+                        "required": true,
+                        "type": "string"
+                    },
                     {
                         "name": "driver_config",
                         "in": "body",
                         "description": "Add driver_config",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/driver_config"
+                            "$ref": "#/definitions/driver_instance"
                         }
                     }
                 ],
                 "responses": {
                     "201": {
                         "description": "Sucessfull response"
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
                     }
                 }
             },
             "delete": {
-                "description": "Deletes a `driver` configuration\n",
-                "operationId": "deleteDriverConfig",
+                "description": "Delete a driver instance",
+                "operationId": "deleteDriverInstance",
+                "parameters": [
+                    {
+                        "name": "authorization",
+                        "description": "Authorization token",
+                        "in": "header",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "driver_instance_id",
+                        "in": "path",
+                        "description": "Driver Instance ID",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
                 "responses": {
                     "204": {
-                        "description": "Sucessfull response"
+                        "description": "Driver deleted"
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
+                    }
+                }
+            }
+        },
+        "/drivers_instances/{driver_instance_id}/ping": {
+            "get": {
+                "description": "Pings the driver\n",
+                "operationId": "pingDriverInstance",
+                "parameters": [
+                    {
+                        "name": "authorization",
+                        "description": "Authorization token",
+                        "in": "header",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "driver_instance_id",
+                        "in": "path",
+                        "description": "Driver Instance ID",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
                     }
                 }
             }
@@ -135,6 +601,22 @@
             "get": {
                 "description": "Gets the existing `service`\n",
                 "operationId": "getServices",
+                "parameters": [
+                    {
+                        "name": "authorization",
+                        "description": "Authorization token",
+                        "in": "header",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "driver_instance_id",
+                        "in": "query",
+                        "type": "string",
+                        "required": false,
+                        "description": "Driver instance ID"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Sucessfull response",
@@ -144,6 +626,12 @@
                                 "$ref": "#/definitions/service"
                             }
                         }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
                     }
                 }
             },
@@ -151,6 +639,13 @@
                 "description": "Create a new `service` definition",
                 "operationId": "createService",
                 "parameters": [
+                    {
+                        "name": "authorization",
+                        "description": "Authorization token",
+                        "in": "header",
+                        "required": true,
+                        "type": "string"
+                    },
                     {
                         "name": "service",
                         "in": "body",
@@ -163,29 +658,51 @@
                 ],
                 "responses": {
                     "201": {
-                        "description": "Sucessfull response"
+                        "description": "Sucessfull response",
+                        "schema": {
+                            "$ref": "#/definitions/service"
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
                     }
                 }
             }
         },
-        "/services/{serviceID}": {
-            "parameters": [
-                {
-                    "name": "serviceID",
-                    "in": "path",
-                    "description": "ID of the service",
-                    "required": true,
-                    "type": "string"
-                }
-            ],
+        "/services/{service_id}": {
             "get": {
                 "description": "Gets the `service` with the id **serviceID**",
-                "operationId": "getServiceByID",
+                "operationId": "getService",
+                "parameters": [
+                    {
+                        "name": "authorization",
+                        "description": "Authorization token",
+                        "in": "header",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "service_id",
+                        "in": "path",
+                        "description": "ID of the service",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Sucessfull response",
                         "schema": {
                             "$ref": "#/definitions/service"
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
                         }
                     }
                 }
@@ -194,6 +711,20 @@
                 "description": "Updates the `service` with the id **serviceID**",
                 "operationId": "updateService",
                 "parameters": [
+                    {
+                        "name": "authorization",
+                        "description": "Authorization token",
+                        "in": "header",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "service_id",
+                        "in": "path",
+                        "description": "ID of the service",
+                        "required": true,
+                        "type": "string"
+                    },
                     {
                         "name": "service",
                         "in": "body",
@@ -207,32 +738,67 @@
                 "responses": {
                     "201": {
                         "description": "Sucessfull response"
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
                     }
                 }
             },
             "delete": {
                 "description": "Deletes a `service`\n",
                 "operationId": "deleteService",
+                "parameters": [
+                    {
+                        "name": "authorization",
+                        "description": "Authorization token",
+                        "in": "header",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "service_id",
+                        "in": "path",
+                        "description": "ID of the service",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
                 "responses": {
                     "204": {
                         "description": "Sucessfull response"
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
                     }
                 }
             }
         },
-        "/services/{serviceID}/plans": {
-            "parameters": [
-                {
-                    "name": "serviceID",
-                    "in": "path",
-                    "description": "ID of the service",
-                    "required": true,
-                    "type": "string"
-                }
-            ],
+        "/plans": {
             "get": {
-                "description": "Gets the `plans` for the **serviceID**",
+                "description": "Gets `plans`",
                 "operationId": "getServicePlans",
+                "parameters": [
+                    {
+                        "name": "authorization",
+                        "description": "Authorization token",
+                        "in": "header",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "dial_id",
+                        "in": "query",
+                        "type": "string",
+                        "required": false,
+                        "description": "Dial ID"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Sucessfull response",
@@ -242,55 +808,80 @@
                                 "$ref": "#/definitions/plan"
                             }
                         }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
                     }
                 }
             },
             "post": {
-                "description": "Create a plan for the **serviceID**",
+                "description": "Create a plan",
                 "operationId": "createServicePlan",
-                "responses": {
-                    "201": {
-                        "description": "Sucessfull response"
-                    }
-                },
                 "parameters": [
+                    {
+                        "name": "authorization",
+                        "description": "Authorization token",
+                        "in": "header",
+                        "required": true,
+                        "type": "string"
+                    },
                     {
                         "name": "plan",
                         "in": "body",
-                        "description": "Add plan for the **serviceID**",
+                        "description": "Add a plan for a **serviceID**",
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/plan"
                         }
                     }
-                ]
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Sucessfull response"
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
+                    }
+                }
             }
         },
-        "/services/{serviceID}/plans/{planID}": {
-            "parameters": [
-                {
-                    "name": "serviceID",
-                    "in": "path",
-                    "description": "ID of the service",
-                    "required": true,
-                    "type": "string"
-                },
-                {
-                    "name": "planID",
-                    "in": "path",
-                    "description": "ID of the plan",
-                    "required": true,
-                    "type": "string"
-                }
-            ],
+        "/plans/{plan_id}": {
             "get": {
                 "description": "Gets the `plan` with the **planID** for the *serviceID*",
-                "operationId": "getServicePlanByID",
+                "operationId": "getServicePlan",
+                "parameters": [
+                    {
+                        "name": "authorization",
+                        "description": "Authorization token",
+                        "in": "header",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "plan_id",
+                        "in": "path",
+                        "description": "ID of the plan",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Sucessfull response",
                         "schema": {
                             "$ref": "#/definitions/plan"
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
                         }
                     }
                 }
@@ -299,6 +890,20 @@
                 "description": "Updates the plan with the id **planID** for the service id **serviceID**",
                 "operationId": "updateServicePlan",
                 "parameters": [
+                    {
+                        "name": "authorization",
+                        "description": "Authorization token",
+                        "in": "header",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "plan_id",
+                        "in": "path",
+                        "description": "ID of the plan",
+                        "required": true,
+                        "type": "string"
+                    },
                     {
                         "name": "plan",
                         "in": "body",
@@ -312,21 +917,291 @@
                 "responses": {
                     "201": {
                         "description": "Sucessfull response"
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
                     }
                 }
             },
             "delete": {
                 "description": "Delets the `plan` with the **planID** for the **serviceID**",
                 "operationId": "deleteServicePlan",
+                "parameters": [
+                    {
+                        "name": "authorization",
+                        "description": "Authorization token",
+                        "in": "header",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "plan_id",
+                        "in": "path",
+                        "description": "ID of the plan",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
                 "responses": {
                     "204": {
                         "description": "Sucessfull response"
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
+                    }
+                }
+            }
+        },
+        "/dials": {
+            "get": {
+                "description": "Gets `dials`",
+                "operationId": "getAllDials",
+                "parameters": [
+                    {
+                        "name": "authorization",
+                        "description": "Authorization token",
+                        "in": "header",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "driver_instance_id",
+                        "in": "query",
+                        "type": "string",
+                        "required": false,
+                        "description": "Driver instance ID"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Sucessfull response",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dial"
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Create a dial for",
+                "operationId": "createDial",
+                "parameters": [
+                    {
+                        "name": "authorization",
+                        "description": "Authorization token",
+                        "in": "header",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "plan",
+                        "in": "body",
+                        "description": "New dial",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/plan"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Sucessfull response"
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
+                    }
+                }
+            }
+        },
+        "/dials/{dial_id}": {
+            "get": {
+                "description": "Gets the `dial` with the **dial_id**",
+                "operationId": "getDial",
+                "parameters": [
+                    {
+                        "name": "authorization",
+                        "description": "Authorization token",
+                        "in": "header",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "dial_id",
+                        "in": "path",
+                        "description": "ID of the dial",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Sucessfull response",
+                        "schema": {
+                            "$ref": "#/definitions/dial"
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Updates the dial with the id **dial_id**",
+                "operationId": "updateDial",
+                "parameters": [
+                    {
+                        "name": "authorization",
+                        "description": "Authorization token",
+                        "in": "header",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "dial_id",
+                        "in": "path",
+                        "description": "ID of the dial",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "dial",
+                        "in": "body",
+                        "description": "Updated dial",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dial"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Sucessfull response"
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Delets the `dial` with the **dial_id**",
+                "operationId": "deleteDial",
+                "parameters": [
+                    {
+                        "name": "authorization",
+                        "description": "Authorization token",
+                        "in": "header",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "dial_id",
+                        "in": "path",
+                        "description": "ID of the dial",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Sucessfull response"
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
+                    }
+                }
+            }
+        },
+        "/dials/{dial_id}/schema": {
+            "get": {
+                "description": "Get dial schema",
+                "operationId": "getDialSchema",
+                "parameters": [
+                    {
+                        "name": "authorization",
+                        "description": "Authorization token",
+                        "in": "header",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "dial_id",
+                        "in": "path",
+                        "description": "ID of the dial",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Sucessfull response",
+                        "schema": {
+                            "$ref": "#/definitions/dial_schema"
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
                     }
                 }
             }
         }
     },
     "definitions": {
+        "broker": {
+            "type": "object",
+            "required": [
+                "listen",
+                "credentials"
+            ],
+            "properties": {
+                "listen": {
+                    "type": "string"
+                },
+                "credentials": {
+                    "required": [
+                        "username",
+                        "password"
+                    ],
+                    "type": "object",
+                    "properties": {
+                        "username": {
+                            "type": "string"
+                        },
+                        "password": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "info": {
             "type": "object",
             "required": [
@@ -341,11 +1216,14 @@
         "service": {
             "type": "object",
             "required": [
-                "id",
+                "driver_instance_id",
                 "name"
             ],
             "properties": {
                 "id": {
+                    "type": "string"
+                },
+                "driver_instance_id": {
                     "type": "string"
                 },
                 "bindable": {
@@ -365,22 +1243,13 @@
                 },
                 "metadata": {
                     "type": "object"
-                },
-                "driver_type": {
-                    "type": "string"
-                },
-                "plans": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/plan"
-                    }
                 }
             }
         },
         "plan": {
             "type": "object",
             "required": [
-                "id",
+                "dial_id",
                 "name"
             ],
             "properties": {
@@ -388,6 +1257,9 @@
                     "type": "string"
                 },
                 "id": {
+                    "type": "string"
+                },
+                "dial_id": {
                     "type": "string"
                 },
                 "description": {
@@ -398,10 +1270,59 @@
                 }
             }
         },
-        "driver_config": {
+        "dial": {
             "type": "object",
             "required": [
-                "id",
+                "driver_instance_id"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "driver_instance_id": {
+                    "type": "string"
+                },
+                "configuration": {
+                    "type": "object"
+                },
+                "plan": {
+                    "type": "string"
+                }
+            }
+        },
+        "driver_instance": {
+            "type": "object",
+            "required": [
+                "driver_id",
+                "name"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "driver_id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "configuration": {
+                    "type": "object"
+                },
+                "dials": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "service": {
+                    "type": "string"
+                }
+            }
+        },
+        "driver": {
+            "type": "object",
+            "required": [
                 "name"
             ],
             "properties": {
@@ -414,11 +1335,28 @@
                 "driver_type": {
                     "type": "string"
                 },
-                "services": {
+                "driver_instances": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
+                }
+            }
+        },
+        "dial_schema": {
+            "type": "object"
+        },
+        "driver_schema": {
+            "type": "object"
+        },
+        "error": {
+            "type": "object",
+            "properties": {
+                "messsage": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "integer"
                 }
             }
         }

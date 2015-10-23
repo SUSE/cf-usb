@@ -10,15 +10,15 @@ import (
 )
 
 // DeleteServicePlanHandlerFunc turns a function with the right signature into a delete service plan handler
-type DeleteServicePlanHandlerFunc func() error
+type DeleteServicePlanHandlerFunc func(DeleteServicePlanParams) error
 
-func (fn DeleteServicePlanHandlerFunc) Handle() error {
-	return fn()
+func (fn DeleteServicePlanHandlerFunc) Handle(params DeleteServicePlanParams) error {
+	return fn(params)
 }
 
 // DeleteServicePlanHandler interface for that can handle valid delete service plan params
 type DeleteServicePlanHandler interface {
-	Handle() error
+	Handle(DeleteServicePlanParams) error
 }
 
 // NewDeleteServicePlan creates a new http.Handler for the delete service plan operation
@@ -31,18 +31,19 @@ Delets the `plan` with the **planID** for the **serviceID**
 */
 type DeleteServicePlan struct {
 	Context *middleware.Context
+	Params  DeleteServicePlanParams
 	Handler DeleteServicePlanHandler
 }
 
 func (o *DeleteServicePlan) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
 
-	if err := o.Context.BindValidRequest(r, route, nil); err != nil { // bind params
+	if err := o.Context.BindValidRequest(r, route, &o.Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	err := o.Handler.Handle() // actually handle the request
+	err := o.Handler.Handle(o.Params) // actually handle the request
 	if err != nil {
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
