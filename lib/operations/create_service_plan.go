@@ -27,7 +27,7 @@ func NewCreateServicePlan(ctx *middleware.Context, handler CreateServicePlanHand
 }
 
 /*
-Create a plan for the **serviceID**
+Create a plan
 */
 type CreateServicePlan struct {
 	Context *middleware.Context
