@@ -24,15 +24,15 @@ type Service struct {
 	 */
 	Description string `json:"description,omitempty"`
 
-	/* DriverType driver type
-	 */
-	DriverType string `json:"driver_type,omitempty"`
-
-	/* ID id
+	/* DriverInstanceID driver instance id
 
 	Required: true
 	*/
-	ID string `json:"id"`
+	DriverInstanceID string `json:"driver_instance_id"`
+
+	/* ID id
+	 */
+	ID string `json:"id,omitempty"`
 
 	/* Metadata metadata
 	 */
@@ -44,10 +44,6 @@ type Service struct {
 	*/
 	Name string `json:"name"`
 
-	/* Plans plans
-	 */
-	Plans []Plan `json:"plans,omitempty"`
-
 	/* Tags tags
 	 */
 	Tags []string `json:"tags,omitempty"`
@@ -58,7 +54,7 @@ func (m *Service) Validate(formats strfmt.Registry) error {
 
 	var res []error
 
-	if err := m.validateID(formats); err != nil {
+	if err := m.validateDriverInstanceID(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -73,9 +69,9 @@ func (m *Service) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *Service) validateID(formats strfmt.Registry) error {
+func (m *Service) validateDriverInstanceID(formats strfmt.Registry) error {
 
-	if err := validate.Required("id", "body", string(m.ID)); err != nil {
+	if err := validate.Required("driver_instance_id", "body", string(m.DriverInstanceID)); err != nil {
 		return err
 	}
 

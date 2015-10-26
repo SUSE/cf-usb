@@ -8,13 +8,17 @@ import (
 
 	"github.com/go-swagger/go-swagger/errors"
 	"github.com/go-swagger/go-swagger/httpkit/middleware"
+	"github.com/go-swagger/go-swagger/httpkit/validate"
+	"github.com/go-swagger/go-swagger/strfmt"
 	"github.com/hpcloud/cf-usb/lib/genmodel"
 )
 
 // CreateServicePlanParams contains all the bound params for the create service plan operation
 // typically these are obtained from a http.Request
 type CreateServicePlanParams struct {
-	// Add plan for the **serviceID**
+	// Authorization token
+	Authorization string
+	// Add a plan for a **serviceID**
 	Plan genmodel.Plan
 }
 
@@ -22,6 +26,10 @@ type CreateServicePlanParams struct {
 // for simple values it will use straight method calls
 func (o *CreateServicePlanParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
+
+	if err := o.bindAuthorization(r.Header.Get("authorization"), route.Formats); err != nil {
+		res = append(res, err)
+	}
 
 	if err := route.Consumer.Consume(r.Body, &o.Plan); err != nil {
 		res = append(res, errors.NewParseError("plan", "body", "", err))
@@ -35,5 +43,15 @@ func (o *CreateServicePlanParams) BindRequest(r *http.Request, route *middleware
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (o *CreateServicePlanParams) bindAuthorization(raw string, formats strfmt.Registry) error {
+	if err := validate.RequiredString("authorization", "header", raw); err != nil {
+		return err
+	}
+
+	o.Authorization = raw
+
 	return nil
 }

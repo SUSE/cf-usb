@@ -10,41 +10,35 @@ import (
 )
 
 /*
-DriverConfig driver config
+Driver driver
 
-swagger:model driver_config
+swagger:model driver
 */
-type DriverConfig struct {
+type Driver struct {
+
+	/* DriverInstances driver instances
+	 */
+	DriverInstances []string `json:"driver_instances,omitempty"`
 
 	/* DriverType driver type
 	 */
 	DriverType string `json:"driver_type,omitempty"`
 
 	/* ID id
-
-	Required: true
-	*/
-	ID string `json:"id"`
+	 */
+	ID string `json:"id,omitempty"`
 
 	/* Name name
 
 	Required: true
 	*/
 	Name string `json:"name"`
-
-	/* Services services
-	 */
-	Services []string `json:"services,omitempty"`
 }
 
-// Validate validates this driver config
-func (m *DriverConfig) Validate(formats strfmt.Registry) error {
+// Validate validates this driver
+func (m *Driver) Validate(formats strfmt.Registry) error {
 
 	var res []error
-
-	if err := m.validateID(formats); err != nil {
-		res = append(res, err)
-	}
 
 	if err := m.validateName(formats); err != nil {
 		res = append(res, err)
@@ -57,16 +51,7 @@ func (m *DriverConfig) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *DriverConfig) validateID(formats strfmt.Registry) error {
-
-	if err := validate.Required("id", "body", string(m.ID)); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (m *DriverConfig) validateName(formats strfmt.Registry) error {
+func (m *Driver) validateName(formats strfmt.Registry) error {
 
 	if err := validate.Required("name", "body", string(m.Name)); err != nil {
 		return err

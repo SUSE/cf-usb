@@ -7,18 +7,19 @@ import (
 	"net/http"
 
 	"github.com/go-swagger/go-swagger/httpkit/middleware"
+	"github.com/hpcloud/cf-usb/lib/genmodel"
 )
 
 // CreateServiceHandlerFunc turns a function with the right signature into a create service handler
-type CreateServiceHandlerFunc func(CreateServiceParams) error
+type CreateServiceHandlerFunc func(CreateServiceParams) (*genmodel.Service, error)
 
-func (fn CreateServiceHandlerFunc) Handle(params CreateServiceParams) error {
+func (fn CreateServiceHandlerFunc) Handle(params CreateServiceParams) (*genmodel.Service, error) {
 	return fn(params)
 }
 
 // CreateServiceHandler interface for that can handle valid create service params
 type CreateServiceHandler interface {
-	Handle(CreateServiceParams) error
+	Handle(CreateServiceParams) (*genmodel.Service, error)
 }
 
 // NewCreateService creates a new http.Handler for the create service operation
@@ -43,11 +44,11 @@ func (o *CreateService) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := o.Handler.Handle(o.Params) // actually handle the request
+	res, err := o.Handler.Handle(o.Params) // actually handle the request
 	if err != nil {
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
-	o.Context.Respond(rw, r, route.Produces, route, nil)
+	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

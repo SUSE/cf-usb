@@ -10,15 +10,15 @@ import (
 )
 
 // DeleteServiceHandlerFunc turns a function with the right signature into a delete service handler
-type DeleteServiceHandlerFunc func() error
+type DeleteServiceHandlerFunc func(DeleteServiceParams) error
 
-func (fn DeleteServiceHandlerFunc) Handle() error {
-	return fn()
+func (fn DeleteServiceHandlerFunc) Handle(params DeleteServiceParams) error {
+	return fn(params)
 }
 
 // DeleteServiceHandler interface for that can handle valid delete service params
 type DeleteServiceHandler interface {
-	Handle() error
+	Handle(DeleteServiceParams) error
 }
 
 // NewDeleteService creates a new http.Handler for the delete service operation
@@ -32,18 +32,19 @@ Deletes a `service`
 */
 type DeleteService struct {
 	Context *middleware.Context
+	Params  DeleteServiceParams
 	Handler DeleteServiceHandler
 }
 
 func (o *DeleteService) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
 
-	if err := o.Context.BindValidRequest(r, route, nil); err != nil { // bind params
+	if err := o.Context.BindValidRequest(r, route, &o.Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	err := o.Handler.Handle() // actually handle the request
+	err := o.Handler.Handle(o.Params) // actually handle the request
 	if err != nil {
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return

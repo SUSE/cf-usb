@@ -7,18 +7,19 @@ import (
 	"net/http"
 
 	"github.com/go-swagger/go-swagger/httpkit/middleware"
+	"github.com/hpcloud/cf-usb/lib/genmodel"
 )
 
 // GetDriversHandlerFunc turns a function with the right signature into a get drivers handler
-type GetDriversHandlerFunc func() (*[]string, error)
+type GetDriversHandlerFunc func(GetDriversParams) (*[]genmodel.Driver, error)
 
-func (fn GetDriversHandlerFunc) Handle() (*[]string, error) {
-	return fn()
+func (fn GetDriversHandlerFunc) Handle(params GetDriversParams) (*[]genmodel.Driver, error) {
+	return fn(params)
 }
 
 // GetDriversHandler interface for that can handle valid get drivers params
 type GetDriversHandler interface {
-	Handle() (*[]string, error)
+	Handle(GetDriversParams) (*[]genmodel.Driver, error)
 }
 
 // NewGetDrivers creates a new http.Handler for the get drivers operation
@@ -27,23 +28,24 @@ func NewGetDrivers(ctx *middleware.Context, handler GetDriversHandler) *GetDrive
 }
 
 /*
-Gets information about the available `driver`
+Gets information about the available `drivers`
 
 */
 type GetDrivers struct {
 	Context *middleware.Context
+	Params  GetDriversParams
 	Handler GetDriversHandler
 }
 
 func (o *GetDrivers) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
 
-	if err := o.Context.BindValidRequest(r, route, nil); err != nil { // bind params
+	if err := o.Context.BindValidRequest(r, route, &o.Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res, err := o.Handler.Handle() // actually handle the request
+	res, err := o.Handler.Handle(o.Params) // actually handle the request
 	if err != nil {
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
