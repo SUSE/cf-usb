@@ -68,6 +68,17 @@ func (c *fileConfig) GetDriverInstanceConfig(instanceID string) (*DriverInstance
 
 }
 
+func (c *fileConfig) GetUaaAuthConfig() (*UaaAuth, error) {
+	conf := (*json.RawMessage)(c.config.ManagementAPI.Authentication)
+
+	uaa := Uaa{}
+	err := json.Unmarshal(*conf, &uaa)
+	if err != nil {
+		return nil, err
+	}
+	return &uaa.UaaAuth, nil
+}
+
 func parseJson(jsonConf []byte) (*Config, error) {
 	config := &Config{}
 

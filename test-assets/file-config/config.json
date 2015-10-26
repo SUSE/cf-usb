@@ -2,7 +2,9 @@
     "api_version": "2.6",
     "logLevel": "debug",
     "broker_api": {
+		"external_url": "http://1.2.3.4:54054",
         "listen": ":54054",
+		"dev_mode": true,
         "credentials": {
             "username": "username",
             "password": "password"
@@ -15,9 +17,13 @@
         "authentication": {
             "uaa": {
                 "adminscope": "usb.management.admin",
-                "public_key": ""
+                "public_key": "-----BEGIN PUBLIC KEY-----\npublic key\n-----END PUBLIC KEY-----"
             }
-        }
+        },
+		"cloud_controller": {
+			"api": "http://api.bosh-lite.com",	
+			"skip_tsl_validation": true 
+		}
     },
     "drivers": [
         {

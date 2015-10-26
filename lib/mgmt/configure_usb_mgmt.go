@@ -5,12 +5,13 @@ import (
 	"github.com/go-swagger/go-swagger/httpkit"
 
 	"github.com/hpcloud/cf-usb/lib/genmodel"
+	"github.com/hpcloud/cf-usb/lib/mgmt/authentication"
 	. "github.com/hpcloud/cf-usb/lib/operations"
 )
 
 // This file is safe to edit. Once it exists it will not be overwritten
 
-func ConfigureAPI(api *UsbMgmtAPI) {
+func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface) {
 	// configure the api here
 	api.ServeError = errors.ServeError
 
@@ -123,7 +124,12 @@ func ConfigureAPI(api *UsbMgmtAPI) {
 	})
 
 	api.GetInfoHandler = GetInfoHandlerFunc(func(params GetInfoParams) (*genmodel.Info, error) {
-		return nil, errors.NotImplemented("operation getInfo has not yet been implemented")
+		err := auth.IsAuthenticated(params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
+		return &genmodel.Info{Version: "0.0.1"}, nil
 	})
 
 	api.GetServicePlansHandler = GetServicePlansHandlerFunc(func(params GetServicePlansParams) (*[]genmodel.Plan, error) {

@@ -10,6 +10,7 @@ import (
 	"github.com/hpcloud/cf-usb/lib/config"
 	"github.com/hpcloud/cf-usb/lib/data"
 	"github.com/hpcloud/cf-usb/lib/mgmt"
+	"github.com/hpcloud/cf-usb/lib/mgmt/authentication/uaa"
 	"github.com/hpcloud/cf-usb/lib/operations"
 	"github.com/pivotal-cf/brokerapi"
 	"github.com/pivotal-golang/lager"
@@ -99,8 +100,18 @@ func (usb *UsbApp) Run(configProvider config.ConfigProvider) {
 				logger.Fatal("error-start-mgmt-api", err)
 			}
 
+			uaaAuthConfig, err := configProvider.GetUaaAuthConfig()
+			if err != nil {
+				logger.Error("error-start-mgmt-api", err)
+			}
+
+			auth, err := uaa.NewUaaAuth(uaaAuthConfig.PublicKey, uaaAuthConfig.Scope, usb.config.BrokerAPI.DevMode)
+			if err != nil {
+				logger.Error("error-start-mgmt-api", err)
+			}
+
 			mgmtAPI := operations.NewUsbMgmtAPI(swaggerSpec)
-			mgmt.ConfigureAPI(mgmtAPI)
+			mgmt.ConfigureAPI(mgmtAPI, auth)
 
 			logger.Info("run", lager.Data{"mgmtadd": mgmtaddr})
 			http.ListenAndServe(mgmtaddr, mgmtAPI.Serve())

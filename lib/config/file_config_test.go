@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -44,7 +45,9 @@ func TestLoadConfig(t *testing.T) {
 
 	assert.Equal("2.6", config.APIVersion)
 	assert.Equal(2, len(config.Drivers))
+	assert.Equal("http://1.2.3.4:54054", config.BrokerAPI.ExternalUrl)
 	assert.Equal(":54054", config.BrokerAPI.Listen)
+	assert.Equal(true, config.BrokerAPI.DevMode)
 	assert.Equal("username", config.BrokerAPI.Credentials.Username)
 	assert.Equal("password", config.BrokerAPI.Credentials.Password)
 	assert.Equal(":54053", config.ManagementAPI.Listen)
@@ -136,4 +139,21 @@ func TestGetDriverDials(t *testing.T) {
 
 	assert.Equal(2, dials[0].MAXDB)
 	assert.Equal(100, dials[1].MAXDB)
+}
+
+func TestGetUaaAuthConfig(t *testing.T) {
+	assert := assert.New(t)
+
+	_, configuration, err := loadConfigAsset()
+	if err != nil {
+		assert.Error(err, "Unable to load from temp config file")
+	}
+
+	uaaAuth, err := configuration.GetUaaAuthConfig()
+	if err != nil {
+		assert.Error(err, "Unable to get uaa auth config")
+	}
+
+	assert.Equal("usb.management.admin", uaaAuth.Scope)
+	assert.True(strings.Contains(uaaAuth.PublicKey, "public key"))
 }

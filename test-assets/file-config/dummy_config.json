@@ -2,22 +2,28 @@
     "api_version": "2.6",
     "logLevel": "debug",
     "broker_api": {
+		"external_url": "http://10.11.0.25:54054",
         "listen": ":54054",
+		"dev_mode": true,
         "credentials": {
             "username": "username",
             "password": "password"
         }
     },
     "management_api": {
-        "listen": ":54053",
-        "uaa_secret": "myuaasecret",
-        "uaa_client": "myuaaclient",
+        "listen": ":54053",      
+		"uaa_secret": "cc-usb—management-secret",
+        "uaa_client": "cc_usb_management",
         "authentication": {
             "uaa": {
                 "adminscope": "usb.management.admin",
-                "public_key": ""
+                "public_key": "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDHFr+KICms+tuT1OXJwhCUmR2d\nKVy7psa8xzElSyzqx7oJyfJ1JZyOzToj9T5SfTIq396agbHJWVfYphNahvZ/7uMX\nqHxf+ZH9BL1gk9Y6kCnbM5R60gfwjyW1/dQPjOzn9N394zd2FJoFHwdq9Qs0wBug\nspULZVNRxq7veq/fzwIDAQAB\n-----END PUBLIC KEY-----"
             }
-        }
+        },
+		"cloud_controller": {
+			"api": "http://api.bosh-lite.com",	
+			"skip_tsl_validation": true 
+		}
     },
     "drivers": [
         {
