@@ -1,4 +1,4 @@
-package uaaauthentication
+package uaa
 
 import (
 	auth "github.com/cloudfoundry-incubator/routing-api/authentication"
@@ -11,14 +11,21 @@ type UaaAuth struct {
 	scope       string
 }
 
-func NewUaaAuth(uaaPublicKey string, scope string) (authentication.AuthenticationInterface, error) {
-	auth := UaaAuth{auth.NewAccessToken(uaaPublicKey), scope}
-	err := auth.accessToken.CheckPublicToken()
+func NewUaaAuth(uaaPublicKey string, scope string, devMode bool) (authentication.AuthenticationInterface, error) {
+	var token auth.Token
+
+	if devMode {
+		token = auth.NullToken{}
+	} else {
+		token = auth.NewAccessToken(uaaPublicKey)
+	}
+
+	newAuth := UaaAuth{token, scope}
+	err := newAuth.accessToken.CheckPublicToken()
 	if err != nil {
 		return nil, err
 	}
-
-	return &auth, nil
+	return &newAuth, nil
 }
 
 func (auth *UaaAuth) IsAuthenticated(authHeader string) error {

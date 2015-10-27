@@ -7,15 +7,27 @@ import (
 )
 
 type BrokerAPI struct {
+	ExternalUrl string                      `json:"external_url"`
 	Listen      string                      `json:"listen"`
+	DevMode     bool                        `json:"dev_mode"`
 	Credentials brokerapi.BrokerCredentials `json:"credentials"`
 }
 
 type ManagementAPI struct {
-	Listen         string           `json:"listen"`
-	UaaClient      string           `json:"uaa_client"`
-	UaaSecret      string           `json:"uaa_secret"`
-	Authentication *json.RawMessage `json:"authentication"`
+	Listen          string           `json:"listen"`
+	UaaClient       string           `json:"uaa_client"`
+	UaaSecret       string           `json:"uaa_secret"`
+	Authentication  *json.RawMessage `json:"authentication"`
+	CloudController *json.RawMessage `json:"cloud_controller"`
+}
+
+type Uaa struct {
+	UaaAuth UaaAuth `json:"uaa"`
+}
+
+type UaaAuth struct {
+	Scope     string `json:"adminscope"`
+	PublicKey string `json:"public_key"`
 }
 
 type Dial struct {
@@ -23,6 +35,7 @@ type Dial struct {
 	Configuration *json.RawMessage      `json:"configuration,omitempty"`
 	Plan          brokerapi.ServicePlan `json:"plan"`
 }
+
 type DriverInstance struct {
 	ID            string            `json:"id"`
 	Name          string            `json:"name"`
@@ -48,4 +61,5 @@ type Config struct {
 type ConfigProvider interface {
 	LoadConfiguration() (*Config, error)
 	GetDriverInstanceConfig(driverInstanceID string) (*DriverInstance, error)
+	GetUaaAuthConfig() (*UaaAuth, error)
 }
