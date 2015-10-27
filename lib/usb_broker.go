@@ -23,13 +23,14 @@ func NewUsbBroker(drivers []*DriverProvider, config *config.Config, logger lager
 
 func (broker *UsbBroker) Services() []brokerapi.Service {
 	var catalog []brokerapi.Service
-	// TODO: advertise only services that have a driver running
 	for _, driverProvider := range broker.driverProverders {
-		service := driverProvider.Instance.Service
-		for _, dial := range driverProvider.Instance.Dials {
-			service.Plans = append(service.Plans, dial.Plan)
+		if driverProvider.Instance != nil {
+			service := driverProvider.Instance.Service
+			for _, dial := range driverProvider.Instance.Dials {
+				service.Plans = append(service.Plans, dial.Plan)
+			}
+			catalog = append(catalog, service)
 		}
-		catalog = append(catalog, service)
 	}
 	return catalog
 }

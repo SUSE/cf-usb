@@ -21,11 +21,12 @@ type DriverProvider struct {
 	driverPath string
 
 	logger   lager.Logger
-	Instance config.DriverInstance
+	Instance *config.DriverInstance
 }
 
-func NewDriverProvider(driverType string, instance config.DriverInstance, logger lager.Logger) (*DriverProvider, error) {
+func NewDriverProvider(driverType string, instance *config.DriverInstance, logger lager.Logger) *DriverProvider {
 	p := DriverProvider{}
+
 	p.Instance = instance
 	p.driverType = driverType
 	p.logger = logger
@@ -34,38 +35,44 @@ func NewDriverProvider(driverType string, instance config.DriverInstance, logger
 	if driverPath == "" {
 		driverPath = "drivers"
 	}
+
 	driverPath = filepath.Join(driverPath, driverType)
 	if runtime.GOOS == "windows" {
 		driverPath = driverPath + ".exe"
 	}
 	p.driverPath = driverPath
 
+	return &p
+}
+
+func (p *DriverProvider) Validate() error {
 	client, err := p.createProviderClient()
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer client.Close()
 
 	err = p.validateConfigSchema(client)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	err = p.validateDialsSchema(client)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	_, err = p.init(client)
+	pong, err := p.Ping()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return &p, nil
-}
+	if !pong {
+		err = errors.New("Cannot reach server.")
+		return err
+	}
 
-func (p *DriverProvider) Init() (string, error) {
-	return p.createClientAndInvoke(p.init)
+	return nil
 }
 
 func (p *DriverProvider) Ping() (bool, error) {
@@ -120,8 +127,9 @@ func (p *DriverProvider) DeprovisionInstance(deprovisionRequest string) (interfa
 
 func (p *DriverProvider) createProviderClient() (*rpc.Client, error) {
 	client, err := pie.StartProviderCodec(jsonrpc.NewClientCodec, os.Stderr, p.driverPath)
+	_, err = p.init(client)
 	if err != nil {
-		return client, err
+		return nil, err
 	}
 	return client, err
 }

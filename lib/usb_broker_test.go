@@ -34,10 +34,7 @@ func setupEnv() (*UsbBroker, error) {
 		return nil, err
 	}
 
-	driverProvider, err := NewDriverProvider("dummy", *testDriverProperties, logger)
-	if err != nil {
-		return nil, err
-	}
+	driverProvider := NewDriverProvider("dummy", testDriverProperties, logger)
 
 	testConfig, err := configProvider.LoadConfiguration()
 	if err != nil {
