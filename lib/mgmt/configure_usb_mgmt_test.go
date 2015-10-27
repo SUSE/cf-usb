@@ -1,9 +1,12 @@
 package mgmt
 
 import (
+	"path/filepath"
+	"os"
 	"testing"
 
 	"github.com/go-swagger/go-swagger/spec"
+	"github.com/hpcloud/cf-usb/lib/config"
 	"github.com/hpcloud/cf-usb/lib/data"
 	"github.com/hpcloud/cf-usb/lib/mgmt/authentication/uaa"
 	"github.com/hpcloud/cf-usb/lib/operations"
@@ -29,7 +32,15 @@ func TestGetInfo(t *testing.T) {
 		t.Errorf("Error instantiating uaa auth: %v", err)
 	}
 
-	ConfigureAPI(mgmtAPI, auth)
+	workDir, err := os.Getwd()
+	configFile := filepath.Join(workDir, "../../test-assets/file-config/config.json")
+	fileConfig := config.NewFileConfig(configFile)
+	configuration, err := fileConfig.LoadConfiguration()
+	if err != nil {
+		t.Errorf("Error loading config: %v", err)
+	}
+
+	ConfigureAPI(mgmtAPI, auth, configuration)
 
 	params := operations.GetInfoParams{""}
 
@@ -38,5 +49,5 @@ func TestGetInfo(t *testing.T) {
 		t.Errorf("Error get info: %v", err)
 	}
 
-	assert.Equal("0.0.1", info.Version)
+	assert.Equal("2.6", info.Version)
 }

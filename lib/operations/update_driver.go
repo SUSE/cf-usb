@@ -7,18 +7,19 @@ import (
 	"net/http"
 
 	"github.com/go-swagger/go-swagger/httpkit/middleware"
+	"github.com/hpcloud/cf-usb/lib/genmodel"
 )
 
 // UpdateDriverHandlerFunc turns a function with the right signature into a update driver handler
-type UpdateDriverHandlerFunc func(UpdateDriverParams) error
+type UpdateDriverHandlerFunc func(UpdateDriverParams) (*genmodel.Driver, error)
 
-func (fn UpdateDriverHandlerFunc) Handle(params UpdateDriverParams) error {
+func (fn UpdateDriverHandlerFunc) Handle(params UpdateDriverParams) (*genmodel.Driver, error) {
 	return fn(params)
 }
 
 // UpdateDriverHandler interface for that can handle valid update driver params
 type UpdateDriverHandler interface {
-	Handle(UpdateDriverParams) error
+	Handle(UpdateDriverParams) (*genmodel.Driver, error)
 }
 
 // NewUpdateDriver creates a new http.Handler for the update driver operation
@@ -43,11 +44,11 @@ func (o *UpdateDriver) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := o.Handler.Handle(o.Params) // actually handle the request
+	res, err := o.Handler.Handle(o.Params) // actually handle the request
 	if err != nil {
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
-	o.Context.Respond(rw, r, route.Produces, route, nil)
+	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

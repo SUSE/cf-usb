@@ -7,18 +7,19 @@ import (
 	"net/http"
 
 	"github.com/go-swagger/go-swagger/httpkit/middleware"
+	"github.com/hpcloud/cf-usb/lib/genmodel"
 )
 
 // CreateDialHandlerFunc turns a function with the right signature into a create dial handler
-type CreateDialHandlerFunc func(CreateDialParams) error
+type CreateDialHandlerFunc func(CreateDialParams) (*genmodel.Dial, error)
 
-func (fn CreateDialHandlerFunc) Handle(params CreateDialParams) error {
+func (fn CreateDialHandlerFunc) Handle(params CreateDialParams) (*genmodel.Dial, error) {
 	return fn(params)
 }
 
 // CreateDialHandler interface for that can handle valid create dial params
 type CreateDialHandler interface {
-	Handle(CreateDialParams) error
+	Handle(CreateDialParams) (*genmodel.Dial, error)
 }
 
 // NewCreateDial creates a new http.Handler for the create dial operation
@@ -43,11 +44,11 @@ func (o *CreateDial) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := o.Handler.Handle(o.Params) // actually handle the request
+	res, err := o.Handler.Handle(o.Params) // actually handle the request
 	if err != nil {
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
-	o.Context.Respond(rw, r, route.Produces, route, nil)
+	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

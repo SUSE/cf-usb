@@ -72,7 +72,7 @@
                             "testService"
                         ],
                         "metadata": {
-                            "providerDisplayName": "Echo Service Ltd."
+                            "displayName": "Echo Service Ltd."
                         }
                     }
                 }

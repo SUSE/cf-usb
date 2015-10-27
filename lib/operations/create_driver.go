@@ -7,18 +7,19 @@ import (
 	"net/http"
 
 	"github.com/go-swagger/go-swagger/httpkit/middleware"
+	"github.com/hpcloud/cf-usb/lib/genmodel"
 )
 
 // CreateDriverHandlerFunc turns a function with the right signature into a create driver handler
-type CreateDriverHandlerFunc func(CreateDriverParams) error
+type CreateDriverHandlerFunc func(CreateDriverParams) (*genmodel.Driver, error)
 
-func (fn CreateDriverHandlerFunc) Handle(params CreateDriverParams) error {
+func (fn CreateDriverHandlerFunc) Handle(params CreateDriverParams) (*genmodel.Driver, error) {
 	return fn(params)
 }
 
 // CreateDriverHandler interface for that can handle valid create driver params
 type CreateDriverHandler interface {
-	Handle(CreateDriverParams) error
+	Handle(CreateDriverParams) (*genmodel.Driver, error)
 }
 
 // NewCreateDriver creates a new http.Handler for the create driver operation
@@ -44,11 +45,11 @@ func (o *CreateDriver) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := o.Handler.Handle(o.Params) // actually handle the request
+	res, err := o.Handler.Handle(o.Params) // actually handle the request
 	if err != nil {
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
-	o.Context.Respond(rw, r, route.Produces, route, nil)
+	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

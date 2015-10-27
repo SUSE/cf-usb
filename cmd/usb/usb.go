@@ -111,7 +111,7 @@ func (usb *UsbApp) Run(configProvider config.ConfigProvider) {
 			}
 
 			mgmtAPI := operations.NewUsbMgmtAPI(swaggerSpec)
-			mgmt.ConfigureAPI(mgmtAPI, auth)
+			mgmt.ConfigureAPI(mgmtAPI, auth, usb.config)
 
 			logger.Info("run", lager.Data{"mgmtadd": mgmtaddr})
 			http.ListenAndServe(mgmtaddr, mgmtAPI.Serve())

@@ -18,7 +18,7 @@ import (
 type CreateServicePlanParams struct {
 	// Authorization token
 	Authorization string
-	// Add a plan for a **serviceID**
+	// Add a plan for a **dialID**
 	Plan genmodel.Plan
 }
 

@@ -10,6 +10,7 @@ import (
 	"github.com/go-swagger/go-swagger/httpkit/middleware"
 	"github.com/go-swagger/go-swagger/httpkit/validate"
 	"github.com/go-swagger/go-swagger/strfmt"
+	"github.com/hpcloud/cf-usb/lib/genmodel"
 )
 
 // UpdateBrokerInfoParams contains all the bound params for the update broker info operation
@@ -17,6 +18,8 @@ import (
 type UpdateBrokerInfoParams struct {
 	// Authorization token
 	Authorization string
+	// Updated broker
+	Broker genmodel.Broker
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
@@ -26,6 +29,15 @@ func (o *UpdateBrokerInfoParams) BindRequest(r *http.Request, route *middleware.
 
 	if err := o.bindAuthorization(r.Header.Get("authorization"), route.Formats); err != nil {
 		res = append(res, err)
+	}
+
+	if err := route.Consumer.Consume(r.Body, &o.Broker); err != nil {
+		res = append(res, errors.NewParseError("broker", "body", "", err))
+	} else {
+		if err := o.Broker.Validate(route.Formats); err != nil {
+			res = append(res, err)
+		}
+
 	}
 
 	if len(res) > 0 {
