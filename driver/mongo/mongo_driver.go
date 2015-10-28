@@ -1,25 +1,22 @@
-package driver
+package mongo
 
 import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 
 	"github.com/hpcloud/cf-usb/driver"
+	"github.com/hpcloud/cf-usb/driver/mongo/config"
 	"github.com/hpcloud/cf-usb/driver/mongo/driverdata"
 	"github.com/hpcloud/cf-usb/driver/mongo/mongoprovisioner"
-	"github.com/hpcloud/cf-usb/lib/model"
+	"github.com/hpcloud/cf-usb/driver/status"
 	"github.com/pivotal-golang/lager"
 )
 
 type MongoDriver struct {
-	User   string `json:"user id"`
-	Pass   string `json:"password"`
-	Host   string `json:"server"`
-	Port   string `json:"port"`
-	db     mongoprovisioner.MongoProvisionerInterface
 	logger lager.Logger
+	conf   config.MongoDriverConfig
+	db     mongoprovisioner.MongoProvisionerInterface
 }
 
 func (e *MongoDriver) secureRandomString(bytesOfEntpry int) string {
@@ -33,19 +30,24 @@ func (e *MongoDriver) secureRandomString(bytesOfEntpry int) string {
 	return base64.URLEncoding.EncodeToString(rb)
 }
 
-func NewMongoDriver(logger lager.Logger) driver.Driver {
-	return &MongoDriver{logger: logger}
+func NewMongoDriver(logger lager.Logger, db mongoprovisioner.MongoProvisionerInterface) driver.Driver {
+	return &MongoDriver{logger: logger, db: db}
 }
 
-func (e *MongoDriver) Init(configuration model.DriverInitRequest, response *string) error {
-	err := json.Unmarshal(*configuration.DriverConfig, &e)
+func (e *MongoDriver) init(configuration *json.RawMessage) error {
+	mongoConfig := config.MongoDriverConfig{}
+	err := json.Unmarshal(*configuration, &mongoConfig)
+	if err != nil {
+		return err
+	}
 	e.logger.Info("Mongo Driver initializing")
-	e.db, err = mongoprovisioner.New(e.User, e.Pass, e.Host+":"+e.Port, e.logger)
+	err = e.db.Connect(mongoConfig)
+	e.conf = mongoConfig
 	return err
 }
 
-func (e *MongoDriver) Ping(empty string, result *bool) error {
-	_, err := mongoprovisioner.New(e.User, e.Pass, e.Host+":"+e.Port, e.logger)
+func (e *MongoDriver) Ping(request *json.RawMessage, result *bool) error {
+	err := e.init(request)
 	if err != nil {
 		*result = false
 		return err
@@ -76,71 +78,104 @@ func (e *MongoDriver) GetConfigSchema(request string, response *string) error {
 	return nil
 }
 
-func (e *MongoDriver) ProvisionInstance(request model.ProvisionInstanceRequest, result *bool) error {
-	err := e.db.CreateDatabase(request.InstanceID)
+func (e *MongoDriver) ProvisionInstance(request driver.ProvisionInstanceRequest, response *driver.Instance) error {
+	err := e.init(request.Config)
+	if err != nil {
+		return err
+	}
+	err = e.db.CreateDatabase(request.InstanceID)
+	if err != nil {
+		return err
+	}
+	response.Status = status.Created
+	return nil
+}
+
+func (e *MongoDriver) GetInstance(request driver.GetInstanceRequest, response *driver.Instance) error {
+	err := e.init(request.Config)
+	if err != nil {
+		return err
+	}
+	created, err := e.db.IsDatabaseCreated(request.InstanceID)
+	if err != nil {
+		return err
+	}
+	response.Status = status.DoesNotExist
+	if created {
+		response.Status = status.Exists
+	}
+	return nil
+}
+
+func (e *MongoDriver) GenerateCredentials(request driver.GenerateCredentialsRequest, response *interface{}) error {
+	err := e.init(request.Config)
 	if err != nil {
 		return err
 	}
 
-	return nil
-}
-
-func (e *MongoDriver) InstanceExists(instanceID string, result *bool) error {
-	created, err := e.db.IsDatabaseCreated(instanceID)
-	if err != nil {
-		return err
-	}
-	*result = created
-	return nil
-}
-
-func (e *MongoDriver) GenerateCredentials(request model.CredentialsRequest, response *interface{}) error {
 	username := request.InstanceID + "-" + request.CredentialsID
 	password := e.secureRandomString(32)
 
-	err := e.db.CreateUser(request.InstanceID, username, password)
+	err = e.db.CreateUser(request.InstanceID, username, password)
 	if err != nil {
 		return err
 	}
 	data := MongoBindingCredentials{
-		Host:             e.Host,
-		Port:             e.Port,
+		Host:             e.conf.Host,
+		Port:             e.conf.Port,
 		Username:         username,
 		Password:         password,
-		ConnectionString: generateConnectionString(e.Host, e.Port, request.InstanceID, username, password),
+		ConnectionString: generateConnectionString(e.conf.Host, e.conf.Port, request.InstanceID, username, password),
 	}
 
 	*response = data
 	return nil
 }
 
-func (e *MongoDriver) CredentialsExist(request model.CredentialsRequest, response *bool) error {
+func (e *MongoDriver) GetCredentials(request driver.GetCredentialsRequest, response *driver.Credentials) error {
+	err := e.init(request.Config)
+	if err != nil {
+		return err
+	}
 	username := request.InstanceID + "-" + request.CredentialsID
 
 	created, err := e.db.IsUserCreated(request.InstanceID, username)
 	if err != nil {
 		return err
 	}
-	*response = created
+	response.Status = status.DoesNotExist
+	if created {
+		response.Status = status.Exists
+	}
 	return nil
 }
 
-func (e *MongoDriver) RevokeCredentials(request model.CredentialsRequest, response *interface{}) error {
+func (e *MongoDriver) RevokeCredentials(request driver.RevokeCredentialsRequest, response *driver.Credentials) error {
+	err := e.init(request.Config)
+	if err != nil {
+		return err
+	}
 	username := request.InstanceID + "-" + request.CredentialsID
-	err := e.db.DeleteUser(request.InstanceID, username)
+
+	err = e.db.DeleteUser(request.InstanceID, username)
 	if err != nil {
 		return err
 	}
-	*response = fmt.Sprintf("Credentials for %s revoked", username)
+	response.Status = status.Deleted
 	return nil
 }
 
-func (e *MongoDriver) DeprovisionInstance(instanceID string, response *interface{}) error {
-	err := e.db.DeleteDatabase(instanceID)
+func (e *MongoDriver) DeprovisionInstance(request driver.DeprovisionInstanceRequest, response *driver.Instance) error {
+	err := e.init(request.Config)
 	if err != nil {
 		return err
 	}
-	*response = fmt.Sprintf("Deprovisioned %s", instanceID)
+
+	err = e.db.DeleteDatabase(request.InstanceID)
+	if err != nil {
+		return err
+	}
+	response.Status = status.Deleted
 
 	return nil
 }

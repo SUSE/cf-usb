@@ -1,45 +1,66 @@
-package driver
+package mongo
 
 import (
+	"encoding/json"
+	"os"
 	"testing"
 
-	"github.com/hpcloud/cf-usb/driver/mongo/mongoprovisioner"
-	"github.com/hpcloud/cf-usb/lib/model"
+	usbDriver "github.com/hpcloud/cf-usb/driver"
+	"github.com/hpcloud/cf-usb/driver/mongo/config"
+	"github.com/hpcloud/cf-usb/driver/mongo/mongoprovisioner/mocks"
+	"github.com/hpcloud/cf-usb/driver/status"
+	"github.com/pivotal-golang/lager"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
+func getEnptyConfig() *json.RawMessage {
+	rawMessage := json.RawMessage([]byte("{}"))
+	emptyConfig := rawMessage
+	return &emptyConfig
+}
+
+func getMockProvisioner() (*mocks.MongoProvisionerInterface, usbDriver.Driver) {
+	var logger = lager.NewLogger("mongodb-driver-test")
+
+	logger.RegisterSink(lager.NewWriterSink(os.Stderr, lager.DEBUG))
+
+	mockProv := new(mocks.MongoProvisionerInterface)
+	mongoDriver := NewMongoDriver(logger, mockProv)
+
+	mockProv.On("Connect", config.MongoDriverConfig{}).Return(nil)
+
+	return mockProv, mongoDriver
+}
+
 func Test_Provision(t *testing.T) {
 	assert := assert.New(t)
 
-	driver := MongoDriver{}
-	mockProv := new(mongoprovisioner.MongoProvisionerMock)
+	mockProv, mongoDriver := getMockProvisioner()
 	mockProv.On("CreateDatabase", "testId").Return(nil)
-	driver.db = mockProv
-
-	var req model.ProvisionInstanceRequest
-
+	var req usbDriver.ProvisionInstanceRequest
 	req.InstanceID = "testId"
+	req.Config = getEnptyConfig()
+	var response usbDriver.Instance
 
-	var response bool
-	err := driver.ProvisionInstance(req, &response)
+	err := mongoDriver.ProvisionInstance(req, &response)
 
 	assert.NoError(err)
 }
 
-func Test_InstanceExists(t *testing.T) {
+func Test_GetInstance(t *testing.T) {
 	assert := assert.New(t)
 
-	driver := MongoDriver{}
-	mockProv := new(mongoprovisioner.MongoProvisionerMock)
+	mockProv, mongoDriver := getMockProvisioner()
 	mockProv.On("IsDatabaseCreated", "testId").Return(true, nil)
-	driver.db = mockProv
-	req := "testId"
+	var req usbDriver.GetInstanceRequest
+	req.InstanceID = "testId"
+	req.Config = getEnptyConfig()
+	var response usbDriver.Instance
 
-	var response bool
-	err := driver.InstanceExists(req, &response)
+	err := mongoDriver.GetInstance(req, &response)
 
-	assert.True(response)
+	assert.Equal(response.Status, status.Exists)
 	assert.NoError(err)
 }
 
@@ -61,72 +82,67 @@ func Test_GetConfigSchema(t *testing.T) {
 	assert.NoError(err)
 }
 
-func Test_CredentialsExist(t *testing.T) {
+func Test_GetCredentials(t *testing.T) {
 	assert := assert.New(t)
-	driver := MongoDriver{}
-	mockProv := new(mongoprovisioner.MongoProvisionerMock)
+	mockProv, mongoDriver := getMockProvisioner()
 	mockProv.On("IsUserCreated", "testId", "testId-user").Return(true, nil)
 
-	driver.db = mockProv
-
-	var req model.CredentialsRequest
+	var req usbDriver.GetCredentialsRequest
+	req.Config = getEnptyConfig()
 	req.CredentialsID = "user"
 	req.InstanceID = "testId"
 
-	var response bool
-	err := driver.CredentialsExist(req, &response)
-	assert.True(response)
+	var response usbDriver.Credentials
+
+	err := mongoDriver.GetCredentials(req, &response)
+	assert.Equal(response.Status, status.Exists)
 	assert.NoError(err)
 }
 
 func Test_GenerateCredentials(t *testing.T) {
 	assert := assert.New(t)
-	driver := MongoDriver{}
-	mockProv := new(mongoprovisioner.MongoProvisionerMock)
+
+	mockProv, mongoDriver := getMockProvisioner()
 	mockProv.On("CreateUser", "testId", "testId-user", mock.Anything).Return(nil)
 
-	driver.db = mockProv
-
-	var req model.CredentialsRequest
+	var req usbDriver.GenerateCredentialsRequest
 	req.CredentialsID = "user"
 	req.InstanceID = "testId"
+	req.Config = getEnptyConfig()
 	var response interface{}
 
-	err := driver.GenerateCredentials(req, &response)
+	err := mongoDriver.GenerateCredentials(req, &response)
 	assert.NoError(err)
 }
 
 func Test_RevokeCredentials(t *testing.T) {
 	assert := assert.New(t)
 
-	driver := MongoDriver{}
-	mockProv := new(mongoprovisioner.MongoProvisionerMock)
+	mockProv, mongoDriver := getMockProvisioner()
 	mockProv.On("DeleteUser", "testId", "testId-user").Return(nil)
 
-	driver.db = mockProv
-
-	var req model.CredentialsRequest
+	var req usbDriver.RevokeCredentialsRequest
 	req.CredentialsID = "user"
 	req.InstanceID = "testId"
-	var response interface{}
+	req.Config = getEnptyConfig()
+	var response usbDriver.Credentials
 
-	err := driver.RevokeCredentials(req, &response)
+	err := mongoDriver.RevokeCredentials(req, &response)
 	assert.NoError(err)
 }
 
 func Test_Deprovision(t *testing.T) {
 	assert := assert.New(t)
 
-	driver := MongoDriver{}
-	mockProv := new(mongoprovisioner.MongoProvisionerMock)
+	mockProv, mongoDriver := getMockProvisioner()
 	mockProv.On("DeleteDatabase", "testId").Return(nil)
 
-	driver.db = mockProv
+	var req usbDriver.DeprovisionInstanceRequest
+	req.Config = getEnptyConfig()
+	req.InstanceID = "testId"
 
-	req := "testId"
-
-	var response interface{}
-	err := driver.DeprovisionInstance(req, &response)
+	var response usbDriver.Instance
+	err := mongoDriver.DeprovisionInstance(req, &response)
 
 	assert.NoError(err)
 }

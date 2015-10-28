@@ -1,30 +1,33 @@
 package mongoprovisioner
 
 import (
-	"fmt"
+	"github.com/hpcloud/cf-usb/driver/mongo/config"
 	"github.com/pivotal-golang/lager"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
 type MongoProvisioner struct {
-	User       string
-	Pass       string
-	Host       string
+	Config     config.MongoDriverConfig
 	Connection *mgo.Session
 	logger     lager.Logger
 }
 
-func New(username string, password string, host string, logger lager.Logger) (MongoProvisionerInterface, error) {
+func New(logger lager.Logger) MongoProvisionerInterface {
+	return &MongoProvisioner{logger: logger}
+}
+
+func (e *MongoProvisioner) Connect(mongoConfig config.MongoDriverConfig) error {
 	var err error
-	provisioner := MongoProvisioner{User: username, Pass: password, Host: host, logger: logger}
-	provisioner.Connection, err = mgo.Dial(host)
+	e.Config = mongoConfig
+
+	//TODO handle authorization
+
+	e.Connection, err = mgo.Dial(e.Config.Host + ":" + e.Config.Port)
 	if err != nil {
-		fmt.Println(err)
-		provisioner.logger.Error("Error creating new mongo provisioner", err)
-		return nil, err
+		e.logger.Error("Error loging into the mongo db service", err)
 	}
-	return &provisioner, nil
+	return err
 }
 
 func (e *MongoProvisioner) Close() {

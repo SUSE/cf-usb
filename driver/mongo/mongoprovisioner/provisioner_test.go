@@ -1,10 +1,11 @@
 package mongoprovisioner
 
 import (
-	"github.com/pivotal-golang/lager"
 	"log"
 	"os"
 	"testing"
+
+	"github.com/pivotal-golang/lager"
 )
 
 var mongoConConfig = struct {
@@ -14,6 +15,7 @@ var mongoConConfig = struct {
 	TestProvisioner MongoProvisionerInterface
 }{}
 
+//TODO Fix tests
 func init() {
 	var err error
 	mongoConConfig.User = os.Getenv("MONGO_USER")
@@ -24,7 +26,7 @@ func init() {
 
 	logger.RegisterSink(lager.NewWriterSink(os.Stderr, lager.DEBUG))
 
-	mongoConConfig.TestProvisioner, err = New(mongoConConfig.User, mongoConConfig.Pass, mongoConConfig.Host, logger)
+	mongoConConfig.TestProvisioner = New(logger)
 	if err != nil {
 		log.Println(err)
 	}

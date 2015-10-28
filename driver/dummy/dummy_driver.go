@@ -1,4 +1,4 @@
-package dummydriver
+package dummy
 
 import (
 	"encoding/json"
