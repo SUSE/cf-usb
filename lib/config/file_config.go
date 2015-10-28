@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+
+	"github.com/pivotal-cf/brokerapi"
 )
 
 type fileConfig struct {
@@ -77,6 +79,38 @@ func (c *fileConfig) GetUaaAuthConfig() (*UaaAuth, error) {
 		return nil, err
 	}
 	return &uaa.UaaAuth, nil
+}
+
+func (c *fileConfig) GetDriver(driverID string) (Driver, error) {
+	return Driver{}, nil
+}
+
+func (c *fileConfig) GetDriverInstance(instanceID string) (DriverInstance, error) {
+	return DriverInstance{}, nil
+}
+
+func (c *fileConfig) GetService(instanceID string) (brokerapi.Service, error) {
+	return brokerapi.Service{}, nil
+}
+
+func (c *fileConfig) GetDial(instanceID string, dialID string) (Dial, error) {
+	return Dial{}, nil
+}
+
+func (c *fileConfig) SetDriver(driverInfo Driver) error {
+	return nil
+}
+
+func (c *fileConfig) SetDriverInstance(driverID string, instance DriverInstance) error {
+	return nil
+}
+
+func (c *fileConfig) SetService(instanceID string, service brokerapi.Service) error {
+	return nil
+}
+
+func (c *fileConfig) SetDial(instanceID string, dialInfo Dial) error {
+	return nil
 }
 
 func parseJson(jsonConf []byte) (*Config, error) {

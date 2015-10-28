@@ -62,4 +62,12 @@ type ConfigProvider interface {
 	LoadConfiguration() (*Config, error)
 	GetDriverInstanceConfig(driverInstanceID string) (*DriverInstance, error)
 	GetUaaAuthConfig() (*UaaAuth, error)
+	SetDriver(Driver) error
+	GetDriver(string) (Driver, error)
+	SetDriverInstance(string, DriverInstance) error
+	GetDriverInstance(string) (DriverInstance, error)
+	SetService(string, brokerapi.Service) error
+	GetService(string) (brokerapi.Service, error)
+	SetDial(string, Dial) error
+	GetDial(string, string) (Dial, error)
 }
