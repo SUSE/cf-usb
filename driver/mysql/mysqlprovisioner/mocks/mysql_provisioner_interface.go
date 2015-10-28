@@ -1,14 +1,27 @@
-package mysqlprovisioner
+package mocks
 
 import "github.com/stretchr/testify/mock"
 
 import "database/sql"
+import "github.com/hpcloud/cf-usb/driver/mysql/config"
 
-type MysqlProvisionerMock struct {
+type MysqlProvisionerInterface struct {
 	mock.Mock
 }
 
-func (_m *MysqlProvisionerMock) IsDatabaseCreated(_a0 string) (bool, error) {
+func (_m *MysqlProvisionerInterface) Connect(_a0 config.MysqlDriverConfig) error {
+	ret := _m.Called(_a0)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(config.MysqlDriverConfig) error); ok {
+		r0 = rf(_a0)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+func (_m *MysqlProvisionerInterface) IsDatabaseCreated(_a0 string) (bool, error) {
 	ret := _m.Called(_a0)
 
 	var r0 bool
@@ -27,7 +40,7 @@ func (_m *MysqlProvisionerMock) IsDatabaseCreated(_a0 string) (bool, error) {
 
 	return r0, r1
 }
-func (_m *MysqlProvisionerMock) IsUserCreated(_a0 string) (bool, error) {
+func (_m *MysqlProvisionerInterface) IsUserCreated(_a0 string) (bool, error) {
 	ret := _m.Called(_a0)
 
 	var r0 bool
@@ -46,7 +59,7 @@ func (_m *MysqlProvisionerMock) IsUserCreated(_a0 string) (bool, error) {
 
 	return r0, r1
 }
-func (_m *MysqlProvisionerMock) CreateDatabase(_a0 string) error {
+func (_m *MysqlProvisionerInterface) CreateDatabase(_a0 string) error {
 	ret := _m.Called(_a0)
 
 	var r0 error
@@ -58,7 +71,7 @@ func (_m *MysqlProvisionerMock) CreateDatabase(_a0 string) error {
 
 	return r0
 }
-func (_m *MysqlProvisionerMock) DeleteDatabase(_a0 string) error {
+func (_m *MysqlProvisionerInterface) DeleteDatabase(_a0 string) error {
 	ret := _m.Called(_a0)
 
 	var r0 error
@@ -70,7 +83,7 @@ func (_m *MysqlProvisionerMock) DeleteDatabase(_a0 string) error {
 
 	return r0
 }
-func (_m *MysqlProvisionerMock) Query(_a0 string) (*sql.Rows, error) {
+func (_m *MysqlProvisionerInterface) Query(_a0 string) (*sql.Rows, error) {
 	ret := _m.Called(_a0)
 
 	var r0 *sql.Rows
@@ -91,7 +104,7 @@ func (_m *MysqlProvisionerMock) Query(_a0 string) (*sql.Rows, error) {
 
 	return r0, r1
 }
-func (_m *MysqlProvisionerMock) CreateUser(_a0 string, _a1 string, _a2 string) error {
+func (_m *MysqlProvisionerInterface) CreateUser(_a0 string, _a1 string, _a2 string) error {
 	ret := _m.Called(_a0, _a1, _a2)
 
 	var r0 error
@@ -103,7 +116,7 @@ func (_m *MysqlProvisionerMock) CreateUser(_a0 string, _a1 string, _a2 string) e
 
 	return r0
 }
-func (_m *MysqlProvisionerMock) DeleteUser(_a0 string) error {
+func (_m *MysqlProvisionerInterface) DeleteUser(_a0 string) error {
 	ret := _m.Called(_a0)
 
 	var r0 error

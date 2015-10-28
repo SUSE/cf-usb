@@ -5,28 +5,27 @@ import (
 	"fmt"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/hpcloud/cf-usb/driver/mysql/config"
 	"github.com/pivotal-golang/lager"
 )
 
 type MysqlProvisioner struct {
-	User       string
-	Pass       string
-	Host       string
+	Conf       config.MysqlDriverConfig
 	Connection *sql.DB
 	logger     lager.Logger
 }
 
-func New(username string, password string, host string, logger lager.Logger) (MysqlProvisionerInterface, error) {
+func New(logger lager.Logger) MysqlProvisionerInterface {
+	return &MysqlProvisioner{logger: logger}
+}
+
+func (e *MysqlProvisioner) Connect(conf config.MysqlDriverConfig) error {
 	var err error
-	provisioner := MysqlProvisioner{User: username, Pass: password, Host: host, logger: logger}
+	e.Conf = conf
 
-	provisioner.Connection, err = provisioner.openSqlConnection()
+	e.Connection, err = e.openSqlConnection()
 
-	if err != nil {
-		return nil, err
-	}
-
-	return &provisioner, nil
+	return err
 }
 
 func (e *MysqlProvisioner) Close() error {
@@ -180,7 +179,7 @@ func (e *MysqlProvisioner) DeleteUser(username string) error {
 }
 
 func (e *MysqlProvisioner) openSqlConnection() (*sql.DB, error) {
-	con, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s)/mysql", e.User, e.Pass, e.Host))
+	con, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/mysql", e.Conf.User, e.Conf.Pass, e.Conf.Host, e.Conf.Port))
 	if err != nil {
 		return nil, err
 	}

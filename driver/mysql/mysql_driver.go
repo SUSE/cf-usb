@@ -6,24 +6,21 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
 	"regexp"
 	"strings"
 
 	"github.com/hpcloud/cf-usb/driver"
+	"github.com/hpcloud/cf-usb/driver/mysql/config"
 	"github.com/hpcloud/cf-usb/driver/mysql/driverdata"
 	"github.com/hpcloud/cf-usb/driver/mysql/mysqlprovisioner"
-	"github.com/hpcloud/cf-usb/lib/model"
+	"github.com/hpcloud/cf-usb/driver/status"
 	"github.com/pivotal-golang/lager"
 )
 
 type MysqlDriver struct {
-	User   string `json:"userid"`
-	Pass   string `json:"password"`
-	Host   string `json:"server"`
-	Port   string `json:"port"`
-	db     mysqlprovisioner.MysqlProvisionerInterface
 	logger lager.Logger
+	conf   config.MysqlDriverConfig
+	db     mysqlprovisioner.MysqlProvisionerInterface
 }
 
 func (e *MysqlDriver) secureRandomString(bytesOfEntpry int) string {
@@ -47,24 +44,30 @@ func (e *MysqlDriver) getMD5Hash(text string) (string, error) {
 	return reg.ReplaceAllString(generated, ""), nil
 }
 
-func NewMysqlDriver(logger lager.Logger) driver.Driver {
-	return &MysqlDriver{logger: logger}
+func NewMysqlDriver(logger lager.Logger, db mysqlprovisioner.MysqlProvisionerInterface) driver.Driver {
+	return &MysqlDriver{logger: logger, db: db}
 }
 
-func (e *MysqlDriver) Init(configuration model.DriverInitRequest, response *string) error {
-	err := json.Unmarshal(*configuration.DriverConfig, &e)
+func (e *MysqlDriver) init(conf *json.RawMessage) error {
+	mysqlConfig := config.MysqlDriverConfig{}
+	err := json.Unmarshal(*conf, &mysqlConfig)
 	e.logger.Info("Mysql Driver initializing")
-	e.db, err = mysqlprovisioner.New(e.User, e.Pass, e.Host+":"+e.Port, e.logger)
-	return err
-}
-
-func (e *MysqlDriver) Ping(empty string, result *bool) error {
-	_, err := mysqlprovisioner.New(e.User, e.Pass, e.Host+":"+e.Port, e.logger)
+	err = e.db.Connect(mysqlConfig)
 	if err != nil {
-		*result = false
 		return err
 	}
-	*result = true
+	e.conf = mysqlConfig
+	return nil
+}
+
+func (e *MysqlDriver) Ping(request *json.RawMessage, response *bool) error {
+	*response = false
+
+	err := e.init(request)
+	if err != nil {
+		return err
+	}
+	*response = true
 	return nil
 }
 
@@ -89,25 +92,43 @@ func (e *MysqlDriver) GetConfigSchema(request string, response *string) error {
 
 	return nil
 }
-func (e *MysqlDriver) ProvisionInstance(request model.ProvisionInstanceRequest, result *bool) error {
-	err := e.db.CreateDatabase(strings.Replace(request.InstanceID, "-", "", -1))
+func (e *MysqlDriver) ProvisionInstance(request driver.ProvisionInstanceRequest, response *driver.Instance) error {
+	err := e.init(request.Config)
 	if err != nil {
 		return err
 	}
-	*result = true
-	return nil
-}
 
-func (e *MysqlDriver) InstanceExists(instanceID string, result *bool) error {
-	created, err := e.db.IsDatabaseCreated(strings.Replace(instanceID, "-", "", -1))
+	err = e.db.CreateDatabase(strings.Replace(request.InstanceID, "-", "", -1))
 	if err != nil {
 		return err
 	}
-	*result = created
+	response.Status = status.Created
 	return nil
 }
 
-func (e *MysqlDriver) GenerateCredentials(request model.CredentialsRequest, response *interface{}) error {
+func (e *MysqlDriver) GetInstance(request driver.GetInstanceRequest, response *driver.Instance) error {
+	response.Status = status.DoesNotExist
+	err := e.init(request.Config)
+	if err != nil {
+		return err
+	}
+	created, err := e.db.IsDatabaseCreated(strings.Replace(request.InstanceID, "-", "", -1))
+	if err != nil {
+		return err
+	}
+
+	if created {
+		response.Status = status.Exists
+	}
+
+	return nil
+}
+
+func (e *MysqlDriver) GenerateCredentials(request driver.GenerateCredentialsRequest, response *interface{}) error {
+	err := e.init(request.Config)
+	if err != nil {
+		return err
+	}
 	username, err := e.getMD5Hash(request.CredentialsID)
 	if err != nil {
 		return err
@@ -122,18 +143,25 @@ func (e *MysqlDriver) GenerateCredentials(request model.CredentialsRequest, resp
 		return err
 	}
 	data := MysqlBindingCredentials{
-		Host:             e.Host,
-		Port:             e.Port,
-		Username:         username,
-		Password:         password,
-		ConnectionString: generateConnectionString(e.Host, e.Port, strings.Replace(request.InstanceID, "-", "", -1), username, password),
+		Host:     e.conf.Host,
+		Port:     e.conf.Port,
+		Username: username,
+		Password: password,
+		ConnectionString: generateConnectionString(e.conf.Host, e.conf.Port,
+			strings.Replace(request.InstanceID, "-", "", -1), username, password),
 	}
 
 	*response = data
 	return nil
 }
 
-func (e *MysqlDriver) CredentialsExist(request model.CredentialsRequest, response *bool) error {
+func (e *MysqlDriver) GetCredentials(request driver.GetCredentialsRequest, response *driver.Credentials) error {
+	response.Status = status.DoesNotExist
+	err := e.init(request.Config)
+	if err != nil {
+		return err
+	}
+
 	username, err := e.getMD5Hash(request.CredentialsID)
 	if err != nil {
 		return err
@@ -145,11 +173,18 @@ func (e *MysqlDriver) CredentialsExist(request model.CredentialsRequest, respons
 	if err != nil {
 		return err
 	}
-	*response = created
+	if created {
+		response.Status = status.Exists
+	}
 	return nil
 }
 
-func (e *MysqlDriver) RevokeCredentials(request model.CredentialsRequest, response *interface{}) error {
+func (e *MysqlDriver) RevokeCredentials(request driver.RevokeCredentialsRequest, response *driver.Credentials) error {
+	err := e.init(request.Config)
+	if err != nil {
+		return err
+	}
+
 	username, err := e.getMD5Hash(request.CredentialsID)
 	if err != nil {
 		return err
@@ -161,16 +196,22 @@ func (e *MysqlDriver) RevokeCredentials(request model.CredentialsRequest, respon
 	if err != nil {
 		return err
 	}
-	*response = fmt.Sprintf("Credentials for %s revoked", username)
+
+	response.Status = status.Deleted
 	return nil
 }
 
-func (e *MysqlDriver) DeprovisionInstance(instanceID string, response *interface{}) error {
-	err := e.db.DeleteDatabase(strings.Replace(instanceID, "-", "", -1))
+func (e *MysqlDriver) DeprovisionInstance(request driver.DeprovisionInstanceRequest, response *driver.Instance) error {
+	err := e.init(request.Config)
 	if err != nil {
 		return err
 	}
-	*response = fmt.Sprintf("Deprovisioned %s", instanceID)
+
+	err = e.db.DeleteDatabase(strings.Replace(request.InstanceID, "-", "", -1))
+	if err != nil {
+		return err
+	}
+	response.Status = status.Deleted
 
 	return nil
 }
