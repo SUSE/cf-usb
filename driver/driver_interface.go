@@ -1,16 +1,65 @@
 package driver
 
-import "github.com/hpcloud/cf-usb/lib/model"
+import (
+	"encoding/json"
+
+	"github.com/hpcloud/cf-usb/driver/status"
+)
+
+type ProvisionInstanceRequest struct {
+	InstanceID string
+	Config     *json.RawMessage
+	Dials      *json.RawMessage
+}
+
+type GetInstanceRequest struct {
+	InstanceID string
+	Config     *json.RawMessage
+}
+
+type DeprovisionInstanceRequest struct {
+	InstanceID string
+	Config     *json.RawMessage
+}
+
+type GenerateCredentialsRequest struct {
+	InstanceID    string
+	CredentialsID string
+	Config        *json.RawMessage
+}
+
+type GetCredentialsRequest struct {
+	InstanceID    string
+	CredentialsID string
+	Config        *json.RawMessage
+}
+
+type RevokeCredentialsRequest struct {
+	InstanceID    string
+	CredentialsID string
+	Config        *json.RawMessage
+}
+
+type Instance struct {
+	InstanceID  string
+	Status      status.Status
+	Description string
+}
+
+type Credentials struct {
+	CredentialsID string
+	Status        status.Status
+	Description   string
+}
 
 type Driver interface {
-	Init(model.DriverInitRequest, *string) error
-	Ping(string, *bool) error
+	Ping(*json.RawMessage, *bool) error
 	GetDailsSchema(string, *string) error
 	GetConfigSchema(string, *string) error
-	ProvisionInstance(model.ProvisionInstanceRequest, *bool) error
-	InstanceExists(string, *bool) error
-	GenerateCredentials(model.CredentialsRequest, *interface{}) error
-	CredentialsExist(model.CredentialsRequest, *bool) error
-	RevokeCredentials(model.CredentialsRequest, *interface{}) error
-	DeprovisionInstance(string, *interface{}) error
+	ProvisionInstance(ProvisionInstanceRequest, *Instance) error
+	GetInstance(GetInstanceRequest, *Instance) error
+	GenerateCredentials(GenerateCredentialsRequest, *interface{}) error
+	GetCredentials(GetCredentialsRequest, *Credentials) error
+	RevokeCredentials(RevokeCredentialsRequest, *Credentials) error
+	DeprovisionInstance(DeprovisionInstanceRequest, *Instance) error
 }

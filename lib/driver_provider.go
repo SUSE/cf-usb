@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 	"runtime"
 
+	"github.com/hpcloud/cf-usb/driver"
 	"github.com/hpcloud/cf-usb/lib/config"
-	"github.com/hpcloud/cf-usb/lib/model"
 	"github.com/natefinch/pie"
 	"github.com/pivotal-golang/lager"
 	"github.com/xeipuuv/gojsonschema"
@@ -89,48 +89,75 @@ func (p *DriverProvider) GetConfigSchema() (string, error) {
 	return p.createClientAndInvoke(p.getConfigSchema)
 }
 
-func (p *DriverProvider) ProvisionInstance(provisonRequest model.ProvisionInstanceRequest) (bool, error) {
-	var result bool
+func (p *DriverProvider) ProvisionInstance(instanceID, planID string) (driver.Instance, error) {
+	var result driver.Instance
+	provisonRequest := driver.ProvisionInstanceRequest{}
+	provisonRequest.Config = p.Instance.Configuration
+	provisonRequest.InstanceID = instanceID
+	for _, d := range p.Instance.Dials {
+		if d.Plan.ID == planID {
+			provisonRequest.Dials = d.Configuration
+			break
+		}
+	}
+
 	err := p.createClientAndCall(fmt.Sprintf("%s.ProvisionInstance", p.driverType), provisonRequest, &result)
 	return result, err
 }
 
-func (p *DriverProvider) InstanceExists(instanceID string) (bool, error) {
-	var result bool
-	err := p.createClientAndCall(fmt.Sprintf("%s.InstanceExists", p.driverType), instanceID, &result)
+func (p *DriverProvider) GetInstance(instanceID string) (driver.Instance, error) {
+	var result driver.Instance
+	instanceRequest := driver.GetInstanceRequest{}
+	instanceRequest.Config = p.Instance.Configuration
+	instanceRequest.InstanceID = instanceID
+
+	err := p.createClientAndCall(fmt.Sprintf("%s.GetInstance", p.driverType), instanceRequest, &result)
 	return result, err
 }
 
-func (p *DriverProvider) GenerateCredentials(credentialsRequest model.CredentialsRequest) (interface{}, error) {
+func (p *DriverProvider) GenerateCredentials(instanceID, credentialsID string) (interface{}, error) {
 	var result interface{}
+	credentialsRequest := driver.GenerateCredentialsRequest{}
+	credentialsRequest.Config = p.Instance.Configuration
+	credentialsRequest.CredentialsID = credentialsID
+	credentialsRequest.InstanceID = instanceID
+
 	err := p.createClientAndCall(fmt.Sprintf("%s.GenerateCredentials", p.driverType), credentialsRequest, &result)
 	return result, err
 }
 
-func (p *DriverProvider) CredentialsExist(credentialsRequest model.CredentialsRequest) (bool, error) {
-	var result bool
-	err := p.createClientAndCall(fmt.Sprintf("%s.CredentialsExist", p.driverType), credentialsRequest, &result)
+func (p *DriverProvider) GetCredentials(instanceID, credentialsID string) (driver.Credentials, error) {
+	var result driver.Credentials
+	credentialsRequest := driver.GetCredentialsRequest{}
+	credentialsRequest.Config = p.Instance.Configuration
+	credentialsRequest.CredentialsID = credentialsID
+	credentialsRequest.InstanceID = instanceID
+
+	err := p.createClientAndCall(fmt.Sprintf("%s.GetCredentials", p.driverType), credentialsRequest, &result)
 	return result, err
 }
 
-func (p *DriverProvider) RevokeCredentials(credentialsRequest model.CredentialsRequest) (interface{}, error) {
-	var result interface{}
+func (p *DriverProvider) RevokeCredentials(instanceID, credentialsID string) (driver.Credentials, error) {
+	var result driver.Credentials
+	credentialsRequest := driver.RevokeCredentialsRequest{}
+	credentialsRequest.Config = p.Instance.Configuration
+	credentialsRequest.CredentialsID = credentialsID
+	credentialsRequest.InstanceID = instanceID
 	err := p.createClientAndCall(fmt.Sprintf("%s.RevokeCredentials", p.driverType), credentialsRequest, &result)
 	return result, err
 }
 
-func (p *DriverProvider) DeprovisionInstance(deprovisionRequest string) (interface{}, error) {
-	var result interface{}
+func (p *DriverProvider) DeprovisionInstance(instanceID string) (driver.Instance, error) {
+	var result driver.Instance
+	deprovisionRequest := driver.DeprovisionInstanceRequest{}
+	deprovisionRequest.Config = p.Instance.Configuration
+	deprovisionRequest.InstanceID = instanceID
 	err := p.createClientAndCall(fmt.Sprintf("%s.DeprovisionInstance", p.driverType), deprovisionRequest, &result)
 	return result, err
 }
 
 func (p *DriverProvider) createProviderClient() (*rpc.Client, error) {
 	client, err := pie.StartProviderCodec(jsonrpc.NewClientCodec, os.Stderr, p.driverPath)
-	_, err = p.init(client)
-	if err != nil {
-		return nil, err
-	}
 	return client, err
 }
 
@@ -209,16 +236,6 @@ func (p *DriverProvider) createClientAndInvoke(call func(*rpc.Client) (string, e
 	defer client.Close()
 
 	return call(client)
-}
-
-func (p *DriverProvider) init(client *rpc.Client) (string, error) {
-	request := model.DriverInitRequest{
-		DriverConfig: p.Instance.Configuration,
-	}
-
-	var result string
-	err := client.Call(fmt.Sprintf("%s.Init", p.driverType), request, &result)
-	return result, err
 }
 
 func (p *DriverProvider) getDailsSchema(client *rpc.Client) (string, error) {

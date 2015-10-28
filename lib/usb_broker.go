@@ -1,10 +1,8 @@
 package lib
 
 import (
-	"encoding/json"
-
+	"github.com/hpcloud/cf-usb/driver/status"
 	"github.com/hpcloud/cf-usb/lib/config"
-	"github.com/hpcloud/cf-usb/lib/model"
 	"github.com/pivotal-cf/brokerapi"
 	"github.com/pivotal-golang/lager"
 )
@@ -40,32 +38,20 @@ func (broker *UsbBroker) Provision(instanceID string, serviceDetails brokerapi.P
 
 	driver := broker.getDriver(serviceDetails.ID)
 
-	exists, err := driver.InstanceExists(instanceID)
+	instance, err := driver.GetInstance(instanceID)
 	if err != nil {
 		return err
 	}
-	if exists {
+	if instance.Status == status.Exists {
 		return brokerapi.ErrInstanceAlreadyExists
 	}
 
-	var dialDetails json.RawMessage
-	for _, dial := range driver.Instance.Dials {
-		if dial.Plan.ID == serviceDetails.PlanID {
-			dialDetails = *dial.Configuration
-			break
-		}
-	}
-
-	driverProvisionRequest := model.ProvisionInstanceRequest{
-		InstanceID: instanceID,
-		Dails:      dialDetails,
-	}
-
-	created, err := driver.ProvisionInstance(driverProvisionRequest)
+	//TODO: add async
+	instance, err = driver.ProvisionInstance(instanceID, serviceDetails.PlanID)
 	if err != nil {
 		return err
 	}
-	broker.logger.Info("provision", lager.Data{"provisioned": created})
+	broker.logger.Info("provision", lager.Data{"provisioned": instance.InstanceID})
 
 	return nil
 }
@@ -73,19 +59,19 @@ func (broker *UsbBroker) Provision(instanceID string, serviceDetails brokerapi.P
 func (broker *UsbBroker) Deprovision(instanceID string, deprovisionDetails brokerapi.DeprovisionDetails) error {
 	driver := broker.getDriver(deprovisionDetails.ServiceID)
 
-	exists, err := driver.InstanceExists(instanceID)
+	instance, err := driver.GetInstance(instanceID)
 	if err != nil {
 		return err
 	}
-	if !exists {
+	if instance.Status == status.DoesNotExist {
 		return brokerapi.ErrInstanceDoesNotExist
 	}
 
-	response, err := driver.DeprovisionInstance(instanceID)
+	instance, err = driver.DeprovisionInstance(instanceID)
 	if err != nil {
 		return err
 	}
-	broker.logger.Info("deprovision", lager.Data{"driver-response": response})
+	broker.logger.Info("deprovision", lager.Data{"driver-response": instance.InstanceID})
 	return nil
 }
 
@@ -94,20 +80,15 @@ func (broker *UsbBroker) Bind(instanceID, bindingID string, details brokerapi.Bi
 
 	driver := broker.getDriver(details.ServiceID)
 
-	driverCredentialsRequest := model.CredentialsRequest{
-		InstanceID:    instanceID,
-		CredentialsID: bindingID,
-	}
-
-	exists, err := driver.CredentialsExist(driverCredentialsRequest)
+	credentials, err := driver.GetCredentials(instanceID, bindingID)
 	if err != nil {
 		return response, err
 	}
-	if exists {
+	if credentials.Status == status.Exists {
 		return response, brokerapi.ErrBindingAlreadyExists
 	}
 
-	response, err = driver.GenerateCredentials(driverCredentialsRequest)
+	response, err = driver.GenerateCredentials(instanceID, bindingID)
 	if err != nil {
 		return response, err
 	}
@@ -118,24 +99,19 @@ func (broker *UsbBroker) Bind(instanceID, bindingID string, details brokerapi.Bi
 func (broker *UsbBroker) Unbind(instanceID, bindingID string, details brokerapi.UnbindDetails) error {
 	driver := broker.getDriver(details.ServiceID)
 
-	driverCredentialsRequest := model.CredentialsRequest{
-		InstanceID:    instanceID,
-		CredentialsID: bindingID,
-	}
-
-	exists, err := driver.CredentialsExist(driverCredentialsRequest)
+	credentials, err := driver.GetCredentials(instanceID, bindingID)
 	if err != nil {
 		return err
 	}
-	if !exists {
+	if credentials.Status == status.DoesNotExist {
 		return brokerapi.ErrBindingDoesNotExist
 	}
 
-	response, err := driver.RevokeCredentials(driverCredentialsRequest)
+	credentials, err = driver.RevokeCredentials(instanceID, bindingID)
 	if err != nil {
 		return err
 	}
-	broker.logger.Info("unbind", lager.Data{"driver-response": response})
+	broker.logger.Info("unbind", lager.Data{"driver-response": credentials.Status})
 
 	return nil
 

@@ -5,8 +5,7 @@ import (
 
 	"github.com/hpcloud/cf-usb/driver"
 	"github.com/hpcloud/cf-usb/driver/dummy/driverdata"
-	"github.com/hpcloud/cf-usb/lib/model"
-	"github.com/pivotal-cf/brokerapi"
+	"github.com/hpcloud/cf-usb/driver/status"
 	"github.com/pivotal-golang/lager"
 )
 
@@ -21,41 +20,40 @@ type DummyServiceBindResponse struct {
 }
 
 type dummyDriver struct {
-	driverProperties DummyServiceConfig
-	logger           lager.Logger
+	logger lager.Logger
 }
 
 func NewDummyDriver(logger lager.Logger) driver.Driver {
-	return &dummyDriver{logger: logger}
+	return dummyDriver{logger: logger}
 }
-func (driver *dummyDriver) Init(driverInitRequest model.DriverInitRequest, response *string) error {
-	driver.logger.Info("init-driver")
+func (d dummyDriver) init(config *json.RawMessage) (DummyServiceConfig, error) {
+	d.logger.Info("init-driver")
 
-	conf := (*json.RawMessage)(driverInitRequest.DriverConfig)
-	driver.logger.Info("init-driver", lager.Data{"configValue": string(*conf)})
+	d.logger.Info("init-driver", lager.Data{"configValue": string(*config)})
 	dsp := DummyServiceConfig{}
-	err := json.Unmarshal(*conf, &dsp)
+	err := json.Unmarshal(*config, &dsp)
+	if err != nil {
+		return dsp, err
+	}
+
+	d.logger.Info("init-driver", lager.Data{"property_one": dsp.PropOne, "property_two": dsp.PropTwo})
+
+	return dsp, err
+
+}
+
+func (d dummyDriver) Ping(request *json.RawMessage, response *bool) error {
+	_, err := d.init(request)
+
 	if err != nil {
 		return err
 	}
-	driver.driverProperties = dsp
 
-	driver.logger.Info("init-driver", lager.Data{"property_one": dsp.PropOne, "property_two": dsp.PropTwo})
-
-	*response = "Sucessfully initialized driver"
-	return nil
-
-}
-
-func (driver *dummyDriver) Ping(request string, response *bool) error {
-	if request == "exists" {
-		*response = true
-	}
-	*response = false
+	*response = true
 	return nil
 }
 
-func (driver *dummyDriver) GetDailsSchema(request string, response *string) error {
+func (d dummyDriver) GetDailsSchema(request string, response *string) error {
 	dailsSchema, err := driverdata.Asset("schemas/dials.json")
 	if err != nil {
 		return err
@@ -66,8 +64,8 @@ func (driver *dummyDriver) GetDailsSchema(request string, response *string) erro
 	return nil
 }
 
-func (driver *dummyDriver) GetConfigSchema(request string, response *string) error {
-	driver.logger.Info("driver-get-config-schema")
+func (d dummyDriver) GetConfigSchema(request string, response *string) error {
+	d.logger.Info("driver-get-config-schema")
 	configSchema, err := driverdata.Asset("schemas/config.json")
 	if err != nil {
 		return err
@@ -78,29 +76,25 @@ func (driver *dummyDriver) GetConfigSchema(request string, response *string) err
 	return nil
 }
 
-func (driver *dummyDriver) ProvisionInstance(request model.ProvisionInstanceRequest, response *bool) error {
-	driver.logger.Info("provision-instance-request", lager.Data{"instance-id": request.InstanceID})
-	*response = true
+func (d dummyDriver) ProvisionInstance(request driver.ProvisionInstanceRequest, response *driver.Instance) error {
+	d.logger.Info("provision-instance-request", lager.Data{"instance-id": request.InstanceID})
+	response.Status = status.Created
 
+	return nil
+}
+
+func (d dummyDriver) GetInstance(request driver.GetInstanceRequest, response *driver.Instance) error {
+	d.logger.Info("credentials-exists-request", lager.Data{"instanceID": request})
+	response.Status = status.DoesNotExist
 	if request.InstanceID == "instanceID" {
-		return brokerapi.ErrInstanceAlreadyExists
+		response.Status = status.Exists
 	}
 
 	return nil
 }
 
-func (driver *dummyDriver) InstanceExists(request string, response *bool) error {
-	driver.logger.Info("credentials-exists-request", lager.Data{"instanceID": request})
-	*response = false
-	if request == "instanceID" {
-		*response = true
-	}
-
-	return nil
-}
-
-func (driver *dummyDriver) GenerateCredentials(request model.CredentialsRequest, response *interface{}) error {
-	driver.logger.Info("generate-credentials-request", lager.Data{"instanceID": request.InstanceID,
+func (d dummyDriver) GenerateCredentials(request driver.GenerateCredentialsRequest, response *interface{}) error {
+	d.logger.Info("generate-credentials-request", lager.Data{"instanceID": request.InstanceID,
 		"credentialsID": request.CredentialsID})
 
 	*response = DummyServiceBindResponse{
@@ -111,27 +105,28 @@ func (driver *dummyDriver) GenerateCredentials(request model.CredentialsRequest,
 	return nil
 }
 
-func (driver *dummyDriver) CredentialsExist(request model.CredentialsRequest, response *bool) error {
-	*response = false
-	driver.logger.Info("credentials-exists-request", lager.Data{"instanceID": request.InstanceID,
+func (d dummyDriver) GetCredentials(request driver.GetCredentialsRequest, response *driver.Credentials) error {
+	response.Status = status.DoesNotExist
+	d.logger.Info("credentials-exists-request", lager.Data{"instanceID": request.InstanceID,
 		"credentialsID": request.CredentialsID})
 	if request.CredentialsID == "credentialsID" {
-		*response = true
+		response.Status = status.Exists
 	}
 
 	return nil
 }
 
-func (driver *dummyDriver) RevokeCredentials(request model.CredentialsRequest, response *interface{}) error {
-	driver.logger.Info("unbind-request", lager.Data{"credentialsID": request.CredentialsID, "InstanceID": request.InstanceID})
+func (d dummyDriver) RevokeCredentials(request driver.RevokeCredentialsRequest, response *driver.Credentials) error {
+	d.logger.Info("unbind-request", lager.Data{"credentialsID": request.CredentialsID, "InstanceID": request.InstanceID})
 
-	*response = ""
+	response.Status = status.Deleted
 	return nil
 }
 
-func (driver *dummyDriver) DeprovisionInstance(request string, response *interface{}) error {
-	driver.logger.Info("deprovision-request", lager.Data{"instance-id": request})
+func (d dummyDriver) DeprovisionInstance(request driver.DeprovisionInstanceRequest, response *driver.Instance) error {
+	d.logger.Info("deprovision-request", lager.Data{"instance-id": request})
 
-	*response = "Successfully deprovisoned"
+	response.Status = status.Deleted
+
 	return nil
 }
