@@ -12,7 +12,7 @@
     },
     "management_api": {
         "listen": ":54053",      
-		"uaa_secret": "cc-usb—management-secret",
+		"uaa_secret": "cc-usb-management-secret",
         "uaa_client": "cc_usb_management",
         "authentication": {
             "uaa": {
