@@ -1,8 +1,9 @@
 package postgresprovisioner
 
+import "github.com/hpcloud/cf-usb/driver/postgres/config"
+
 type PostgresProvisionerInterface interface {
-	Init() error
-	Ping() error
+	Connect(conf config.PostgresDriverConfig) error
 	CreateDatabase(string) error
 	DeleteDatabase(string) error
 	DatabaseExists(string) (bool, error)

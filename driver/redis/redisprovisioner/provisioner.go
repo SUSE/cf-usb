@@ -8,33 +8,26 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/hpcloud/cf-usb/driver/redis/config"
 	"github.com/pivotal-golang/lager"
 
 	dockerclient "github.com/fsouza/go-dockerclient"
 )
 
-type RedisServiceProperties struct {
-	DockerEndpoint string `json:"docker_endpoint"`
-	DockerImage    string `json:"docker_image"`
-	ImageVersion   string `json:"docker_image_version"`
-}
-
 type RedisProvisioner struct {
-	serviceProperties RedisServiceProperties
-	client            *dockerclient.Client
-	logger            lager.Logger
+	driverConfig config.RedisDriverConfig
+	client       *dockerclient.Client
+	logger       lager.Logger
 }
 
-func NewRedisProvisioner(serviceProperties RedisServiceProperties, logger lager.Logger) RedisProvisionerInterface {
-	return &RedisProvisioner{
-		serviceProperties: serviceProperties,
-		logger:            logger,
-	}
+func NewRedisProvisioner(logger lager.Logger) RedisProvisionerInterface {
+	return &RedisProvisioner{logger: logger}
 }
 
-func (provisioner *RedisProvisioner) Init() error {
+func (provisioner *RedisProvisioner) Connect(driverConfig config.RedisDriverConfig) error {
 	var err error
 
+	provisioner.driverConfig = driverConfig
 	provisioner.client, err = provisioner.getClient()
 
 	if err != nil {
@@ -45,7 +38,7 @@ func (provisioner *RedisProvisioner) Init() error {
 }
 
 func (provisioner *RedisProvisioner) CreateContainer(containerName string) error {
-	err := provisioner.pullImage(provisioner.serviceProperties.DockerImage, provisioner.serviceProperties.ImageVersion)
+	err := provisioner.pullImage(provisioner.driverConfig.DockerImage, provisioner.driverConfig.ImageVersion)
 	if err != nil {
 		return err
 	}
@@ -55,7 +48,7 @@ func (provisioner *RedisProvisioner) CreateContainer(containerName string) error
 	hostConfig := dockerclient.HostConfig{PublishAllPorts: true}
 	createOpts := dockerclient.CreateContainerOptions{
 		Config: &dockerclient.Config{
-			Image: provisioner.serviceProperties.DockerImage + ":" + provisioner.serviceProperties.ImageVersion,
+			Image: provisioner.driverConfig.DockerImage + ":" + provisioner.driverConfig.ImageVersion,
 			Cmd:   []string{"redis-server", fmt.Sprintf("--requirepass %s", pass)},
 		},
 		HostConfig: &hostConfig,
@@ -94,7 +87,7 @@ func (provisioner *RedisProvisioner) DeleteContainer(containerName string) error
 }
 
 func (provisioner *RedisProvisioner) getClient() (*dockerclient.Client, error) {
-	client, err := dockerclient.NewClient(provisioner.serviceProperties.DockerEndpoint)
+	client, err := dockerclient.NewClient(provisioner.driverConfig.DockerEndpoint)
 	if err != nil {
 		return nil, err
 	}

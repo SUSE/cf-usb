@@ -26,11 +26,11 @@ func getMockProvisioner() (*mocks.MysqlProvisionerInterface, usbDriver.Driver) {
 	logger.RegisterSink(lager.NewWriterSink(os.Stderr, lager.DEBUG))
 
 	mockProv := new(mocks.MysqlProvisionerInterface)
-	mongoDriver := NewMysqlDriver(logger, mockProv)
+	mysqlDriver := NewMysqlDriver(logger, mockProv)
 
 	mockProv.On("Connect", config.MysqlDriverConfig{}).Return(nil)
 
-	return mockProv, mongoDriver
+	return mockProv, mysqlDriver
 }
 
 func Test_Provision(t *testing.T) {

@@ -1,29 +1,26 @@
-package postgresprovisioner
+package mocks
 
 import "github.com/stretchr/testify/mock"
 
-type PostgresProvisionerMock struct {
+import "github.com/hpcloud/cf-usb/driver/postgres/config"
+
+type PostgresProvisionerInterface struct {
 	mock.Mock
 }
 
-func (_m *PostgresProvisionerMock) Init() error {
-	ret := _m.Called()
+func (_m *PostgresProvisionerInterface) Connect(conf config.PostgresDriverConfig) error {
+	ret := _m.Called(conf)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func() error); ok {
-		r0 = rf()
+	if rf, ok := ret.Get(0).(func(config.PostgresDriverConfig) error); ok {
+		r0 = rf(conf)
 	} else {
 		r0 = ret.Error(0)
 	}
 
 	return r0
 }
-
-func (_m *PostgresProvisionerMock) Ping() error {
-	return nil
-}
-
-func (_m *PostgresProvisionerMock) CreateDatabase(_a0 string) error {
+func (_m *PostgresProvisionerInterface) CreateDatabase(_a0 string) error {
 	ret := _m.Called(_a0)
 
 	var r0 error
@@ -35,7 +32,7 @@ func (_m *PostgresProvisionerMock) CreateDatabase(_a0 string) error {
 
 	return r0
 }
-func (_m *PostgresProvisionerMock) DeleteDatabase(_a0 string) error {
+func (_m *PostgresProvisionerInterface) DeleteDatabase(_a0 string) error {
 	ret := _m.Called(_a0)
 
 	var r0 error
@@ -47,7 +44,7 @@ func (_m *PostgresProvisionerMock) DeleteDatabase(_a0 string) error {
 
 	return r0
 }
-func (_m *PostgresProvisionerMock) DatabaseExists(_a0 string) (bool, error) {
+func (_m *PostgresProvisionerInterface) DatabaseExists(_a0 string) (bool, error) {
 	ret := _m.Called(_a0)
 
 	var r0 bool
@@ -66,7 +63,7 @@ func (_m *PostgresProvisionerMock) DatabaseExists(_a0 string) (bool, error) {
 
 	return r0, r1
 }
-func (_m *PostgresProvisionerMock) CreateUser(_a0 string, _a1 string, _a2 string) error {
+func (_m *PostgresProvisionerInterface) CreateUser(_a0 string, _a1 string, _a2 string) error {
 	ret := _m.Called(_a0, _a1, _a2)
 
 	var r0 error
@@ -78,7 +75,7 @@ func (_m *PostgresProvisionerMock) CreateUser(_a0 string, _a1 string, _a2 string
 
 	return r0
 }
-func (_m *PostgresProvisionerMock) DeleteUser(_a0 string, _a1 string) error {
+func (_m *PostgresProvisionerInterface) DeleteUser(_a0 string, _a1 string) error {
 	ret := _m.Called(_a0, _a1)
 
 	var r0 error
@@ -90,7 +87,7 @@ func (_m *PostgresProvisionerMock) DeleteUser(_a0 string, _a1 string) error {
 
 	return r0
 }
-func (_m *PostgresProvisionerMock) UserExists(_a0 string) (bool, error) {
+func (_m *PostgresProvisionerInterface) UserExists(_a0 string) (bool, error) {
 	ret := _m.Called(_a0)
 
 	var r0 bool

@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/hpcloud/cf-usb/driver/postgres/config"
 	_ "github.com/lib/pq"
 	"github.com/pivotal-golang/lager/lagertest"
 )
@@ -12,12 +13,12 @@ import (
 var logger *lagertest.TestLogger = lagertest.NewTestLogger("postgres-provisioner")
 
 var testPostgresProv = struct {
-	postgresProvisioner PostgresProvisionerInterface
-	postgresDefaultConn PostgresServiceProperties
+	postgresProvisioner  PostgresProvisionerInterface
+	postgresDriverConfig config.PostgresDriverConfig
 }{}
 
-func init() {
-	testPostgresProv.postgresDefaultConn = PostgresServiceProperties{
+func initDriver() error {
+	testPostgresProv.postgresDriverConfig = config.PostgresDriverConfig{
 		User:     os.Getenv("POSTGRES_USER"),
 		Password: os.Getenv("POSTGRES_PASSWORD"),
 		Host:     os.Getenv("POSTGRES_HOST"),
@@ -25,8 +26,9 @@ func init() {
 		Dbname:   os.Getenv("POSTGRES_DBNAME"),
 		Sslmode:  os.Getenv("POSTGRES_SSLMODE")}
 
-	testPostgresProv.postgresProvisioner = NewPostgresProvisioner(testPostgresProv.postgresDefaultConn, logger)
-	testPostgresProv.postgresProvisioner.Init()
+	testPostgresProv.postgresProvisioner = NewPostgresProvisioner(logger)
+	err := testPostgresProv.postgresProvisioner.Connect(testPostgresProv.postgresDriverConfig)
+	return err
 }
 
 func TestCreateDatabase(t *testing.T) {
@@ -168,6 +170,6 @@ func TestParametrizeQuery(t *testing.T) {
 }
 
 func envVarsOk() bool {
-	return testPostgresProv.postgresDefaultConn.User != "" && testPostgresProv.postgresDefaultConn.Password != "" && testPostgresProv.postgresDefaultConn.Host != "" &&
-		testPostgresProv.postgresDefaultConn.Port != "" && testPostgresProv.postgresDefaultConn.Dbname != "" && testPostgresProv.postgresDefaultConn.Sslmode != ""
+	return testPostgresProv.postgresDriverConfig.User != "" && testPostgresProv.postgresDriverConfig.Password != "" && testPostgresProv.postgresDriverConfig.Host != "" &&
+		testPostgresProv.postgresDriverConfig.Port != "" && testPostgresProv.postgresDriverConfig.Dbname != "" && testPostgresProv.postgresDriverConfig.Sslmode != ""
 }
