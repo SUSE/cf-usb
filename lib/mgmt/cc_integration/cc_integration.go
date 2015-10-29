@@ -14,7 +14,7 @@ type CCIntegrationInterface interface {
 	Init() error
 	CreateServiceBroker(name, url, username, password string) error
 	UpdateServiceBroker(serviceBrokerGuid, name, url, username, password string) error
-	EnableServiceAccess() error
+	EnableServiceAccess(servicePlanGuid, name, description, serviceGuid string, free, public bool) error
 }
 
 type CCIntegration struct {
@@ -56,7 +56,7 @@ func (cci *CCIntegration) Init() error {
 		return err
 	}
 
-	tokenGenerator := uaa_api.NewTokenGenerator(tokenUrl, cci.config.ManagementAPI.UaaClient, cci.config.ManagementAPI.UaaSecret, cc.SkipTslValidation)
+	tokenGenerator := uaa_api.NewTokenGenerator(tokenUrl, cci.config.ManagementAPI.UaaClient, cci.config.ManagementAPI.UaaSecret, cci.client)
 	cci.tokenGenerator = tokenGenerator
 
 	cci.logger.Info("init-uaa-token-generator", lager.Data{"token url": tokenUrl, "skip tls validation": cc.SkipTslValidation})
@@ -65,27 +65,34 @@ func (cci *CCIntegration) Init() error {
 }
 
 func (cci *CCIntegration) CreateServiceBroker(name, url, username, password string) error {
-	//sb := cc_api.NewServiceBroker(cci.client, cci.tokenGenerator, cci.ccConfig.Api, cci.logger)
+	sb := cc_api.NewServiceBroker(cci.client, cci.tokenGenerator, cci.ccConfig.Api, cci.logger)
 
-	//err := sb.Create(name, url, username, password)
-	//if err != nil {
-	//	return err
-	//}
+	err := sb.Create(name, url, username, password)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
 
 func (cci *CCIntegration) UpdateServiceBroker(serviceBrokerGuid, name, url, username, password string) error {
-	//sb := cc_api.NewServiceBroker(cci.client, cci.tokenGenerator, cci.ccConfig.Api, cci.logger)
+	sb := cc_api.NewServiceBroker(cci.client, cci.tokenGenerator, cci.ccConfig.Api, cci.logger)
 
-	//err := sb.Update(serviceBrokerGuid, name, url, username, password)
-	//if err != nil {
-	//	return err
-	//}
+	err := sb.Update(serviceBrokerGuid, name, url, username, password)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
 
-func (cci *CCIntegration) EnableServiceAccess() error {
+func (cci *CCIntegration) EnableServiceAccess(servicePlanGuid, name, description, serviceGuid string, free, public bool) error {
+	sp := cc_api.NewServicePlan(cci.client, cci.tokenGenerator, cci.ccConfig.Api, cci.logger)
+
+	err := sp.Update(servicePlanGuid, name, description, serviceGuid, free, public)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
