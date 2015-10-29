@@ -4,6 +4,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/hpcloud/cf-usb/driver/redis/config"
 	"github.com/pivotal-golang/lager/lagertest"
 	"github.com/stretchr/testify/assert"
 )
@@ -11,19 +12,19 @@ import (
 var logger *lagertest.TestLogger = lagertest.NewTestLogger("redis-provisioner")
 
 var testRedisProv = struct {
-	redisProvisioner       RedisProvisionerInterface
-	redisServiceProperties RedisServiceProperties
+	redisProvisioner RedisProvisionerInterface
+	driverConfig     config.RedisDriverConfig
 }{}
 
 func init() {
-	testRedisProv.redisServiceProperties = RedisServiceProperties{
+	testRedisProv.driverConfig = config.RedisDriverConfig{
 		DockerEndpoint: os.Getenv("DOCKER_ENDPOINT"),
 		DockerImage:    os.Getenv("DOCKER_IMAGE"),
 		ImageVersion:   os.Getenv("DOCKER_IMAGE_VERSION"),
 	}
 
-	testRedisProv.redisProvisioner = NewRedisProvisioner(testRedisProv.redisServiceProperties, logger)
-	testRedisProv.redisProvisioner.Init()
+	testRedisProv.redisProvisioner = NewRedisProvisioner(logger)
+	testRedisProv.redisProvisioner.Connect(testRedisProv.driverConfig)
 }
 
 func TestCreateContainer(t *testing.T) {
@@ -76,5 +77,5 @@ func TestDeleteContainer(t *testing.T) {
 }
 
 func envVarsOk() bool {
-	return testRedisProv.redisServiceProperties.DockerEndpoint != "" && testRedisProv.redisServiceProperties.DockerImage != "" && testRedisProv.redisServiceProperties.ImageVersion != ""
+	return testRedisProv.driverConfig.DockerEndpoint != "" && testRedisProv.driverConfig.DockerImage != "" && testRedisProv.driverConfig.ImageVersion != ""
 }

@@ -2,9 +2,12 @@ package mysqlprovisioner
 
 import (
 	"database/sql"
+
+	"github.com/hpcloud/cf-usb/driver/mysql/config"
 )
 
 type MysqlProvisionerInterface interface {
+	Connect(config.MysqlDriverConfig) error
 	IsDatabaseCreated(string) (bool, error)
 	IsUserCreated(string) (bool, error)
 	CreateDatabase(string) error

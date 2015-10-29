@@ -1,12 +1,26 @@
-package mongoprovisioner
+package mocks
 
 import "github.com/stretchr/testify/mock"
 
-type MongoProvisionerMock struct {
+import "github.com/hpcloud/cf-usb/driver/mongo/config"
+
+type MongoProvisionerInterface struct {
 	mock.Mock
 }
 
-func (_m *MongoProvisionerMock) IsDatabaseCreated(_a0 string) (bool, error) {
+func (_m *MongoProvisionerInterface) Connect(_a0 config.MongoDriverConfig) error {
+	ret := _m.Called(_a0)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(config.MongoDriverConfig) error); ok {
+		r0 = rf(_a0)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+func (_m *MongoProvisionerInterface) IsDatabaseCreated(_a0 string) (bool, error) {
 	ret := _m.Called(_a0)
 
 	var r0 bool
@@ -25,7 +39,7 @@ func (_m *MongoProvisionerMock) IsDatabaseCreated(_a0 string) (bool, error) {
 
 	return r0, r1
 }
-func (_m *MongoProvisionerMock) IsUserCreated(_a0 string, _a1 string) (bool, error) {
+func (_m *MongoProvisionerInterface) IsUserCreated(_a0 string, _a1 string) (bool, error) {
 	ret := _m.Called(_a0, _a1)
 
 	var r0 bool
@@ -44,7 +58,7 @@ func (_m *MongoProvisionerMock) IsUserCreated(_a0 string, _a1 string) (bool, err
 
 	return r0, r1
 }
-func (_m *MongoProvisionerMock) CreateDatabase(_a0 string) error {
+func (_m *MongoProvisionerInterface) CreateDatabase(_a0 string) error {
 	ret := _m.Called(_a0)
 
 	var r0 error
@@ -56,7 +70,7 @@ func (_m *MongoProvisionerMock) CreateDatabase(_a0 string) error {
 
 	return r0
 }
-func (_m *MongoProvisionerMock) DeleteDatabase(_a0 string) error {
+func (_m *MongoProvisionerInterface) DeleteDatabase(_a0 string) error {
 	ret := _m.Called(_a0)
 
 	var r0 error
@@ -68,7 +82,7 @@ func (_m *MongoProvisionerMock) DeleteDatabase(_a0 string) error {
 
 	return r0
 }
-func (_m *MongoProvisionerMock) CreateUser(_a0 string, _a1 string, _a2 string) error {
+func (_m *MongoProvisionerInterface) CreateUser(_a0 string, _a1 string, _a2 string) error {
 	ret := _m.Called(_a0, _a1, _a2)
 
 	var r0 error
@@ -80,7 +94,7 @@ func (_m *MongoProvisionerMock) CreateUser(_a0 string, _a1 string, _a2 string) e
 
 	return r0
 }
-func (_m *MongoProvisionerMock) DeleteUser(_a0 string, _a1 string) error {
+func (_m *MongoProvisionerInterface) DeleteUser(_a0 string, _a1 string) error {
 	ret := _m.Called(_a0, _a1)
 
 	var r0 error

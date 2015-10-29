@@ -8,6 +8,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/hpcloud/cf-usb/driver/postgres/config"
 	_ "github.com/lib/pq"
 	"github.com/pivotal-golang/lager"
 )
@@ -23,30 +24,17 @@ var deleteRoleQuery = "DROP ROLE {{.User}}"
 var terminateDatabaseConnQuery = "SELECT pg_terminate_backend(pg_stat_activity.procpid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '{{.Database}}' AND procpid <> pg_backend_pid()"
 var deleteDatabaseQuery = "DROP DATABASE {{.Database}}"
 
-type PostgresServiceProperties struct {
-	User     string `json:"user"`
-	Password string `json:"password"`
-	Host     string `json:"host"`
-	Port     string `json:"port"`
-	Dbname   string `json:"dbname"`
-	Sslmode  string `json:"sslmode"`
-}
-
 type PostgresProvisioner struct {
 	pgClient          *sql.DB
-	defaultConnParams PostgresServiceProperties
+	defaultConnParams config.PostgresDriverConfig
 	logger            lager.Logger
 }
 
-func NewPostgresProvisioner(defaultConnParams PostgresServiceProperties, logger lager.Logger) PostgresProvisionerInterface {
-	return &PostgresProvisioner{
-		pgClient:          nil,
-		defaultConnParams: defaultConnParams,
-		logger:            logger,
-	}
+func NewPostgresProvisioner(logger lager.Logger) PostgresProvisionerInterface {
+	return &PostgresProvisioner{logger: logger}
 }
 
-func (provisioner *PostgresProvisioner) Init() error {
+func (provisioner *PostgresProvisioner) Connect(conf config.PostgresDriverConfig) error {
 	var err error = nil
 	connString := buildConnectionString(provisioner.defaultConnParams)
 	provisioner.pgClient, err = sql.Open("postgres", connString)
@@ -60,14 +48,6 @@ func (provisioner *PostgresProvisioner) Init() error {
 		return err
 	}
 
-	return nil
-}
-
-func (provisioner *PostgresProvisioner) Ping() error {
-	err := provisioner.pgClient.Ping()
-	if err != nil {
-		return err
-	}
 	return nil
 }
 func (provisioner *PostgresProvisioner) Close() error {
@@ -150,7 +130,7 @@ func (provisioner *PostgresProvisioner) UserExists(username string) (bool, error
 	return false, nil
 }
 
-func buildConnectionString(connectionParams PostgresServiceProperties) string {
+func buildConnectionString(connectionParams config.PostgresDriverConfig) string {
 	var res string = fmt.Sprintf("user=%v password=%v host=%v port=%v dbname=%v sslmode=%v",
 		connectionParams.User, connectionParams.Password, connectionParams.Host, connectionParams.Port, connectionParams.Dbname, connectionParams.Sslmode)
 

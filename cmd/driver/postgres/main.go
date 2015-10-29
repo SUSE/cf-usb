@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/hpcloud/cf-usb/driver/postgres"
+	"github.com/hpcloud/cf-usb/driver/postgres/postgresprovisioner"
 	"github.com/natefinch/pie"
 	"github.com/pivotal-golang/lager"
 )
@@ -16,7 +17,8 @@ func main() {
 
 	p := pie.NewProvider()
 
-	postgresDriver := postgres.NewPostgresDriver(logger)
+	provisioner := postgresprovisioner.NewPostgresProvisioner(logger)
+	postgresDriver := postgres.NewPostgresDriver(logger, provisioner)
 
 	if err := p.RegisterName("postgres", postgresDriver); err != nil {
 		logger.Fatal("register-plugin", err)

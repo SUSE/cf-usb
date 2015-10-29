@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/hpcloud/cf-usb/driver/mongo"
+	"github.com/hpcloud/cf-usb/driver/mongo/mongoprovisioner"
 	"github.com/natefinch/pie"
 	"github.com/pivotal-golang/lager"
 )
@@ -19,7 +20,8 @@ func main() {
 
 	p := pie.NewProvider()
 
-	mongodriver := driver.NewMongoDriver(logger)
+	provisioner := mongoprovisioner.New(logger)
+	mongodriver := mongo.NewMongoDriver(logger, provisioner)
 
 	if err := p.RegisterName("mongo", mongodriver); err != nil {
 		log.Fatalf("failed to register Plugin: %s", err)

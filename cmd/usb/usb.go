@@ -75,11 +75,7 @@ func (usb *UsbApp) Run(configProvider config.ConfigProvider) {
 
 	usb.logger = logger
 
-	drivers, err := usb.startDrivers(configProvider)
-	if err != nil {
-		logger.Error("start-drivers", err)
-		os.Exit(1)
-	}
+	drivers := usb.getDrivers(configProvider)
 
 	logger.Info("run", lager.Data{"action": "starting drivers"})
 	usbService := lib.NewUsbBroker(drivers, usb.config, logger)
@@ -125,25 +121,25 @@ func (usb *UsbApp) Run(configProvider config.ConfigProvider) {
 
 }
 
-func (usb *UsbApp) startDrivers(configProvider config.ConfigProvider) ([]*lib.DriverProvider, error) {
+func (usb *UsbApp) getDrivers(configProvider config.ConfigProvider) []*lib.DriverProvider {
 	var drivers []*lib.DriverProvider
-	//TODO: should not fail if a driver fails to start
 	for _, driver := range usb.config.Drivers {
 		for _, driverInstance := range driver.DriverInstances {
 			usb.logger.Info("start-driver ", lager.Data{"driver-type": driver.DriverType,
 				"driver-instance": driverInstance.Name})
 			instanceConfig, err := configProvider.GetDriverInstanceConfig(driverInstance.ID)
 			if err != nil {
-				return drivers, err
+				logger.Error("failed-to-load-driver-config", err, lager.Data{"DriverInstance": driverInstance.ID})
 			}
-			driver, err := lib.NewDriverProvider(driver.DriverType, *instanceConfig, usb.logger)
+			driver := lib.NewDriverProvider(driver.DriverType, instanceConfig, usb.logger)
+			err = driver.Validate()
 			if err != nil {
-				return drivers, err
+				logger.Error("failed-to-validate-driver", err, lager.Data{"DriverInstance": driverInstance.ID})
 			}
 			drivers = append(drivers, driver)
 		}
 	}
 
-	return drivers, nil
+	return drivers
 
 }

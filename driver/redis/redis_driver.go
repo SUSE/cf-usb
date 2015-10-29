@@ -6,47 +6,44 @@ import (
 	"net"
 
 	"github.com/hpcloud/cf-usb/driver"
+	"github.com/hpcloud/cf-usb/driver/redis/config"
 	"github.com/hpcloud/cf-usb/driver/redis/driverdata"
 	"github.com/hpcloud/cf-usb/driver/redis/redisprovisioner"
-	"github.com/hpcloud/cf-usb/lib/model"
+	"github.com/hpcloud/cf-usb/driver/status"
 
 	"github.com/pivotal-golang/lager"
 )
 
-type redisDriver struct {
-	driverProperties  model.DriverInitRequest
-	defaultConnParams redisprovisioner.RedisServiceProperties
-	redisProvisioner  redisprovisioner.RedisProvisionerInterface
-	logger            lager.Logger
+type RedisDriver struct {
+	conf             config.RedisDriverConfig
+	redisProvisioner redisprovisioner.RedisProvisionerInterface
+	logger           lager.Logger
 }
 
-func NewRedisDriver(logger lager.Logger) driver.Driver {
-	return &redisDriver{logger: logger}
+func NewRedisDriver(logger lager.Logger, provisioner redisprovisioner.RedisProvisionerInterface) driver.Driver {
+	return &RedisDriver{logger: logger, redisProvisioner: provisioner}
 }
 
-func (driver *redisDriver) Init(driverProperties model.DriverInitRequest, response *string) error {
-	driver.driverProperties = driverProperties
+func (d *RedisDriver) init(conf *json.RawMessage) error {
 
-	conf := (*json.RawMessage)(driverProperties.DriverConfig)
-
-	serviceProperties := redisprovisioner.RedisServiceProperties{}
-
-	err := json.Unmarshal(*conf, &serviceProperties)
-
-	driver.defaultConnParams = serviceProperties
-	driver.redisProvisioner = redisprovisioner.NewRedisProvisioner(serviceProperties, driver.logger)
-	driver.redisProvisioner.Init()
+	redisConfig := config.RedisDriverConfig{}
+	err := json.Unmarshal(*conf, &redisConfig)
+	d.logger.Info("Postgress Driver initializing")
+	err = d.redisProvisioner.Connect(redisConfig)
 	if err != nil {
-		driver.logger.Fatal("error-initializing-provisioner", err)
 		return err
 	}
-
-	*response = "Sucessfully initialized redis driver"
+	d.conf = redisConfig
 	return nil
 }
 
-func (driver *redisDriver) ProvisionInstance(request model.ProvisionInstanceRequest, response *bool) error {
-	err := driver.redisProvisioner.CreateContainer(request.InstanceID)
+func (d *RedisDriver) Ping(request *json.RawMessage, response *bool) error {
+	err := d.init(request)
+	if err != nil {
+		return err
+	}
+
+	err = d.redisProvisioner.PingServer()
 	if err != nil {
 		*response = false
 		return err
@@ -55,19 +52,41 @@ func (driver *redisDriver) ProvisionInstance(request model.ProvisionInstanceRequ
 	return nil
 }
 
-func (driver *redisDriver) DeprovisionInstance(request string, response *interface{}) error {
-	err := driver.redisProvisioner.DeleteContainer(request)
+func (d *RedisDriver) ProvisionInstance(request driver.ProvisionInstanceRequest, response *driver.Instance) error {
+	err := d.init(request.Config)
 	if err != nil {
-		*response = false
 		return err
 	}
-	*response = true
+	err = d.redisProvisioner.CreateContainer(request.InstanceID)
+	if err != nil {
+		return err
+	}
+	response.Status = status.Created
 	return nil
 }
 
-func (driver *redisDriver) GenerateCredentials(request model.CredentialsRequest, response *interface{}) error {
+func (d *RedisDriver) DeprovisionInstance(request driver.DeprovisionInstanceRequest, response *driver.Instance) error {
+	err := d.init(request.Config)
+	if err != nil {
+		return err
+	}
 
-	cred, err := driver.redisProvisioner.GetCredentials(request.InstanceID)
+	err = d.redisProvisioner.DeleteContainer(request.InstanceID)
+	if err != nil {
+		return err
+	}
+
+	response.Status = status.Deleted
+	return nil
+}
+
+func (d *RedisDriver) GenerateCredentials(request driver.GenerateCredentialsRequest, response *interface{}) error {
+	err := d.init(request.Config)
+	if err != nil {
+		return err
+	}
+
+	cred, err := d.redisProvisioner.GetCredentials(request.InstanceID)
 	if err != nil {
 		return err
 	}
@@ -87,26 +106,17 @@ func (driver *redisDriver) GenerateCredentials(request model.CredentialsRequest,
 	return nil
 }
 
-func (driver *redisDriver) RevokeCredentials(request model.CredentialsRequest, response *interface{}) error {
+func (d *RedisDriver) RevokeCredentials(request driver.RevokeCredentialsRequest, response *driver.Credentials) error {
+	response.Status = status.Deleted
 	return nil
 }
 
-func (driver *redisDriver) CredentialsExist(request model.CredentialsRequest, response *bool) error {
-	*response = false
+func (d *RedisDriver) GetCredentials(request driver.GetCredentialsRequest, response *driver.Credentials) error {
+	response.Status = status.DoesNotExist
 	return nil
 }
 
-func (driver *redisDriver) Ping(request string, response *bool) error {
-	err := driver.redisProvisioner.PingServer()
-	if err != nil {
-		*response = false
-		return err
-	}
-	*response = true
-	return nil
-}
-
-func (driver *redisDriver) GetDailsSchema(request string, response *string) error {
+func (d *RedisDriver) GetDailsSchema(request string, response *string) error {
 	dailsSchema, err := driverdata.Asset("schemas/dials.json")
 	if err != nil {
 		return err
@@ -117,7 +127,7 @@ func (driver *redisDriver) GetDailsSchema(request string, response *string) erro
 	return nil
 }
 
-func (driver *redisDriver) GetConfigSchema(request string, response *string) error {
+func (d *RedisDriver) GetConfigSchema(request string, response *string) error {
 	configSchema, err := driverdata.Asset("schemas/config.json")
 	if err != nil {
 		return err
@@ -128,12 +138,20 @@ func (driver *redisDriver) GetConfigSchema(request string, response *string) err
 	return nil
 }
 
-func (driver *redisDriver) InstanceExists(request string, response *bool) error {
-	exists, err := driver.redisProvisioner.ContainerExists(request)
+func (d *RedisDriver) GetInstance(request driver.GetInstanceRequest, response *driver.Instance) error {
+	err := d.init(request.Config)
 	if err != nil {
 		return err
 	}
-	*response = exists
+	response.Status = status.DoesNotExist
+	exists, err := d.redisProvisioner.ContainerExists(request.InstanceID)
+	if err != nil {
+		return err
+	}
+
+	if exists {
+		response.Status = status.Exists
+	}
 	return nil
 }
 

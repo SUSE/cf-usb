@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/hpcloud/cf-usb/driver/mysql"
+	"github.com/hpcloud/cf-usb/driver/mysql/mysqlprovisioner"
 	"github.com/natefinch/pie"
 	"github.com/pivotal-golang/lager"
 )
@@ -19,7 +20,8 @@ func main() {
 
 	p := pie.NewProvider()
 
-	mysqldriver := driver.NewMysqlDriver(logger)
+	provisioner := mysqlprovisioner.New(logger)
+	mysqldriver := driver.NewMysqlDriver(logger, provisioner)
 
 	if err := p.RegisterName("mysql", mysqldriver); err != nil {
 		log.Fatalf("failed to register Plugin: %s", err)

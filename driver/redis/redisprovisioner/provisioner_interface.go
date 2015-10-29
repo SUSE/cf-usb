@@ -1,7 +1,9 @@
 package redisprovisioner
 
+import "github.com/hpcloud/cf-usb/driver/redis/config"
+
 type RedisProvisionerInterface interface {
-	Init() error
+	Connect(config.RedisDriverConfig) error
 	CreateContainer(string) error
 	DeleteContainer(string) error
 	ContainerExists(string) (bool, error)
