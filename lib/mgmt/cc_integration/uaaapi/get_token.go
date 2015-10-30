@@ -1,4 +1,4 @@
-package uaa_api
+package uaaapi
 
 import (
 	"encoding/json"

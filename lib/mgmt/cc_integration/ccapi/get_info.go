@@ -1,4 +1,4 @@
-package cc_api
+package ccapi
 
 import (
 	"encoding/json"
@@ -19,7 +19,7 @@ type GetInfo struct {
 }
 
 type GetInfoResponse struct {
-	Token_endpoint string `json:"token_endpoint"`
+	TokenEndpoint string `json:"token_endpoint"`
 }
 
 func NewGetInfo(ccApi string, client httpclient.HttpClient, logger lager.Logger) GetInfoInterface {
@@ -46,7 +46,7 @@ func (info *GetInfo) GetTokenEndpoint() (string, error) {
 		return "", err
 	}
 
-	info.logger.Info("get-info", lager.Data{"get token endpoint": data.Token_endpoint})
+	info.logger.Info("get-info", lager.Data{"get token endpoint": data.TokenEndpoint})
 
-	return data.Token_endpoint, nil
+	return data.TokenEndpoint, nil
 }

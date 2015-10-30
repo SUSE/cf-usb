@@ -1,6 +1,7 @@
-package cc_api
+package ccapi
 
 import (
+	"os"
 	"testing"
 
 	"github.com/hpcloud/cf-usb/lib/mgmt/cc_integration/httpclient"
@@ -11,9 +12,15 @@ import (
 var infoLogger *lagertest.TestLogger = lagertest.NewTestLogger("cc-api")
 
 func TestGetInfo(t *testing.T) {
+	ccApi := os.Getenv("CC_API")
+
+	if ccApi == "" {
+		t.Skip("Skipping test, not all env variables are set:'CC_API'")
+	}
+
 	client := httpclient.NewHttpClient(true)
 
-	getinfo := NewGetInfo("http://api.bosh-lite.com", client, infoLogger)
+	getinfo := NewGetInfo(ccApi, client, infoLogger)
 
 	tokenUrl, err := getinfo.GetTokenEndpoint()
 	if err != nil {
