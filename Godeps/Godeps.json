@@ -1,6 +1,6 @@
 {
 	"ImportPath": "github.com/hpcloud/cf-usb",
-	"GoVersion": "go1.4",
+	"GoVersion": "go1.4.2",
 	"Packages": [
 		"./..."
 	],
@@ -85,6 +85,15 @@
 		{
 			"ImportPath": "github.com/gorilla/mux",
 			"Rev": "e444e69cbd2e2e3e0749a2f3c717cec491552bbf"
+		},
+		{
+			"ImportPath": "github.com/hashicorp/consul/api",
+			"Comment": "v0.5.2-469-g6a350d5",
+			"Rev": "6a350d5d19a41f94e0c99a933410e8545c4e7a51"
+		},
+		{
+			"ImportPath": "github.com/hashicorp/go-cleanhttp",
+			"Rev": "5df5ddc69534f1a4697289f1dca2193fbb40213f"
 		},
 		{
 			"ImportPath": "github.com/lib/pq",

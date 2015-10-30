@@ -50,7 +50,10 @@ func (c *consulConfig) LoadConfiguration() (*Config, error) {
 		return nil, err
 	}
 
-	err = json.Unmarshal(managementApiConfig, &config.ManagementAPI)
+	var management ManagementAPI
+	err = json.Unmarshal(managementApiConfig, &management)
+
+	config.ManagementAPI = &management
 
 	if err != nil {
 		return nil, err
@@ -78,8 +81,28 @@ func (c *consulConfig) LoadConfiguration() (*Config, error) {
 					instanceKey = strings.TrimPrefix(instanceKey, "usb/drivers/"+driverID+"/instances/")
 
 					driverInstanceInfo, err := c.GetDriverInstance(instanceKey)
+
 					if err != nil {
 						return nil, err
+					}
+
+					driverInstanceInfo.Service, err = c.GetService(instanceKey)
+					if err != nil {
+						return nil, err
+					}
+
+					dialkeys, err := c.provisioner.GetAllKeys("usb/drivers/"+driverID+"/instances/"+instanceKey+"/dials/", "/", nil)
+
+					for _, dialKey := range dialkeys {
+						dialKey = strings.TrimSuffix(dialKey, "/")
+						dialKey = strings.TrimPrefix(dialKey, "usb/drivers/"+driverID+"/instances/"+instanceKey+"/dials/")
+						fmt.Println(dialKey)
+
+						dialInfo, err := c.GetDial(instanceKey, dialKey)
+						if err != nil {
+							return nil, err
+						}
+						driverInstanceInfo.Dials = append(driverInstanceInfo.Dials, dialInfo)
 					}
 
 					driverInfo.DriverInstances = append(driverInfo.DriverInstances, &driverInstanceInfo)
@@ -91,6 +114,9 @@ func (c *consulConfig) LoadConfiguration() (*Config, error) {
 		}
 	}
 	config.Drivers = drivers
+
+	c.config = &config
+	c.loaded = true
 
 	return &config, nil
 }
@@ -290,31 +316,28 @@ func (c *consulConfig) getKey(instanceID string) (string, error) {
 
 func (c *consulConfig) GetDriverInstanceConfig(instanceID string) (*DriverInstance, error) {
 
-	var instance DriverInstance
-	exists := false
+	driverInstance, err := c.GetDriverInstance(instanceID)
+	service, err := c.GetService(instanceID)
 
-	if !c.loaded {
-		_, err := c.LoadConfiguration()
+	driverInstance.Service = service
+
+	key, err := c.getKey(instanceID)
+
+	dialkeys, err := c.provisioner.GetAllKeys(key+"/dials/", "/", nil)
+
+	for _, dialKey := range dialkeys {
+		dialKey = strings.TrimSuffix(dialKey, "/")
+		dialKey = strings.TrimPrefix(dialKey, key+"/dials/")
+		fmt.Println(dialKey)
+
+		dialInfo, err := c.GetDial(instanceID, dialKey)
 		if err != nil {
 			return nil, err
 		}
+		driverInstance.Dials = append(driverInstance.Dials, dialInfo)
 	}
 
-	for _, d := range c.config.Drivers {
-		for _, di := range d.DriverInstances {
-			if di.ID == instanceID {
-				instance = *di
-				exists = true
-				break
-			}
-		}
-	}
-
-	if !exists {
-		return nil, errors.New(fmt.Sprintf("Cannot find instanceID : %s", instanceID))
-	}
-
-	return &instance, nil
+	return &driverInstance, err
 }
 
 func (c *consulConfig) GetUaaAuthConfig() (*UaaAuth, error) {

@@ -34,6 +34,9 @@ func init() {
 
 func initProvider() (bool, error) {
 	var consulConfig api.Config
+	if IntegrationConfig.consulAddress == "" {
+		return false, nil
+	}
 	consulConfig.Address = IntegrationConfig.consulAddress
 	consulConfig.Datacenter = IntegrationConfig.consulPassword
 

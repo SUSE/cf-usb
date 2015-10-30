@@ -87,6 +87,16 @@ func Test_AddKVList(t *testing.T) {
 
 	list = append(list, &api.KVPair{Key: "usb/management_api", Value: []byte("{\"listen\":\":54053\",\"uaa_secret\":\"myuaasecret\",\"uaa_client\":\"myuaaclient\",\"authentication\":{\"uaa\":{\"adminscope\":\"usb.management.admin\",\"public_key\":\"\"}}}")})
 
+	list = append(list, &api.KVPair{Key: "usb/drivers/mysql", Value: []byte("mysql")})
+
+	list = append(list, &api.KVPair{Key: "usb/drivers/mysql/instances/00000000-0000-0000-0000-0000000000M1/Name", Value: []byte("mysql-local")})
+
+	list = append(list, &api.KVPair{Key: "usb/drivers/mysql/instances/00000000-0000-0000-0000-0000000000M1/Configuration", Value: []byte("{\"server\":\"127.0.0.1\",\"port\":\"3306\",\"userid\":\"root\",\"password\":\"password\"}")})
+
+	list = append(list, &api.KVPair{Key: "usb/drivers/mysql/instances/00000000-0000-0000-0000-0000000000M1/dials/B0000000-0000-0000-0000-000000000LM1", Value: []byte("{\"id\":\"B0000000-0000-0000-0000-000000000LM1\",\"configuration\":{},\"plan\":{\"name\":\"free\",\"id\":\"53425178-F731-49E7-9E53-5CF4BE9D807L\",\"description\":\"This is the first plan\",\"free\":true}}")})
+
+	list = append(list, &api.KVPair{Key: "usb/drivers/mysql/instances/00000000-0000-0000-0000-0000000000M1/service", Value: []byte("{\"id\":\"83E94C97-C755-46A5-8653-461517EB442L\",\"bindable\":true,\"name\":\"MysqlLocalService\",\"description\":\"Mysql Local Service\",\"tags\":[\"mysql\"],\"metadata\":{\"providerDisplayName\":\"Mysql Local Service\"}}")})
+
 	err := consulConfig.TestProvisioner.PutKVs(&list, nil)
 	if err != nil {
 		log.Fatalln(err)
@@ -138,7 +148,6 @@ func Test_GetKeys(t *testing.T) {
 	}
 }
 
-/*
 func Test_RemoveKeyList(t *testing.T) {
 	if consulConfig.Address == "" {
 		t.Skip("Skipping test as Consul env vars are not set: CONSUL_ADDRESS, CONSUL_DATACENTER, (CONSUL_USERNAME, CONSUL_PASSWORD) / CONSUL_TOKEN")
@@ -149,4 +158,4 @@ func Test_RemoveKeyList(t *testing.T) {
 		log.Fatalln(err)
 	}
 
-}*/
+}

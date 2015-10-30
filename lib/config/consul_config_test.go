@@ -6,8 +6,6 @@ import (
 	"log"
 	"testing"
 
-	//consul "github.com/hpcloud/cf-usb/lib/config/consul_provisioner"
-
 	"github.com/hashicorp/consul/api"
 	consulMock "github.com/hpcloud/cf-usb/lib/config/consul_provisioner/mocks"
 	"github.com/stretchr/testify/mock"
@@ -196,9 +194,11 @@ func Test_ConsulLoadConfig(t *testing.T) {
 	if err != nil {
 		log.Fatalln(err)
 	}
+
 	t.Log(config.BrokerAPI)
 	t.Log(config.ManagementAPI)
 	t.Log(config.Drivers)
 	t.Log(config.LogLevel)
+
 	assert.NoError(err)
 }
