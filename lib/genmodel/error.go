@@ -14,7 +14,7 @@ type Error struct {
 	 */
 	Code int64 `json:"code,omitempty"`
 
-	/* Messsage messsage
+	/* Message message
 	 */
-	Messsage string `json:"messsage,omitempty"`
+	Message string `json:"message,omitempty"`
 }

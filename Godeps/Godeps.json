@@ -30,6 +30,10 @@
 			"Rev": "f62f64ea222e5e6d6d86421b5507b0862a3ebf7f"
 		},
 		{
+			"ImportPath": "github.com/fatih/structs",
+			"Rev": "c701457aaa1ff6709d5e35fccb5c129448e0a37b"
+		},
+		{
 			"ImportPath": "github.com/fsouza/go-dockerclient",
 			"Rev": "2bd40eb3ca54e74e8181ecbbc9b91902cb03d1df"
 		},
@@ -40,35 +44,35 @@
 		},
 		{
 			"ImportPath": "github.com/go-swagger/go-swagger/errors",
-			"Rev": "2e74a8626dbd66f60ef5a47e1d0bfaebd2c2b080"
+			"Rev": "d98664ecfe95b1c174aa89ac342f4b63c36e7d8d"
 		},
 		{
 			"ImportPath": "github.com/go-swagger/go-swagger/httpkit",
-			"Rev": "2e74a8626dbd66f60ef5a47e1d0bfaebd2c2b080"
+			"Rev": "d98664ecfe95b1c174aa89ac342f4b63c36e7d8d"
 		},
 		{
 			"ImportPath": "github.com/go-swagger/go-swagger/internal/validate",
-			"Rev": "2e74a8626dbd66f60ef5a47e1d0bfaebd2c2b080"
+			"Rev": "d98664ecfe95b1c174aa89ac342f4b63c36e7d8d"
 		},
 		{
 			"ImportPath": "github.com/go-swagger/go-swagger/jsonpointer",
-			"Rev": "2e74a8626dbd66f60ef5a47e1d0bfaebd2c2b080"
+			"Rev": "d98664ecfe95b1c174aa89ac342f4b63c36e7d8d"
 		},
 		{
 			"ImportPath": "github.com/go-swagger/go-swagger/jsonreference",
-			"Rev": "2e74a8626dbd66f60ef5a47e1d0bfaebd2c2b080"
+			"Rev": "d98664ecfe95b1c174aa89ac342f4b63c36e7d8d"
 		},
 		{
 			"ImportPath": "github.com/go-swagger/go-swagger/spec",
-			"Rev": "2e74a8626dbd66f60ef5a47e1d0bfaebd2c2b080"
+			"Rev": "d98664ecfe95b1c174aa89ac342f4b63c36e7d8d"
 		},
 		{
 			"ImportPath": "github.com/go-swagger/go-swagger/strfmt",
-			"Rev": "2e74a8626dbd66f60ef5a47e1d0bfaebd2c2b080"
+			"Rev": "d98664ecfe95b1c174aa89ac342f4b63c36e7d8d"
 		},
 		{
 			"ImportPath": "github.com/go-swagger/go-swagger/swag",
-			"Rev": "2e74a8626dbd66f60ef5a47e1d0bfaebd2c2b080"
+			"Rev": "d98664ecfe95b1c174aa89ac342f4b63c36e7d8d"
 		},
 		{
 			"ImportPath": "github.com/golang/gddo/httputil",

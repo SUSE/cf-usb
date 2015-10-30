@@ -35,6 +35,14 @@ type Broker struct {
 		Username string `json:"username"`
 	} `json:"credentials"`
 
+	/* DevMode dev mode
+	 */
+	DevMode bool `json:"dev_mode,omitempty"`
+
+	/* ExternalURL external url
+	 */
+	ExternalURL string `json:"external_url,omitempty"`
+
 	/* Listen listen
 
 	Required: true

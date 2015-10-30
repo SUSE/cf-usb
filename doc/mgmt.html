@@ -190,9 +190,9 @@ code {
   
   <li><a href="#getBrokerInfo"><code><span class="http-method">get</span> /broker</code></a></li>
   
-  <li><a href="#updateBrokerInfo"><code><span class="http-method">post</span> /broker</code></a></li>
+  <li><a href="#updateBrokerInfo"><code><span class="http-method">put</span> /broker</code></a></li>
   
-  <li><a href="#updateCatalog"><code><span class="http-method">post</span> /broker/update_catalog</code></a></li>
+  <li><a href="#updateCatalog"><code><span class="http-method">get</span> /broker/update_catalog</code></a></li>
   
   <li><a href="#getAllDials"><code><span class="http-method">get</span> /dials</code></a></li>
   
@@ -205,6 +205,18 @@ code {
   <li><a href="#deleteDial"><code><span class="http-method">delete</span> /dials/{dial_id}</code></a></li>
   
   <li><a href="#getDialSchema"><code><span class="http-method">get</span> /dials/{dial_id}/schema</code></a></li>
+  
+  <li><a href="#getDriverInstances"><code><span class="http-method">get</span> /driver_instances</code></a></li>
+  
+  <li><a href="#createDriverInstance"><code><span class="http-method">post</span> /driver_instances</code></a></li>
+  
+  <li><a href="#getDriverInstance"><code><span class="http-method">get</span> /driver_instances/{driver_instance_id}</code></a></li>
+  
+  <li><a href="#updateDriverInstance"><code><span class="http-method">put</span> /driver_instances/{driver_instance_id}</code></a></li>
+  
+  <li><a href="#deleteDriverInstance"><code><span class="http-method">delete</span> /driver_instances/{driver_instance_id}</code></a></li>
+  
+  <li><a href="#pingDriverInstance"><code><span class="http-method">get</span> /driver_instances/{driver_instance_id}/ping</code></a></li>
   
   <li><a href="#getDrivers"><code><span class="http-method">get</span> /drivers</code></a></li>
   
@@ -219,18 +231,6 @@ code {
   <li><a href="#uploadDriver"><code><span class="http-method">put</span> /drivers/{driver_id}/bits</code></a></li>
   
   <li><a href="#getDriverSchema"><code><span class="http-method">get</span> /drivers/{driver_id}/schema</code></a></li>
-  
-  <li><a href="#getDriverInstances"><code><span class="http-method">get</span> /drivers_instances</code></a></li>
-  
-  <li><a href="#createDriverInstance"><code><span class="http-method">post</span> /drivers_instances</code></a></li>
-  
-  <li><a href="#getDriverInstance"><code><span class="http-method">get</span> /drivers_instances/{driver_instance_id}</code></a></li>
-  
-  <li><a href="#updateDriverInstance"><code><span class="http-method">put</span> /drivers_instances/{driver_instance_id}</code></a></li>
-  
-  <li><a href="#deleteDriverInstance"><code><span class="http-method">delete</span> /drivers_instances/{driver_instance_id}</code></a></li>
-  
-  <li><a href="#pingDriverInstance"><code><span class="http-method">get</span> /drivers_instances/{driver_instance_id}/ping</code></a></li>
   
   <li><a href="#getInfo"><code><span class="http-method">get</span> /info</code></a></li>
   
@@ -332,7 +332,7 @@ code {
   <div class="method"><a name="updateBrokerInfo"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
-    <pre class="post"><code class="huge"><span class="http-method">post</span> /broker</code></pre></div>
+    <pre class="put"><code class="huge"><span class="http-method">put</span> /broker</code></pre></div>
     <div class="method-summary"> (<span class="nickname">updateBrokerInfo</span>)</div>
     
     <div class="method-notes">Sets the broker api connection info</div>
@@ -349,6 +349,13 @@ code {
     </ul>
     
 
+    
+    <h3 class="field-label">Request body</h3>
+    <div class="field-items">
+      <div class="param">broker (required)</div>
+
+      <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash; Updated broker </div>
+    </div>  <!-- field-items -->
     
 
     
@@ -384,7 +391,7 @@ code {
 
     <h3 class="field-label">Responses</h3>
     
-    <h4 class="field-label">201</h4>
+    <h4 class="field-label">200</h4>
     Successful response
     
     
@@ -398,7 +405,7 @@ code {
   <div class="method"><a name="updateCatalog"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
-    <pre class="post"><code class="huge"><span class="http-method">post</span> /broker/update_catalog</code></pre></div>
+    <pre class="get"><code class="huge"><span class="http-method">get</span> /broker/update_catalog</code></pre></div>
     <div class="method-summary"> (<span class="nickname">updateCatalog</span>)</div>
     
     <div class="method-notes">Updates the broker catalog</div>
@@ -554,7 +561,7 @@ code {
     
     <h3 class="field-label">Request body</h3>
     <div class="field-items">
-      <div class="param">plan (required)</div>
+      <div class="param">dial (required)</div>
 
       <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash; New dial </div>
     </div>  <!-- field-items -->
@@ -570,6 +577,9 @@ code {
          for our swagger.json files, it is always empty and there is no boolean guard or hasReturnType
          do we end up with a heading but not content
 
+    
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type"><a href="#">dial</a></div>
     
 
     Todo: process Response Object and its headers, schema, examples
@@ -721,6 +731,9 @@ code {
          do we end up with a heading but not content
 
     
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type"><a href="#">dial</a></div>
+    
 
     Todo: process Response Object and its headers, schema, examples
     -->
@@ -740,7 +753,7 @@ code {
 
     <h3 class="field-label">Responses</h3>
     
-    <h4 class="field-label">201</h4>
+    <h4 class="field-label">200</h4>
     Sucessfull response
     
     
@@ -894,6 +907,441 @@ code {
   </div> <!-- method -->
   <hr/>
   
+  <div class="method"><a name="getDriverInstances"/>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="get"><code class="huge"><span class="http-method">get</span> /driver_instances</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">getDriverInstances</span>)</div>
+    
+    <div class="method-notes">Gets all driver configurations</div>
+
+    
+
+    
+    <h3 class="field-label">Consumes</h3>
+    This API call consumes the following media types via the <span class="heaader">Content-Type</span> request header:
+    <ul>
+    
+      <li><code>application/json</code></li>
+    
+    </ul>
+    
+
+    
+
+    
+
+    
+    <h3 class="field-label">Query parameters</h3>
+    <div class="field-items">
+      <div class="param">driverId (optional)</div>
+
+      <div class="param-desc"><span class="param-type">Query Parameter</span> &mdash; Driver ID </div>
+    </div>  <!-- field-items -->
+    
+
+    
+
+    <!-- Remove Return type... unclear where this comes from;
+         for our swagger.json files, it is always empty and there is no boolean guard or hasReturnType
+         do we end up with a heading but not content
+
+    
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type"><a href="#array">array[driver_instance]</a></div>
+    
+
+    Todo: process Response Object and its headers, schema, examples
+    -->
+
+    
+
+    
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="heaader">Content-Type</span> response header.
+    <ul>
+    
+      <li><code>application/json</code></li>
+    
+    </ul>
+    
+
+    <h3 class="field-label">Responses</h3>
+    
+    <h4 class="field-label">200</h4>
+    OK
+    
+    
+  </div> <!-- method -->
+  <hr/>
+  
+  <div class="method"><a name="createDriverInstance"/>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="post"><code class="huge"><span class="http-method">post</span> /driver_instances</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">createDriverInstance</span>)</div>
+    
+    <div class="method-notes">Create a driver instance</div>
+
+    
+
+    
+    <h3 class="field-label">Consumes</h3>
+    This API call consumes the following media types via the <span class="heaader">Content-Type</span> request header:
+    <ul>
+    
+      <li><code>application/json</code></li>
+    
+    </ul>
+    
+
+    
+    <h3 class="field-label">Request body</h3>
+    <div class="field-items">
+      <div class="param">driverInstance (required)</div>
+
+      <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash;  </div>
+    </div>  <!-- field-items -->
+    
+
+    
+
+    
+
+    
+
+    <!-- Remove Return type... unclear where this comes from;
+         for our swagger.json files, it is always empty and there is no boolean guard or hasReturnType
+         do we end up with a heading but not content
+
+    
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type"><a href="#">driver_instance</a></div>
+    
+
+    Todo: process Response Object and its headers, schema, examples
+    -->
+
+    
+
+    
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="heaader">Content-Type</span> response header.
+    <ul>
+    
+      <li><code>application/json</code></li>
+    
+    </ul>
+    
+
+    <h3 class="field-label">Responses</h3>
+    
+    <h4 class="field-label">201</h4>
+    Instance created
+    
+    
+    <h4 class="field-label">0</h4>
+    Unexpected error
+    
+    
+  </div> <!-- method -->
+  <hr/>
+  
+  <div class="method"><a name="getDriverInstance"/>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="get"><code class="huge"><span class="http-method">get</span> /driver_instances/{driver_instance_id}</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">getDriverInstance</span>)</div>
+    
+    <div class="method-notes">Gets driver configurations</div>
+
+    
+    <h3 class="field-label">Path parameters</h3>
+    <div class="field-items">
+      <div class="param">driverInstanceId (required)</div>
+
+      <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash; Driver Instance ID </div>
+    </div>  <!-- field-items -->
+    
+
+    
+    <h3 class="field-label">Consumes</h3>
+    This API call consumes the following media types via the <span class="heaader">Content-Type</span> request header:
+    <ul>
+    
+      <li><code>application/json</code></li>
+    
+    </ul>
+    
+
+    
+
+    
+
+    
+
+    
+
+    <!-- Remove Return type... unclear where this comes from;
+         for our swagger.json files, it is always empty and there is no boolean guard or hasReturnType
+         do we end up with a heading but not content
+
+    
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type"><a href="#">driver_instance</a></div>
+    
+
+    Todo: process Response Object and its headers, schema, examples
+    -->
+
+    
+
+    
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="heaader">Content-Type</span> response header.
+    <ul>
+    
+      <li><code>application/json</code></li>
+    
+    </ul>
+    
+
+    <h3 class="field-label">Responses</h3>
+    
+    <h4 class="field-label">200</h4>
+    OK
+    
+    
+    <h4 class="field-label">0</h4>
+    Unexpected error
+    
+    
+  </div> <!-- method -->
+  <hr/>
+  
+  <div class="method"><a name="updateDriverInstance"/>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="put"><code class="huge"><span class="http-method">put</span> /driver_instances/{driver_instance_id}</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">updateDriverInstance</span>)</div>
+    
+    <div class="method-notes">Update a driver instance</div>
+
+    
+    <h3 class="field-label">Path parameters</h3>
+    <div class="field-items">
+      <div class="param">driverInstanceId (required)</div>
+
+      <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash; Driver Instance ID </div>
+    </div>  <!-- field-items -->
+    
+
+    
+    <h3 class="field-label">Consumes</h3>
+    This API call consumes the following media types via the <span class="heaader">Content-Type</span> request header:
+    <ul>
+    
+      <li><code>application/json</code></li>
+    
+    </ul>
+    
+
+    
+    <h3 class="field-label">Request body</h3>
+    <div class="field-items">
+      <div class="param">driverConfig (required)</div>
+
+      <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash; Add driver_config </div>
+    </div>  <!-- field-items -->
+    
+
+    
+
+    
+
+    
+
+    <!-- Remove Return type... unclear where this comes from;
+         for our swagger.json files, it is always empty and there is no boolean guard or hasReturnType
+         do we end up with a heading but not content
+
+    
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type"><a href="#">driver_instance</a></div>
+    
+
+    Todo: process Response Object and its headers, schema, examples
+    -->
+
+    
+
+    
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="heaader">Content-Type</span> response header.
+    <ul>
+    
+      <li><code>application/json</code></li>
+    
+    </ul>
+    
+
+    <h3 class="field-label">Responses</h3>
+    
+    <h4 class="field-label">200</h4>
+    Sucessfull response
+    
+    
+    <h4 class="field-label">0</h4>
+    Unexpected error
+    
+    
+  </div> <!-- method -->
+  <hr/>
+  
+  <div class="method"><a name="deleteDriverInstance"/>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="delete"><code class="huge"><span class="http-method">delete</span> /driver_instances/{driver_instance_id}</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">deleteDriverInstance</span>)</div>
+    
+    <div class="method-notes">Delete a driver instance</div>
+
+    
+    <h3 class="field-label">Path parameters</h3>
+    <div class="field-items">
+      <div class="param">driverInstanceId (required)</div>
+
+      <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash; Driver Instance ID </div>
+    </div>  <!-- field-items -->
+    
+
+    
+    <h3 class="field-label">Consumes</h3>
+    This API call consumes the following media types via the <span class="heaader">Content-Type</span> request header:
+    <ul>
+    
+      <li><code>application/json</code></li>
+    
+    </ul>
+    
+
+    
+
+    
+
+    
+
+    
+
+    <!-- Remove Return type... unclear where this comes from;
+         for our swagger.json files, it is always empty and there is no boolean guard or hasReturnType
+         do we end up with a heading but not content
+
+    
+
+    Todo: process Response Object and its headers, schema, examples
+    -->
+
+    
+
+    
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="heaader">Content-Type</span> response header.
+    <ul>
+    
+      <li><code>application/json</code></li>
+    
+    </ul>
+    
+
+    <h3 class="field-label">Responses</h3>
+    
+    <h4 class="field-label">204</h4>
+    Driver deleted
+    
+    
+    <h4 class="field-label">0</h4>
+    Unexpected error
+    
+    
+  </div> <!-- method -->
+  <hr/>
+  
+  <div class="method"><a name="pingDriverInstance"/>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="get"><code class="huge"><span class="http-method">get</span> /driver_instances/{driver_instance_id}/ping</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">pingDriverInstance</span>)</div>
+    
+    <div class="method-notes">Pings the driver</div>
+
+    
+    <h3 class="field-label">Path parameters</h3>
+    <div class="field-items">
+      <div class="param">driverInstanceId (required)</div>
+
+      <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash; Driver Instance ID </div>
+    </div>  <!-- field-items -->
+    
+
+    
+    <h3 class="field-label">Consumes</h3>
+    This API call consumes the following media types via the <span class="heaader">Content-Type</span> request header:
+    <ul>
+    
+      <li><code>application/json</code></li>
+    
+    </ul>
+    
+
+    
+
+    
+
+    
+
+    
+
+    <!-- Remove Return type... unclear where this comes from;
+         for our swagger.json files, it is always empty and there is no boolean guard or hasReturnType
+         do we end up with a heading but not content
+
+    
+
+    Todo: process Response Object and its headers, schema, examples
+    -->
+
+    
+
+    
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="heaader">Content-Type</span> response header.
+    <ul>
+    
+      <li><code>application/json</code></li>
+    
+    </ul>
+    
+
+    <h3 class="field-label">Responses</h3>
+    
+    <h4 class="field-label">200</h4>
+    OK
+    
+    
+    <h4 class="field-label">0</h4>
+    Unexpected error
+    
+    
+  </div> <!-- method -->
+  <hr/>
+  
   <div class="method"><a name="getDrivers"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
@@ -1000,6 +1448,9 @@ code {
          do we end up with a heading but not content
 
     
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type"><a href="#">driver</a></div>
+    
 
     Todo: process Response Object and its headers, schema, examples
     -->
@@ -1092,8 +1543,8 @@ code {
 
     <h3 class="field-label">Responses</h3>
     
-    <h4 class="field-label">201</h4>
-    Driver updated
+    <h4 class="field-label">200</h4>
+    OK
     
     
     <h4 class="field-label">0</h4>
@@ -1150,6 +1601,9 @@ code {
          do we end up with a heading but not content
 
     
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type"><a href="#">driver</a></div>
+    
 
     Todo: process Response Object and its headers, schema, examples
     -->
@@ -1169,7 +1623,7 @@ code {
 
     <h3 class="field-label">Responses</h3>
     
-    <h4 class="field-label">201</h4>
+    <h4 class="field-label">200</h4>
     Driver updated
     
     
@@ -1318,8 +1772,8 @@ code {
 
     <h3 class="field-label">Responses</h3>
     
-    <h4 class="field-label">201</h4>
-    Driver updated
+    <h4 class="field-label">200</h4>
+    Driver uploaded
     
     
     <h4 class="field-label">0</h4>
@@ -1371,438 +1825,6 @@ code {
     
     <h3 class="field-label">Return type</h3>
     <div class="return-type"><a href="#">driver_schema</a></div>
-    
-
-    Todo: process Response Object and its headers, schema, examples
-    -->
-
-    
-
-    
-    <h3 class="field-label">Produces</h3>
-    This API call produces the following media types according to the <span class="header">Accept</span> request header;
-    the media type will be conveyed by the <span class="heaader">Content-Type</span> response header.
-    <ul>
-    
-      <li><code>application/json</code></li>
-    
-    </ul>
-    
-
-    <h3 class="field-label">Responses</h3>
-    
-    <h4 class="field-label">200</h4>
-    OK
-    
-    
-    <h4 class="field-label">0</h4>
-    Unexpected error
-    
-    
-  </div> <!-- method -->
-  <hr/>
-  
-  <div class="method"><a name="getDriverInstances"/>
-    <div class="method-path">
-    <a class="up" href="#__Methods">Up</a>
-    <pre class="get"><code class="huge"><span class="http-method">get</span> /drivers_instances</code></pre></div>
-    <div class="method-summary"> (<span class="nickname">getDriverInstances</span>)</div>
-    
-    <div class="method-notes">Gets all driver configurations</div>
-
-    
-
-    
-    <h3 class="field-label">Consumes</h3>
-    This API call consumes the following media types via the <span class="heaader">Content-Type</span> request header:
-    <ul>
-    
-      <li><code>application/json</code></li>
-    
-    </ul>
-    
-
-    
-
-    
-
-    
-    <h3 class="field-label">Query parameters</h3>
-    <div class="field-items">
-      <div class="param">driverId (optional)</div>
-
-      <div class="param-desc"><span class="param-type">Query Parameter</span> &mdash; Driver ID </div>
-    </div>  <!-- field-items -->
-    
-
-    
-
-    <!-- Remove Return type... unclear where this comes from;
-         for our swagger.json files, it is always empty and there is no boolean guard or hasReturnType
-         do we end up with a heading but not content
-
-    
-    <h3 class="field-label">Return type</h3>
-    <div class="return-type"><a href="#array">array[driver_instance]</a></div>
-    
-
-    Todo: process Response Object and its headers, schema, examples
-    -->
-
-    
-
-    
-    <h3 class="field-label">Produces</h3>
-    This API call produces the following media types according to the <span class="header">Accept</span> request header;
-    the media type will be conveyed by the <span class="heaader">Content-Type</span> response header.
-    <ul>
-    
-      <li><code>application/json</code></li>
-    
-    </ul>
-    
-
-    <h3 class="field-label">Responses</h3>
-    
-    <h4 class="field-label">200</h4>
-    OK
-    
-    
-  </div> <!-- method -->
-  <hr/>
-  
-  <div class="method"><a name="createDriverInstance"/>
-    <div class="method-path">
-    <a class="up" href="#__Methods">Up</a>
-    <pre class="post"><code class="huge"><span class="http-method">post</span> /drivers_instances</code></pre></div>
-    <div class="method-summary"> (<span class="nickname">createDriverInstance</span>)</div>
-    
-    <div class="method-notes">Create a driver instance</div>
-
-    
-
-    
-    <h3 class="field-label">Consumes</h3>
-    This API call consumes the following media types via the <span class="heaader">Content-Type</span> request header:
-    <ul>
-    
-      <li><code>application/json</code></li>
-    
-    </ul>
-    
-
-    
-    <h3 class="field-label">Request body</h3>
-    <div class="field-items">
-      <div class="param">driverInstance (required)</div>
-
-      <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash;  </div>
-    </div>  <!-- field-items -->
-    
-
-    
-
-    
-
-    
-
-    <!-- Remove Return type... unclear where this comes from;
-         for our swagger.json files, it is always empty and there is no boolean guard or hasReturnType
-         do we end up with a heading but not content
-
-    
-    <h3 class="field-label">Return type</h3>
-    <div class="return-type"><a href="#">driver_instance</a></div>
-    
-
-    Todo: process Response Object and its headers, schema, examples
-    -->
-
-    
-
-    
-    <h3 class="field-label">Produces</h3>
-    This API call produces the following media types according to the <span class="header">Accept</span> request header;
-    the media type will be conveyed by the <span class="heaader">Content-Type</span> response header.
-    <ul>
-    
-      <li><code>application/json</code></li>
-    
-    </ul>
-    
-
-    <h3 class="field-label">Responses</h3>
-    
-    <h4 class="field-label">201</h4>
-    Instance created
-    
-    
-    <h4 class="field-label">0</h4>
-    Unexpected error
-    
-    
-  </div> <!-- method -->
-  <hr/>
-  
-  <div class="method"><a name="getDriverInstance"/>
-    <div class="method-path">
-    <a class="up" href="#__Methods">Up</a>
-    <pre class="get"><code class="huge"><span class="http-method">get</span> /drivers_instances/{driver_instance_id}</code></pre></div>
-    <div class="method-summary"> (<span class="nickname">getDriverInstance</span>)</div>
-    
-    <div class="method-notes">Gets driver configurations</div>
-
-    
-    <h3 class="field-label">Path parameters</h3>
-    <div class="field-items">
-      <div class="param">driverInstanceId (required)</div>
-
-      <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash; Driver Instance ID </div>
-    </div>  <!-- field-items -->
-    
-
-    
-    <h3 class="field-label">Consumes</h3>
-    This API call consumes the following media types via the <span class="heaader">Content-Type</span> request header:
-    <ul>
-    
-      <li><code>application/json</code></li>
-    
-    </ul>
-    
-
-    
-
-    
-
-    
-
-    
-
-    <!-- Remove Return type... unclear where this comes from;
-         for our swagger.json files, it is always empty and there is no boolean guard or hasReturnType
-         do we end up with a heading but not content
-
-    
-    <h3 class="field-label">Return type</h3>
-    <div class="return-type"><a href="#">driver_instance</a></div>
-    
-
-    Todo: process Response Object and its headers, schema, examples
-    -->
-
-    
-
-    
-    <h3 class="field-label">Produces</h3>
-    This API call produces the following media types according to the <span class="header">Accept</span> request header;
-    the media type will be conveyed by the <span class="heaader">Content-Type</span> response header.
-    <ul>
-    
-      <li><code>application/json</code></li>
-    
-    </ul>
-    
-
-    <h3 class="field-label">Responses</h3>
-    
-    <h4 class="field-label">200</h4>
-    OK
-    
-    
-    <h4 class="field-label">0</h4>
-    Unexpected error
-    
-    
-  </div> <!-- method -->
-  <hr/>
-  
-  <div class="method"><a name="updateDriverInstance"/>
-    <div class="method-path">
-    <a class="up" href="#__Methods">Up</a>
-    <pre class="put"><code class="huge"><span class="http-method">put</span> /drivers_instances/{driver_instance_id}</code></pre></div>
-    <div class="method-summary"> (<span class="nickname">updateDriverInstance</span>)</div>
-    
-    <div class="method-notes">Update a driver instance</div>
-
-    
-    <h3 class="field-label">Path parameters</h3>
-    <div class="field-items">
-      <div class="param">driverInstanceId (required)</div>
-
-      <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash; Driver Instance ID </div>
-    </div>  <!-- field-items -->
-    
-
-    
-    <h3 class="field-label">Consumes</h3>
-    This API call consumes the following media types via the <span class="heaader">Content-Type</span> request header:
-    <ul>
-    
-      <li><code>application/json</code></li>
-    
-    </ul>
-    
-
-    
-    <h3 class="field-label">Request body</h3>
-    <div class="field-items">
-      <div class="param">driverConfig (required)</div>
-
-      <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash; Add driver_config </div>
-    </div>  <!-- field-items -->
-    
-
-    
-
-    
-
-    
-
-    <!-- Remove Return type... unclear where this comes from;
-         for our swagger.json files, it is always empty and there is no boolean guard or hasReturnType
-         do we end up with a heading but not content
-
-    
-
-    Todo: process Response Object and its headers, schema, examples
-    -->
-
-    
-
-    
-    <h3 class="field-label">Produces</h3>
-    This API call produces the following media types according to the <span class="header">Accept</span> request header;
-    the media type will be conveyed by the <span class="heaader">Content-Type</span> response header.
-    <ul>
-    
-      <li><code>application/json</code></li>
-    
-    </ul>
-    
-
-    <h3 class="field-label">Responses</h3>
-    
-    <h4 class="field-label">201</h4>
-    Sucessfull response
-    
-    
-    <h4 class="field-label">0</h4>
-    Unexpected error
-    
-    
-  </div> <!-- method -->
-  <hr/>
-  
-  <div class="method"><a name="deleteDriverInstance"/>
-    <div class="method-path">
-    <a class="up" href="#__Methods">Up</a>
-    <pre class="delete"><code class="huge"><span class="http-method">delete</span> /drivers_instances/{driver_instance_id}</code></pre></div>
-    <div class="method-summary"> (<span class="nickname">deleteDriverInstance</span>)</div>
-    
-    <div class="method-notes">Delete a driver instance</div>
-
-    
-    <h3 class="field-label">Path parameters</h3>
-    <div class="field-items">
-      <div class="param">driverInstanceId (required)</div>
-
-      <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash; Driver Instance ID </div>
-    </div>  <!-- field-items -->
-    
-
-    
-    <h3 class="field-label">Consumes</h3>
-    This API call consumes the following media types via the <span class="heaader">Content-Type</span> request header:
-    <ul>
-    
-      <li><code>application/json</code></li>
-    
-    </ul>
-    
-
-    
-
-    
-
-    
-
-    
-
-    <!-- Remove Return type... unclear where this comes from;
-         for our swagger.json files, it is always empty and there is no boolean guard or hasReturnType
-         do we end up with a heading but not content
-
-    
-
-    Todo: process Response Object and its headers, schema, examples
-    -->
-
-    
-
-    
-    <h3 class="field-label">Produces</h3>
-    This API call produces the following media types according to the <span class="header">Accept</span> request header;
-    the media type will be conveyed by the <span class="heaader">Content-Type</span> response header.
-    <ul>
-    
-      <li><code>application/json</code></li>
-    
-    </ul>
-    
-
-    <h3 class="field-label">Responses</h3>
-    
-    <h4 class="field-label">204</h4>
-    Driver deleted
-    
-    
-    <h4 class="field-label">0</h4>
-    Unexpected error
-    
-    
-  </div> <!-- method -->
-  <hr/>
-  
-  <div class="method"><a name="pingDriverInstance"/>
-    <div class="method-path">
-    <a class="up" href="#__Methods">Up</a>
-    <pre class="get"><code class="huge"><span class="http-method">get</span> /drivers_instances/{driver_instance_id}/ping</code></pre></div>
-    <div class="method-summary"> (<span class="nickname">pingDriverInstance</span>)</div>
-    
-    <div class="method-notes">Pings the driver</div>
-
-    
-    <h3 class="field-label">Path parameters</h3>
-    <div class="field-items">
-      <div class="param">driverInstanceId (required)</div>
-
-      <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash; Driver Instance ID </div>
-    </div>  <!-- field-items -->
-    
-
-    
-    <h3 class="field-label">Consumes</h3>
-    This API call consumes the following media types via the <span class="heaader">Content-Type</span> request header:
-    <ul>
-    
-      <li><code>application/json</code></li>
-    
-    </ul>
-    
-
-    
-
-    
-
-    
-
-    
-
-    <!-- Remove Return type... unclear where this comes from;
-         for our swagger.json files, it is always empty and there is no boolean guard or hasReturnType
-         do we end up with a heading but not content
-
     
 
     Todo: process Response Object and its headers, schema, examples
@@ -1927,9 +1949,9 @@ code {
     
     <h3 class="field-label">Query parameters</h3>
     <div class="field-items">
-      <div class="param">dialId (optional)</div>
+      <div class="param">driverInstanceId (optional)</div>
 
-      <div class="param-desc"><span class="param-type">Query Parameter</span> &mdash; Dial ID </div>
+      <div class="param-desc"><span class="param-type">Query Parameter</span> &mdash; Driver Instance ID </div>
     </div>  <!-- field-items -->
     
 
@@ -1998,7 +2020,7 @@ code {
     <div class="field-items">
       <div class="param">plan (required)</div>
 
-      <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash; Add a plan for a **serviceID** </div>
+      <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash; Add a plan for a **dialID** </div>
     </div>  <!-- field-items -->
     
 
@@ -2012,6 +2034,9 @@ code {
          for our swagger.json files, it is always empty and there is no boolean guard or hasReturnType
          do we end up with a heading but not content
 
+    
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type"><a href="#">plan</a></div>
     
 
     Todo: process Response Object and its headers, schema, examples
@@ -2163,6 +2188,9 @@ code {
          do we end up with a heading but not content
 
     
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type"><a href="#">plan</a></div>
+    
 
     Todo: process Response Object and its headers, schema, examples
     -->
@@ -2182,7 +2210,7 @@ code {
 
     <h3 class="field-label">Responses</h3>
     
-    <h4 class="field-label">201</h4>
+    <h4 class="field-label">200</h4>
     Sucessfull response
     
     
@@ -2529,6 +2557,9 @@ code {
          do we end up with a heading but not content
 
     
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type"><a href="#">service</a></div>
+    
 
     Todo: process Response Object and its headers, schema, examples
     -->
@@ -2548,7 +2579,7 @@ code {
 
     <h3 class="field-label">Responses</h3>
     
-    <h4 class="field-label">201</h4>
+    <h4 class="field-label">200</h4>
     Sucessfull response
     
     
@@ -2684,6 +2715,8 @@ code {
     <h3 class="field-label"><a name="Broker">Broker</a> <a class="up" href="#__Models">Up</a></h3>
     <div class="field-items">
       <div class="param">listen </div><div class="param-desc"><span class="param-type">String</span> </div>
+      <div class="param">external_url </div><div class="param-desc"><span class="param-type">String</span> </div>
+      <div class="param">dev_mode </div><div class="param-desc"><span class="param-type">Boolean</span> </div>
       <div class="param">credentials </div><div class="param-desc"><span class="param-type">broker_credentials</span> </div>
       
     </div>  <!-- field-items -->
@@ -2775,7 +2808,7 @@ code {
   <div class="model">
     <h3 class="field-label"><a name="Error">Error</a> <a class="up" href="#__Models">Up</a></h3>
     <div class="field-items">
-      <div class="param">messsage </div><div class="param-desc"><span class="param-type">String</span> </div>
+      <div class="param">message </div><div class="param-desc"><span class="param-type">String</span> </div>
       <div class="param">code </div><div class="param-desc"><span class="param-type">Integer</span> </div>
       
     </div>  <!-- field-items -->

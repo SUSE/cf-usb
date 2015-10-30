@@ -7,18 +7,19 @@ import (
 	"net/http"
 
 	"github.com/go-swagger/go-swagger/httpkit/middleware"
+	"github.com/hpcloud/cf-usb/lib/genmodel"
 )
 
 // UpdateDialHandlerFunc turns a function with the right signature into a update dial handler
-type UpdateDialHandlerFunc func(UpdateDialParams) error
+type UpdateDialHandlerFunc func(UpdateDialParams) (*genmodel.Dial, error)
 
-func (fn UpdateDialHandlerFunc) Handle(params UpdateDialParams) error {
+func (fn UpdateDialHandlerFunc) Handle(params UpdateDialParams) (*genmodel.Dial, error) {
 	return fn(params)
 }
 
 // UpdateDialHandler interface for that can handle valid update dial params
 type UpdateDialHandler interface {
-	Handle(UpdateDialParams) error
+	Handle(UpdateDialParams) (*genmodel.Dial, error)
 }
 
 // NewUpdateDial creates a new http.Handler for the update dial operation
@@ -43,11 +44,11 @@ func (o *UpdateDial) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := o.Handler.Handle(o.Params) // actually handle the request
+	res, err := o.Handler.Handle(o.Params) // actually handle the request
 	if err != nil {
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
-	o.Context.Respond(rw, r, route.Produces, route, nil)
+	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

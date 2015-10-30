@@ -48,7 +48,7 @@
                     }
                 }
             },
-            "post": {
+            "put": {
                 "description": "Sets the broker api connection info\n",
                 "operationId": "updateBrokerInfo",
                 "parameters": [
@@ -58,10 +58,19 @@
                         "in": "header",
                         "required": true,
                         "type": "string"
+                    },
+                    {
+                        "name": "broker",
+                        "in": "body",
+                        "description": "Updated broker",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/broker"
+                        }
                     }
                 ],
                 "responses": {
-                    "201": {
+                    "200": {
                         "description": "Successful response",
                         "schema": {
                             "$ref": "#/definitions/broker"
@@ -77,7 +86,7 @@
             }
         },
         "/broker/update_catalog": {
-            "post": {
+            "get": {
                 "description": "Updates the broker catalog\n",
                 "operationId": "updateCatalog",
                 "parameters": [
@@ -185,7 +194,10 @@
                 ],
                 "responses": {
                     "201": {
-                        "description": "Driver created"
+                        "description": "Driver created",
+                        "schema": {
+                            "$ref": "#/definitions/driver"
+                        }
                     },
                     "default": {
                         "description": "Unexpected error",
@@ -217,8 +229,8 @@
                     }
                 ],
                 "responses": {
-                    "201": {
-                        "description": "Driver updated",
+                    "200": {
+                        "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/driver"
                         }
@@ -260,8 +272,11 @@
                     }
                 ],
                 "responses": {
-                    "201": {
-                        "description": "Driver updated"
+                    "200": {
+                        "description": "Driver updated",
+                        "schema": {
+                            "$ref": "#/definitions/driver"
+                        }
                     },
                     "default": {
                         "description": "Unexpected error",
@@ -341,8 +356,8 @@
                     "multipart/form-data"
                 ],
                 "responses": {
-                    "201": {
-                        "description": "Driver updated"
+                    "200": {
+                        "description": "Driver uploaded"
                     },
                     "default": {
                         "description": "Unexpected error",
@@ -389,7 +404,7 @@
                 }
             }
         },
-        "/drivers_instances": {
+        "/driver_instances": {
             "get": {
                 "description": "Gets all driver configurations\n",
                 "operationId": "getDriverInstances",
@@ -457,7 +472,7 @@
                 }
             }
         },
-        "/drivers_instances/{driver_instance_id}": {
+        "/driver_instances/{driver_instance_id}": {
             "get": {
                 "description": "Gets driver configurations\n",
                 "operationId": "getDriverInstance",
@@ -521,8 +536,11 @@
                     }
                 ],
                 "responses": {
-                    "201": {
-                        "description": "Sucessfull response"
+                    "200": {
+                        "description": "Sucessfull response",
+                        "schema": {
+                            "$ref": "#/definitions/driver_instance"
+                        }
                     },
                     "default": {
                         "description": "Unexpected error",
@@ -564,7 +582,7 @@
                 }
             }
         },
-        "/drivers_instances/{driver_instance_id}/ping": {
+        "/driver_instances/{driver_instance_id}/ping": {
             "get": {
                 "description": "Pings the driver\n",
                 "operationId": "pingDriverInstance",
@@ -736,8 +754,11 @@
                     }
                 ],
                 "responses": {
-                    "201": {
-                        "description": "Sucessfull response"
+                    "200": {
+                        "description": "Sucessfull response",
+                        "schema": {
+                            "$ref": "#/definitions/service"
+                        }
                     },
                     "default": {
                         "description": "Unexpected error",
@@ -792,11 +813,11 @@
                         "type": "string"
                     },
                     {
-                        "name": "dial_id",
+                        "name": "driver_instance_id",
                         "in": "query",
                         "type": "string",
                         "required": false,
-                        "description": "Dial ID"
+                        "description": "Driver Instance ID"
                     }
                 ],
                 "responses": {
@@ -831,7 +852,7 @@
                     {
                         "name": "plan",
                         "in": "body",
-                        "description": "Add a plan for a **serviceID**",
+                        "description": "Add a plan for a **dialID**",
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/plan"
@@ -840,7 +861,10 @@
                 ],
                 "responses": {
                     "201": {
-                        "description": "Sucessfull response"
+                        "description": "Sucessfull response",
+                        "schema": {
+                            "$ref": "#/definitions/plan"
+                        }
                     },
                     "default": {
                         "description": "Unexpected error",
@@ -915,8 +939,11 @@
                     }
                 ],
                 "responses": {
-                    "201": {
-                        "description": "Sucessfull response"
+                    "200": {
+                        "description": "Sucessfull response",
+                        "schema": {
+                            "$ref": "#/definitions/plan"
+                        }
                     },
                     "default": {
                         "description": "Unexpected error",
@@ -1008,18 +1035,21 @@
                         "type": "string"
                     },
                     {
-                        "name": "plan",
+                        "name": "dial",
                         "in": "body",
                         "description": "New dial",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/plan"
+                            "$ref": "#/definitions/dial"
                         }
                     }
                 ],
                 "responses": {
                     "201": {
-                        "description": "Sucessfull response"
+                        "description": "Sucessfull response",
+                        "schema": {
+                            "$ref": "#/definitions/dial"
+                        }
                     },
                     "default": {
                         "description": "Unexpected error",
@@ -1094,8 +1124,11 @@
                     }
                 ],
                 "responses": {
-                    "201": {
-                        "description": "Sucessfull response"
+                    "200": {
+                        "description": "Sucessfull response",
+                        "schema": {
+                            "$ref": "#/definitions/dial"
+                        }
                     },
                     "default": {
                         "description": "Unexpected error",
@@ -1184,6 +1217,12 @@
             "properties": {
                 "listen": {
                     "type": "string"
+                },
+                "external_url": {
+                    "type": "string"
+                },
+                "dev_mode": {
+                    "type": "boolean"
                 },
                 "credentials": {
                     "required": [
@@ -1352,7 +1391,7 @@
         "error": {
             "type": "object",
             "properties": {
-                "messsage": {
+                "message": {
                     "type": "string"
                 },
                 "code": {

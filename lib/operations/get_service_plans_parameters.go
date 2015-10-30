@@ -17,8 +17,8 @@ import (
 type GetServicePlansParams struct {
 	// Authorization token
 	Authorization string
-	// Dial ID
-	DialID string
+	// Driver Instance ID
+	DriverInstanceID string
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
@@ -31,7 +31,7 @@ func (o *GetServicePlansParams) BindRequest(r *http.Request, route *middleware.M
 		res = append(res, err)
 	}
 
-	if err := o.bindDialID(qs.Get("dial_id"), route.Formats); err != nil {
+	if err := o.bindDriverInstanceID(qs.Get("driver_instance_id"), route.Formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -51,9 +51,9 @@ func (o *GetServicePlansParams) bindAuthorization(raw string, formats strfmt.Reg
 	return nil
 }
 
-func (o *GetServicePlansParams) bindDialID(raw string, formats strfmt.Registry) error {
+func (o *GetServicePlansParams) bindDriverInstanceID(raw string, formats strfmt.Registry) error {
 
-	o.DialID = raw
+	o.DriverInstanceID = raw
 
 	return nil
 }

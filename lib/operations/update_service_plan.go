@@ -7,18 +7,19 @@ import (
 	"net/http"
 
 	"github.com/go-swagger/go-swagger/httpkit/middleware"
+	"github.com/hpcloud/cf-usb/lib/genmodel"
 )
 
 // UpdateServicePlanHandlerFunc turns a function with the right signature into a update service plan handler
-type UpdateServicePlanHandlerFunc func(UpdateServicePlanParams) error
+type UpdateServicePlanHandlerFunc func(UpdateServicePlanParams) (*genmodel.Plan, error)
 
-func (fn UpdateServicePlanHandlerFunc) Handle(params UpdateServicePlanParams) error {
+func (fn UpdateServicePlanHandlerFunc) Handle(params UpdateServicePlanParams) (*genmodel.Plan, error) {
 	return fn(params)
 }
 
 // UpdateServicePlanHandler interface for that can handle valid update service plan params
 type UpdateServicePlanHandler interface {
-	Handle(UpdateServicePlanParams) error
+	Handle(UpdateServicePlanParams) (*genmodel.Plan, error)
 }
 
 // NewUpdateServicePlan creates a new http.Handler for the update service plan operation
@@ -43,11 +44,11 @@ func (o *UpdateServicePlan) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := o.Handler.Handle(o.Params) // actually handle the request
+	res, err := o.Handler.Handle(o.Params) // actually handle the request
 	if err != nil {
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
-	o.Context.Respond(rw, r, route.Produces, route, nil)
+	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

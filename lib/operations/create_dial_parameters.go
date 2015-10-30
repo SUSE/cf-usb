@@ -19,7 +19,7 @@ type CreateDialParams struct {
 	// Authorization token
 	Authorization string
 	// New dial
-	Plan genmodel.Plan
+	Dial genmodel.Dial
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
@@ -31,10 +31,10 @@ func (o *CreateDialParams) BindRequest(r *http.Request, route *middleware.Matche
 		res = append(res, err)
 	}
 
-	if err := route.Consumer.Consume(r.Body, &o.Plan); err != nil {
-		res = append(res, errors.NewParseError("plan", "body", "", err))
+	if err := route.Consumer.Consume(r.Body, &o.Dial); err != nil {
+		res = append(res, errors.NewParseError("dial", "body", "", err))
 	} else {
-		if err := o.Plan.Validate(route.Formats); err != nil {
+		if err := o.Dial.Validate(route.Formats); err != nil {
 			res = append(res, err)
 		}
 
