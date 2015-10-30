@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/hpcloud/cf-usb/driver/mysql/config"
 	"github.com/pivotal-golang/lager"
 )
 
@@ -13,22 +14,31 @@ var mysqlConConfig = struct {
 	User            string
 	Pass            string
 	Host            string
+	Port            string
 	TestProvisioner MysqlProvisionerInterface
 }{}
-
-//TODO fix tests
 
 func init() {
 	var err error
 	mysqlConConfig.User = os.Getenv("MYSQL_USER")
 	mysqlConConfig.Pass = os.Getenv("MYSQL_PASS")
 	mysqlConConfig.Host = os.Getenv("MYSQL_HOST")
+	mysqlConConfig.Port = os.Getenv("MYSQL_PORT")
 
 	var logger = lager.NewLogger("test-provider")
 
 	logger.RegisterSink(lager.NewWriterSink(os.Stderr, lager.DEBUG))
 
 	mysqlConConfig.TestProvisioner = New(logger)
+
+	mysql := config.MysqlDriverConfig{
+		Host: mysqlConConfig.Host,
+		Port: mysqlConConfig.Port,
+		Pass: mysqlConConfig.Pass,
+		User: mysqlConConfig.User,
+	}
+
+	err = mysqlConConfig.TestProvisioner.Connect(mysql)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -36,8 +46,8 @@ func init() {
 
 func TestCreateDb(t *testing.T) {
 	dbName := "test_createdb"
-	if mysqlConConfig.User == "" || mysqlConConfig.Pass == "" || mysqlConConfig.Host == "" {
-		t.Skip("Skipping test as not all env variables are set:'MYSQL_USER','MYSQL_PASS','MYSQL_HOST'(ip:port)")
+	if !envVarsOk() {
+		t.Skip("Skipping test as not all env variables are set:'MYSQL_USER','MYSQL_PASS','MYSQL_HOST', 'MYSQL_PORT'")
 	}
 
 	log.Println("Creating test database")
@@ -50,8 +60,8 @@ func TestCreateDb(t *testing.T) {
 
 func TestCreateDbExists(t *testing.T) {
 	dbName := "test_createdb"
-	if mysqlConConfig.User == "" || mysqlConConfig.Pass == "" || mysqlConConfig.Host == "" {
-		t.Skip("Skipping test as not all env variables are set:'MYSQL_USER','MYSQL_PASS','MYSQL_HOST'(ip:port)")
+	if !envVarsOk() {
+		t.Skip("Skipping test as not all env variables are set:'MYSQL_USER','MYSQL_PASS','MYSQL_HOST', 'MYSQL_PORT'")
 	}
 	log.Println("Testing if database exists")
 	created, err := mysqlConConfig.TestProvisioner.IsDatabaseCreated(dbName)
@@ -68,8 +78,8 @@ func TestCreateDbExists(t *testing.T) {
 func TestCreateUser(t *testing.T) {
 	dbName := "test_createdb"
 
-	if mysqlConConfig.User == "" || mysqlConConfig.Pass == "" || mysqlConConfig.Host == "" {
-		t.Skip("Skipping test as not all env variables are set:'MYSQL_USER','MYSQL_PASS','MYSQL_HOST'(ip:port)")
+	if !envVarsOk() {
+		t.Skip("Skipping test as not all env variables are set:'MYSQL_USER','MYSQL_PASS','MYSQL_HOST', 'MYSQL_PORT'")
 	}
 
 	log.Println("Creating test user")
@@ -81,8 +91,8 @@ func TestCreateUser(t *testing.T) {
 
 func TestCreateUserExists(t *testing.T) {
 
-	if mysqlConConfig.User == "" || mysqlConConfig.Pass == "" || mysqlConConfig.Host == "" {
-		t.Skip("Skipping test as not all env variables are set:'MYSQL_USER','MYSQL_PASS','MYSQL_HOST'(ip:port)")
+	if !envVarsOk() {
+		t.Skip("Skipping test as not all env variables are set:'MYSQL_USER','MYSQL_PASS','MYSQL_HOST', 'MYSQL_PORT'")
 	}
 
 	log.Println("Testing if user exists")
@@ -98,8 +108,8 @@ func TestCreateUserExists(t *testing.T) {
 }
 
 func TestDeleteUser(t *testing.T) {
-	if mysqlConConfig.User == "" || mysqlConConfig.Pass == "" || mysqlConConfig.Host == "" {
-		t.Skip("Skipping test as not all env variables are set:'MYSQL_USER','MYSQL_PASS','MYSQL_HOST'(ip:port)")
+	if !envVarsOk() {
+		t.Skip("Skipping test as not all env variables are set:'MYSQL_USER','MYSQL_PASS','MYSQL_HOST', 'MYSQL_PORT'")
 	}
 
 	log.Println("Removing test user")
@@ -110,8 +120,8 @@ func TestDeleteUser(t *testing.T) {
 }
 
 func TestDeleteTheDatabase(t *testing.T) {
-	if mysqlConConfig.User == "" || mysqlConConfig.Pass == "" || mysqlConConfig.Host == "" {
-		t.Skip("Skipping test as not all env variables are set:'MYSQL_USER','MYSQL_PASS','MYSQL_HOST'(ip:port)")
+	if !envVarsOk() {
+		t.Skip("Skipping test as not all env variables are set:'MYSQL_USER','MYSQL_PASS','MYSQL_HOST', 'MYSQL_PORT'")
 	}
 
 	dbName := "test_createdb"
@@ -121,4 +131,8 @@ func TestDeleteTheDatabase(t *testing.T) {
 	if err != nil {
 		t.Errorf("Error deleting database %v", err)
 	}
+}
+
+func envVarsOk() bool {
+	return mysqlConConfig.User != "" && mysqlConConfig.Pass != "" && mysqlConConfig.Host != "" && mysqlConConfig.Port != ""
 }

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -21,7 +22,7 @@ var grantAllPrivToRoleQuery = "GRANT ALL PRIVILEGES ON DATABASE {{.Database}} TO
 var userCountQuery = "SELECT COUNT(*) FROM pg_roles WHERE rolname = '{{.User}}'"
 var revokeAllPrivFromRoleQuery = "REVOKE ALL PRIVILEGES ON DATABASE {{.Database}} FROM {{.User}}"
 var deleteRoleQuery = "DROP ROLE {{.User}}"
-var terminateDatabaseConnQuery = "SELECT pg_terminate_backend(pg_stat_activity.procpid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '{{.Database}}' AND procpid <> pg_backend_pid()"
+var terminateDatabaseConnQuery = "SELECT pg_terminate_backend(pg_stat_activity.{{ .PidColumn }}) FROM pg_stat_activity WHERE pg_stat_activity.datname = '{{.Database}}' AND {{ .PidColumn }} <> pg_backend_pid()"
 var deleteDatabaseQuery = "DROP DATABASE {{.Database}}"
 
 type PostgresProvisioner struct {
@@ -36,7 +37,7 @@ func NewPostgresProvisioner(logger lager.Logger) PostgresProvisionerInterface {
 
 func (provisioner *PostgresProvisioner) Connect(conf config.PostgresDriverConfig) error {
 	var err error = nil
-	connString := buildConnectionString(provisioner.defaultConnParams)
+	connString := buildConnectionString(conf)
 	provisioner.pgClient, err = sql.Open("postgres", connString)
 
 	if err != nil {
@@ -71,7 +72,22 @@ func (provisioner *PostgresProvisioner) CreateDatabase(dbname string) error {
 }
 
 func (provisioner *PostgresProvisioner) DeleteDatabase(dbname string) error {
-	err := provisioner.executeQueryTx([]string{terminateDatabaseConnQuery}, map[string]string{"Database": dbname})
+	version, err := provisioner.getServerVersion()
+	if err != nil {
+		return err
+	}
+
+	var pidColumn string
+	if version > 90200 {
+		pidColumn = "pid"
+	} else {
+		pidColumn = "procpid"
+	}
+
+	err = provisioner.executeQueryTx([]string{terminateDatabaseConnQuery}, map[string]string{
+		"Database":  dbname,
+		"PidColumn": pidColumn,
+	})
 	if err != nil {
 		return err
 	}
@@ -133,7 +149,6 @@ func (provisioner *PostgresProvisioner) UserExists(username string) (bool, error
 func buildConnectionString(connectionParams config.PostgresDriverConfig) string {
 	var res string = fmt.Sprintf("user=%v password=%v host=%v port=%v dbname=%v sslmode=%v",
 		connectionParams.User, connectionParams.Password, connectionParams.Host, connectionParams.Port, connectionParams.Dbname, connectionParams.Sslmode)
-
 	return res
 }
 
@@ -217,4 +232,23 @@ func (provisioner *PostgresProvisioner) executeQueryRow(query string, params map
 	}
 
 	return res, nil
+}
+
+func (provisioner *PostgresProvisioner) getServerVersion() (int, error) {
+	res, err := provisioner.executeQueryRow("SHOW server_version_num", map[string]string{})
+	if err != nil {
+		return 0, err
+	}
+
+	i := res.([]uint8)
+	b := make([]byte, len(i))
+	for i, v := range i {
+		if v < 0 {
+			b[i] = byte(256 + int(v))
+		} else {
+			b[i] = byte(v)
+		}
+	}
+
+	return strconv.Atoi(string(b))
 }
