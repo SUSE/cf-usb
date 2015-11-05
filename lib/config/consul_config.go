@@ -4,13 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	consul "github.com/hpcloud/cf-usb/lib/config/consul_provisioner"
+	"github.com/hpcloud/cf-usb/lib/config/consul"
 	"github.com/pivotal-cf/brokerapi"
 	"strings"
 )
 
 type consulConfig struct {
-	loaded      bool
 	address     string
 	provisioner consul.ConsulProvisionerInterface
 	config      *Config
@@ -19,7 +18,6 @@ type consulConfig struct {
 func NewConsulConfig(provisioner consul.ConsulProvisionerInterface) ConfigProvider {
 	var consulStruct consulConfig
 
-	consulStruct.loaded = false
 	consulStruct.provisioner = provisioner
 
 	return &consulStruct
@@ -116,7 +114,6 @@ func (c *consulConfig) LoadConfiguration() (*Config, error) {
 	config.Drivers = drivers
 
 	c.config = &config
-	c.loaded = true
 
 	return &config, nil
 }

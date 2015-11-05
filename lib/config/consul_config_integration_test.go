@@ -6,7 +6,7 @@ import (
 	"log"
 	"testing"
 
-	consul "github.com/hpcloud/cf-usb/lib/config/consul_provisioner"
+	"github.com/hpcloud/cf-usb/lib/config/consul"
 
 	"github.com/hashicorp/consul/api"
 	"github.com/pivotal-cf/brokerapi"
@@ -27,7 +27,7 @@ func init() {
 	IntegrationConfig.consulAddress = os.Getenv("CONSUL_ADDRESS")
 	IntegrationConfig.consulDatacenter = os.Getenv("CONSUL_DATACENTER")
 	IntegrationConfig.consulPassword = os.Getenv("CONSUL_PASSWORD")
-	IntegrationConfig.consulUser = os.Getenv("COSNUL_USER")
+	IntegrationConfig.consulUser = os.Getenv("CONSUL_USER")
 	IntegrationConfig.consulSchema = os.Getenv("CONSUL_SCHEMA")
 	IntegrationConfig.consulToken = os.Getenv("CONSUL_TOKEN")
 }

@@ -7,7 +7,7 @@ import (
 	"github.com/hpcloud/cf-usb/lib/config"
 
 	"github.com/hashicorp/consul/api"
-	consul "github.com/hpcloud/cf-usb/lib/config/consul_provisioner"
+	"github.com/hpcloud/cf-usb/lib/config/consul"
 )
 
 type ConsulConfigProvider struct {

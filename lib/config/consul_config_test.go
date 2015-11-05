@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/consul/api"
-	consulMock "github.com/hpcloud/cf-usb/lib/config/consul_provisioner/mocks"
+	consulMock "github.com/hpcloud/cf-usb/lib/config/consul/mocks"
 	"github.com/stretchr/testify/mock"
 
 	"github.com/pivotal-cf/brokerapi"
