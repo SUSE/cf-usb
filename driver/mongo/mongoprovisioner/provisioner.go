@@ -1,6 +1,8 @@
 package mongoprovisioner
 
 import (
+	"fmt"
+
 	"github.com/hpcloud/cf-usb/driver/mongo/config"
 	"github.com/pivotal-golang/lager"
 	"gopkg.in/mgo.v2"
@@ -21,9 +23,14 @@ func (e *MongoProvisioner) Connect(mongoConfig config.MongoDriverConfig) error {
 	var err error
 	e.Config = mongoConfig
 
-	//TODO handle authorization
+	var connString string
+	if e.Config.User != "" && e.Config.Pass != "" {
+		connString = fmt.Sprintf("mongodb://%s:%s@%s:%s", mongoConfig.User, mongoConfig.Pass, mongoConfig.Host, mongoConfig.Port)
+	} else {
+		connString = fmt.Sprintf("mongodb://%s:%s", mongoConfig.Host, mongoConfig.Port)
+	}
 
-	e.Connection, err = mgo.Dial(e.Config.Host + ":" + e.Config.Port)
+	e.Connection, err = mgo.Dial(connString)
 	if err != nil {
 		e.logger.Error("Error loging into the mongo db service", err)
 	}

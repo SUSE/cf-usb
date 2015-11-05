@@ -1,6 +1,7 @@
 package postgresprovisioner
 
 import (
+	"log"
 	"os"
 	"strings"
 	"testing"
@@ -17,7 +18,8 @@ var testPostgresProv = struct {
 	postgresDriverConfig config.PostgresDriverConfig
 }{}
 
-func initDriver() error {
+func init() {
+	var err error
 	testPostgresProv.postgresDriverConfig = config.PostgresDriverConfig{
 		User:     os.Getenv("POSTGRES_USER"),
 		Password: os.Getenv("POSTGRES_PASSWORD"),
@@ -27,8 +29,10 @@ func initDriver() error {
 		Sslmode:  os.Getenv("POSTGRES_SSLMODE")}
 
 	testPostgresProv.postgresProvisioner = NewPostgresProvisioner(logger)
-	err := testPostgresProv.postgresProvisioner.Connect(testPostgresProv.postgresDriverConfig)
-	return err
+	err = testPostgresProv.postgresProvisioner.Connect(testPostgresProv.postgresDriverConfig)
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 func TestCreateDatabase(t *testing.T) {
