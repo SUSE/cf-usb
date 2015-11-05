@@ -171,14 +171,12 @@ func (c *consulConfig) GetService(instanceID string) (brokerapi.Service, error) 
 
 	val, err := c.provisioner.GetValue(key + "/service")
 	if err != nil {
-		return service, nil
+		return service, err
 	}
 
 	err = json.Unmarshal(val, &service)
-	if err != nil {
-		return service, err
-	}
-	return service, nil
+
+	return service, err
 }
 
 func (c *consulConfig) GetDial(instanceID string, dialID string) (Dial, error) {
@@ -200,11 +198,8 @@ func (c *consulConfig) GetDial(instanceID string, dialID string) (Dial, error) {
 	}
 
 	err = json.Unmarshal(data, &dialInfo)
-	if err != nil {
-		return dialInfo, err
-	}
 
-	return dialInfo, nil
+	return dialInfo, err
 }
 
 func (c *consulConfig) SetDriver(driver Driver) error {
@@ -218,11 +213,7 @@ func (c *consulConfig) SetDriver(driver Driver) error {
 		}
 	}
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func (c *consulConfig) SetDriverInstance(driverID string, instance DriverInstance) error {
@@ -269,11 +260,8 @@ func (c *consulConfig) SetService(instanceID string, service brokerapi.Service) 
 	}
 
 	err = c.provisioner.AddKV(key+"/service", data, nil)
-	if err != nil {
-		return err
-	}
 
-	return nil
+	return err
 }
 
 func (c *consulConfig) SetDial(instanceID string, dial Dial) error {
@@ -290,10 +278,8 @@ func (c *consulConfig) SetDial(instanceID string, dial Dial) error {
 		return err
 	}
 	err = c.provisioner.AddKV(key+"/dials/"+dial.ID, data, nil)
-	if err != nil {
-		return err
-	}
-	return nil
+
+	return err
 }
 
 func (c *consulConfig) getKey(instanceID string) (string, error) {
@@ -309,6 +295,34 @@ func (c *consulConfig) getKey(instanceID string) (string, error) {
 		}
 	}
 	return "", nil
+}
+
+func (c *consulConfig) DeleteDriver(driverID string) error {
+	return c.provisioner.DeleteKVs("usb/drivers/"+driverID, nil)
+}
+
+func (c *consulConfig) DeleteDriverInstance(instanceID string) error {
+	key, err := c.getKey(instanceID)
+	if err != nil {
+		return err
+	}
+	return c.provisioner.DeleteKVs(key, nil)
+}
+
+func (c *consulConfig) DeleteService(instanceID string) error {
+	key, err := c.getKey(instanceID)
+	if err != nil {
+		return err
+	}
+	return c.provisioner.DeleteKV(key+"/service", nil)
+}
+
+func (c *consulConfig) DeleteDial(instanceID string, dialID string) error {
+	key, err := c.getKey(instanceID)
+	if err != nil {
+		return err
+	}
+	return c.provisioner.DeleteKV(key+"/dials/"+dialID, nil)
 }
 
 func (c *consulConfig) GetDriverInstanceConfig(instanceID string) (*DriverInstance, error) {

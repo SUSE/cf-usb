@@ -8,6 +8,6 @@ type ConsulProvisionerInterface interface {
 	GetValue(string) ([]byte, error)
 	GetAllKVs(string, *api.QueryOptions) (api.KVPairs, error)
 	DeleteKV(string, *api.WriteOptions) error
-	DelteKVs(string, *api.WriteOptions) error
+	DeleteKVs(string, *api.WriteOptions) error
 	GetAllKeys(string, string, *api.QueryOptions) ([]string, error)
 }

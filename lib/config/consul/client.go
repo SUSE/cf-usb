@@ -27,11 +27,7 @@ func New(config *api.Config) (ConsulProvisionerInterface, error) {
 
 	provisioner.ConsulClient, err = api.NewClient(config)
 
-	if err != nil {
-		return nil, err
-	}
-
-	return &provisioner, nil
+	return &provisioner, err
 }
 
 func (e *ConsulProvisioner) AddKV(key string, value []byte, options *api.WriteOptions) error {
@@ -40,21 +36,16 @@ func (e *ConsulProvisioner) AddKV(key string, value []byte, options *api.WriteOp
 	p := &api.KVPair{Key: key, Value: value}
 
 	_, err := kv.Put(p, options)
-	if err != nil {
-		return err
-	}
-	return nil
+
+	return err
 }
 
 func (e *ConsulProvisioner) GetValue(key string) ([]byte, error) {
 	kv := e.ConsulClient.KV()
 
 	pair, _, err := kv.Get(key, nil)
-	if err != nil {
-		return nil, err
-	}
 
-	return pair.Value, nil
+	return pair.Value, err
 }
 
 func (e *ConsulProvisioner) PutKVs(pairs *api.KVPairs, options *api.WriteOptions) error {
@@ -71,28 +62,22 @@ func (e *ConsulProvisioner) PutKVs(pairs *api.KVPairs, options *api.WriteOptions
 func (e *ConsulProvisioner) GetAllKeys(prefix string, separator string, options *api.QueryOptions) ([]string, error) {
 	kv := e.ConsulClient.KV()
 	result, _, err := kv.Keys(prefix, separator, options)
-	if err != nil {
-		return nil, err
-	}
-	return result, nil
+
+	return result, err
 }
 
 func (e *ConsulProvisioner) GetAllKVs(prefix string, options *api.QueryOptions) (api.KVPairs, error) {
 	kv := e.ConsulClient.KV()
 	result, _, err := kv.List(prefix, options)
-	if err != nil {
-		return nil, err
-	}
-	return result, nil
+
+	return result, err
 }
 
-func (e *ConsulProvisioner) DelteKVs(prefix string, options *api.WriteOptions) error {
+func (e *ConsulProvisioner) DeleteKVs(prefix string, options *api.WriteOptions) error {
 	kv := e.ConsulClient.KV()
 	_, err := kv.DeleteTree(prefix, options)
-	if err != nil {
-		return err
-	}
-	return nil
+
+	return err
 }
 
 func (e *ConsulProvisioner) DeleteKV(key string, options *api.WriteOptions) error {
@@ -100,8 +85,5 @@ func (e *ConsulProvisioner) DeleteKV(key string, options *api.WriteOptions) erro
 
 	_, err := kv.Delete(key, options)
 
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }

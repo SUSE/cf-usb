@@ -84,7 +84,7 @@ func (_m *ConsulProvisionerInterface) DeleteKV(_a0 string, _a1 *api.WriteOptions
 
 	return r0
 }
-func (_m *ConsulProvisionerInterface) DelteKVs(_a0 string, _a1 *api.WriteOptions) error {
+func (_m *ConsulProvisionerInterface) DeleteKVs(_a0 string, _a1 *api.WriteOptions) error {
 	ret := _m.Called(_a0, _a1)
 
 	var r0 error

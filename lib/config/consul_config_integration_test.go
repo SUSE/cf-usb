@@ -3,7 +3,6 @@ package config
 import (
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
-	"log"
 	"testing"
 
 	"github.com/hpcloud/cf-usb/lib/config/consul"
@@ -214,26 +213,5 @@ func Test_IntGetDial(t *testing.T) {
 	dialInfo, err := IntegrationConfig.Provider.GetDial("testInstanceID", "dialID")
 
 	assert.Equal(dialInfo.Plan.Name, "free")
-	assert.NoError(err)
-}
-
-func Test_IntConsulLoadConfig(t *testing.T) {
-
-	initialized, err := initProvider()
-	if initialized == false {
-		t.Skip("Skipping Consul Set Driver test, environment variables not set: CONSUL_ADDRESS(host:port), CONSUL_DATACENTER, CONSUL_TOKEN / CONSUL_USER + CONSUL_PASSWORD, CONSUL_SCHEMA")
-		t.Log(err)
-	}
-
-	assert := assert.New(t)
-
-	config, err := IntegrationConfig.Provider.LoadConfiguration()
-	if err != nil {
-		log.Fatalln(err)
-	}
-	t.Log(config.BrokerAPI)
-	t.Log(config.ManagementAPI)
-	t.Log(config.Drivers)
-	t.Log(config.LogLevel)
 	assert.NoError(err)
 }
