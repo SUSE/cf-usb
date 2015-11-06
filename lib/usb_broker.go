@@ -1,6 +1,8 @@
 package lib
 
 import (
+	"errors"
+	"fmt"
 	"github.com/hpcloud/cf-usb/driver/status"
 	"github.com/hpcloud/cf-usb/lib/config"
 	"github.com/pivotal-cf/brokerapi"
@@ -37,6 +39,9 @@ func (broker *UsbBroker) Provision(instanceID string, serviceDetails brokerapi.P
 	broker.logger.Info("provision", lager.Data{"instanceID": instanceID})
 
 	driver := broker.getDriver(serviceDetails.ID)
+	if driver == nil {
+		return errors.New(fmt.Sprintf("Cannot find driver for %s", serviceDetails.ID))
+	}
 
 	instance, err := driver.GetInstance(instanceID)
 	if err != nil {
@@ -58,7 +63,9 @@ func (broker *UsbBroker) Provision(instanceID string, serviceDetails brokerapi.P
 
 func (broker *UsbBroker) Deprovision(instanceID string, deprovisionDetails brokerapi.DeprovisionDetails) error {
 	driver := broker.getDriver(deprovisionDetails.ServiceID)
-
+	if driver == nil {
+		return errors.New(fmt.Sprintf("Cannot find driver for %s", deprovisionDetails.ServiceID))
+	}
 	instance, err := driver.GetInstance(instanceID)
 	if err != nil {
 		return err
