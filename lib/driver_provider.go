@@ -77,7 +77,7 @@ func (p *DriverProvider) Validate() error {
 
 func (p *DriverProvider) Ping() (bool, error) {
 	result := false
-	err := p.createClientAndCall(fmt.Sprintf("%s.Ping", p.driverType), "", &result)
+	err := p.createClientAndCall(fmt.Sprintf("%s.Ping", p.driverType), p.Instance.Configuration, &result)
 	return result, err
 }
 
