@@ -22,7 +22,11 @@ type ServicePlan struct {
 }
 
 type PlanValues struct {
-	Public bool `json:"public"`
+	Name        string `json:"name"`
+	Free        bool   `json:"free"`
+	Description string `json:"description"`
+	Public      bool   `json:"public"`
+	ServiceGuid string `json:"service_guid"`
 }
 
 type PlanResources struct {
@@ -31,6 +35,7 @@ type PlanResources struct {
 
 type PlanResource struct {
 	Values PlanMetadata `json:"metadata"`
+	Entity PlanValues   `json:"entity"`
 }
 
 type PlanMetadata struct {
@@ -52,7 +57,7 @@ func (sp *ServicePlan) Update(serviceGuid string) error {
 		return err
 	}
 
-	servicePlanGuids, err := sp.getServicePlanGuids(serviceGuid, token)
+	servicePlans, err := sp.getServicePlans(serviceGuid, token)
 	if err != nil {
 		return err
 	}
@@ -60,16 +65,17 @@ func (sp *ServicePlan) Update(serviceGuid string) error {
 	headers := make(map[string]string)
 	headers["Authorization"] = token
 
-	body := PlanValues{Public: true}
-	values, err := json.Marshal(body)
-	if err != nil {
-		return err
-	}
-
 	sp.logger.Debug("update-service-plans", lager.Data{"service guid": serviceGuid})
 
-	for _, servicePlanGuid := range servicePlanGuids {
-		path := fmt.Sprintf("/v2/service_plans/%s", servicePlanGuid)
+	for _, value := range servicePlans.Resources {
+		path := fmt.Sprintf("/v2/service_plans/%s", value.Values.Guid)
+
+		body := PlanValues{Name: value.Entity.Name, Free: value.Entity.Free, Description: value.Entity.Description, Public: value.Entity.Public, ServiceGuid: value.Entity.ServiceGuid}
+		values, err := json.Marshal(body)
+		if err != nil {
+			return err
+		}
+
 		request := httpclient.Request{Verb: "PUT", Endpoint: sp.ccApi, ApiUrl: path, Body: strings.NewReader(string(values)), Headers: headers, StatusCode: 201}
 
 		_, err = sp.client.Request(request)
@@ -77,13 +83,13 @@ func (sp *ServicePlan) Update(serviceGuid string) error {
 			return err
 		}
 
-		sp.logger.Debug("update-service-plan", lager.Data{"service plan guid": servicePlanGuid})
+		sp.logger.Debug("update-service-plan", lager.Data{"service plan guid": value.Values.Guid})
 	}
 
 	return nil
 }
 
-func (sp *ServicePlan) getServicePlanGuids(serviceGuid, token string) ([]string, error) {
+func (sp *ServicePlan) getServicePlans(serviceGuid, token string) (*PlanResources, error) {
 	path := fmt.Sprintf("/v2/service_plans?q=service_guid:%s", serviceGuid)
 
 	headers := make(map[string]string)
@@ -104,12 +110,5 @@ func (sp *ServicePlan) getServicePlanGuids(serviceGuid, token string) ([]string,
 		return nil, err
 	}
 
-	var guids []string
-	for _, value := range resources.Resources {
-		guids = append(guids, value.Values.Guid)
-	}
-
-	sp.logger.Debug("get-service-plan", lager.Data{"service plan guids": guids})
-
-	return guids, nil
+	return resources, nil
 }

@@ -19,18 +19,18 @@ type Token struct {
 }
 
 type Generator struct {
-	token_url     string
-	client_id     string
-	client_secret string
-	client        httpclient.HttpClient
+	tokenUrl     string
+	clientId     string
+	clientSecret string
+	client       httpclient.HttpClient
 }
 
 func NewTokenGenerator(tokenUrl, clientId, clientSecret string, client httpclient.HttpClient) GetTokenInterface {
 	return &Generator{
-		token_url:     tokenUrl,
-		client_id:     clientId,
-		client_secret: clientSecret,
-		client:        client,
+		tokenUrl:     tokenUrl,
+		clientId:     clientId,
+		clientSecret: clientSecret,
+		client:       client,
 	}
 }
 
@@ -44,9 +44,9 @@ func (generator *Generator) GetToken() (string, error) {
 	headers["Content-Type"] = "application/x-www-form-urlencoded; charset=UTF-8"
 	headers["Accept"] = "application/json; charset=utf-8"
 
-	credentials := httpclient.BasicAuth{Username: generator.client_id, Password: generator.client_secret}
+	credentials := httpclient.BasicAuth{Username: generator.clientId, Password: generator.clientSecret}
 
-	request := httpclient.Request{Verb: "POST", Endpoint: generator.token_url, ApiUrl: tokenURL, Body: strings.NewReader(requestBody), Headers: headers, Credentials: &credentials, StatusCode: 200}
+	request := httpclient.Request{Verb: "POST", Endpoint: generator.tokenUrl, ApiUrl: tokenURL, Body: strings.NewReader(requestBody), Headers: headers, Credentials: &credentials, StatusCode: 200}
 
 	response, err := generator.client.Request(request)
 	if err != nil {

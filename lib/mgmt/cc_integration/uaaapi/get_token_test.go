@@ -1,10 +1,13 @@
 package uaaapi
 
 import (
+	"encoding/json"
 	"os"
 	"testing"
 
-	"github.com/hpcloud/cf-usb/lib/mgmt/cc_integration/httpclient"
+	"github.com/hpcloud/cf-usb/lib/mgmt/cc_integration/mocks"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 var tokenEndpoint = os.Getenv("TOKEN_ENDPOINT")
@@ -12,22 +15,23 @@ var clientId = os.Getenv("CLIENT_ID")
 var clientSecret = os.Getenv("CLIENT_SECRET")
 
 func TestGetToken(t *testing.T) {
-	if !envVarsOk() {
-		t.Skip("Skipping test, not all env variables are set:'TOKEN_ENDPOINT','CLIENT_ID','CLIENT_SECRET'")
+	tokenValue := "atoken"
+	tokenMocked := Token{AccessToken: tokenValue, ExpireTime: 10000}
+	values, err := json.Marshal(tokenMocked)
+	if err != nil {
+		t.Errorf("Error marshall token: %v", err)
 	}
 
-	client := httpclient.NewHttpClient(true)
+	client := new(mocks.HttpClient)
+	client.Mock.On("Request", mock.Anything).Return(values, nil)
 
-	tokenGenerator := NewTokenGenerator(tokenEndpoint, clientId, clientSecret, client)
+	tokenGenerator := NewTokenGenerator("", "", "", client)
 
 	token, err := tokenGenerator.GetToken()
 	if err != nil {
 		t.Errorf("Error generationg token: %v", err)
 	}
 
-	t.Logf("token: %v", token)
-}
-
-func envVarsOk() bool {
-	return tokenEndpoint != "" && clientId != "" && clientSecret != ""
+	assert.NoError(t, err)
+	assert.Equal(t, "bearer "+tokenValue, token)
 }

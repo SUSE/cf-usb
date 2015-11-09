@@ -1,31 +1,33 @@
 package ccapi
 
 import (
-	"os"
+	"encoding/json"
 	"testing"
 
-	"github.com/hpcloud/cf-usb/lib/mgmt/cc_integration/httpclient"
+	"github.com/hpcloud/cf-usb/lib/mgmt/cc_integration/mocks"
 	"github.com/pivotal-golang/lager/lagertest"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 var infoLogger *lagertest.TestLogger = lagertest.NewTestLogger("cc-api")
 
 func TestGetInfo(t *testing.T) {
-	ccApi := os.Getenv("CC_API")
-
-	if ccApi == "" {
-		t.Skip("Skipping test, not all env variables are set:'CC_API'")
+	tokenEndpointMocked := GetInfoResponse{TokenEndpoint: "http://uaa.test.com"}
+	values, err := json.Marshal(tokenEndpointMocked)
+	if err != nil {
+		t.Errorf("Error marshall token endpoint: %v", err)
 	}
 
-	client := httpclient.NewHttpClient(true)
+	client := new(mocks.HttpClient)
+	client.Mock.On("Request", mock.Anything).Return(values, nil)
 
-	getinfo := NewGetInfo(ccApi, client, infoLogger)
-
+	getinfo := NewGetInfo("", client, infoLogger)
 	tokenUrl, err := getinfo.GetTokenEndpoint()
 	if err != nil {
 		t.Errorf("Error get info: %v", err)
 	}
 
+	assert.NoError(t, err)
 	assert.Contains(t, tokenUrl, "uaa")
 }
