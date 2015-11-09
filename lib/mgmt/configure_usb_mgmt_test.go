@@ -1,8 +1,8 @@
 package mgmt
 
 import (
-	"path/filepath"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/go-swagger/go-swagger/spec"
@@ -35,12 +35,12 @@ func TestGetInfo(t *testing.T) {
 	workDir, err := os.Getwd()
 	configFile := filepath.Join(workDir, "../../test-assets/file-config/config.json")
 	fileConfig := config.NewFileConfig(configFile)
-	configuration, err := fileConfig.LoadConfiguration()
+
 	if err != nil {
 		t.Errorf("Error loading config: %v", err)
 	}
 
-	ConfigureAPI(mgmtAPI, auth, configuration)
+	ConfigureAPI(mgmtAPI, auth, fileConfig)
 
 	params := operations.GetInfoParams{""}
 
