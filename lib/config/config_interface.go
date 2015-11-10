@@ -18,7 +18,7 @@ type ManagementAPI struct {
 	UaaClient       string           `json:"uaa_client"`
 	UaaSecret       string           `json:"uaa_secret"`
 	Authentication  *json.RawMessage `json:"authentication"`
-	CloudController *json.RawMessage `json:"cloud_controller"`
+	CloudController CloudController  `json:"cloud_controller"`
 }
 
 type Uaa struct {
@@ -28,6 +28,11 @@ type Uaa struct {
 type UaaAuth struct {
 	Scope     string `json:"adminscope"`
 	PublicKey string `json:"public_key"`
+}
+
+type CloudController struct {
+	Api               string `json:"api"`
+	SkipTslValidation bool   `json:"skip_tsl_validation"`
 }
 
 type Dial struct {

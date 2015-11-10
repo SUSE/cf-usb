@@ -53,6 +53,8 @@ func TestLoadConfig(t *testing.T) {
 	assert.Equal(":54053", config.ManagementAPI.Listen)
 	assert.Equal("myuaaclient", config.ManagementAPI.UaaClient)
 	assert.Equal("myuaasecret", config.ManagementAPI.UaaSecret)
+	assert.Equal("http://api.bosh-lite.com", config.ManagementAPI.CloudController.Api)
+	assert.Equal(true, config.ManagementAPI.CloudController.SkipTslValidation)
 }
 
 func TestLoadServiceConfig(t *testing.T) {
