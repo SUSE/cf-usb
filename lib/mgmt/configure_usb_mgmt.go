@@ -2,7 +2,6 @@ package mgmt
 
 import (
 	"encoding/json"
-
 	"github.com/fatih/structs"
 
 	"github.com/go-swagger/go-swagger/errors"
@@ -80,30 +79,22 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 			return nil, err
 		}
 
-		config, err := configProvider.LoadConfiguration()
+		d, err := configProvider.GetDriver(params.DriverID)
 		if err != nil {
 			return nil, err
 		}
 
-		for _, d := range config.Drivers {
-			if d.ID == params.DriverID {
-
-				var instances = make([]string, 0)
-				for _, instance := range d.DriverInstances {
-					instances = append(instances, instance.ID)
-				}
-
-				driver := &genmodel.Driver{
-					ID:              d.ID,
-					DriverType:      d.DriverType,
-					DriverInstances: instances,
-				}
-
-				return driver, nil
-			}
+		var instances = make([]string, 0)
+		for _, instance := range d.DriverInstances {
+			instances = append(instances, instance.ID)
 		}
 
-		return nil, errors.NotFound("Driver ID: %s not found", params.DriverID)
+		driver := &genmodel.Driver{
+			ID:              d.ID,
+			DriverType:      d.DriverType,
+			DriverInstances: instances,
+		}
+		return driver, nil
 	})
 
 	api.GetDriversHandler = GetDriversHandlerFunc(func(params GetDriversParams) (*[]genmodel.Driver, error) {
@@ -329,29 +320,21 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 		var services = make([]genmodel.Service, 0)
 
-		config, err := configProvider.LoadConfiguration()
+		di, err := configProvider.GetDriverInstance(params.DriverInstanceID)
 		if err != nil {
 			return nil, err
 		}
 
-		for _, d := range config.Drivers {
-			for _, di := range d.DriverInstances {
-				if params.DriverInstanceID != "" && di.ID != params.DriverInstanceID {
-					continue
-				}
-
-				service := genmodel.Service{
-					ID:               di.Service.ID,
-					DriverInstanceID: di.ID,
-					Bindable:         di.Service.Bindable,
-					Name:             di.Service.Name,
-					Tags:             di.Service.Tags,
-					Metadata:         structs.Map(di.Service.Metadata),
-				}
-
-				services = append(services, service)
-			}
+		service := genmodel.Service{
+			ID:               di.Service.ID,
+			DriverInstanceID: di.ID,
+			Bindable:         di.Service.Bindable,
+			Name:             di.Service.Name,
+			Tags:             di.Service.Tags,
+			Metadata:         structs.Map(di.Service.Metadata),
 		}
+
+		services = append(services, service)
 
 		return &services, nil
 	})
@@ -472,7 +455,6 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 							meta.DisplayName = params.Plan.Name
 							plan.Metadata = meta
-
 							dial.Plan = plan
 							err = configProvider.SetDial(instance.ID, dial)
 
@@ -702,40 +684,28 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 			return nil, err
 		}
 
-		config, err := configProvider.LoadConfiguration()
+		instance, err := configProvider.GetDriverInstance(params.DriverInstanceID)
 		if err != nil {
 			return nil, err
 		}
-
-		for _, d := range config.Drivers {
-			for _, di := range d.DriverInstances {
-				if di.ID == params.DriverInstanceID {
-					var dials = make([]string, 0)
-					for _, dial := range di.Dials {
-						dials = append(dials, dial.ID)
-					}
-
-					var conf map[string]interface{}
-					err := json.Unmarshal(*di.Configuration, &conf)
-					if err != nil {
-						return nil, err
-					}
-
-					driverInstance := genmodel.DriverInstance{
-						Configuration: conf,
-						Dials:         dials,
-						ID:            di.ID,
-						DriverID:      d.ID,
-						Name:          di.Name,
-						Service:       di.Service.ID,
-					}
-
-					return &driverInstance, nil
-				}
-			}
+		var conf map[string]interface{}
+		err = json.Unmarshal(*instance.Configuration, &conf)
+		if err != nil {
+			return nil, err
+		}
+		var dials = make([]string, 0)
+		for _, dial := range instance.Dials {
+			dials = append(dials, dial.ID)
 		}
 
-		return nil, errors.NotFound("Driver Instance with ID: %s not found", params.DriverInstanceID)
+		driverInstance := genmodel.DriverInstance{
+			Configuration: conf,
+			Dials:         dials,
+			ID:            instance.ID,
+			Name:          instance.Name,
+			Service:       instance.Service.ID,
+		}
+		return &driverInstance, nil
 	})
 
 	api.CreateServiceHandler = CreateServiceHandlerFunc(func(params CreateServiceParams) (*genmodel.Service, error) {
