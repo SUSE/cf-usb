@@ -13,6 +13,7 @@ import (
 type ServiceBrokerInterface interface {
 	Create(name, url, username, password string) error
 	Update(name, url, username, password string) error
+	EnableServiceAccess(serviceId string) error
 }
 
 type ServiceBroker struct {
@@ -115,6 +116,16 @@ func (sb *ServiceBroker) Update(name, url, username, password string) error {
 	return nil
 }
 
+func (sb *ServiceBroker) EnableServiceAccess(serviceId string) error {
+	sp := NewServicePlan(sb.client, sb.tokenGenerator, sb.ccApi, sb.logger)
+
+	err := sp.Update(serviceId)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (sb *ServiceBroker) getServiceBrokerGuidByName(name, token string) (string, error) {
 	path := fmt.Sprintf("/v2/service_brokers?q=name:%s", name)
 
@@ -126,6 +137,7 @@ func (sb *ServiceBroker) getServiceBrokerGuidByName(name, token string) (string,
 	findRequest := httpclient.Request{Verb: "GET", Endpoint: sb.ccApi, ApiUrl: path, Headers: headers, StatusCode: 200}
 
 	response, err := sb.client.Request(findRequest)
+	fmt.Println("===============", string(response))
 	if err != nil {
 		return "", err
 	}

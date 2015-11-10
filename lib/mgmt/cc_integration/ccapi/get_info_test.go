@@ -1,7 +1,6 @@
 package ccapi
 
 import (
-	"encoding/json"
 	"testing"
 
 	"github.com/hpcloud/cf-usb/lib/mgmt/cc_integration/mocks"
@@ -13,21 +12,17 @@ import (
 var infoLogger *lagertest.TestLogger = lagertest.NewTestLogger("cc-api")
 
 func TestGetInfo(t *testing.T) {
-	tokenEndpointMocked := GetInfoResponse{TokenEndpoint: "http://uaa.test.com"}
-	values, err := json.Marshal(tokenEndpointMocked)
-	if err != nil {
-		t.Errorf("Error marshall token endpoint: %v", err)
-	}
+	assert := assert.New(t)
 
 	client := new(mocks.HttpClient)
-	client.Mock.On("Request", mock.Anything).Return(values, nil)
+	client.Mock.On("Request", mock.Anything).Return([]byte(`{"token_endpoint":"http://uaa.1.2.3.4.io"}`), nil)
 
-	getinfo := NewGetInfo("", client, infoLogger)
+	getinfo := NewGetInfo("http://api.1.2.3.4.io", client, infoLogger)
 	tokenUrl, err := getinfo.GetTokenEndpoint()
 	if err != nil {
 		t.Errorf("Error get info: %v", err)
 	}
 
-	assert.NoError(t, err)
-	assert.Contains(t, tokenUrl, "uaa")
+	assert.NoError(err)
+	assert.Contains(tokenUrl, "uaa")
 }
