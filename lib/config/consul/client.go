@@ -1,7 +1,10 @@
 package consul
 
 import (
+	"errors"
+	"fmt"
 	"github.com/hashicorp/consul/api"
+	"strings"
 )
 
 type ConsulProvisioner struct {
@@ -42,6 +45,21 @@ func (e *ConsulProvisioner) AddKV(key string, value []byte, options *api.WriteOp
 
 func (e *ConsulProvisioner) GetValue(key string) ([]byte, error) {
 	kv := e.ConsulClient.KV()
+
+	keys, err := e.GetAllKeys(strings.Split(key, "/")[0], "", nil)
+	if err != nil {
+		return nil, err
+	}
+	exists := false
+	for _, keyinfo := range keys {
+		if strings.Contains(keyinfo, key) {
+			exists = true
+			break
+		}
+	}
+	if exists == false {
+		return nil, errors.New(fmt.Sprintf("Key %s not found", key))
+	}
 
 	pair, _, err := kv.Get(key, nil)
 
