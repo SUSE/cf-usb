@@ -1,7 +1,15 @@
 package mgmt
 
 import (
+	"bufio"
+	"crypto/sha1"
+	"encoding/base64"
 	"encoding/json"
+	"io"
+	"os"
+	"path/filepath"
+	"runtime"
+
 	"github.com/fatih/structs"
 
 	"github.com/go-swagger/go-swagger/errors"
@@ -38,7 +46,53 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.UploadDriverHandler = UploadDriverHandlerFunc(func(params UploadDriverParams) error {
-		return errors.NotImplemented("operation uploadDriver has not yet been implemented")
+
+		err := auth.IsAuthenticated(params.Authorization)
+		if err != nil {
+			return err
+		}
+
+		driver, err := configProvider.GetDriver(params.DriverID)
+		if err != nil{
+			return err
+		}
+
+		driverType := driver.DriverType
+
+		driverPath := os.Getenv("USB_DRIVER_PATH")
+		if driverPath == "" {
+			driverPath = "drivers"
+		}
+		driverPath = filepath.Join(driverPath, driverType)
+		if runtime.GOOS == "windows" {
+			driverPath = driverPath + ".exe"
+		}
+
+		defer params.File.Data.Close()
+
+		f, err := os.OpenFile(driverPath, os.O_WRONLY|os.O_CREATE, 0666)
+		if err != nil {
+			return err
+		}
+
+		defer f.Close()
+
+		reader := bufio.NewReader(params.File.Data)
+
+		sha1 := sha1.New()
+		_, err = io.Copy(f, io.TeeReader(reader, sha1))
+		if err != nil {
+			return err
+		}
+
+		sha := base64.StdEncoding.EncodeToString(sha1.Sum(nil))
+		if sha != params.Sha {
+			f.Close()
+			os.Remove(driverPath)
+			return errors.New(400, "Checksum mismatch. Expected: %s, got %s", params.Sha, sha)
+		}
+
+		return nil
 	})
 
 	api.DeleteServicePlanHandler = DeleteServicePlanHandlerFunc(func(params DeleteServicePlanParams) error {
