@@ -42,6 +42,18 @@ type PlanMetadata struct {
 	Guid string `json:"guid"`
 }
 
+type ServiceResources struct {
+	Resources []ServiceResource `json:"resources"`
+}
+
+type ServiceResource struct {
+	Values BrokerMetadata `json:"metadata"`
+}
+
+type ServiceMetadata struct {
+	Guid string `json:"guid"`
+}
+
 func NewServicePlan(client httpclient.HttpClient, token uaaapi.GetTokenInterface, ccApi string, logger lager.Logger) ServicePlanInterface {
 	return &ServicePlan{
 		client:         client,
@@ -51,8 +63,13 @@ func NewServicePlan(client httpclient.HttpClient, token uaaapi.GetTokenInterface
 	}
 }
 
-func (sp *ServicePlan) Update(serviceGuid string) error {
+func (sp *ServicePlan) Update(serviceName string) error {
 	token, err := sp.tokenGenerator.GetToken()
+	if err != nil {
+		return err
+	}
+
+	serviceGuid, err := sp.getServiceGuidByLabel(serviceName, token)
 	if err != nil {
 		return err
 	}
@@ -87,6 +104,34 @@ func (sp *ServicePlan) Update(serviceGuid string) error {
 	}
 
 	return nil
+}
+
+func (sp *ServicePlan) getServiceGuidByLabel(serviceLabel, token string) (string, error) {
+	path := fmt.Sprintf("/v2/services?q=label:%s", serviceLabel)
+
+	headers := make(map[string]string)
+	headers["Authorization"] = token
+	headers["Content-Type"] = "application/x-www-form-urlencoded; charset=UTF-8"
+	headers["Accept"] = "application/json; charset=utf-8"
+
+	findRequest := httpclient.Request{Verb: "GET", Endpoint: sp.ccApi, ApiUrl: path, Headers: headers, StatusCode: 200}
+
+	response, err := sp.client.Request(findRequest)
+	if err != nil {
+		return "", err
+	}
+
+	resources := &ServiceResources{}
+	err = json.Unmarshal(response, resources)
+	if err != nil {
+		return "", err
+	}
+
+	guid := resources.Resources[0].Values.Guid
+
+	sp.logger.Debug("get-service", lager.Data{"service giud by name": serviceLabel})
+
+	return guid, nil
 }
 
 func (sp *ServicePlan) getServicePlans(serviceGuid, token string) (*PlanResources, error) {

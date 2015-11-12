@@ -11,6 +11,9 @@ import (
 	"github.com/hpcloud/cf-usb/lib/data"
 	"github.com/hpcloud/cf-usb/lib/mgmt"
 	"github.com/hpcloud/cf-usb/lib/mgmt/authentication/uaa"
+	"github.com/hpcloud/cf-usb/lib/mgmt/cc_integration/ccapi"
+	"github.com/hpcloud/cf-usb/lib/mgmt/cc_integration/httpclient"
+	"github.com/hpcloud/cf-usb/lib/mgmt/cc_integration/uaaapi"
 	"github.com/hpcloud/cf-usb/lib/operations"
 	"github.com/pivotal-cf/brokerapi"
 	"github.com/pivotal-golang/lager"
@@ -107,8 +110,23 @@ func (usb *UsbApp) Run(configProvider config.ConfigProvider) {
 				logger.Error("error-start-mgmt-api", err)
 			}
 
+			config, err := configProvider.LoadConfiguration()
+			if err != nil {
+				logger.Error("error-start-mgmt-api", err)
+			}
+
+			client := httpclient.NewHttpClient(config.ManagementAPI.CloudController.SkipTslValidation)
+			info := ccapi.NewGetInfo(config.ManagementAPI.CloudController.Api, client, logger)
+			tokenUrl, err := info.GetTokenEndpoint()
+			if err != nil {
+				logger.Error("error-start-mgmt-api", err)
+			}
+			tokenGenerator := uaaapi.NewTokenGenerator(tokenUrl, config.ManagementAPI.UaaClient, config.ManagementAPI.UaaSecret, client)
+
+			ccServiceBroker := ccapi.NewServiceBroker(client, tokenGenerator, config.ManagementAPI.CloudController.Api, logger)
+
 			mgmtAPI := operations.NewUsbMgmtAPI(swaggerSpec)
-			mgmt.ConfigureAPI(mgmtAPI, auth, configProvider)
+			mgmt.ConfigureAPI(mgmtAPI, auth, configProvider, ccServiceBroker, logger)
 
 			logger.Info("run", lager.Data{"mgmtadd": mgmtaddr})
 			http.ListenAndServe(mgmtaddr, mgmtAPI.Serve())

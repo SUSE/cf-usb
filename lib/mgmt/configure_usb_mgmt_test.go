@@ -11,11 +11,16 @@ import (
 	"github.com/hpcloud/cf-usb/lib/config/mocks"
 	"github.com/hpcloud/cf-usb/lib/data"
 	"github.com/hpcloud/cf-usb/lib/mgmt/authentication/uaa"
+	sbMocks "github.com/hpcloud/cf-usb/lib/mgmt/cc_integration/mocks"
 	"github.com/hpcloud/cf-usb/lib/operations"
 	"github.com/pivotal-cf/brokerapi"
+	"github.com/pivotal-golang/lager/lagertest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
+
+var logger *lagertest.TestLogger = lagertest.NewTestLogger("mgmt-api")
+var sbMocked *sbMocks.ServiceBrokerInterface = new(sbMocks.ServiceBrokerInterface)
 
 var UnitTest = struct {
 	MgmtAPI *operations.UsbMgmtAPI
@@ -37,7 +42,8 @@ func init_mgmt(provider config.ConfigProvider) error {
 	if err != nil {
 		return err
 	}
-	ConfigureAPI(mgmtAPI, auth, provider)
+
+	ConfigureAPI(mgmtAPI, auth, provider, sbMocked, logger)
 
 	UnitTest.MgmtAPI = mgmtAPI
 	return nil
@@ -145,6 +151,8 @@ func Test_CreateService(t *testing.T) {
 		t.Error(err)
 	}
 
+	var testConfig config.Config
+
 	params := operations.CreateServiceParams{}
 
 	params.Service.Bindable = true
@@ -152,7 +160,14 @@ func Test_CreateService(t *testing.T) {
 	params.Service.ID = "testServiceID"
 	params.Service.Name = "testService"
 	params.Service.Tags = []string{"test", "test Service"}
+	provider.On("LoadConfiguration").Return(&testConfig, nil)
 	provider.On("SetService", mock.Anything, mock.Anything).Return(nil)
+
+	sbMocked.Mock.On("GetServiceBrokerGuidByName", mock.Anything).Return("aguid", nil)
+	sbMocked.Mock.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	sbMocked.Mock.On("Update", "aguid", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	sbMocked.Mock.On("EnableServiceAccess", mock.Anything).Return(nil)
+
 	info, err := UnitTest.MgmtAPI.CreateServiceHandler.Handle(params)
 	t.Log(info)
 	assert.NoError(err)

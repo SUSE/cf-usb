@@ -12,6 +12,7 @@ import (
 	"github.com/hpcloud/cf-usb/lib/config"
 	"github.com/hpcloud/cf-usb/lib/genmodel"
 	"github.com/hpcloud/cf-usb/lib/mgmt/authentication"
+	"github.com/hpcloud/cf-usb/lib/mgmt/cc_integration/ccapi"
 	. "github.com/hpcloud/cf-usb/lib/operations"
 	"github.com/pivotal-cf/brokerapi"
 	"github.com/pivotal-golang/lager"
@@ -21,7 +22,9 @@ import (
 
 // This file is safe to edit. Once it exists it will not be overwritten
 
-func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, configProvider config.ConfigProvider) {
+const brokerName string = "usb"
+
+func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, configProvider config.ConfigProvider, ccServiceBroker ccapi.ServiceBrokerInterface, logger lager.Logger) {
 	// configure the api here
 	api.ServeError = errors.ServeError
 
@@ -595,6 +598,20 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		config.BrokerAPI.Credentials.Username = params.Broker.Credentials.Username
 		config.BrokerAPI.Listen = params.Broker.Listen
 
+		guid, err := ccServiceBroker.GetServiceBrokerGuidByName(brokerName)
+		if err != nil {
+			return nil, err
+		}
+
+		if guid == "" {
+			err = ccServiceBroker.Create(brokerName, config.BrokerAPI.ExternalUrl, config.BrokerAPI.Credentials.Username, config.BrokerAPI.Credentials.Password)
+		} else {
+			err = ccServiceBroker.Update(guid, brokerName, config.BrokerAPI.ExternalUrl, config.BrokerAPI.Credentials.Username, config.BrokerAPI.Credentials.Password)
+		}
+		if err != nil {
+			return nil, err
+		}
+
 		// 		TODO: restart broker listener
 
 		broker := &genmodel.Broker{
@@ -760,6 +777,30 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 	api.CreateServiceHandler = CreateServiceHandlerFunc(func(params CreateServiceParams) (*genmodel.Service, error) {
 
+		config, err := configProvider.LoadConfiguration()
+		if err != nil {
+			return nil, err
+		}
+
+		guid, err := ccServiceBroker.GetServiceBrokerGuidByName(brokerName)
+		if err != nil {
+			return nil, err
+		}
+
+		if guid == "" {
+			err = ccServiceBroker.Create(brokerName, config.BrokerAPI.ExternalUrl, config.BrokerAPI.Credentials.Username, config.BrokerAPI.Credentials.Password)
+		} else {
+			err = ccServiceBroker.Update(guid, brokerName, config.BrokerAPI.ExternalUrl, config.BrokerAPI.Credentials.Username, config.BrokerAPI.Credentials.Password)
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		err = ccServiceBroker.EnableServiceAccess(params.Service.Name)
+		if err != nil {
+			return nil, err
+		}
+
 		var service brokerapi.Service
 
 		service.Bindable = params.Service.Bindable
@@ -768,7 +809,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		service.Name = params.Service.Name
 		service.Tags = params.Service.Tags
 
-		err := configProvider.SetService(params.Service.DriverInstanceID, service)
+		err = configProvider.SetService(params.Service.DriverInstanceID, service)
 		if err != nil {
 			return nil, err
 		}

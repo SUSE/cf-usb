@@ -21,7 +21,7 @@ func TestUpdateServicePlanVisibility(t *testing.T) {
 
 	sp := NewServicePlan(client, tokenGenerator, "http://api.1.2.3.4.io", loggerSP)
 
-	err := sp.Update("a-service-guid")
+	err := sp.Update("a-service-label")
 	if err != nil {
 		t.Errorf("Error enable service access: %v", err)
 	}

@@ -12,8 +12,9 @@ import (
 
 type ServiceBrokerInterface interface {
 	Create(name, url, username, password string) error
-	Update(name, url, username, password string) error
+	Update(serviceBrokerGuid, name, url, username, password string) error
 	EnableServiceAccess(serviceId string) error
+	GetServiceBrokerGuidByName(name string) (string, error)
 }
 
 type ServiceBroker struct {
@@ -67,8 +68,6 @@ func (sb *ServiceBroker) Create(name, url, username, password string) error {
 		return err
 	}
 
-	sb.logger.Debug("create-service-broker", lager.Data{"token recieved": token})
-
 	headers := make(map[string]string)
 	headers["Authorization"] = token
 
@@ -82,13 +81,8 @@ func (sb *ServiceBroker) Create(name, url, username, password string) error {
 	return nil
 }
 
-func (sb *ServiceBroker) Update(name, url, username, password string) error {
+func (sb *ServiceBroker) Update(serviceBrokerGuid, name, url, username, password string) error {
 	token, err := sb.tokenGenerator.GetToken()
-	if err != nil {
-		return err
-	}
-
-	serviceBrokerGuid, err := sb.getServiceBrokerGuidByName(name, token)
 	if err != nil {
 		return err
 	}
@@ -126,7 +120,12 @@ func (sb *ServiceBroker) EnableServiceAccess(serviceId string) error {
 	return nil
 }
 
-func (sb *ServiceBroker) getServiceBrokerGuidByName(name, token string) (string, error) {
+func (sb *ServiceBroker) GetServiceBrokerGuidByName(name string) (string, error) {
+	token, err := sb.tokenGenerator.GetToken()
+	if err != nil {
+		return "", err
+	}
+
 	path := fmt.Sprintf("/v2/service_brokers?q=name:%s", name)
 
 	headers := make(map[string]string)
@@ -137,7 +136,6 @@ func (sb *ServiceBroker) getServiceBrokerGuidByName(name, token string) (string,
 	findRequest := httpclient.Request{Verb: "GET", Endpoint: sb.ccApi, ApiUrl: path, Headers: headers, StatusCode: 200}
 
 	response, err := sb.client.Request(findRequest)
-	fmt.Println("===============", string(response))
 	if err != nil {
 		return "", err
 	}
