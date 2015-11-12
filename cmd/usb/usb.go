@@ -110,20 +110,15 @@ func (usb *UsbApp) Run(configProvider config.ConfigProvider) {
 				logger.Error("error-start-mgmt-api", err)
 			}
 
-			config, err := configProvider.LoadConfiguration()
-			if err != nil {
-				logger.Error("error-start-mgmt-api", err)
-			}
-
-			client := httpclient.NewHttpClient(config.ManagementAPI.CloudController.SkipTslValidation)
-			info := ccapi.NewGetInfo(config.ManagementAPI.CloudController.Api, client, logger)
+			client := httpclient.NewHttpClient(usb.config.ManagementAPI.CloudController.SkipTslValidation)
+			info := ccapi.NewGetInfo(usb.config.ManagementAPI.CloudController.Api, client, logger)
 			tokenUrl, err := info.GetTokenEndpoint()
 			if err != nil {
 				logger.Error("error-start-mgmt-api", err)
 			}
-			tokenGenerator := uaaapi.NewTokenGenerator(tokenUrl, config.ManagementAPI.UaaClient, config.ManagementAPI.UaaSecret, client)
+			tokenGenerator := uaaapi.NewTokenGenerator(tokenUrl, usb.config.ManagementAPI.UaaClient, usb.config.ManagementAPI.UaaSecret, client)
 
-			ccServiceBroker := ccapi.NewServiceBroker(client, tokenGenerator, config.ManagementAPI.CloudController.Api, logger)
+			ccServiceBroker := ccapi.NewServiceBroker(client, tokenGenerator, usb.config.ManagementAPI.CloudController.Api, logger)
 
 			mgmtAPI := operations.NewUsbMgmtAPI(swaggerSpec)
 			mgmt.ConfigureAPI(mgmtAPI, auth, configProvider, ccServiceBroker, logger)

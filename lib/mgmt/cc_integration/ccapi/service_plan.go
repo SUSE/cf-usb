@@ -2,6 +2,7 @@ package ccapi
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -126,10 +127,15 @@ func (sp *ServicePlan) getServiceGuidByLabel(serviceLabel, token string) (string
 	if err != nil {
 		return "", err
 	}
+	sp.logger.Debug("result", lager.Data{"response": string(response)})
+
+	if len(resources.Resources) == 0 {
+		return "", errors.New(fmt.Sprintf("Service %s not found", serviceLabel))
+	}
 
 	guid := resources.Resources[0].Values.Guid
 
-	sp.logger.Debug("get-service", lager.Data{"service giud by name": serviceLabel})
+	sp.logger.Debug("get-service", lager.Data{"service guid by name": serviceLabel})
 
 	return guid, nil
 }

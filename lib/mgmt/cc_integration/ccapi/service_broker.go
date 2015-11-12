@@ -2,6 +2,7 @@ package ccapi
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -144,6 +145,10 @@ func (sb *ServiceBroker) GetServiceBrokerGuidByName(name string) (string, error)
 	err = json.Unmarshal(response, resources)
 	if err != nil {
 		return "", err
+	}
+
+	if len(resources.Resources) == 0 {
+		return "", errors.New(fmt.Sprintf("Service broker %s not found", name))
 	}
 
 	guid := resources.Resources[0].Values.Guid
