@@ -1,6 +1,6 @@
 {
 	"ImportPath": "github.com/hpcloud/cf-usb",
-	"GoVersion": "go1.4.2",
+	"GoVersion": "go1.5.1",
 	"Packages": [
 		"./..."
 	],
@@ -23,6 +23,10 @@
 			"ImportPath": "github.com/codegangsta/cli",
 			"Comment": "1.2.0-66-g6086d79",
 			"Rev": "6086d7927ec35315964d9fea46df6c04e6d697c1"
+		},
+		{
+			"ImportPath": "github.com/denisenkom/go-mssqldb",
+			"Rev": "fda4305a1f654b663adcb5f1971b4bd7740198ce"
 		},
 		{
 			"ImportPath": "github.com/dgrijalva/jwt-go",
@@ -160,6 +164,10 @@
 		{
 			"ImportPath": "github.com/xeipuuv/gojsonschema",
 			"Rev": "ac452913faa25c08bb78810d3e6f88b8a39f8f25"
+		},
+		{
+			"ImportPath": "golang.org/x/crypto/md4",
+			"Rev": "575fdbe86e5dd89229707ebec0575ce7d088a4a6"
 		},
 		{
 			"ImportPath": "gopkg.in/mgo.v2",
