@@ -1,0 +1,26 @@
+{
+    "type": "object",
+    "properties": {
+        "server": {
+            "type": "string"
+        },
+        "port": {
+            "type": "integer"
+        },
+        "userid": {
+            "type": "string"
+        },
+        "password": {
+            "type": "string"
+        },
+        "db_identifier_prefix": {
+            "type": "string"
+        }
+    },
+    "required": [
+        "server",
+        "port",
+        "userid",
+        "password"
+    ]
+}
