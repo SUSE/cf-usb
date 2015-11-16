@@ -20,6 +20,7 @@ import (
 	"github.com/hpcloud/cf-usb/lib/mgmt/authentication"
 	. "github.com/hpcloud/cf-usb/lib/operations"
 	"github.com/pivotal-cf/brokerapi"
+	uuid "github.com/satori/go.uuid"
 )
 
 // This file is safe to edit. Once it exists it will not be overwritten
@@ -187,7 +188,8 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		var driver config.Driver
 
 		driver.DriverType = params.Driver.DriverType
-		driver.ID = params.Driver.ID
+
+		driver.ID = uuid.NewV4().String()
 
 		err := configProvider.SetDriver(driver)
 		if err != nil {
@@ -302,7 +304,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 		var dial config.Dial
 
-		dial.ID = params.Dial.ID
+		dial.ID = uuid.NewV4().String()
 		dialconfig, err := json.Marshal(params.Dial.Configuration)
 		if err != nil {
 			return nil, err
@@ -396,7 +398,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	api.CreateDriverInstanceHandler = CreateDriverInstanceHandlerFunc(func(params CreateDriverInstanceParams) (*genmodel.DriverInstance, error) {
 
 		var instance config.DriverInstance
-		instance.ID = params.DriverInstance.ID
+		instance.ID = uuid.NewV4().String()
 
 		instanceConfig, err := json.Marshal(params.DriverInstance.Configuration)
 		if err != nil {
@@ -768,7 +770,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 		service.Bindable = params.Service.Bindable
 		service.Description = params.Service.Description
-		service.ID = params.Service.ID
+		service.ID = uuid.NewV4().String()
 		service.Name = params.Service.Name
 		service.Tags = params.Service.Tags
 
