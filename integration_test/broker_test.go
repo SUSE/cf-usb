@@ -169,7 +169,7 @@ func Test_BrokerWithConsulConfigProviderCatalog(t *testing.T) {
 	//wait for process to start
 	time.Sleep(2 * time.Second)
 
-	resp, err := http.Get(fmt.Sprintf("http://%s:%s@localhost:54054/v2/catalog", user, pass))
+	resp, err := http.Get(fmt.Sprintf("http://%s:%s@%s/v2/catalog", user, pass, ConsulConfig.consulAddress))
 
 	if err != nil {
 		t.Fatal(err)

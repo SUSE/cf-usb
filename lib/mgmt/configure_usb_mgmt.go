@@ -195,7 +195,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		if err != nil {
 			return nil, err
 		}
-
+		params.Driver.ID = driver.ID
 		return &params.Driver, nil
 	})
 
@@ -316,6 +316,9 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		if err != nil {
 			return nil, err
 		}
+
+		params.Dial.ID = dial.ID
+
 		return &params.Dial, nil
 	})
 
@@ -412,6 +415,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		if err != nil {
 			return nil, err
 		}
+		params.DriverInstance.ID = instance.ID
 		return &params.DriverInstance, nil
 	})
 
@@ -778,7 +782,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		if err != nil {
 			return nil, err
 		}
-
+		params.Service.ID = service.ID
 		return &params.Service, nil
 	})
 
@@ -806,7 +810,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 						var meta brokerapi.ServicePlanMetadata
 
 						plan.Description = params.Plan.Description
-						plan.ID = params.Plan.ID
+						plan.ID = uuid.NewV4().String()
 						plan.Name = params.Plan.Name
 
 						meta.DisplayName = params.Plan.Name
@@ -817,6 +821,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 						if err != nil {
 							return nil, err
 						}
+						params.Plan.ID = plan.ID
 						return &params.Plan, nil
 					}
 				}
