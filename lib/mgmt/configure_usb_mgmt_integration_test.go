@@ -104,7 +104,7 @@ func Test_IntCreate(t *testing.T) {
 	var driver genmodel.Driver
 
 	driver.Name = "testDriver"
-	driver.DriverType = "testDriverType"
+	driver.DriverType = "mysql"
 
 	params := operations.CreateDriverParams{}
 	params.Driver = driver
@@ -121,7 +121,16 @@ func Test_IntCreate(t *testing.T) {
 
 	instace.Name = "testInstanceName"
 	instace.DriverID = info.ID
+	instanceConfig := make(map[string]interface{})
+
+	instanceConfig["userid"] = "testUser"
+	instanceConfig["password"] = "testPass"
+	instanceConfig["server"] = "127.0.0.1"
+	instanceConfig["port"] = "3306"
+
 	instanceParams.DriverInstance = instace
+	instanceParams.DriverInstance.DriverID = info.ID
+	instanceParams.DriverInstance.Configuration = instanceConfig
 	infoInstance, err := IntegrationConfig.MgmtAPI.CreateDriverInstanceHandler.Handle(instanceParams)
 	t.Log(infoInstance)
 	assert.NoError(err)
@@ -194,6 +203,7 @@ func Test_IntUpdate(t *testing.T) {
 
 	firstDriver := (*drivers)[0]
 
+	t.Log(firstDriver)
 	dialParams := operations.GetAllDialsParams{}
 	dialParams.DriverInstanceID = firstDriver.DriverInstances[0]
 	dials, err := IntegrationConfig.MgmtAPI.GetAllDialsHandler.Handle(dialParams)
