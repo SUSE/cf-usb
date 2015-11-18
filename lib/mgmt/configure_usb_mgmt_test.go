@@ -116,9 +116,16 @@ func Test_CreateDriverInstance(t *testing.T) {
 	provider.On("SetDriverInstance", mock.Anything, mock.Anything).Return(nil)
 	provider.On("SetDial", mock.Anything, mock.Anything).Return(nil)
 	provider.On("GetDriver", "testDriverID").Return(testDriver, nil)
+	provider.On("SetService", mock.Anything, mock.Anything).Return(testDriver, nil)
+
+	sbMocked.Mock.On("GetServiceBrokerGuidByName", mock.Anything).Return("aguid", nil)
+	sbMocked.Mock.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	sbMocked.Mock.On("Update", "aguid", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	sbMocked.Mock.On("EnableServiceAccess", mock.Anything).Return(nil)
+
 	_, err = UnitTest.MgmtAPI.CreateDriverInstanceHandler.Handle(params)
 	t.Log("Expected error from validation call :", err)
-	assert.Error(err)
+	assert.Error(err, "fork/exec drivers/test: no such file or directory")
 }
 
 func Test_CreateDial(t *testing.T) {
@@ -162,11 +169,6 @@ func Test_CreateService(t *testing.T) {
 	params.Service.Tags = []string{"test", "test Service"}
 	provider.On("LoadConfiguration").Return(&testConfig, nil)
 	provider.On("SetService", mock.Anything, mock.Anything).Return(nil)
-
-	sbMocked.Mock.On("GetServiceBrokerGuidByName", mock.Anything).Return("aguid", nil)
-	sbMocked.Mock.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-	sbMocked.Mock.On("Update", "aguid", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-	sbMocked.Mock.On("EnableServiceAccess", mock.Anything).Return(nil)
 
 	info, err := UnitTest.MgmtAPI.CreateServiceHandler.Handle(params)
 	t.Log(info)

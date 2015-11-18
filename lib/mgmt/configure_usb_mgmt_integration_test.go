@@ -5,7 +5,6 @@ import (
 	"github.com/hpcloud/cf-usb/lib/config/consul"
 	"github.com/stretchr/testify/assert"
 	"os"
-	"strconv"
 	"testing"
 
 	"github.com/go-swagger/go-swagger/spec"
@@ -13,11 +12,10 @@ import (
 	"github.com/hpcloud/cf-usb/lib/data"
 	"github.com/hpcloud/cf-usb/lib/genmodel"
 	"github.com/hpcloud/cf-usb/lib/mgmt/authentication/uaa"
-	"github.com/hpcloud/cf-usb/lib/mgmt/cc_integration/ccapi"
-	"github.com/hpcloud/cf-usb/lib/mgmt/cc_integration/httpclient"
-	"github.com/hpcloud/cf-usb/lib/mgmt/cc_integration/uaaapi"
+	sbMocks "github.com/hpcloud/cf-usb/lib/mgmt/cc_integration/mocks"
 	"github.com/hpcloud/cf-usb/lib/operations"
 	"github.com/pivotal-golang/lager/lagertest"
+	"github.com/stretchr/testify/mock"
 )
 
 var testLogger *lagertest.TestLogger = lagertest.NewTestLogger("mgmt-api")
@@ -32,15 +30,7 @@ var IntegrationConfig = struct {
 	consulSchema     string
 	consulToken      string
 
-	CcServiceBroker ccapi.ServiceBrokerInterface
-	ccApi           string
-	skipTls         bool
-	tokenEndpoint   string
-	clientId        string
-	clientSecret    string
-	usbEndpoint     string
-	usbUsername     string
-	usbPassword     string
+	CcServiceBroker *sbMocks.ServiceBrokerInterface
 }{}
 
 func init() {
@@ -50,15 +40,6 @@ func init() {
 	IntegrationConfig.consulUser = os.Getenv("CONSUL_USER")
 	IntegrationConfig.consulSchema = os.Getenv("CONSUL_SCHEMA")
 	IntegrationConfig.consulToken = os.Getenv("CONSUL_TOKEN")
-
-	IntegrationConfig.ccApi = os.Getenv("CC_API")
-	IntegrationConfig.skipTls, _ = strconv.ParseBool(os.Getenv("SKIP_TLS"))
-	IntegrationConfig.tokenEndpoint = os.Getenv("TOKEN_ENDPOINT")
-	IntegrationConfig.clientId = os.Getenv("CLIENT_ID")
-	IntegrationConfig.clientSecret = os.Getenv("CLIENT_SECRET")
-	IntegrationConfig.usbEndpoint = os.Getenv("USB_ENDPOINT")
-	IntegrationConfig.usbUsername = os.Getenv("USB_USERNAME")
-	IntegrationConfig.usbPassword = os.Getenv("USB_PASSWORD")
 }
 
 func initProvider() (bool, error) {
@@ -111,9 +92,7 @@ func initManager() error {
 		return err
 	}
 
-	client := httpclient.NewHttpClient(IntegrationConfig.skipTls)
-	tokenGenerator := uaaapi.NewTokenGenerator(IntegrationConfig.tokenEndpoint, IntegrationConfig.clientId, IntegrationConfig.clientSecret, client)
-	IntegrationConfig.CcServiceBroker = ccapi.NewServiceBroker(client, tokenGenerator, IntegrationConfig.ccApi, testLogger)
+	IntegrationConfig.CcServiceBroker = new(sbMocks.ServiceBrokerInterface)
 
 	ConfigureAPI(IntegrationConfig.MgmtAPI, auth, IntegrationConfig.Provider, IntegrationConfig.CcServiceBroker, testLogger)
 	return nil
@@ -125,10 +104,6 @@ func Test_IntCreate(t *testing.T) {
 	if IntegrationConfig.consulAddress == "" {
 		t.Skip("Skipping mgmt create test, environment variables not set: CONSUL_ADDRESS(host:port), CONSUL_DATACENTER, CONSUL_TOKEN / CONSUL_USER + CONSUL_PASSWORD, CONSUL_SCHEMA")
 	}
-
-	//if IntegrationConfig.ccApi == "" {
-	//	t.Skip("Skipping mgmt Create Service test, environment variables not set: CC_API, SKIP_TLS, TOKEN_ENDPOINT, CLIENT_ID, CLIENT_SECRET, USB_ENDPOINT, USB_USERNAME, USB_PASSWORD")
-	//}
 
 	err := initManager()
 	if err != nil {
@@ -149,6 +124,11 @@ func Test_IntCreate(t *testing.T) {
 	}
 	t.Log(info)
 	assert.NoError(err)
+
+	sbMocked.Mock.On("GetServiceBrokerGuidByName", mock.Anything).Return("aguid", nil)
+	sbMocked.Mock.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	sbMocked.Mock.On("Update", "aguid", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	sbMocked.Mock.On("EnableServiceAccess", mock.Anything).Return(nil)
 
 	instanceParams := operations.CreateDriverInstanceParams{}
 	var instace genmodel.DriverInstance
