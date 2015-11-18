@@ -3,8 +3,7 @@
     "logLevel": "debug",
     "broker_api": {
 		"external_url": "http://1.2.3.4:54054",
-        "listen": ":54054",
-		"dev_mode": true,
+        "listen": ":54054",		
         "credentials": {
             "username": "username",
             "password": "password"
@@ -12,6 +11,7 @@
     },
     "management_api": {
         "listen": ":54053",
+		"dev_mode": false,
         "uaa_secret": "myuaasecret",
         "uaa_client": "myuaaclient",
         "authentication": {
