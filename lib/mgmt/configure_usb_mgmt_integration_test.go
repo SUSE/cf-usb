@@ -126,6 +126,10 @@ func Test_IntCreate(t *testing.T) {
 		t.Skip("Skipping mgmt create test, environment variables not set: CONSUL_ADDRESS(host:port), CONSUL_DATACENTER, CONSUL_TOKEN / CONSUL_USER + CONSUL_PASSWORD, CONSUL_SCHEMA")
 	}
 
+	if IntegrationConfig.ccApi == "" {
+		t.Skip("Skipping mgmt Create Service test, environment variables not set: CC_API, SKIP_TLS, TOKEN_ENDPOINT, CLIENT_ID, CLIENT_SECRET, USB_ENDPOINT, USB_USERNAME, USB_PASSWORD")
+	}
+
 	err := initManager()
 	if err != nil {
 		t.Error(err)
@@ -183,16 +187,11 @@ func Test_IntCreate(t *testing.T) {
 	serviceParams := operations.CreateServiceParams{}
 	var instaceService genmodel.Service
 
-	if IntegrationConfig.ccApi == "" {
-		t.Skip("Skipping mgmt Create Service test, environment variables not set: CC_API, SKIP_TLS, TOKEN_ENDPOINT, CLIENT_ID, CLIENT_SECRET, USB_ENDPOINT, USB_USERNAME, USB_PASSWORD")
-	}
-
 	instaceService.Bindable = true
 	instaceService.DriverInstanceID = infoInstance.ID
 	instaceService.Name = "testService"
 	instaceService.Tags = []string{"test", "test service"}
 	instaceService.Metadata = make(map[string]interface{})
-	instaceService.Metadata["guid"] = "testGuid"
 
 	serviceParams.Service = instaceService
 
@@ -207,9 +206,9 @@ func Test_IntCreate(t *testing.T) {
 	}
 	assert.NoError(err)
 
-	err = IntegrationConfig.CcServiceBroker.EnableServiceAccess(instace.Name)
+	err = IntegrationConfig.CcServiceBroker.EnableServiceAccess(instaceService.Name)
 	assert.NoError(err)
-	
+
 	infoService, err := IntegrationConfig.MgmtAPI.CreateServiceHandler.Handle(serviceParams)
 	t.Log(infoService)
 	assert.NoError(err)

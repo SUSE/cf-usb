@@ -17,7 +17,6 @@ import (
 	"github.com/pivotal-cf/brokerapi"
 	"github.com/pivotal-golang/lager"
 	uuid "github.com/satori/go.uuid"
-	sys "os"
 )
 
 // This file is safe to edit. Once it exists it will not be overwritten
@@ -31,13 +30,19 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	api.JSONConsumer = httpkit.JSONConsumer()
 
 	api.JSONProducer = httpkit.JSONProducer()
+
 	api.UpdateDriverHandler = UpdateDriverHandlerFunc(func(params UpdateDriverParams) (*genmodel.Driver, error) {
+		err := auth.IsAuthenticated(params.Authorization)
+		if err != nil {
+			return nil, err
+		}
+
 		var driver config.Driver
 
 		driver.DriverType = params.Driver.DriverType
 		driver.ID = params.Driver.ID
 
-		err := configProvider.SetDriver(driver)
+		err = configProvider.SetDriver(driver)
 		if err != nil {
 			return nil, err
 		}
@@ -137,6 +142,10 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.CreateDriverHandler = CreateDriverHandlerFunc(func(params CreateDriverParams) (*genmodel.Driver, error) {
+		err := auth.IsAuthenticated(params.Authorization)
+		if err != nil {
+			return nil, err
+		}
 
 		var driver config.Driver
 
@@ -144,7 +153,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 		driver.ID = uuid.NewV4().String()
 
-		err := configProvider.SetDriver(driver)
+		err = configProvider.SetDriver(driver)
 		if err != nil {
 			return nil, err
 		}
@@ -153,6 +162,10 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.UpdateServiceHandler = UpdateServiceHandlerFunc(func(params UpdateServiceParams) (*genmodel.Service, error) {
+		err := auth.IsAuthenticated(params.Authorization)
+		if err != nil {
+			return nil, err
+		}
 
 		var service brokerapi.Service
 
@@ -162,7 +175,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		service.Name = params.Service.Name
 		service.Tags = params.Service.Tags
 
-		err := configProvider.SetService(params.Service.DriverInstanceID, service)
+		err = configProvider.SetService(params.Service.DriverInstanceID, service)
 		if err != nil {
 			return nil, err
 		}
@@ -254,6 +267,10 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.CreateDialHandler = CreateDialHandlerFunc(func(params CreateDialParams) (*genmodel.Dial, error) {
+		err := auth.IsAuthenticated(params.Authorization)
+		if err != nil {
+			return nil, err
+		}
 
 		var dial config.Dial
 
@@ -276,6 +293,10 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.UpdateDialHandler = UpdateDialHandlerFunc(func(params UpdateDialParams) (*genmodel.Dial, error) {
+		err := auth.IsAuthenticated(params.Authorization)
+		if err != nil {
+			return nil, err
+		}
 
 		var dial config.Dial
 
@@ -352,6 +373,10 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.CreateDriverInstanceHandler = CreateDriverInstanceHandlerFunc(func(params CreateDriverInstanceParams) (*genmodel.DriverInstance, error) {
+		err := auth.IsAuthenticated(params.Authorization)
+		if err != nil {
+			return nil, err
+		}
 
 		existingDriver, err := configProvider.GetDriver(params.DriverInstance.DriverID)
 		fmt.Println(existingDriver)
@@ -370,18 +395,9 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		instance.Configuration = &configuration
 		instance.Name = params.DriverInstance.Name
 
-		var logger = lager.NewLogger("driver instance mgmt")
-
-		logger.RegisterSink(lager.NewWriterSink(sys.Stderr, lager.DEBUG))
-
 		driverProvider := lib.NewDriverProvider(existingDriver.DriverType, &instance, logger)
 
 		err = driverProvider.Validate()
-		if err != nil {
-			return nil, err
-		}
-		err = configProvider.SetDriverInstance(params.DriverInstance.DriverID, instance)
-
 		if err != nil {
 			return nil, err
 		}
@@ -409,10 +425,57 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		}
 		params.DriverInstance.Dials = append(params.DriverInstance.Dials, defaultDial.ID)
 		params.DriverInstance.ID = instance.ID
+
+		var service brokerapi.Service
+		service.ID = uuid.NewV4().String()
+		service.Name = params.DriverInstance.Name + "-default"
+		service.Description = "A default service for driver " + params.DriverInstance.Name
+		service.Tags = []string{params.DriverInstance.Name}
+
+		err = configProvider.SetService(instance.ID, service)
+		if err != nil {
+			return nil, err
+		}
+
+		params.DriverInstance.Service = service.ID
+
+		err = configProvider.SetDriverInstance(params.DriverInstance.DriverID, instance)
+		if err != nil {
+			return nil, err
+		}
+
+		config, err := configProvider.LoadConfiguration()
+		if err != nil {
+			return nil, err
+		}
+
+		guid, err := ccServiceBroker.GetServiceBrokerGuidByName(brokerName)
+		if err != nil {
+			return nil, err
+		}
+
+		if guid == "" {
+			err = ccServiceBroker.Create(brokerName, config.BrokerAPI.ExternalUrl, config.BrokerAPI.Credentials.Username, config.BrokerAPI.Credentials.Password)
+		} else {
+			err = ccServiceBroker.Update(guid, brokerName, config.BrokerAPI.ExternalUrl, config.BrokerAPI.Credentials.Username, config.BrokerAPI.Credentials.Password)
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		err = ccServiceBroker.EnableServiceAccess(service.Name)
+		if err != nil {
+			return nil, err
+		}
+
 		return &params.DriverInstance, nil
 	})
 
 	api.UpdateDriverInstanceHandler = UpdateDriverInstanceHandlerFunc(func(params UpdateDriverInstanceParams) (*genmodel.DriverInstance, error) {
+		err := auth.IsAuthenticated(params.Authorization)
+		if err != nil {
+			return nil, err
+		}
 
 		var instance config.DriverInstance
 		instance.ID = params.DriverInstanceID
@@ -584,11 +647,11 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.UpdateBrokerInfoHandler = UpdateBrokerInfoHandlerFunc(func(params UpdateBrokerInfoParams) (*genmodel.Broker, error) {
-
 		err := auth.IsAuthenticated(params.Authorization)
 		if err != nil {
 			return nil, err
 		}
+
 		config, err := configProvider.LoadConfiguration()
 		if err != nil {
 			return nil, err
@@ -776,27 +839,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.CreateServiceHandler = CreateServiceHandlerFunc(func(params CreateServiceParams) (*genmodel.Service, error) {
-
-		config, err := configProvider.LoadConfiguration()
-		if err != nil {
-			return nil, err
-		}
-
-		guid, err := ccServiceBroker.GetServiceBrokerGuidByName(brokerName)
-		if err != nil {
-			return nil, err
-		}
-
-		if guid == "" {
-			err = ccServiceBroker.Create(brokerName, config.BrokerAPI.ExternalUrl, config.BrokerAPI.Credentials.Username, config.BrokerAPI.Credentials.Password)
-		} else {
-			err = ccServiceBroker.Update(guid, brokerName, config.BrokerAPI.ExternalUrl, config.BrokerAPI.Credentials.Username, config.BrokerAPI.Credentials.Password)
-		}
-		if err != nil {
-			return nil, err
-		}
-
-		err = ccServiceBroker.EnableServiceAccess(params.Service.Name)
+		err := auth.IsAuthenticated(params.Authorization)
 		if err != nil {
 			return nil, err
 		}
