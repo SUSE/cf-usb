@@ -126,9 +126,9 @@ func Test_IntCreate(t *testing.T) {
 		t.Skip("Skipping mgmt create test, environment variables not set: CONSUL_ADDRESS(host:port), CONSUL_DATACENTER, CONSUL_TOKEN / CONSUL_USER + CONSUL_PASSWORD, CONSUL_SCHEMA")
 	}
 
-	if IntegrationConfig.ccApi == "" {
-		t.Skip("Skipping mgmt Create Service test, environment variables not set: CC_API, SKIP_TLS, TOKEN_ENDPOINT, CLIENT_ID, CLIENT_SECRET, USB_ENDPOINT, USB_USERNAME, USB_PASSWORD")
-	}
+	//if IntegrationConfig.ccApi == "" {
+	//	t.Skip("Skipping mgmt Create Service test, environment variables not set: CC_API, SKIP_TLS, TOKEN_ENDPOINT, CLIENT_ID, CLIENT_SECRET, USB_ENDPOINT, USB_USERNAME, USB_PASSWORD")
+	//}
 
 	err := initManager()
 	if err != nil {
@@ -195,20 +195,6 @@ func Test_IntCreate(t *testing.T) {
 
 	serviceParams.Service = instaceService
 
-	brokerName := "testBroker"
-	guid, err := IntegrationConfig.CcServiceBroker.GetServiceBrokerGuidByName(brokerName)
-	assert.NoError(err)
-
-	if guid == "" {
-		err = IntegrationConfig.CcServiceBroker.Create(brokerName, IntegrationConfig.usbEndpoint, IntegrationConfig.usbUsername, IntegrationConfig.usbPassword)
-	} else {
-		err = IntegrationConfig.CcServiceBroker.Update(guid, brokerName, IntegrationConfig.usbEndpoint, IntegrationConfig.usbUsername, IntegrationConfig.usbPassword)
-	}
-	assert.NoError(err)
-
-	err = IntegrationConfig.CcServiceBroker.EnableServiceAccess(instaceService.Name)
-	assert.NoError(err)
-
 	infoService, err := IntegrationConfig.MgmtAPI.CreateServiceHandler.Handle(serviceParams)
 	t.Log(infoService)
 	assert.NoError(err)
@@ -247,6 +233,7 @@ func Test_IntUpdate(t *testing.T) {
 	if err != nil {
 		t.Skip(err)
 	}
+	assert.NotNil(drivers)
 
 	firstDriver := (*drivers)[0]
 
@@ -254,10 +241,10 @@ func Test_IntUpdate(t *testing.T) {
 	dialParams := operations.GetAllDialsParams{}
 	dialParams.DriverInstanceID = firstDriver.DriverInstances[0]
 	dials, err := IntegrationConfig.MgmtAPI.GetAllDialsHandler.Handle(dialParams)
-
 	if err != nil {
 		t.Skip(err)
 	}
+	assert.NotNil(dials)
 
 	firstDial := (*dials)[0]
 
@@ -340,6 +327,7 @@ func Test_IntDelete(t *testing.T) {
 	if err != nil {
 		t.Skip(err)
 	}
+	assert.NotNil(drivers)
 
 	firstDriver := (*drivers)[0]
 
@@ -350,6 +338,7 @@ func Test_IntDelete(t *testing.T) {
 	if err != nil {
 		t.Skip(err)
 	}
+	assert.NotNil(dials)
 
 	firstDial := (*dials)[0]
 
