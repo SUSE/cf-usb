@@ -1,25 +1,22 @@
 package mgmt
 
 import (
-	"bufio"
-	"crypto/sha1"
-	"encoding/base64"
 	"encoding/json"
-	"io"
-	"os"
-	"path/filepath"
-	"runtime"
-
 	"github.com/fatih/structs"
+	"github.com/hpcloud/cf-usb/lib"
 
 	"github.com/go-swagger/go-swagger/errors"
 	"github.com/go-swagger/go-swagger/httpkit"
 
+	"fmt"
 	"github.com/hpcloud/cf-usb/lib/config"
 	"github.com/hpcloud/cf-usb/lib/genmodel"
 	"github.com/hpcloud/cf-usb/lib/mgmt/authentication"
 	. "github.com/hpcloud/cf-usb/lib/operations"
 	"github.com/pivotal-cf/brokerapi"
+	"github.com/pivotal-golang/lager"
+	uuid "github.com/satori/go.uuid"
+	sys "os"
 )
 
 // This file is safe to edit. Once it exists it will not be overwritten
@@ -46,53 +43,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.UploadDriverHandler = UploadDriverHandlerFunc(func(params UploadDriverParams) error {
-
-		err := auth.IsAuthenticated(params.Authorization)
-		if err != nil {
-			return err
-		}
-
-		driver, err := configProvider.GetDriver(params.DriverID)
-		if err != nil{
-			return err
-		}
-
-		driverType := driver.DriverType
-
-		driverPath := os.Getenv("USB_DRIVER_PATH")
-		if driverPath == "" {
-			driverPath = "drivers"
-		}
-		driverPath = filepath.Join(driverPath, driverType)
-		if runtime.GOOS == "windows" {
-			driverPath = driverPath + ".exe"
-		}
-
-		defer params.File.Data.Close()
-
-		f, err := os.OpenFile(driverPath, os.O_WRONLY|os.O_CREATE, 0666)
-		if err != nil {
-			return err
-		}
-
-		defer f.Close()
-
-		reader := bufio.NewReader(params.File.Data)
-
-		sha1 := sha1.New()
-		_, err = io.Copy(f, io.TeeReader(reader, sha1))
-		if err != nil {
-			return err
-		}
-
-		sha := base64.StdEncoding.EncodeToString(sha1.Sum(nil))
-		if sha != params.Sha {
-			f.Close()
-			os.Remove(driverPath)
-			return errors.New(400, "Checksum mismatch. Expected: %s, got %s", params.Sha, sha)
-		}
-
-		return nil
+		return errors.NotImplemented("operation uploadDriver has not yet been implemented")
 	})
 
 	api.DeleteServicePlanHandler = DeleteServicePlanHandlerFunc(func(params DeleteServicePlanParams) error {
@@ -187,13 +138,14 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		var driver config.Driver
 
 		driver.DriverType = params.Driver.DriverType
-		driver.ID = params.Driver.ID
+
+		driver.ID = uuid.NewV4().String()
 
 		err := configProvider.SetDriver(driver)
 		if err != nil {
 			return nil, err
 		}
-
+		params.Driver.ID = driver.ID
 		return &params.Driver, nil
 	})
 
@@ -302,7 +254,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 		var dial config.Dial
 
-		dial.ID = params.Dial.ID
+		dial.ID = uuid.NewV4().String()
 		dialconfig, err := json.Marshal(params.Dial.Configuration)
 		if err != nil {
 			return nil, err
@@ -314,6 +266,9 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		if err != nil {
 			return nil, err
 		}
+
+		params.Dial.ID = dial.ID
+
 		return &params.Dial, nil
 	})
 
@@ -395,8 +350,14 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 	api.CreateDriverInstanceHandler = CreateDriverInstanceHandlerFunc(func(params CreateDriverInstanceParams) (*genmodel.DriverInstance, error) {
 
+		existingDriver, err := configProvider.GetDriver(params.DriverInstance.DriverID)
+		fmt.Println(existingDriver)
+		if err != nil {
+			return nil, err
+		}
+
 		var instance config.DriverInstance
-		instance.ID = params.DriverInstance.ID
+		instance.ID = uuid.NewV4().String()
 
 		instanceConfig, err := json.Marshal(params.DriverInstance.Configuration)
 		if err != nil {
@@ -406,10 +367,45 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		instance.Configuration = &configuration
 		instance.Name = params.DriverInstance.Name
 
-		err = configProvider.SetDriverInstance(params.DriverInstance.DriverID, instance)
+		var logger = lager.NewLogger("driver instance mgmt")
+
+		logger.RegisterSink(lager.NewWriterSink(sys.Stderr, lager.DEBUG))
+
+		driverProvider := lib.NewDriverProvider(existingDriver.DriverType, &instance, logger)
+
+		err = driverProvider.Validate()
 		if err != nil {
 			return nil, err
 		}
+		err = configProvider.SetDriverInstance(params.DriverInstance.DriverID, instance)
+
+		if err != nil {
+			return nil, err
+		}
+
+		var defaultDial config.Dial
+
+		defaultDial.ID = uuid.NewV4().String()
+
+		var plan brokerapi.ServicePlan
+		plan.Description = "default plan"
+		plan.Name = params.DriverInstance.Name + "_default"
+
+		var meta brokerapi.ServicePlanMetadata
+		meta.DisplayName = "default plan"
+
+		plan.Metadata = meta
+
+		defaultDial.Plan = plan
+		defaultDialConfig := json.RawMessage([]byte("{}"))
+		defaultDial.Configuration = &defaultDialConfig
+
+		err = configProvider.SetDial(instance.ID, defaultDial)
+		if err != nil {
+			return nil, err
+		}
+		params.DriverInstance.Dials = append(params.DriverInstance.Dials, defaultDial.ID)
+		params.DriverInstance.ID = instance.ID
 		return &params.DriverInstance, nil
 	})
 
@@ -768,7 +764,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 		service.Bindable = params.Service.Bindable
 		service.Description = params.Service.Description
-		service.ID = params.Service.ID
+		service.ID = uuid.NewV4().String()
 		service.Name = params.Service.Name
 		service.Tags = params.Service.Tags
 
@@ -776,7 +772,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		if err != nil {
 			return nil, err
 		}
-
+		params.Service.ID = service.ID
 		return &params.Service, nil
 	})
 
@@ -804,7 +800,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 						var meta brokerapi.ServicePlanMetadata
 
 						plan.Description = params.Plan.Description
-						plan.ID = params.Plan.ID
+						plan.ID = uuid.NewV4().String()
 						plan.Name = params.Plan.Name
 
 						meta.DisplayName = params.Plan.Name
@@ -815,6 +811,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 						if err != nil {
 							return nil, err
 						}
+						params.Plan.ID = plan.ID
 						return &params.Plan, nil
 					}
 				}

@@ -104,10 +104,15 @@ func Test_CreateDriverInstance(t *testing.T) {
 	params.DriverInstance.ID = "testInstanceID"
 	params.DriverInstance.Name = "testInstance"
 
+	var testDriver config.Driver
+	testDriver.DriverType = "test"
+
 	provider.On("SetDriverInstance", mock.Anything, mock.Anything).Return(nil)
-	info, err := UnitTest.MgmtAPI.CreateDriverInstanceHandler.Handle(params)
-	t.Log(info)
-	assert.NoError(err)
+	provider.On("SetDial", mock.Anything, mock.Anything).Return(nil)
+	provider.On("GetDriver", "testDriverID").Return(testDriver, nil)
+	_, err = UnitTest.MgmtAPI.CreateDriverInstanceHandler.Handle(params)
+	t.Log("Expected error from validation call :", err)
+	assert.Error(err)
 }
 
 func Test_CreateDial(t *testing.T) {

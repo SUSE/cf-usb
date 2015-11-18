@@ -140,6 +140,10 @@
 			"Rev": "81d18ed6a75f16276fed99134f0e8397ec2e91e2"
 		},
 		{
+			"ImportPath": "github.com/satori/go.uuid",
+			"Rev": "d41af8bb6a7704f00bc3b7cba9355ae6a5a80048"
+		},
+		{
 			"ImportPath": "github.com/stretchr/objx",
 			"Rev": "cbeaeb16a013161a98496fad62933b1d21786672"
 		},

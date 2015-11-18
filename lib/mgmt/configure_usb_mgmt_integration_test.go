@@ -89,11 +89,11 @@ func initManager() error {
 	return nil
 }
 
-func Test_IntCreateDriver(t *testing.T) {
+func Test_IntCreate(t *testing.T) {
 	assert := assert.New(t)
 
 	if IntegrationConfig.consulAddress == "" {
-		t.Skip("Skipping mgmt Create Driver test, environment variables not set: CONSUL_ADDRESS(host:port), CONSUL_DATACENTER, CONSUL_TOKEN / CONSUL_USER + CONSUL_PASSWORD, CONSUL_SCHEMA")
+		t.Skip("Skipping mgmt create test, environment variables not set: CONSUL_ADDRESS(host:port), CONSUL_DATACENTER, CONSUL_TOKEN / CONSUL_USER + CONSUL_PASSWORD, CONSUL_SCHEMA")
 	}
 
 	err := initManager()
@@ -104,8 +104,7 @@ func Test_IntCreateDriver(t *testing.T) {
 	var driver genmodel.Driver
 
 	driver.Name = "testDriver"
-	driver.ID = "testDriverID"
-	driver.DriverType = "testDriverType"
+	driver.DriverType = "mysql"
 
 	params := operations.CreateDriverParams{}
 	params.Driver = driver
@@ -116,122 +115,78 @@ func Test_IntCreateDriver(t *testing.T) {
 	}
 	t.Log(info)
 	assert.NoError(err)
-}
 
-func Test_IntCreateDriverInstance(t *testing.T) {
-
-	assert := assert.New(t)
-
-	if IntegrationConfig.consulAddress == "" {
-		t.Skip("Skipping mgmt Create Driver test, environment variables not set: CONSUL_ADDRESS(host:port), CONSUL_DATACENTER, CONSUL_TOKEN / CONSUL_USER + CONSUL_PASSWORD, CONSUL_SCHEMA")
-	}
-
-	err := initManager()
-	if err != nil {
-		t.Error(err)
-	}
-
-	params := operations.CreateDriverInstanceParams{}
+	instanceParams := operations.CreateDriverInstanceParams{}
 	var instace genmodel.DriverInstance
 
-	instace.ID = "testInstanceID"
 	instace.Name = "testInstanceName"
-	instace.DriverID = "testDriverID"
-	params.DriverInstance = instace
-	info, err := IntegrationConfig.MgmtAPI.CreateDriverInstanceHandler.Handle(params)
-	t.Log(info)
+	instace.DriverID = info.ID
+	instanceConfig := make(map[string]interface{})
+
+	instanceConfig["userid"] = "testUser"
+	instanceConfig["password"] = "testPass"
+	instanceConfig["server"] = "127.0.0.1"
+	instanceConfig["port"] = "3306"
+
+	instanceParams.DriverInstance = instace
+	instanceParams.DriverInstance.DriverID = info.ID
+	instanceParams.DriverInstance.Configuration = instanceConfig
+	infoInstance, err := IntegrationConfig.MgmtAPI.CreateDriverInstanceHandler.Handle(instanceParams)
+	t.Log(infoInstance)
 	assert.NoError(err)
-}
 
-func Test_IntCreateDial(t *testing.T) {
+	dialParams := operations.CreateDialParams{}
+	var instaceDial genmodel.Dial
 
-	assert := assert.New(t)
+	instaceDial.DriverInstanceID = infoInstance.ID
+	instaceDial.Plan = "{\"Name\":\"testPlanName\"}"
 
-	if IntegrationConfig.consulAddress == "" {
-		t.Skip("Skipping mgmt Create Driver test, environment variables not set: CONSUL_ADDRESS(host:port), CONSUL_DATACENTER, CONSUL_TOKEN / CONSUL_USER + CONSUL_PASSWORD, CONSUL_SCHEMA")
-	}
+	dialConfig := make(map[string]interface{})
+	dialConfig["max_db_size_mb"] = "200"
+	instaceDial.Configuration = dialConfig
+	dialParams.Dial = instaceDial
 
-	err := initManager()
-	if err != nil {
-		t.Error(err)
-	}
-
-	params := operations.CreateDialParams{}
-	var instace genmodel.Dial
-
-	instace.ID = "testDialID"
-	instace.DriverInstanceID = "testInstanceID"
-	instace.Plan = "{\"Name\":\"testPlanName\"}"
-	params.Dial = instace
-
-	info, err := IntegrationConfig.MgmtAPI.CreateDialHandler.Handle(params)
-	t.Log(info)
+	infoDial, err := IntegrationConfig.MgmtAPI.CreateDialHandler.Handle(dialParams)
+	t.Log(infoDial)
 	assert.NoError(err)
-}
 
-func Test_IntCreateService(t *testing.T) {
-	assert := assert.New(t)
+	serviceParams := operations.CreateServiceParams{}
+	var instaceService genmodel.Service
 
-	if IntegrationConfig.consulAddress == "" {
-		t.Skip("Skipping mgmt Create Driver test, environment variables not set: CONSUL_ADDRESS(host:port), CONSUL_DATACENTER, CONSUL_TOKEN / CONSUL_USER + CONSUL_PASSWORD, CONSUL_SCHEMA")
-	}
+	instaceService.Bindable = true
+	instaceService.DriverInstanceID = infoInstance.ID
+	instaceService.Name = "testService"
+	instaceService.Tags = []string{"test", "test service"}
+	instaceService.Metadata = make(map[string]interface{})
+	instaceService.Metadata["guid"] = "testGuid"
 
-	err := initManager()
-	if err != nil {
-		t.Error(err)
-	}
+	serviceParams.Service = instaceService
 
-	params := operations.CreateServiceParams{}
-	var instace genmodel.Service
-
-	instace.ID = "testServiceID"
-	instace.Bindable = true
-	instace.DriverInstanceID = "testInstanceID"
-	instace.Name = "testService"
-	instace.Tags = []string{"test", "test service"}
-	instace.Metadata = make(map[string]interface{})
-	instace.Metadata["guid"] = "testGuid"
-
-	params.Service = instace
-
-	info, err := IntegrationConfig.MgmtAPI.CreateServiceHandler.Handle(params)
-	t.Log(info)
+	infoService, err := IntegrationConfig.MgmtAPI.CreateServiceHandler.Handle(serviceParams)
+	t.Log(infoService)
 	assert.NoError(err)
-}
 
-func Test_IntCreateServicePlan(t *testing.T) {
-	assert := assert.New(t)
-
-	if IntegrationConfig.consulAddress == "" {
-		t.Skip("Skipping mgmt Create Driver test, environment variables not set: CONSUL_ADDRESS(host:port), CONSUL_DATACENTER, CONSUL_TOKEN / CONSUL_USER + CONSUL_PASSWORD, CONSUL_SCHEMA")
-	}
-
-	err := initManager()
-	if err != nil {
-		t.Error(err)
-	}
-
-	params := operations.CreateServicePlanParams{}
+	splanParams := operations.CreateServicePlanParams{}
 	var plan genmodel.Plan
 
-	plan.DialID = "testDialID"
+	plan.DialID = infoDial.ID
 	plan.Description = "testDescription"
 	plan.Free = true
 	plan.ID = "testPlanID"
 	plan.Name = "testPlan"
 
-	params.Plan = plan
+	splanParams.Plan = plan
 
-	info, err := IntegrationConfig.MgmtAPI.CreateServicePlanHandler.Handle(params)
-	t.Log(info)
+	infoPlan, err := IntegrationConfig.MgmtAPI.CreateServicePlanHandler.Handle(splanParams)
+	t.Log(infoPlan)
 	assert.NoError(err)
 }
 
-func Test_IntUpdateServicePlan(t *testing.T) {
+func Test_IntUpdate(t *testing.T) {
 	assert := assert.New(t)
 
 	if IntegrationConfig.consulAddress == "" {
-		t.Skip("Skipping mgmt Create Driver test, environment variables not set: CONSUL_ADDRESS(host:port), CONSUL_DATACENTER, CONSUL_TOKEN / CONSUL_USER + CONSUL_PASSWORD, CONSUL_SCHEMA")
+		t.Skip("Skipping mgmt update test, environment variables not set: CONSUL_ADDRESS(host:port), CONSUL_DATACENTER, CONSUL_TOKEN / CONSUL_USER + CONSUL_PASSWORD, CONSUL_SCHEMA")
 	}
 
 	err := initManager()
@@ -239,147 +194,92 @@ func Test_IntUpdateServicePlan(t *testing.T) {
 		t.Error(err)
 	}
 
+	callparams := operations.GetDriversParams{}
+
+	drivers, err := IntegrationConfig.MgmtAPI.GetDriversHandler.Handle(callparams)
+	if err != nil {
+		t.Skip(err)
+	}
+
+	firstDriver := (*drivers)[0]
+
+	t.Log(firstDriver)
+	dialParams := operations.GetAllDialsParams{}
+	dialParams.DriverInstanceID = firstDriver.DriverInstances[0]
+	dials, err := IntegrationConfig.MgmtAPI.GetAllDialsHandler.Handle(dialParams)
+
+	if err != nil {
+		t.Skip(err)
+	}
+
+	firstDial := (*dials)[0]
+
 	params := operations.UpdateServicePlanParams{}
 	var plan genmodel.Plan
 
-	plan.DialID = "testDialID"
+	plan.DialID = firstDial.ID
 	plan.Description = "testDescription Updated"
 	plan.Free = true
-	plan.ID = "testPlanID"
+	plan.ID = firstDial.Plan
 	plan.Name = "testPlanUpdated"
 
-	params.PlanID = "testPlanID"
+	params.PlanID = firstDial.Plan
 	params.Plan = plan
 
 	info, err := IntegrationConfig.MgmtAPI.UpdateServicePlanHandler.Handle(params)
 	t.Log(info)
 	assert.NoError(err)
-}
 
-func Test_IntUpdateDriver(t *testing.T) {
-	assert := assert.New(t)
+	instanceParams := operations.GetDriverInstanceParams{}
+	instanceParams.DriverInstanceID = firstDriver.DriverInstances[0]
 
-	if IntegrationConfig.consulAddress == "" {
-		t.Skip("Skipping mgmt Create Driver test, environment variables not set: CONSUL_ADDRESS(host:port), CONSUL_DATACENTER, CONSUL_TOKEN / CONSUL_USER + CONSUL_PASSWORD, CONSUL_SCHEMA")
-	}
-
-	err := initManager()
+	existingInstace, err := IntegrationConfig.MgmtAPI.GetDriverInstanceHandler.Handle(instanceParams)
 	if err != nil {
-		t.Error(err)
+		t.Skip(err)
 	}
 
-	params := operations.UpdateDriverParams{}
-
-	var driver genmodel.Driver
-
-	driver.Name = "testDriverUpdate"
-	driver.ID = "testDriverID"
-	driver.DriverType = "testDriverUpdateType"
-
-	params.DriverID = driver.ID
-	params.Driver = driver
-
-	info, err := IntegrationConfig.MgmtAPI.UpdateDriverHandler.Handle(params)
-	t.Log(info)
-	assert.NoError(err)
-}
-
-func Test_IntUpdateDriverInstance(t *testing.T) {
-	assert := assert.New(t)
-
-	if IntegrationConfig.consulAddress == "" {
-		t.Skip("Skipping mgmt Create Driver test, environment variables not set: CONSUL_ADDRESS(host:port), CONSUL_DATACENTER, CONSUL_TOKEN / CONSUL_USER + CONSUL_PASSWORD, CONSUL_SCHEMA")
-	}
-
-	err := initManager()
-	if err != nil {
-		t.Error(err)
-	}
-
-	params := operations.UpdateDriverParams{}
-
-	var driver genmodel.Driver
-
-	driver.Name = "testDriverUpdate"
-	driver.ID = "testDriverID"
-	driver.DriverType = "testDriverUpdateType"
-
-	params.DriverID = driver.ID
-	params.Driver = driver
-
-	info, err := IntegrationConfig.MgmtAPI.UpdateDriverHandler.Handle(params)
-	t.Log(info)
-	assert.NoError(err)
-}
-
-func Test_IntUpdateDial(t *testing.T) {
-
-	assert := assert.New(t)
-
-	if IntegrationConfig.consulAddress == "" {
-		t.Skip("Skipping mgmt Create Driver test, environment variables not set: CONSUL_ADDRESS(host:port), CONSUL_DATACENTER, CONSUL_TOKEN / CONSUL_USER + CONSUL_PASSWORD, CONSUL_SCHEMA")
-	}
-
-	err := initManager()
-	if err != nil {
-		t.Error(err)
-	}
-
-	params := operations.UpdateDialParams{}
-
-	var dial genmodel.Dial
-	dial.DriverInstanceID = "testInstanceID"
-	dial.ID = "testDialID"
-
-	dial.Configuration = make(map[string]interface{})
-	dial.Configuration["test"] = "test"
-
-	params.Dial = dial
-	params.DialID = dial.ID
-
-	info, err := IntegrationConfig.MgmtAPI.UpdateDialHandler.Handle(params)
-	t.Log(info)
-	assert.NoError(err)
-}
-
-func Test_IntUpdateService(t *testing.T) {
-	assert := assert.New(t)
-
-	if IntegrationConfig.consulAddress == "" {
-		t.Skip("Skipping mgmt Create Driver test, environment variables not set: CONSUL_ADDRESS(host:port), CONSUL_DATACENTER, CONSUL_TOKEN / CONSUL_USER + CONSUL_PASSWORD, CONSUL_SCHEMA")
-	}
-
-	err := initManager()
-	if err != nil {
-		t.Error(err)
-	}
-
-	params := operations.UpdateServiceParams{}
+	serviceParams := operations.UpdateServiceParams{}
 	var instace genmodel.Service
 
-	instace.ID = "testServiceID"
+	instace.ID = existingInstace.Service
 	instace.Bindable = true
-	instace.DriverInstanceID = "testInstanceID"
+	instace.DriverInstanceID = firstDriver.DriverInstances[0]
 	instace.Name = "testUpdatedService"
 	instace.Tags = []string{"test update", "test service"}
 	instace.Metadata = make(map[string]interface{})
 	instace.Metadata["guid"] = "testUpdateGuid"
 
-	params.Service = instace
-	params.ServiceID = instace.ID
+	serviceParams.Service = instace
+	serviceParams.ServiceID = instace.ID
 
-	info, err := IntegrationConfig.MgmtAPI.UpdateServiceHandler.Handle(params)
-	t.Log(info)
+	infoServiceUpdate, err := IntegrationConfig.MgmtAPI.UpdateServiceHandler.Handle(serviceParams)
+	t.Log(infoServiceUpdate)
+	assert.NoError(err)
+
+	dialUpdateParams := operations.UpdateDialParams{}
+
+	var dial genmodel.Dial
+	dial.DriverInstanceID = existingInstace.ID
+	dial.ID = firstDial.ID
+
+	dial.Configuration = make(map[string]interface{})
+	dial.Configuration["max_dbsize_mb"] = "400"
+
+	dialUpdateParams.Dial = dial
+	dialUpdateParams.DialID = dial.ID
+
+	infoDial, err := IntegrationConfig.MgmtAPI.UpdateDialHandler.Handle(dialUpdateParams)
+	t.Log(infoDial)
 	assert.NoError(err)
 }
 
 //Cleanup
 
-func Test_IntDeleteDial(t *testing.T) {
+func Test_IntDelete(t *testing.T) {
 	assert := assert.New(t)
 
 	if IntegrationConfig.consulAddress == "" {
-		t.Skip("Skipping mgmt Create Driver test, environment variables not set: CONSUL_ADDRESS(host:port), CONSUL_DATACENTER, CONSUL_TOKEN / CONSUL_USER + CONSUL_PASSWORD, CONSUL_SCHEMA")
+		t.Skip("Skipping mgmt delete test, environment variables not set: CONSUL_ADDRESS(host:port), CONSUL_DATACENTER, CONSUL_TOKEN / CONSUL_USER + CONSUL_PASSWORD, CONSUL_SCHEMA")
 	}
 
 	err := initManager()
@@ -387,64 +287,52 @@ func Test_IntDeleteDial(t *testing.T) {
 		t.Error(err)
 	}
 
-	params := operations.DeleteDialParams{}
-	params.DialID = "testDialID"
+	callparams := operations.GetDriversParams{}
 
-	err = IntegrationConfig.MgmtAPI.DeleteDialHandler.Handle(params)
+	drivers, err := IntegrationConfig.MgmtAPI.GetDriversHandler.Handle(callparams)
+	if err != nil {
+		t.Skip(err)
+	}
+
+	firstDriver := (*drivers)[0]
+
+	dialParams := operations.GetAllDialsParams{}
+	dialParams.DriverInstanceID = firstDriver.DriverInstances[0]
+	dials, err := IntegrationConfig.MgmtAPI.GetAllDialsHandler.Handle(dialParams)
+
+	if err != nil {
+		t.Skip(err)
+	}
+
+	firstDial := (*dials)[0]
+
+	dialDeleteParams := operations.DeleteDialParams{}
+	dialDeleteParams.DialID = firstDial.ID
+
+	instanceParams := operations.GetDriverInstanceParams{}
+	instanceParams.DriverInstanceID = firstDriver.DriverInstances[0]
+
+	existingInstace, err := IntegrationConfig.MgmtAPI.GetDriverInstanceHandler.Handle(instanceParams)
+	if err != nil {
+		t.Skip(err)
+	}
+
+	err = IntegrationConfig.MgmtAPI.DeleteDialHandler.Handle(dialDeleteParams)
 	assert.NoError(err)
-}
 
-func Test_IntDeleteServicePlan(t *testing.T) {
+	deleteServiceParams := operations.DeleteServiceParams{}
+	deleteServiceParams.ServiceID = existingInstace.Service
 
-	assert := assert.New(t)
-
-	if IntegrationConfig.consulAddress == "" {
-		t.Skip("Skipping mgmt Create Driver test, environment variables not set: CONSUL_ADDRESS(host:port), CONSUL_DATACENTER, CONSUL_TOKEN / CONSUL_USER + CONSUL_PASSWORD, CONSUL_SCHEMA")
-	}
-
-	err := initManager()
-	if err != nil {
-		t.Error(err)
-	}
-
-	params := operations.DeleteServiceParams{}
-	params.ServiceID = "testServiceID"
-	err = IntegrationConfig.MgmtAPI.DeleteServiceHandler.Handle(params)
+	err = IntegrationConfig.MgmtAPI.DeleteServiceHandler.Handle(deleteServiceParams)
 	assert.NoError(err)
-}
 
-func Test_IntDeleteDriverInstance(t *testing.T) {
-	assert := assert.New(t)
-
-	if IntegrationConfig.consulAddress == "" {
-		t.Skip("Skipping mgmt Create Driver test, environment variables not set: CONSUL_ADDRESS(host:port), CONSUL_DATACENTER, CONSUL_TOKEN / CONSUL_USER + CONSUL_PASSWORD, CONSUL_SCHEMA")
-	}
-
-	err := initManager()
-	if err != nil {
-		t.Error(err)
-	}
-
-	params := operations.DeleteDriverInstanceParams{}
-	params.DriverInstanceID = "testInstanceID"
-	err = IntegrationConfig.MgmtAPI.DeleteDriverInstanceHandler.Handle(params)
+	deleteInstanceParams := operations.DeleteDriverInstanceParams{}
+	deleteInstanceParams.DriverInstanceID = existingInstace.ID
+	err = IntegrationConfig.MgmtAPI.DeleteDriverInstanceHandler.Handle(deleteInstanceParams)
 	assert.NoError(err)
-}
 
-func Test_IntDeleteDriver(t *testing.T) {
-	assert := assert.New(t)
-
-	if IntegrationConfig.consulAddress == "" {
-		t.Skip("Skipping mgmt Create Driver test, environment variables not set: CONSUL_ADDRESS(host:port), CONSUL_DATACENTER, CONSUL_TOKEN / CONSUL_USER + CONSUL_PASSWORD, CONSUL_SCHEMA")
-	}
-
-	err := initManager()
-	if err != nil {
-		t.Error(err)
-	}
-
-	params := operations.DeleteDriverParams{}
-	params.DriverID = "testDriverID"
-	err = IntegrationConfig.MgmtAPI.DeleteDriverHandler.Handle(params)
+	deleteDriverParams := operations.DeleteDriverParams{}
+	deleteDriverParams.DriverID = firstDriver.ID
+	err = IntegrationConfig.MgmtAPI.DeleteDriverHandler.Handle(deleteDriverParams)
 	assert.NoError(err)
 }
