@@ -5,6 +5,7 @@ import (
 	"github.com/hpcloud/cf-usb/lib/config/consul"
 	"github.com/stretchr/testify/assert"
 	"os"
+	"strconv"
 	"testing"
 
 	"github.com/go-swagger/go-swagger/spec"
@@ -12,8 +13,14 @@ import (
 	"github.com/hpcloud/cf-usb/lib/data"
 	"github.com/hpcloud/cf-usb/lib/genmodel"
 	"github.com/hpcloud/cf-usb/lib/mgmt/authentication/uaa"
+	"github.com/hpcloud/cf-usb/lib/mgmt/cc_integration/ccapi"
+	"github.com/hpcloud/cf-usb/lib/mgmt/cc_integration/httpclient"
+	"github.com/hpcloud/cf-usb/lib/mgmt/cc_integration/uaaapi"
 	"github.com/hpcloud/cf-usb/lib/operations"
+	"github.com/pivotal-golang/lager/lagertest"
 )
+
+var testLogger *lagertest.TestLogger = lagertest.NewTestLogger("mgmt-api")
 
 var IntegrationConfig = struct {
 	Provider         config.ConfigProvider
@@ -24,6 +31,16 @@ var IntegrationConfig = struct {
 	consulPassword   string
 	consulSchema     string
 	consulToken      string
+
+	CcServiceBroker ccapi.ServiceBrokerInterface
+	ccApi           string
+	skipTls         bool
+	tokenEndpoint   string
+	clientId        string
+	clientSecret    string
+	usbEndpoint     string
+	usbUsername     string
+	usbPassword     string
 }{}
 
 func init() {
@@ -33,6 +50,15 @@ func init() {
 	IntegrationConfig.consulUser = os.Getenv("CONSUL_USER")
 	IntegrationConfig.consulSchema = os.Getenv("CONSUL_SCHEMA")
 	IntegrationConfig.consulToken = os.Getenv("CONSUL_TOKEN")
+
+	IntegrationConfig.ccApi = os.Getenv("CC_API")
+	IntegrationConfig.skipTls, _ = strconv.ParseBool(os.Getenv("SKIP_TLS"))
+	IntegrationConfig.tokenEndpoint = os.Getenv("TOKEN_ENDPOINT")
+	IntegrationConfig.clientId = os.Getenv("CLIENT_ID")
+	IntegrationConfig.clientSecret = os.Getenv("CLIENT_SECRET")
+	IntegrationConfig.usbEndpoint = os.Getenv("USB_ENDPOINT")
+	IntegrationConfig.usbUsername = os.Getenv("USB_USERNAME")
+	IntegrationConfig.usbPassword = os.Getenv("USB_PASSWORD")
 }
 
 func initProvider() (bool, error) {
@@ -85,7 +111,11 @@ func initManager() error {
 		return err
 	}
 
-	ConfigureAPI(IntegrationConfig.MgmtAPI, auth, IntegrationConfig.Provider)
+	client := httpclient.NewHttpClient(IntegrationConfig.skipTls)
+	tokenGenerator := uaaapi.NewTokenGenerator(IntegrationConfig.tokenEndpoint, IntegrationConfig.clientId, IntegrationConfig.clientSecret, client)
+	IntegrationConfig.CcServiceBroker = ccapi.NewServiceBroker(client, tokenGenerator, IntegrationConfig.ccApi, testLogger)
+
+	ConfigureAPI(IntegrationConfig.MgmtAPI, auth, IntegrationConfig.Provider, IntegrationConfig.CcServiceBroker, testLogger)
 	return nil
 }
 
@@ -94,6 +124,10 @@ func Test_IntCreate(t *testing.T) {
 
 	if IntegrationConfig.consulAddress == "" {
 		t.Skip("Skipping mgmt create test, environment variables not set: CONSUL_ADDRESS(host:port), CONSUL_DATACENTER, CONSUL_TOKEN / CONSUL_USER + CONSUL_PASSWORD, CONSUL_SCHEMA")
+	}
+
+	if IntegrationConfig.ccApi == "" {
+		t.Skip("Skipping mgmt Create Service test, environment variables not set: CC_API, SKIP_TLS, TOKEN_ENDPOINT, CLIENT_ID, CLIENT_SECRET, USB_ENDPOINT, USB_USERNAME, USB_PASSWORD")
 	}
 
 	err := initManager()
@@ -158,9 +192,22 @@ func Test_IntCreate(t *testing.T) {
 	instaceService.Name = "testService"
 	instaceService.Tags = []string{"test", "test service"}
 	instaceService.Metadata = make(map[string]interface{})
-	instaceService.Metadata["guid"] = "testGuid"
 
 	serviceParams.Service = instaceService
+
+	brokerName := "testBroker"
+	guid, err := IntegrationConfig.CcServiceBroker.GetServiceBrokerGuidByName(brokerName)
+	assert.NoError(err)
+
+	if guid == "" {
+		err = IntegrationConfig.CcServiceBroker.Create(brokerName, IntegrationConfig.usbEndpoint, IntegrationConfig.usbUsername, IntegrationConfig.usbPassword)
+	} else {
+		err = IntegrationConfig.CcServiceBroker.Update(guid, brokerName, IntegrationConfig.usbEndpoint, IntegrationConfig.usbUsername, IntegrationConfig.usbPassword)
+	}
+	assert.NoError(err)
+
+	err = IntegrationConfig.CcServiceBroker.EnableServiceAccess(instaceService.Name)
+	assert.NoError(err)
 
 	infoService, err := IntegrationConfig.MgmtAPI.CreateServiceHandler.Handle(serviceParams)
 	t.Log(infoService)
