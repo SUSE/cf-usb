@@ -2,8 +2,10 @@ package mgmt
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/go-swagger/go-swagger/spec"
@@ -27,6 +29,13 @@ var UnitTest = struct {
 }{}
 
 func init_mgmt(provider config.ConfigProvider) error {
+	workDir, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	buildDir := filepath.Join(workDir, "../../build", fmt.Sprintf("%s-%s", runtime.GOOS, runtime.GOARCH))
+	os.Setenv("USB_DRIVER_PATH", buildDir)
+
 	swaggerJSON, err := data.Asset("swagger-spec/api.json")
 	if err != nil {
 		return err
@@ -109,23 +118,46 @@ func Test_CreateDriverInstance(t *testing.T) {
 	params.DriverInstance.DriverID = "testDriverID"
 	params.DriverInstance.ID = "testInstanceID"
 	params.DriverInstance.Name = "testInstance"
+	params.DriverInstance.Configuration = map[string]interface{}{"property_one": "one", "property_two": "two"}
 
-	var testDriver config.Driver
-	testDriver.DriverType = "test"
+	var driver config.Driver
+	var instanceDriver config.DriverInstance
+	var dial config.Dial
+
+	driver.ID = "testDriverID"
+	driver.DriverType = "dummy"
+
+	dial.ID = "testDialID"
+	dialConf := []byte(`{"configuration":{"max_dbsize_mb":2}}`)
+	dial.Configuration = (*json.RawMessage)(&dialConf)
+
+	instanceDriver.ID = "testInstanceID"
+	instanceDriver.Name = "testInstance"
+	instanceDriverConf := []byte(`{"property_one":"one", "property_two":"two"}`)
+	instanceDriver.Configuration = (*json.RawMessage)(&instanceDriverConf)
+
+	instanceDriver.Dials = append(instanceDriver.Dials, dial)
+
+	driver.DriverInstances = append(driver.DriverInstances, &instanceDriver)
 
 	provider.On("SetDriverInstance", mock.Anything, mock.Anything).Return(nil)
 	provider.On("SetDial", mock.Anything, mock.Anything).Return(nil)
-	provider.On("GetDriver", "testDriverID").Return(testDriver, nil)
-	provider.On("SetService", mock.Anything, mock.Anything).Return(testDriver, nil)
+	provider.On("GetDriver", "testDriverID").Return(driver, nil)
+	provider.On("SetService", mock.Anything, mock.Anything).Return(nil)
+
+	var testConfig config.Config
+	testConfig.Drivers = append(testConfig.Drivers, driver)
+	provider.On("LoadConfiguration").Return(&testConfig, nil)
 
 	sbMocked.Mock.On("GetServiceBrokerGuidByName", mock.Anything).Return("aguid", nil)
 	sbMocked.Mock.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	sbMocked.Mock.On("Update", "aguid", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	sbMocked.Mock.On("EnableServiceAccess", mock.Anything).Return(nil)
 
-	_, err = UnitTest.MgmtAPI.CreateDriverInstanceHandler.Handle(params)
+	driverInstance, err := UnitTest.MgmtAPI.CreateDriverInstanceHandler.Handle(params)
 	t.Log("Expected error from validation call :", err)
-	assert.Error(err, "fork/exec drivers/test: no such file or directory")
+	assert.NoError(err)
+	assert.NotNil(driverInstance)
 }
 
 func Test_CreateDial(t *testing.T) {

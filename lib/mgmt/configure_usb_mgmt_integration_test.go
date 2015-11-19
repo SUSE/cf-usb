@@ -1,9 +1,13 @@
 package mgmt
 
 import (
+	"fmt"
 	"github.com/hashicorp/consul/api"
 	"github.com/hpcloud/cf-usb/lib/config/consul"
 	"github.com/stretchr/testify/assert"
+	"path/filepath"
+	"runtime"
+
 	"os"
 	"testing"
 
@@ -49,6 +53,13 @@ func initProvider() (bool, error) {
 	}
 	consulConfig.Address = IntegrationConfig.consulAddress
 	consulConfig.Datacenter = IntegrationConfig.consulPassword
+
+	workDir, err := os.Getwd()
+	if err != nil {
+		return false, err
+	}
+	buildDir := filepath.Join(workDir, "../../build", fmt.Sprintf("%s-%s", runtime.GOOS, runtime.GOARCH))
+	os.Setenv("USB_DRIVER_PATH", buildDir)
 
 	var auth api.HttpBasicAuth
 	auth.Username = IntegrationConfig.consulUser
@@ -125,10 +136,10 @@ func Test_IntCreate(t *testing.T) {
 	t.Log(info)
 	assert.NoError(err)
 
-	sbMocked.Mock.On("GetServiceBrokerGuidByName", mock.Anything).Return("aguid", nil)
-	sbMocked.Mock.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-	sbMocked.Mock.On("Update", "aguid", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-	sbMocked.Mock.On("EnableServiceAccess", mock.Anything).Return(nil)
+	IntegrationConfig.CcServiceBroker.Mock.On("GetServiceBrokerGuidByName", mock.Anything).Return("aguid", nil)
+	IntegrationConfig.CcServiceBroker.Mock.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	IntegrationConfig.CcServiceBroker.Mock.On("Update", "aguid", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	IntegrationConfig.CcServiceBroker.Mock.On("EnableServiceAccess", mock.Anything).Return(nil)
 
 	instanceParams := operations.CreateDriverInstanceParams{}
 	var instace genmodel.DriverInstance
