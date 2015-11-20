@@ -45,7 +45,7 @@ func getLogLevel(config *config.Config) lager.LogLevel {
 	case FATAL:
 		minLogLevel = lager.FATAL
 	default:
-		panic(fmt.Errorf("invalid log level: %s", config.LogLevel))
+		minLogLevel = lager.DEBUG
 	}
 
 	return minLogLevel
@@ -104,8 +104,8 @@ func (usb *UsbApp) Run(configProvider config.ConfigProvider) {
 			if err != nil {
 				logger.Error("error-start-mgmt-api", err)
 			}
-
-			auth, err := uaa.NewUaaAuth(uaaAuthConfig.PublicKey, uaaAuthConfig.Scope, usb.config.ManagementAPI.DevMode)
+			auth, err := uaa.NewUaaAuth(uaaAuthConfig.PublicKey, uaaAuthConfig.Scope,
+				usb.config.BrokerAPI.DevMode, usb.logger)
 			if err != nil {
 				logger.Error("error-start-mgmt-api", err)
 			}

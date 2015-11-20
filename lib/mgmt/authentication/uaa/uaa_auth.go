@@ -2,16 +2,17 @@ package uaa
 
 import (
 	auth "github.com/cloudfoundry-incubator/routing-api/authentication"
-
 	"github.com/hpcloud/cf-usb/lib/mgmt/authentication"
+	"github.com/pivotal-golang/lager"
 )
 
 type UaaAuth struct {
 	accessToken auth.Token
 	scope       string
+	logger      lager.Logger
 }
 
-func NewUaaAuth(uaaPublicKey string, scope string, devMode bool) (authentication.AuthenticationInterface, error) {
+func NewUaaAuth(uaaPublicKey string, scope string, devMode bool, logger lager.Logger) (authentication.AuthenticationInterface, error) {
 	var token auth.Token
 
 	if devMode {
@@ -20,7 +21,7 @@ func NewUaaAuth(uaaPublicKey string, scope string, devMode bool) (authentication
 		token = auth.NewAccessToken(uaaPublicKey)
 	}
 
-	newAuth := UaaAuth{token, scope}
+	newAuth := UaaAuth{token, scope, logger}
 	err := newAuth.accessToken.CheckPublicToken()
 	if err != nil {
 		return nil, err
@@ -29,5 +30,9 @@ func NewUaaAuth(uaaPublicKey string, scope string, devMode bool) (authentication
 }
 
 func (auth *UaaAuth) IsAuthenticated(authHeader string) error {
-	return auth.accessToken.DecodeToken(authHeader, auth.scope)
+	err := auth.accessToken.DecodeToken(authHeader, auth.scope)
+	if err != nil {
+		auth.logger.Error("is-authenticated", err)
+	}
+	return err
 }
