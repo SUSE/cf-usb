@@ -47,7 +47,7 @@ func init_mgmt(provider config.ConfigProvider) error {
 	}
 	mgmtAPI := operations.NewUsbMgmtAPI(swaggerSpec)
 
-	auth, err := uaa.NewUaaAuth("", "", true)
+	auth, err := uaa.NewUaaAuth("", "", true, logger)
 	if err != nil {
 		return err
 	}

@@ -92,7 +92,7 @@ func initManager() error {
 
 	IntegrationConfig.MgmtAPI = operations.NewUsbMgmtAPI(swaggerSpec)
 
-	auth, err := uaa.NewUaaAuth("", "", true)
+	auth, err := uaa.NewUaaAuth("", "", true, testLogger)
 	if err != nil {
 		return err
 	}

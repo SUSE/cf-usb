@@ -2,6 +2,7 @@ package uaa
 
 import (
 	"fmt"
+	"github.com/pivotal-golang/lager/lagertest"
 	"testing"
 
 	"github.com/dgrijalva/jwt-go"
@@ -37,18 +38,19 @@ no key
 
 var expiredToken = `bearer eyJhbGciOiJSUzI1NiJ9.eyJqdGkiOiJmMDNhYzJhNS02OTBiLTQxNmMtOWU3Yy04YjVjYWE2ZDY0NWMiLCJzdWIiOiJjY191c2JfbWFuYWdlbWVudCIsImF1dGhvcml0aWVzIjpbInVzYi5tYW5hZ2VtZW50LmFkbWluIl0sInNjb3BlIjpbInVzYi5tYW5hZ2VtZW50LmFkbWluIl0sImNsaWVudF9pZCI6ImNjX3VzYl9tYW5hZ2VtZW50IiwiY2lkIjoiY2NfdXNiX21hbmFnZW1lbnQiLCJhenAiOiJjY191c2JfbWFuYWdlbWVudCIsImdyYW50X3R5cGUiOiJjbGllbnRfY3JlZGVudGlhbHMiLCJyZXZfc2lnIjoiNGRhMzk5NTMiLCJpYXQiOjE0NDQ5MTY0NDUsImV4cCI6MTQ0NDk1OTY0NSwiaXNzIjoiaHR0cHM6Ly91YWEuYm9zaC1saXRlLmNvbS9vYXV0aC90b2tlbiIsInppZCI6InVhYSIsImF1ZCI6WyJjY191c2JfbWFuYWdlbWVudCIsInVzYi5tYW5hZ2VtZW50Il19.EJDHBommGHFAkDhErACG8EvxfW21cJEbqDeD8qOGD5Qzw7nIxISNxVgy3nn9henr52KQ03a68LkpWNPXYaLhdllr-x_dSH3pe-VNbc7mh12Fwfi-zLB0ILePf8jwD1xbABQ_p5QmUs-uwMKdwMHuvdlFR9opmcJpk9bMiTeTNGY`
 var invalidToken = `bearer eyJhbGciOiJSUzI1NiJ9.eyJqdGkiOiTmMDNhYzJhNS02OTBiLTQxNmMtOWU3Yy04YjVjYWE2ZDY0NWMiLCJzdWIiOiJjY191c2JfbWFuYWdlbWVudCIsImF1dGhvcml0aWVzIjpbInVzYi5tYW5hZ2VtZW50LmFkbWluIl0sInNjb3BlIjpbInVzYi5tYW5hZ2VtZW50LmFkbWluIl0sImNsaWVudF9pZCI6ImNjX3VzYl9tYW5hZ2VtZW50IiwiY2lkIjoiY2NfdXNiX21hbmFnZW1lbnQiLCJhenAiOiJjY191c2JfbWFuYWdlbWVudCIsImdyYW50X3R5cGUiOiJjbGllbnRfY3JlZGVudGlhbHMiLCJyZXZfc2lnIjoiNGRhMzk5NTMiLCJpYXQiOjE0NDQ5MTY0NDUsImV4cCI6MTQ0NDk1OTY0NSwiaXNzIjoiaHR0cHM6Ly91YWEuYm9zaC1saXRlLmNvbS9vYXV0aC90b2tlbiIsInppZCI6InVhYSIsImF1ZCI6WyJjY191c2JfbWFuYWdlbWVudCIsInVzYi5tYW5hZ2VtZW50Il19.EJDHBommGHFAkDhErACG8EvxfW21cJEbqDeD8qOGD5Qzw7nIxISNxVgy3nn9henr52KQ03a68LkpWNPXYaLhdllr-x_dSH3pe-VNbc7mh12Fwfi-zLB0ILePf8jwD1xbABQ_p5QmUs-uwMKdwMHuvdlFR9opmcJpk9bMiTeTNGY`
+var logger *lagertest.TestLogger = lagertest.NewTestLogger("mgmt-api")
 
 func TestInitWrongUaaAuth(t *testing.T) {
 	assert := assert.New(t)
 
-	_, err := NewUaaAuth(wrongUaaPublicKey, "usb.management.admin", false)
+	_, err := NewUaaAuth(wrongUaaPublicKey, "usb.management.admin", false, logger)
 	assert.Error(err, "Public uaa token must be PEM encoded")
 }
 
 func TestDecodeExpiredToken(t *testing.T) {
 	assert := assert.New(t)
 
-	uaaauth, err := NewUaaAuth(uaaPublicKey, "usb.management.admin", false)
+	uaaauth, err := NewUaaAuth(uaaPublicKey, "usb.management.admin", false, logger)
 	if err != nil {
 		t.Errorf("Error initialising uaa auth: %v", err)
 	}
@@ -59,7 +61,7 @@ func TestDecodeExpiredToken(t *testing.T) {
 
 func TestDecodeInvalidToken(t *testing.T) {
 	assert := assert.New(t)
-	uaaauth, err := NewUaaAuth(uaaPublicKey, "usb.management.admin", false)
+	uaaauth, err := NewUaaAuth(uaaPublicKey, "usb.management.admin", false, logger)
 	if err != nil {
 		t.Errorf("Error initialising uaa auth: %v", err)
 	}
@@ -69,7 +71,7 @@ func TestDecodeInvalidToken(t *testing.T) {
 }
 
 func TestCodeDecodeToken(t *testing.T) {
-	uaaauth, err := NewUaaAuth(uaaPublicKey, "usb.management.admin", false)
+	uaaauth, err := NewUaaAuth(uaaPublicKey, "usb.management.admin", false, logger)
 	if err != nil {
 		t.Errorf("Error initialising uaa auth: %v", err)
 	}
@@ -103,7 +105,7 @@ func TestCodeDecodeToken(t *testing.T) {
 
 func TestCodeDecodeWrongScopeToken(t *testing.T) {
 	testScope := "a.scope"
-	uaaauth, err := NewUaaAuth(uaaPublicKey, testScope, false)
+	uaaauth, err := NewUaaAuth(uaaPublicKey, testScope, false, logger)
 	if err != nil {
 		t.Errorf("Error initialising uaa auth: %v", err)
 	}
