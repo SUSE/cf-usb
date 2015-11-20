@@ -386,7 +386,6 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 		var instance config.DriverInstance
 		instance.ID = uuid.NewV4().String()
-
 		instanceConfig, err := json.Marshal(params.DriverInstance.Configuration)
 		if err != nil {
 			return nil, err
@@ -396,8 +395,12 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		instance.Name = params.DriverInstance.Name
 
 		driverProvider := lib.NewDriverProvider(existingDriver.DriverType, &instance, logger)
-
 		err = driverProvider.Validate()
+		if err != nil {
+			return nil, err
+		}
+
+		err = configProvider.SetDriverInstance(params.DriverInstance.DriverID, instance)
 		if err != nil {
 			return nil, err
 		}
@@ -423,6 +426,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		if err != nil {
 			return nil, err
 		}
+
 		params.DriverInstance.Dials = append(params.DriverInstance.Dials, defaultDial.ID)
 		params.DriverInstance.ID = instance.ID
 
@@ -438,11 +442,6 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		}
 
 		params.DriverInstance.Service = service.ID
-
-		err = configProvider.SetDriverInstance(params.DriverInstance.DriverID, instance)
-		if err != nil {
-			return nil, err
-		}
 
 		config, err := configProvider.LoadConfiguration()
 		if err != nil {

@@ -3,15 +3,15 @@
     "logLevel": "debug",
     "broker_api": {
 		"external_url": "http://10.11.0.25:54054",
-        "listen": ":54054",
-		"dev_mode": true,
+        "listen": ":54054",		
         "credentials": {
             "username": "username",
             "password": "password"
         }
     },
     "management_api": {
-        "listen": ":54053",      
+        "listen": ":54053",  
+		"dev_mode": true,    
 		"uaa_secret": "cc-usb-management-secret",
         "uaa_client": "cc_usb_management",
         "authentication": {

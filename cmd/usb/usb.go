@@ -105,7 +105,7 @@ func (usb *UsbApp) Run(configProvider config.ConfigProvider) {
 				logger.Error("error-start-mgmt-api", err)
 			}
 
-			auth, err := uaa.NewUaaAuth(uaaAuthConfig.PublicKey, uaaAuthConfig.Scope, usb.config.BrokerAPI.DevMode)
+			auth, err := uaa.NewUaaAuth(uaaAuthConfig.PublicKey, uaaAuthConfig.Scope, usb.config.ManagementAPI.DevMode)
 			if err != nil {
 				logger.Error("error-start-mgmt-api", err)
 			}

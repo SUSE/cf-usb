@@ -9,12 +9,12 @@ import (
 type BrokerAPI struct {
 	ExternalUrl string                      `json:"external_url"`
 	Listen      string                      `json:"listen"`
-	DevMode     bool                        `json:"dev_mode"`
 	Credentials brokerapi.BrokerCredentials `json:"credentials"`
 }
 
 type ManagementAPI struct {
 	Listen          string           `json:"listen"`
+	DevMode         bool             `json:"dev_mode"`
 	UaaClient       string           `json:"uaa_client"`
 	UaaSecret       string           `json:"uaa_secret"`
 	Authentication  *json.RawMessage `json:"authentication"`
