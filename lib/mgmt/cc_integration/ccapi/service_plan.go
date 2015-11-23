@@ -88,7 +88,7 @@ func (sp *ServicePlan) Update(serviceName string) error {
 	for _, value := range servicePlans.Resources {
 		path := fmt.Sprintf("/v2/service_plans/%s", value.Values.Guid)
 
-		body := PlanValues{Name: value.Entity.Name, Free: value.Entity.Free, Description: value.Entity.Description, Public: value.Entity.Public, ServiceGuid: value.Entity.ServiceGuid}
+		body := PlanValues{Name: value.Entity.Name, Free: value.Entity.Free, Description: value.Entity.Description, Public: true, ServiceGuid: value.Entity.ServiceGuid}
 		values, err := json.Marshal(body)
 		if err != nil {
 			return err

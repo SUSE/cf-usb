@@ -462,7 +462,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		var plan brokerapi.ServicePlan
 		plan.ID = uuid.NewV4().String()
 		plan.Description = "default plan"
-		plan.Name = params.DriverInstance.Name + "_default"
+		plan.Name = "default"
 
 		var meta brokerapi.ServicePlanMetadata
 		meta.DisplayName = "default plan"
@@ -483,8 +483,8 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 		var service brokerapi.Service
 		service.ID = uuid.NewV4().String()
-		service.Name = params.DriverInstance.Name + "-default"
-		service.Description = "A default service for driver " + params.DriverInstance.Name
+		service.Name = fmt.Sprintf("%s-%s", params.DriverInstance.Name, GetRandomString(5))
+		service.Description = "Default service"
 		service.Tags = []string{params.DriverInstance.Name}
 
 		err = configProvider.SetService(instance.ID, service)
