@@ -96,14 +96,14 @@ func TestGetDriverConfig(t *testing.T) {
 		assert.Error(err, "Unable to load from temp config file")
 	}
 
-	dummyInstanceConfig, err := provider.GetDriverInstanceConfig("A0000000-0000-0000-0000-000000000002")
+	driverInstance, err := provider.LoadDriverInstance("A0000000-0000-0000-0000-000000000002")
 	if err != nil {
 		assert.Error(err, "Unable to get driver configuration")
 	}
 
 	dsp := DummyServiceProperties{}
 
-	conf := (*json.RawMessage)(dummyInstanceConfig.Configuration)
+	conf := (*json.RawMessage)(driverInstance.Configuration)
 	err = json.Unmarshal(*conf, &dsp)
 
 	if err != nil {
@@ -123,14 +123,14 @@ func TestGetDriverDials(t *testing.T) {
 		assert.Error(err, "Unable to load from temp config file")
 	}
 
-	dummyInstanceConfig, err := configuration.GetDriverInstanceConfig("A0000000-0000-0000-0000-000000000002")
+	driverInstance, err := configuration.LoadDriverInstance("A0000000-0000-0000-0000-000000000002")
 	if err != nil {
 		assert.Error(err, "Unable to get driver configuration")
 	}
 
 	var dials []DummyServiceDials
 
-	for _, dial := range dummyInstanceConfig.Dials {
+	for _, dial := range driverInstance.Dials {
 		var dialDetails DummyServiceDials
 		err = json.Unmarshal(*dial.Configuration, &dialDetails)
 		if err != nil {

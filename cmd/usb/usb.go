@@ -79,10 +79,8 @@ func (usb *UsbApp) Run(configProvider config.ConfigProvider) {
 
 	usb.logger = logger
 
-	drivers := usb.getDrivers(configProvider)
-
 	logger.Info("run", lager.Data{"action": "starting drivers"})
-	usbService := lib.NewUsbBroker(drivers, usb.config, logger)
+	usbService := lib.NewUsbBroker(configProvider, logger)
 	brokerAPI := brokerapi.New(usbService, logger, usb.config.BrokerAPI.Credentials)
 
 	addr := usb.config.BrokerAPI.Listen
@@ -116,7 +114,7 @@ func (usb *UsbApp) Run(configProvider config.ConfigProvider) {
 			if err != nil {
 				logger.Error("error-start-mgmt-api", err)
 			}
-			tokenGenerator := uaaapi.NewTokenGenerator(tokenUrl, usb.config.ManagementAPI.UaaClient, usb.config.ManagementAPI.UaaSecret, client)
+			tokenGenerator := uaaapi.NewTokenGenerator(tokenUrl, usb.config.ManagementAPI.UaaClient, usb.config.ManagementAPI.UaaSecret, client, logger)
 
 			ccServiceBroker := ccapi.NewServiceBroker(client, tokenGenerator, usb.config.ManagementAPI.CloudController.Api, logger)
 
@@ -132,28 +130,5 @@ func (usb *UsbApp) Run(configProvider config.ConfigProvider) {
 	if err != nil {
 		logger.Fatal("error-listening", err)
 	}
-
-}
-
-func (usb *UsbApp) getDrivers(configProvider config.ConfigProvider) []*lib.DriverProvider {
-	var drivers []*lib.DriverProvider
-	for _, driver := range usb.config.Drivers {
-		for _, driverInstance := range driver.DriverInstances {
-			usb.logger.Info("start-driver ", lager.Data{"driver-type": driver.DriverType,
-				"driver-instance": driverInstance.Name})
-			instanceConfig, err := configProvider.GetDriverInstanceConfig(driverInstance.ID)
-			if err != nil {
-				logger.Error("failed-to-load-driver-config", err, lager.Data{"DriverInstance": driverInstance.ID})
-			}
-			driver := lib.NewDriverProvider(driver.DriverType, instanceConfig, usb.logger)
-			err = driver.Validate()
-			if err != nil {
-				logger.Error("failed-to-validate-driver", err, lager.Data{"DriverInstance": driverInstance.ID})
-			}
-			drivers = append(drivers, driver)
-		}
-	}
-
-	return drivers
 
 }

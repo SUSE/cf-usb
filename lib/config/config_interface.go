@@ -65,7 +65,7 @@ type Config struct {
 
 type ConfigProvider interface {
 	LoadConfiguration() (*Config, error)
-	GetDriverInstanceConfig(driverInstanceID string) (*DriverInstance, error)
+	LoadDriverInstance(driverInstanceID string) (*DriverInstance, error)
 	GetUaaAuthConfig() (*UaaAuth, error)
 	SetDriver(Driver) error
 	GetDriver(string) (Driver, error)

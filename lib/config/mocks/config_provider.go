@@ -30,7 +30,7 @@ func (_m *ConfigProvider) LoadConfiguration() (*config.Config, error) {
 
 	return r0, r1
 }
-func (_m *ConfigProvider) GetDriverInstanceConfig(driverInstanceID string) (*config.DriverInstance, error) {
+func (_m *ConfigProvider) LoadDriverInstance(driverInstanceID string) (*config.DriverInstance, error) {
 	ret := _m.Called(driverInstanceID)
 
 	var r0 *config.DriverInstance

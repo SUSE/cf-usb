@@ -2,7 +2,6 @@ package ccapi
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strings"
 
@@ -54,6 +53,8 @@ func NewServiceBroker(client httpclient.HttpClient, token uaaapi.GetTokenInterfa
 }
 
 func (sb *ServiceBroker) Create(name, url, username, password string) error {
+
+	sb.logger.Info("create-broker", lager.Data{"starting-create": name})
 	path := "/v2/service_brokers"
 	body := &BrokerValues{Name: name, BrokerUrl: url, AuthUsername: username, AuthPassword: password}
 
@@ -62,7 +63,7 @@ func (sb *ServiceBroker) Create(name, url, username, password string) error {
 		return err
 	}
 
-	sb.logger.Debug("create-service-broker", lager.Data{"service broker name": name, "content": string(values)})
+	sb.logger.Debug("create-service-broker", lager.Data{"service-broker-name": name, "content": string(values)})
 
 	token, err := sb.tokenGenerator.GetToken()
 	if err != nil {
@@ -72,6 +73,7 @@ func (sb *ServiceBroker) Create(name, url, username, password string) error {
 	headers := make(map[string]string)
 	headers["Authorization"] = token
 
+	sb.logger.Info("create-broker", lager.Data{"create-api": sb.ccApi, "path": path, "values": string(values), "headers": headers})
 	request := httpclient.Request{Verb: "POST", Endpoint: sb.ccApi, ApiUrl: path, Body: strings.NewReader(string(values)), Headers: headers, StatusCode: 201}
 
 	_, err = sb.client.Request(request)
@@ -83,6 +85,8 @@ func (sb *ServiceBroker) Create(name, url, username, password string) error {
 }
 
 func (sb *ServiceBroker) Update(serviceBrokerGuid, name, url, username, password string) error {
+	sb.logger.Info("update-broker", lager.Data{"starting-update": name})
+
 	token, err := sb.tokenGenerator.GetToken()
 	if err != nil {
 		return err
@@ -112,6 +116,8 @@ func (sb *ServiceBroker) Update(serviceBrokerGuid, name, url, username, password
 }
 
 func (sb *ServiceBroker) EnableServiceAccess(serviceId string) error {
+	sb.logger.Info("broker-enableservice-access", lager.Data{"serviceID": serviceId})
+
 	sp := NewServicePlan(sb.client, sb.tokenGenerator, sb.ccApi, sb.logger)
 
 	err := sp.Update(serviceId)
@@ -122,6 +128,7 @@ func (sb *ServiceBroker) EnableServiceAccess(serviceId string) error {
 }
 
 func (sb *ServiceBroker) GetServiceBrokerGuidByName(name string) (string, error) {
+	sb.logger.Info("get-service-broker-guid-by-name", lager.Data{"name": name})
 	token, err := sb.tokenGenerator.GetToken()
 	if err != nil {
 		return "", err
@@ -134,12 +141,15 @@ func (sb *ServiceBroker) GetServiceBrokerGuidByName(name string) (string, error)
 	headers["Content-Type"] = "application/x-www-form-urlencoded; charset=UTF-8"
 	headers["Accept"] = "application/json; charset=utf-8"
 
+	sb.logger.Info("get-service-broker-guid-by-name", lager.Data{"api": sb.ccApi, "path": path, "headers": headers})
+
 	findRequest := httpclient.Request{Verb: "GET", Endpoint: sb.ccApi, ApiUrl: path, Headers: headers, StatusCode: 200}
 
 	response, err := sb.client.Request(findRequest)
 	if err != nil {
 		return "", err
 	}
+	sb.logger.Info("get-service-broker-guid-by-name", lager.Data{"response": string(response)})
 
 	resources := &BrokerResources{}
 	err = json.Unmarshal(response, resources)
@@ -148,12 +158,13 @@ func (sb *ServiceBroker) GetServiceBrokerGuidByName(name string) (string, error)
 	}
 
 	if len(resources.Resources) == 0 {
-		return "", errors.New(fmt.Sprintf("Service broker %s not found", name))
+		return "", nil
 	}
+	sb.logger.Info("get-service-broker-guid-by-name", lager.Data{"resources": resources})
 
 	guid := resources.Resources[0].Values.Guid
 
-	sb.logger.Debug("get-service-broker", lager.Data{"service broker guid": guid})
+	sb.logger.Debug("get-service-broker-guid-by-name", lager.Data{"service broker guid": guid})
 
 	return guid, nil
 }

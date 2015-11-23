@@ -40,7 +40,7 @@ func (c *fileConfig) LoadConfiguration() (*Config, error) {
 	return config, nil
 }
 
-func (c *fileConfig) GetDriverInstanceConfig(instanceID string) (*DriverInstance, error) {
+func (c *fileConfig) LoadDriverInstance(instanceID string) (*DriverInstance, error) {
 
 	var instance DriverInstance
 	exists := false

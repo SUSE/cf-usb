@@ -12,24 +12,31 @@ import (
 var usbBroker UsbBroker
 
 type UsbBroker struct {
-	driverProverders []*DriverProvider
-	brokerConfig     *config.Config
-	logger           lager.Logger
+	configProvider config.ConfigProvider
+	logger         lager.Logger
 }
 
-func NewUsbBroker(drivers []*DriverProvider, config *config.Config, logger lager.Logger) *UsbBroker {
-	return &UsbBroker{driverProverders: drivers, brokerConfig: config, logger: logger}
+func NewUsbBroker(configProvider config.ConfigProvider, logger lager.Logger) *UsbBroker {
+	return &UsbBroker{configProvider: configProvider, logger: logger}
 }
 
 func (broker *UsbBroker) Services() []brokerapi.Service {
 	var catalog []brokerapi.Service
-	for _, driverProvider := range broker.driverProverders {
-		if driverProvider.Instance != nil {
-			service := driverProvider.Instance.Service
-			for _, dial := range driverProvider.Instance.Dials {
+	config, err := broker.configProvider.LoadConfiguration()
+	if err != nil {
+		broker.logger.Error("retrive-configuration", err)
+	}
+
+	broker.logger.Info("get-catalog", lager.Data{})
+
+	for _, driver := range config.Drivers {
+		for _, instance := range driver.DriverInstances {
+			service := instance.Service
+			for _, dial := range instance.Dials {
 				service.Plans = append(service.Plans, dial.Plan)
 			}
 			catalog = append(catalog, service)
+
 		}
 	}
 	return catalog
@@ -38,7 +45,11 @@ func (broker *UsbBroker) Services() []brokerapi.Service {
 func (broker *UsbBroker) Provision(instanceID string, serviceDetails brokerapi.ProvisionDetails) error {
 	broker.logger.Info("provision", lager.Data{"instanceID": instanceID})
 
-	driver := broker.getDriver(serviceDetails.ID)
+	driver, err := broker.getDriver(serviceDetails.ID)
+	if err != nil {
+		return err
+	}
+
 	if driver == nil {
 		return errors.New(fmt.Sprintf("Cannot find driver for %s", serviceDetails.ID))
 	}
@@ -62,7 +73,10 @@ func (broker *UsbBroker) Provision(instanceID string, serviceDetails brokerapi.P
 }
 
 func (broker *UsbBroker) Deprovision(instanceID string, deprovisionDetails brokerapi.DeprovisionDetails) error {
-	driver := broker.getDriver(deprovisionDetails.ServiceID)
+	driver, err := broker.getDriver(deprovisionDetails.ServiceID)
+	if err != nil {
+		return err
+	}
 	if driver == nil {
 		return errors.New(fmt.Sprintf("Cannot find driver for %s", deprovisionDetails.ServiceID))
 	}
@@ -85,7 +99,10 @@ func (broker *UsbBroker) Deprovision(instanceID string, deprovisionDetails broke
 func (broker *UsbBroker) Bind(instanceID, bindingID string, details brokerapi.BindDetails) (interface{}, error) {
 	var response interface{}
 
-	driver := broker.getDriver(details.ServiceID)
+	driver, err := broker.getDriver(details.ServiceID)
+	if err != nil {
+		return response, err
+	}
 
 	credentials, err := driver.GetCredentials(instanceID, bindingID)
 	if err != nil {
@@ -104,7 +121,10 @@ func (broker *UsbBroker) Bind(instanceID, bindingID string, details brokerapi.Bi
 }
 
 func (broker *UsbBroker) Unbind(instanceID, bindingID string, details brokerapi.UnbindDetails) error {
-	driver := broker.getDriver(details.ServiceID)
+	driver, err := broker.getDriver(details.ServiceID)
+	if err != nil {
+		return err
+	}
 
 	credentials, err := driver.GetCredentials(instanceID, bindingID)
 	if err != nil {
@@ -124,12 +144,21 @@ func (broker *UsbBroker) Unbind(instanceID, bindingID string, details brokerapi.
 
 }
 
-func (broker *UsbBroker) getDriver(serviceID string) *DriverProvider {
+func (broker *UsbBroker) getDriver(serviceID string) (*DriverProvider, error) {
+	config, err := broker.configProvider.LoadConfiguration()
+	if err != nil {
+		return nil, err
+	}
 
-	for _, driverProvider := range broker.driverProverders {
-		if driverProvider.Instance.Service.ID == serviceID {
-			return driverProvider
+	for _, driver := range config.Drivers {
+		for _, driverInstance := range driver.DriverInstances {
+			if driverInstance.Service.ID == serviceID {
+				driverProvider := NewDriverProvider(driver.DriverType,
+					broker.configProvider, driverInstance.ID, broker.logger)
+				return driverProvider, nil
+			}
 		}
 	}
-	return nil
+
+	return nil, nil
 }
