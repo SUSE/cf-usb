@@ -325,7 +325,7 @@ func (c *consulConfig) DeleteDial(instanceID string, dialID string) error {
 	return c.provisioner.DeleteKV(key+"/dials/"+dialID, nil)
 }
 
-func (c *consulConfig) GetDriverInstanceConfig(instanceID string) (*DriverInstance, error) {
+func (c *consulConfig) LoadDriverInstance(instanceID string) (*DriverInstance, error) {
 
 	driverInstance, err := c.GetDriverInstance(instanceID)
 	service, err := c.GetService(instanceID)

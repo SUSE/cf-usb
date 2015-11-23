@@ -13,24 +13,29 @@ var usbBroker UsbBroker
 
 type UsbBroker struct {
 	driverProverders []*DriverProvider
-	brokerConfig     *config.Config
+	configProvider   config.ConfigProvider
 	logger           lager.Logger
 }
 
-func NewUsbBroker(drivers []*DriverProvider, config *config.Config, logger lager.Logger) *UsbBroker {
-	return &UsbBroker{driverProverders: drivers, brokerConfig: config, logger: logger}
+func NewUsbBroker(drivers []*DriverProvider, configProvider config.ConfigProvider, logger lager.Logger) *UsbBroker {
+	return &UsbBroker{driverProverders: drivers, configProvider: configProvider, logger: logger}
 }
 
 func (broker *UsbBroker) Services() []brokerapi.Service {
 	var catalog []brokerapi.Service
+
 	for _, driverProvider := range broker.driverProverders {
-		if driverProvider.Instance != nil {
-			service := driverProvider.Instance.Service
-			for _, dial := range driverProvider.Instance.Dials {
-				service.Plans = append(service.Plans, dial.Plan)
-			}
-			catalog = append(catalog, service)
+		driverInstance, err := broker.configProvider.LoadDriverInstance(driverProvider.driverInstanceID)
+		if err != nil {
+			broker.logger.Error("get-services", err, lager.Data{"driverInstanceID": driverProvider.driverInstanceID})
+			continue
 		}
+		service := driverInstance.Service
+		for _, dial := range driverInstance.Dials {
+			service.Plans = append(service.Plans, dial.Plan)
+		}
+		catalog = append(catalog, service)
+
 	}
 	return catalog
 }
@@ -38,7 +43,11 @@ func (broker *UsbBroker) Services() []brokerapi.Service {
 func (broker *UsbBroker) Provision(instanceID string, serviceDetails brokerapi.ProvisionDetails) error {
 	broker.logger.Info("provision", lager.Data{"instanceID": instanceID})
 
-	driver := broker.getDriver(serviceDetails.ID)
+	driver, err := broker.getDriver(serviceDetails.ID)
+	if err != nil {
+		return err
+	}
+
 	if driver == nil {
 		return errors.New(fmt.Sprintf("Cannot find driver for %s", serviceDetails.ID))
 	}
@@ -62,7 +71,10 @@ func (broker *UsbBroker) Provision(instanceID string, serviceDetails brokerapi.P
 }
 
 func (broker *UsbBroker) Deprovision(instanceID string, deprovisionDetails brokerapi.DeprovisionDetails) error {
-	driver := broker.getDriver(deprovisionDetails.ServiceID)
+	driver, err := broker.getDriver(deprovisionDetails.ServiceID)
+	if err != nil {
+		return err
+	}
 	if driver == nil {
 		return errors.New(fmt.Sprintf("Cannot find driver for %s", deprovisionDetails.ServiceID))
 	}
@@ -85,7 +97,10 @@ func (broker *UsbBroker) Deprovision(instanceID string, deprovisionDetails broke
 func (broker *UsbBroker) Bind(instanceID, bindingID string, details brokerapi.BindDetails) (interface{}, error) {
 	var response interface{}
 
-	driver := broker.getDriver(details.ServiceID)
+	driver, err := broker.getDriver(details.ServiceID)
+	if err != nil {
+		return response, err
+	}
 
 	credentials, err := driver.GetCredentials(instanceID, bindingID)
 	if err != nil {
@@ -104,7 +119,10 @@ func (broker *UsbBroker) Bind(instanceID, bindingID string, details brokerapi.Bi
 }
 
 func (broker *UsbBroker) Unbind(instanceID, bindingID string, details brokerapi.UnbindDetails) error {
-	driver := broker.getDriver(details.ServiceID)
+	driver, err := broker.getDriver(details.ServiceID)
+	if err != nil {
+		return err
+	}
 
 	credentials, err := driver.GetCredentials(instanceID, bindingID)
 	if err != nil {
@@ -124,12 +142,15 @@ func (broker *UsbBroker) Unbind(instanceID, bindingID string, details brokerapi.
 
 }
 
-func (broker *UsbBroker) getDriver(serviceID string) *DriverProvider {
-
+func (broker *UsbBroker) getDriver(serviceID string) (*DriverProvider, error) {
 	for _, driverProvider := range broker.driverProverders {
-		if driverProvider.Instance.Service.ID == serviceID {
-			return driverProvider
+		service, err := broker.configProvider.GetService(driverProvider.driverInstanceID)
+		if err != nil {
+			return nil, err
+		}
+		if service.ID == serviceID {
+			return driverProvider, nil
 		}
 	}
-	return nil
+	return nil, nil
 }

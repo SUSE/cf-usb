@@ -445,8 +445,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		instance.Configuration = &configuration
 		instance.Name = params.DriverInstance.Name
 
-		driverProvider := lib.NewDriverProvider(existingDriver.DriverType, &instance, logger)
-		err = driverProvider.Validate()
+		err = lib.Validate(instance, existingDriver.DriverType, logger)
 		if err != nil {
 			return nil, err
 		}
@@ -461,6 +460,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		defaultDial.ID = uuid.NewV4().String()
 
 		var plan brokerapi.ServicePlan
+		plan.ID = uuid.NewV4().String()
 		plan.Description = "default plan"
 		plan.Name = params.DriverInstance.Name + "_default"
 
@@ -493,26 +493,32 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		}
 
 		params.DriverInstance.Service = service.ID
-
 		config, err := configProvider.LoadConfiguration()
 		if err != nil {
 			return nil, err
 		}
 
+		logger.Info("create-instance", lager.Data{"get-broker": brokerName})
 		guid, err := ccServiceBroker.GetServiceBrokerGuidByName(brokerName)
+
+		logger.Info("create-instance", lager.Data{"broker-guid": guid})
 		if err != nil {
 			return nil, err
 		}
 
 		if guid == "" {
+
+			logger.Info("create-instance", lager.Data{"service-broker-create": service.Name})
 			err = ccServiceBroker.Create(brokerName, config.BrokerAPI.ExternalUrl, config.BrokerAPI.Credentials.Username, config.BrokerAPI.Credentials.Password)
 		} else {
+
+			logger.Info("create-instance", lager.Data{"service-broker-update": service.Name})
 			err = ccServiceBroker.Update(guid, brokerName, config.BrokerAPI.ExternalUrl, config.BrokerAPI.Credentials.Username, config.BrokerAPI.Credentials.Password)
 		}
 		if err != nil {
 			return nil, err
 		}
-
+		logger.Info("create-instance", lager.Data{"enable-access": service.Name})
 		err = ccServiceBroker.EnableServiceAccess(service.Name)
 		if err != nil {
 			return nil, err

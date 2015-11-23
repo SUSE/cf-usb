@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/rpc"
@@ -20,49 +21,151 @@ type DriverProvider struct {
 	driverType string
 	driverPath string
 
-	logger   lager.Logger
-	Instance *config.DriverInstance
+	logger           lager.Logger
+	ConfigProvider   config.ConfigProvider
+	driverInstanceID string
 }
 
-func NewDriverProvider(driverType string, instance *config.DriverInstance, logger lager.Logger) *DriverProvider {
+func NewDriverProvider(driverType string, configProvider config.ConfigProvider,
+	driverInstanceID string, logger lager.Logger) *DriverProvider {
 	p := DriverProvider{}
 
-	p.Instance = instance
+	p.ConfigProvider = configProvider
+	p.driverInstanceID = driverInstanceID
 	p.driverType = driverType
 	p.logger = logger
 
-	driverPath := os.Getenv("USB_DRIVER_PATH")
-	if driverPath == "" {
-		driverPath = "drivers"
-	}
-
-	driverPath = filepath.Join(driverPath, driverType)
-	if runtime.GOOS == "windows" {
-		driverPath = driverPath + ".exe"
-	}
-	p.driverPath = driverPath
+	p.driverPath = getDriverPath(p.driverType)
 
 	return &p
 }
 
-func (p *DriverProvider) Validate() error {
-	client, err := p.createProviderClient()
+func (p *DriverProvider) ProvisionInstance(instanceID, planID string) (driver.Instance, error) {
+	var result driver.Instance
+	driverInstance, err := p.ConfigProvider.LoadDriverInstance(p.driverInstanceID)
+	if err != nil {
+		return result, err
+	}
+
+	provisonRequest := driver.ProvisionInstanceRequest{}
+	provisonRequest.Config = driverInstance.Configuration
+	provisonRequest.InstanceID = instanceID
+	for _, d := range driverInstance.Dials {
+		if d.Plan.ID == planID {
+			provisonRequest.Dials = d.Configuration
+			break
+		}
+	}
+
+	err = createClientAndCall(fmt.Sprintf("%s.ProvisionInstance", p.driverType), p.driverPath,
+		provisonRequest, &result)
+	return result, err
+}
+
+func (p *DriverProvider) GetInstance(instanceID string) (driver.Instance, error) {
+	var result driver.Instance
+
+	driverInstance, err := p.ConfigProvider.GetDriverInstance(p.driverInstanceID)
+	if err != nil {
+		return result, err
+	}
+
+	instanceRequest := driver.GetInstanceRequest{}
+	instanceRequest.Config = driverInstance.Configuration
+	instanceRequest.InstanceID = instanceID
+
+	err = createClientAndCall(fmt.Sprintf("%s.GetInstance", p.driverType),
+		p.driverPath, instanceRequest, &result)
+	return result, err
+}
+
+func (p *DriverProvider) GenerateCredentials(instanceID, credentialsID string) (interface{}, error) {
+	var result interface{}
+
+	driverInstance, err := p.ConfigProvider.GetDriverInstance(p.driverInstanceID)
+	if err != nil {
+		return result, err
+	}
+
+	credentialsRequest := driver.GenerateCredentialsRequest{}
+	credentialsRequest.Config = driverInstance.Configuration
+	credentialsRequest.CredentialsID = credentialsID
+	credentialsRequest.InstanceID = instanceID
+
+	err = createClientAndCall(fmt.Sprintf("%s.GenerateCredentials", p.driverType),
+		p.driverPath, credentialsRequest, &result)
+	return result, err
+}
+
+func (p *DriverProvider) GetCredentials(instanceID, credentialsID string) (driver.Credentials, error) {
+	var result driver.Credentials
+
+	driverInstance, err := p.ConfigProvider.GetDriverInstance(p.driverInstanceID)
+	if err != nil {
+		return result, err
+	}
+
+	credentialsRequest := driver.GetCredentialsRequest{}
+	credentialsRequest.Config = driverInstance.Configuration
+	credentialsRequest.CredentialsID = credentialsID
+	credentialsRequest.InstanceID = instanceID
+
+	err = createClientAndCall(fmt.Sprintf("%s.GetCredentials", p.driverType),
+		p.driverPath, credentialsRequest, &result)
+	return result, err
+}
+
+func (p *DriverProvider) RevokeCredentials(instanceID, credentialsID string) (driver.Credentials, error) {
+	var result driver.Credentials
+
+	driverInstance, err := p.ConfigProvider.GetDriverInstance(p.driverInstanceID)
+	if err != nil {
+		return result, err
+	}
+
+	credentialsRequest := driver.RevokeCredentialsRequest{}
+	credentialsRequest.Config = driverInstance.Configuration
+	credentialsRequest.CredentialsID = credentialsID
+	credentialsRequest.InstanceID = instanceID
+	err = createClientAndCall(fmt.Sprintf("%s.RevokeCredentials", p.driverType),
+		p.driverPath, credentialsRequest, &result)
+	return result, err
+}
+
+func (p *DriverProvider) DeprovisionInstance(instanceID string) (driver.Instance, error) {
+	var result driver.Instance
+
+	driverInstance, err := p.ConfigProvider.GetDriverInstance(p.driverInstanceID)
+	if err != nil {
+		return result, err
+	}
+
+	deprovisionRequest := driver.DeprovisionInstanceRequest{}
+	deprovisionRequest.Config = driverInstance.Configuration
+	deprovisionRequest.InstanceID = instanceID
+	err = createClientAndCall(fmt.Sprintf("%s.DeprovisionInstance", p.driverType),
+		p.driverPath, deprovisionRequest, &result)
+	return result, err
+}
+
+func Validate(driverInstance config.DriverInstance, driverType string, logger lager.Logger) error {
+	client, err := createProviderClient(getDriverPath(driverType))
 	if err != nil {
 		return err
 	}
 	defer client.Close()
 
-	err = p.validateConfigSchema(client)
+	err = validateConfigSchema(client, driverType, driverInstance.Configuration, logger)
 	if err != nil {
 		return err
 	}
 
-	err = p.validateDialsSchema(client)
+	err = validateDialsSchema(client, driverType, driverInstance, logger)
 	if err != nil {
 		return err
 	}
 
-	pong, err := p.Ping()
+	pong, err := ping(driverInstance.Configuration, driverType)
 	if err != nil {
 		return err
 	}
@@ -75,101 +178,28 @@ func (p *DriverProvider) Validate() error {
 	return nil
 }
 
-func (p *DriverProvider) Ping() (bool, error) {
+func ping(configuration *json.RawMessage, driverType string) (bool, error) {
 	result := false
-	err := p.createClientAndCall(fmt.Sprintf("%s.Ping", p.driverType), p.Instance.Configuration, &result)
+	driverPath := getDriverPath(driverType)
+
+	err := createClientAndCall(fmt.Sprintf("%s.Ping", driverType), driverPath, configuration, &result)
 	return result, err
 }
 
-func (p *DriverProvider) GetDailsSchema() (string, error) {
-	return p.createClientAndInvoke(p.getDailsSchema)
-}
-
-func (p *DriverProvider) GetConfigSchema() (string, error) {
-	return p.createClientAndInvoke(p.getConfigSchema)
-}
-
-func (p *DriverProvider) ProvisionInstance(instanceID, planID string) (driver.Instance, error) {
-	var result driver.Instance
-	provisonRequest := driver.ProvisionInstanceRequest{}
-	provisonRequest.Config = p.Instance.Configuration
-	provisonRequest.InstanceID = instanceID
-	for _, d := range p.Instance.Dials {
-		if d.Plan.ID == planID {
-			provisonRequest.Dials = d.Configuration
-			break
-		}
-	}
-
-	err := p.createClientAndCall(fmt.Sprintf("%s.ProvisionInstance", p.driverType), provisonRequest, &result)
-	return result, err
-}
-
-func (p *DriverProvider) GetInstance(instanceID string) (driver.Instance, error) {
-	var result driver.Instance
-	instanceRequest := driver.GetInstanceRequest{}
-	instanceRequest.Config = p.Instance.Configuration
-	instanceRequest.InstanceID = instanceID
-
-	err := p.createClientAndCall(fmt.Sprintf("%s.GetInstance", p.driverType), instanceRequest, &result)
-	return result, err
-}
-
-func (p *DriverProvider) GenerateCredentials(instanceID, credentialsID string) (interface{}, error) {
-	var result interface{}
-	credentialsRequest := driver.GenerateCredentialsRequest{}
-	credentialsRequest.Config = p.Instance.Configuration
-	credentialsRequest.CredentialsID = credentialsID
-	credentialsRequest.InstanceID = instanceID
-
-	err := p.createClientAndCall(fmt.Sprintf("%s.GenerateCredentials", p.driverType), credentialsRequest, &result)
-	return result, err
-}
-
-func (p *DriverProvider) GetCredentials(instanceID, credentialsID string) (driver.Credentials, error) {
-	var result driver.Credentials
-	credentialsRequest := driver.GetCredentialsRequest{}
-	credentialsRequest.Config = p.Instance.Configuration
-	credentialsRequest.CredentialsID = credentialsID
-	credentialsRequest.InstanceID = instanceID
-
-	err := p.createClientAndCall(fmt.Sprintf("%s.GetCredentials", p.driverType), credentialsRequest, &result)
-	return result, err
-}
-
-func (p *DriverProvider) RevokeCredentials(instanceID, credentialsID string) (driver.Credentials, error) {
-	var result driver.Credentials
-	credentialsRequest := driver.RevokeCredentialsRequest{}
-	credentialsRequest.Config = p.Instance.Configuration
-	credentialsRequest.CredentialsID = credentialsID
-	credentialsRequest.InstanceID = instanceID
-	err := p.createClientAndCall(fmt.Sprintf("%s.RevokeCredentials", p.driverType), credentialsRequest, &result)
-	return result, err
-}
-
-func (p *DriverProvider) DeprovisionInstance(instanceID string) (driver.Instance, error) {
-	var result driver.Instance
-	deprovisionRequest := driver.DeprovisionInstanceRequest{}
-	deprovisionRequest.Config = p.Instance.Configuration
-	deprovisionRequest.InstanceID = instanceID
-	err := p.createClientAndCall(fmt.Sprintf("%s.DeprovisionInstance", p.driverType), deprovisionRequest, &result)
-	return result, err
-}
-
-func (p *DriverProvider) createProviderClient() (*rpc.Client, error) {
-	client, err := pie.StartProviderCodec(jsonrpc.NewClientCodec, os.Stderr, p.driverPath)
+func createProviderClient(driverPath string) (*rpc.Client, error) {
+	client, err := pie.StartProviderCodec(jsonrpc.NewClientCodec, os.Stderr, driverPath)
 	return client, err
 }
 
-func (p *DriverProvider) validateDialsSchema(client *rpc.Client) error {
-	dialSchema, err := p.getDailsSchema(client)
-
+func validateDialsSchema(client *rpc.Client, driverType string, driverInstance config.DriverInstance,
+	logger lager.Logger) error {
+	dialSchema, err := getDailsSchema(client, driverType)
 	if err != nil {
 		return err
 	}
 
 	dialsSchemaLoader := gojsonschema.NewStringLoader(dialSchema)
-	for _, dial := range p.Instance.Dials {
+	for _, dial := range driverInstance.Dials {
 		dialLoader := gojsonschema.NewGoLoader(dial.Configuration)
 		result, err := gojsonschema.Validate(dialsSchemaLoader, dialLoader)
 		if err != nil {
@@ -182,7 +212,7 @@ func (p *DriverProvider) validateDialsSchema(client *rpc.Client) error {
 			for _, e := range result.Errors() {
 				errData[e.Field()] = e.Description()
 			}
-			p.logger.Error("driver-init", err, errData)
+			logger.Error("driver-init", err, errData)
 			return err
 		}
 	}
@@ -190,14 +220,15 @@ func (p *DriverProvider) validateDialsSchema(client *rpc.Client) error {
 	return nil
 }
 
-func (p *DriverProvider) validateConfigSchema(client *rpc.Client) error {
-	configSchema, err := p.getConfigSchema(client)
+func validateConfigSchema(client *rpc.Client, driverType string, configuration *json.RawMessage,
+	logger lager.Logger) error {
+	configSchema, err := getConfigSchema(client, driverType)
 	if err != nil {
 		return err
 	}
 
 	schemaLoader := gojsonschema.NewStringLoader(configSchema)
-	configLoader := gojsonschema.NewGoLoader(p.Instance.Configuration)
+	configLoader := gojsonschema.NewGoLoader(configuration)
 
 	result, err := gojsonschema.Validate(schemaLoader, configLoader)
 	if err != nil {
@@ -211,15 +242,15 @@ func (p *DriverProvider) validateConfigSchema(client *rpc.Client) error {
 		for _, e := range result.Errors() {
 			errData[e.Field()] = e.Description()
 		}
-		p.logger.Error("driver-init", err, errData)
+		logger.Error("driver-init", err, errData)
 		return err
 	}
 
 	return nil
 }
 
-func (p *DriverProvider) createClientAndCall(serviceMethod string, args interface{}, reply interface{}) error {
-	client, err := p.createProviderClient()
+func createClientAndCall(serviceMethod string, driverPath string, args interface{}, reply interface{}) error {
+	client, err := createProviderClient(driverPath)
 	if err != nil {
 		return err
 	}
@@ -228,8 +259,8 @@ func (p *DriverProvider) createClientAndCall(serviceMethod string, args interfac
 	return client.Call(serviceMethod, args, reply)
 }
 
-func (p *DriverProvider) createClientAndInvoke(call func(*rpc.Client) (string, error)) (string, error) {
-	client, err := p.createProviderClient()
+func createClientAndInvoke(call func(*rpc.Client) (string, error), driverPath string) (string, error) {
+	client, err := createProviderClient(driverPath)
 	if err != nil {
 		return "", err
 	}
@@ -238,14 +269,27 @@ func (p *DriverProvider) createClientAndInvoke(call func(*rpc.Client) (string, e
 	return call(client)
 }
 
-func (p *DriverProvider) getDailsSchema(client *rpc.Client) (string, error) {
+func getDailsSchema(client *rpc.Client, driverType string) (string, error) {
 	var result string
-	err := client.Call(fmt.Sprintf("%s.GetDailsSchema", p.driverType), "", &result)
+	err := client.Call(fmt.Sprintf("%s.GetDailsSchema", driverType), "", &result)
 	return result, err
 }
 
-func (p *DriverProvider) getConfigSchema(client *rpc.Client) (string, error) {
+func getConfigSchema(client *rpc.Client, driverType string) (string, error) {
 	var result string
-	err := client.Call(fmt.Sprintf("%s.GetConfigSchema", p.driverType), "", &result)
+	err := client.Call(fmt.Sprintf("%s.GetConfigSchema", driverType), "", &result)
 	return result, err
+}
+
+func getDriverPath(driverType string) string {
+	driverPath := os.Getenv("USB_DRIVER_PATH")
+	if driverPath == "" {
+		driverPath = "drivers"
+	}
+
+	driverPath = filepath.Join(driverPath, driverType)
+	if runtime.GOOS == "windows" {
+		driverPath = driverPath + ".exe"
+	}
+	return driverPath
 }

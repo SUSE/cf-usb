@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/hpcloud/cf-usb/lib/mgmt/cc_integration/mocks"
+	"github.com/pivotal-golang/lager/lagertest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -12,10 +13,12 @@ func TestGetToken(t *testing.T) {
 	assert := assert.New(t)
 	tokenValue := "atoken"
 
+	var infoLogger *lagertest.TestLogger = lagertest.NewTestLogger("cc-api")
+
 	client := new(mocks.HttpClient)
 	client.Mock.On("Request", mock.Anything).Return([]byte(`{"access_token":"atoken","expires_in":10000}`), nil)
 
-	tokenGenerator := NewTokenGenerator("http://api.1.2.3.4.io", "clientId", "clientSecret", client)
+	tokenGenerator := NewTokenGenerator("http://api.1.2.3.4.io", "clientId", "clientSecret", client, infoLogger)
 
 	token, err := tokenGenerator.GetToken()
 	if err != nil {
@@ -28,11 +31,12 @@ func TestGetToken(t *testing.T) {
 
 func TestGetWrongToken(t *testing.T) {
 	assert := assert.New(t)
+	var infoLogger *lagertest.TestLogger = lagertest.NewTestLogger("cc-api")
 
 	client := new(mocks.HttpClient)
 	client.Mock.On("Request", mock.Anything).Return([]byte(`{"access_token":"atoken","expires_in":""}`), nil)
 
-	tokenGenerator := NewTokenGenerator("http://api.1.2.3.4.io", "clientId", "clientSecret", client)
+	tokenGenerator := NewTokenGenerator("http://api.1.2.3.4.io", "clientId", "clientSecret", client, infoLogger)
 
 	token, err := tokenGenerator.GetToken()
 

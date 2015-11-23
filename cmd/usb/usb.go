@@ -82,7 +82,7 @@ func (usb *UsbApp) Run(configProvider config.ConfigProvider) {
 	drivers := usb.getDrivers(configProvider)
 
 	logger.Info("run", lager.Data{"action": "starting drivers"})
-	usbService := lib.NewUsbBroker(drivers, usb.config, logger)
+	usbService := lib.NewUsbBroker(drivers, configProvider, logger)
 	brokerAPI := brokerapi.New(usbService, logger, usb.config.BrokerAPI.Credentials)
 
 	addr := usb.config.BrokerAPI.Listen
@@ -116,7 +116,7 @@ func (usb *UsbApp) Run(configProvider config.ConfigProvider) {
 			if err != nil {
 				logger.Error("error-start-mgmt-api", err)
 			}
-			tokenGenerator := uaaapi.NewTokenGenerator(tokenUrl, usb.config.ManagementAPI.UaaClient, usb.config.ManagementAPI.UaaSecret, client)
+			tokenGenerator := uaaapi.NewTokenGenerator(tokenUrl, usb.config.ManagementAPI.UaaClient, usb.config.ManagementAPI.UaaSecret, client, logger)
 
 			ccServiceBroker := ccapi.NewServiceBroker(client, tokenGenerator, usb.config.ManagementAPI.CloudController.Api, logger)
 
@@ -141,15 +141,17 @@ func (usb *UsbApp) getDrivers(configProvider config.ConfigProvider) []*lib.Drive
 		for _, driverInstance := range driver.DriverInstances {
 			usb.logger.Info("start-driver ", lager.Data{"driver-type": driver.DriverType,
 				"driver-instance": driverInstance.Name})
-			instanceConfig, err := configProvider.GetDriverInstanceConfig(driverInstance.ID)
+			driverInstance, err := configProvider.LoadDriverInstance(driverInstance.ID)
 			if err != nil {
 				logger.Error("failed-to-load-driver-config", err, lager.Data{"DriverInstance": driverInstance.ID})
 			}
-			driver := lib.NewDriverProvider(driver.DriverType, instanceConfig, usb.logger)
-			err = driver.Validate()
+			err = lib.Validate(*driverInstance, driver.DriverType, logger)
 			if err != nil {
 				logger.Error("failed-to-validate-driver", err, lager.Data{"DriverInstance": driverInstance.ID})
+				continue
 			}
+			driver := lib.NewDriverProvider(driver.DriverType, configProvider, driverInstance.ID, usb.logger)
+
 			drivers = append(drivers, driver)
 		}
 	}
