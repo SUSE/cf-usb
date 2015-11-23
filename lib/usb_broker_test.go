@@ -29,15 +29,7 @@ func setupEnv() (*UsbBroker, error) {
 
 	configProvider := config.NewFileConfig(configFile)
 
-	driverInstance, err := configProvider.LoadDriverInstance("A0000000-0000-0000-0000-000000000002")
-	if err != nil {
-		return nil, err
-	}
-
-	driverProvider := NewDriverProvider("dummy", configProvider, driverInstance.ID, logger)
-
-	broker := NewUsbBroker([]*DriverProvider{driverProvider},
-		configProvider, lager.NewLogger("brokerTests"))
+	broker := NewUsbBroker(configProvider, lager.NewLogger("brokerTests"))
 	return broker, nil
 }
 

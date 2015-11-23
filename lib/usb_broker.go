@@ -12,30 +12,32 @@ import (
 var usbBroker UsbBroker
 
 type UsbBroker struct {
-	driverProverders []*DriverProvider
-	configProvider   config.ConfigProvider
-	logger           lager.Logger
+	configProvider config.ConfigProvider
+	logger         lager.Logger
 }
 
-func NewUsbBroker(drivers []*DriverProvider, configProvider config.ConfigProvider, logger lager.Logger) *UsbBroker {
-	return &UsbBroker{driverProverders: drivers, configProvider: configProvider, logger: logger}
+func NewUsbBroker(configProvider config.ConfigProvider, logger lager.Logger) *UsbBroker {
+	return &UsbBroker{configProvider: configProvider, logger: logger}
 }
 
 func (broker *UsbBroker) Services() []brokerapi.Service {
 	var catalog []brokerapi.Service
+	config, err := broker.configProvider.LoadConfiguration()
+	if err != nil {
+		broker.logger.Error("retrive-configuration", err)
+	}
 
-	for _, driverProvider := range broker.driverProverders {
-		driverInstance, err := broker.configProvider.LoadDriverInstance(driverProvider.driverInstanceID)
-		if err != nil {
-			broker.logger.Error("get-services", err, lager.Data{"driverInstanceID": driverProvider.driverInstanceID})
-			continue
-		}
-		service := driverInstance.Service
-		for _, dial := range driverInstance.Dials {
-			service.Plans = append(service.Plans, dial.Plan)
-		}
-		catalog = append(catalog, service)
+	broker.logger.Info("get-catalog", lager.Data{})
 
+	for _, driver := range config.Drivers {
+		for _, instance := range driver.DriverInstances {
+			service := instance.Service
+			for _, dial := range instance.Dials {
+				service.Plans = append(service.Plans, dial.Plan)
+			}
+			catalog = append(catalog, service)
+
+		}
 	}
 	return catalog
 }
@@ -143,14 +145,20 @@ func (broker *UsbBroker) Unbind(instanceID, bindingID string, details brokerapi.
 }
 
 func (broker *UsbBroker) getDriver(serviceID string) (*DriverProvider, error) {
-	for _, driverProvider := range broker.driverProverders {
-		service, err := broker.configProvider.GetService(driverProvider.driverInstanceID)
-		if err != nil {
-			return nil, err
-		}
-		if service.ID == serviceID {
-			return driverProvider, nil
+	config, err := broker.configProvider.LoadConfiguration()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, driver := range config.Drivers {
+		for _, driverInstance := range driver.DriverInstances {
+			if driverInstance.Service.ID == serviceID {
+				driverProvider := NewDriverProvider(driver.DriverType,
+					broker.configProvider, driverInstance.ID, broker.logger)
+				return driverProvider, nil
+			}
 		}
 	}
+
 	return nil, nil
 }
