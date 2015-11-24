@@ -486,6 +486,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		service.Name = fmt.Sprintf("%s-%s", params.DriverInstance.Name, GetRandomString(5))
 		service.Description = "Default service"
 		service.Tags = []string{params.DriverInstance.Name}
+		service.Bindable = true
 
 		err = configProvider.SetService(instance.ID, service)
 		if err != nil {
