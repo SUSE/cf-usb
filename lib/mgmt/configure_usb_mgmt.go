@@ -80,7 +80,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 		defer params.File.Data.Close()
 
-		f, err := os.OpenFile(driverPath, os.O_WRONLY|os.O_CREATE, 0666)
+		f, err := os.OpenFile(driverPath, os.O_WRONLY|os.O_CREATE, 0755)
 		if err != nil {
 			return err
 		}

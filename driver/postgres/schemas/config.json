@@ -23,7 +23,7 @@
    "required":[  
       "server",
       "port",
-	  "userid",
+	  "user",
 	  "password"
    ]
 }
