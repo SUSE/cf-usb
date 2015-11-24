@@ -23,8 +23,8 @@ type GetDriverInstancesHandler interface {
 }
 
 // NewGetDriverInstances creates a new http.Handler for the get driver instances operation
-func NewGetDriverInstances(ctx *middleware.Context, handler GetDriverInstancesHandler) *GetDriverInstances {
-	return &GetDriverInstances{Context: ctx, Handler: handler}
+func NewGetDriverInstances(ctx *middleware.Context, handler GetDriverInstancesHandler) GetDriverInstances {
+	return GetDriverInstances{Context: ctx, Handler: handler}
 }
 
 /*
@@ -37,7 +37,7 @@ type GetDriverInstances struct {
 	Handler GetDriverInstancesHandler
 }
 
-func (o *GetDriverInstances) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (o GetDriverInstances) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
 
 	if err := o.Context.BindValidRequest(r, route, &o.Params); err != nil { // bind params

@@ -23,8 +23,8 @@ type GetInfoHandler interface {
 }
 
 // NewGetInfo creates a new http.Handler for the get info operation
-func NewGetInfo(ctx *middleware.Context, handler GetInfoHandler) *GetInfo {
-	return &GetInfo{Context: ctx, Handler: handler}
+func NewGetInfo(ctx *middleware.Context, handler GetInfoHandler) GetInfo {
+	return GetInfo{Context: ctx, Handler: handler}
 }
 
 /*
@@ -37,7 +37,7 @@ type GetInfo struct {
 	Handler GetInfoHandler
 }
 
-func (o *GetInfo) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (o GetInfo) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
 
 	if err := o.Context.BindValidRequest(r, route, &o.Params); err != nil { // bind params

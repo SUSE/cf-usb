@@ -22,8 +22,8 @@ type DeleteServicePlanHandler interface {
 }
 
 // NewDeleteServicePlan creates a new http.Handler for the delete service plan operation
-func NewDeleteServicePlan(ctx *middleware.Context, handler DeleteServicePlanHandler) *DeleteServicePlan {
-	return &DeleteServicePlan{Context: ctx, Handler: handler}
+func NewDeleteServicePlan(ctx *middleware.Context, handler DeleteServicePlanHandler) DeleteServicePlan {
+	return DeleteServicePlan{Context: ctx, Handler: handler}
 }
 
 /*
@@ -35,7 +35,7 @@ type DeleteServicePlan struct {
 	Handler DeleteServicePlanHandler
 }
 
-func (o *DeleteServicePlan) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (o DeleteServicePlan) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
 
 	if err := o.Context.BindValidRequest(r, route, &o.Params); err != nil { // bind params

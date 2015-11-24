@@ -23,8 +23,8 @@ type UpdateServicePlanHandler interface {
 }
 
 // NewUpdateServicePlan creates a new http.Handler for the update service plan operation
-func NewUpdateServicePlan(ctx *middleware.Context, handler UpdateServicePlanHandler) *UpdateServicePlan {
-	return &UpdateServicePlan{Context: ctx, Handler: handler}
+func NewUpdateServicePlan(ctx *middleware.Context, handler UpdateServicePlanHandler) UpdateServicePlan {
+	return UpdateServicePlan{Context: ctx, Handler: handler}
 }
 
 /*
@@ -36,7 +36,7 @@ type UpdateServicePlan struct {
 	Handler UpdateServicePlanHandler
 }
 
-func (o *UpdateServicePlan) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (o UpdateServicePlan) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
 
 	if err := o.Context.BindValidRequest(r, route, &o.Params); err != nil { // bind params

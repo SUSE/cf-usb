@@ -23,8 +23,8 @@ type UpdateBrokerInfoHandler interface {
 }
 
 // NewUpdateBrokerInfo creates a new http.Handler for the update broker info operation
-func NewUpdateBrokerInfo(ctx *middleware.Context, handler UpdateBrokerInfoHandler) *UpdateBrokerInfo {
-	return &UpdateBrokerInfo{Context: ctx, Handler: handler}
+func NewUpdateBrokerInfo(ctx *middleware.Context, handler UpdateBrokerInfoHandler) UpdateBrokerInfo {
+	return UpdateBrokerInfo{Context: ctx, Handler: handler}
 }
 
 /*
@@ -37,7 +37,7 @@ type UpdateBrokerInfo struct {
 	Handler UpdateBrokerInfoHandler
 }
 
-func (o *UpdateBrokerInfo) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (o UpdateBrokerInfo) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
 
 	if err := o.Context.BindValidRequest(r, route, &o.Params); err != nil { // bind params

@@ -22,8 +22,8 @@ type UploadDriverHandler interface {
 }
 
 // NewUploadDriver creates a new http.Handler for the upload driver operation
-func NewUploadDriver(ctx *middleware.Context, handler UploadDriverHandler) *UploadDriver {
-	return &UploadDriver{Context: ctx, Handler: handler}
+func NewUploadDriver(ctx *middleware.Context, handler UploadDriverHandler) UploadDriver {
+	return UploadDriver{Context: ctx, Handler: handler}
 }
 
 /*
@@ -35,7 +35,7 @@ type UploadDriver struct {
 	Handler UploadDriverHandler
 }
 
-func (o *UploadDriver) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (o UploadDriver) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
 
 	if err := o.Context.BindValidRequest(r, route, &o.Params); err != nil { // bind params

@@ -23,8 +23,8 @@ type CreateServicePlanHandler interface {
 }
 
 // NewCreateServicePlan creates a new http.Handler for the create service plan operation
-func NewCreateServicePlan(ctx *middleware.Context, handler CreateServicePlanHandler) *CreateServicePlan {
-	return &CreateServicePlan{Context: ctx, Handler: handler}
+func NewCreateServicePlan(ctx *middleware.Context, handler CreateServicePlanHandler) CreateServicePlan {
+	return CreateServicePlan{Context: ctx, Handler: handler}
 }
 
 /*
@@ -36,7 +36,7 @@ type CreateServicePlan struct {
 	Handler CreateServicePlanHandler
 }
 
-func (o *CreateServicePlan) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (o CreateServicePlan) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
 
 	if err := o.Context.BindValidRequest(r, route, &o.Params); err != nil { // bind params

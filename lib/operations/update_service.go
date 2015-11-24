@@ -23,8 +23,8 @@ type UpdateServiceHandler interface {
 }
 
 // NewUpdateService creates a new http.Handler for the update service operation
-func NewUpdateService(ctx *middleware.Context, handler UpdateServiceHandler) *UpdateService {
-	return &UpdateService{Context: ctx, Handler: handler}
+func NewUpdateService(ctx *middleware.Context, handler UpdateServiceHandler) UpdateService {
+	return UpdateService{Context: ctx, Handler: handler}
 }
 
 /*
@@ -36,7 +36,7 @@ type UpdateService struct {
 	Handler UpdateServiceHandler
 }
 
-func (o *UpdateService) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (o UpdateService) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
 
 	if err := o.Context.BindValidRequest(r, route, &o.Params); err != nil { // bind params

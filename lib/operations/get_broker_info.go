@@ -23,8 +23,8 @@ type GetBrokerInfoHandler interface {
 }
 
 // NewGetBrokerInfo creates a new http.Handler for the get broker info operation
-func NewGetBrokerInfo(ctx *middleware.Context, handler GetBrokerInfoHandler) *GetBrokerInfo {
-	return &GetBrokerInfo{Context: ctx, Handler: handler}
+func NewGetBrokerInfo(ctx *middleware.Context, handler GetBrokerInfoHandler) GetBrokerInfo {
+	return GetBrokerInfo{Context: ctx, Handler: handler}
 }
 
 /*
@@ -37,7 +37,7 @@ type GetBrokerInfo struct {
 	Handler GetBrokerInfoHandler
 }
 
-func (o *GetBrokerInfo) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (o GetBrokerInfo) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
 
 	if err := o.Context.BindValidRequest(r, route, &o.Params); err != nil { // bind params

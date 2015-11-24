@@ -23,8 +23,8 @@ type GetDialSchemaHandler interface {
 }
 
 // NewGetDialSchema creates a new http.Handler for the get dial schema operation
-func NewGetDialSchema(ctx *middleware.Context, handler GetDialSchemaHandler) *GetDialSchema {
-	return &GetDialSchema{Context: ctx, Handler: handler}
+func NewGetDialSchema(ctx *middleware.Context, handler GetDialSchemaHandler) GetDialSchema {
+	return GetDialSchema{Context: ctx, Handler: handler}
 }
 
 /*
@@ -36,7 +36,7 @@ type GetDialSchema struct {
 	Handler GetDialSchemaHandler
 }
 
-func (o *GetDialSchema) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (o GetDialSchema) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
 
 	if err := o.Context.BindValidRequest(r, route, &o.Params); err != nil { // bind params

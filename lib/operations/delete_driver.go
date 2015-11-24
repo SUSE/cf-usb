@@ -22,8 +22,8 @@ type DeleteDriverHandler interface {
 }
 
 // NewDeleteDriver creates a new http.Handler for the delete driver operation
-func NewDeleteDriver(ctx *middleware.Context, handler DeleteDriverHandler) *DeleteDriver {
-	return &DeleteDriver{Context: ctx, Handler: handler}
+func NewDeleteDriver(ctx *middleware.Context, handler DeleteDriverHandler) DeleteDriver {
+	return DeleteDriver{Context: ctx, Handler: handler}
 }
 
 /*
@@ -35,7 +35,7 @@ type DeleteDriver struct {
 	Handler DeleteDriverHandler
 }
 
-func (o *DeleteDriver) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (o DeleteDriver) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
 
 	if err := o.Context.BindValidRequest(r, route, &o.Params); err != nil { // bind params

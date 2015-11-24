@@ -22,8 +22,8 @@ type DeleteDialHandler interface {
 }
 
 // NewDeleteDial creates a new http.Handler for the delete dial operation
-func NewDeleteDial(ctx *middleware.Context, handler DeleteDialHandler) *DeleteDial {
-	return &DeleteDial{Context: ctx, Handler: handler}
+func NewDeleteDial(ctx *middleware.Context, handler DeleteDialHandler) DeleteDial {
+	return DeleteDial{Context: ctx, Handler: handler}
 }
 
 /*
@@ -35,7 +35,7 @@ type DeleteDial struct {
 	Handler DeleteDialHandler
 }
 
-func (o *DeleteDial) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (o DeleteDial) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
 
 	if err := o.Context.BindValidRequest(r, route, &o.Params); err != nil { // bind params

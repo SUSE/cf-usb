@@ -22,8 +22,8 @@ type DeleteServiceHandler interface {
 }
 
 // NewDeleteService creates a new http.Handler for the delete service operation
-func NewDeleteService(ctx *middleware.Context, handler DeleteServiceHandler) *DeleteService {
-	return &DeleteService{Context: ctx, Handler: handler}
+func NewDeleteService(ctx *middleware.Context, handler DeleteServiceHandler) DeleteService {
+	return DeleteService{Context: ctx, Handler: handler}
 }
 
 /*
@@ -36,7 +36,7 @@ type DeleteService struct {
 	Handler DeleteServiceHandler
 }
 
-func (o *DeleteService) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (o DeleteService) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
 
 	if err := o.Context.BindValidRequest(r, route, &o.Params); err != nil { // bind params

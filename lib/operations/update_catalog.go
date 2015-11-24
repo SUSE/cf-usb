@@ -22,8 +22,8 @@ type UpdateCatalogHandler interface {
 }
 
 // NewUpdateCatalog creates a new http.Handler for the update catalog operation
-func NewUpdateCatalog(ctx *middleware.Context, handler UpdateCatalogHandler) *UpdateCatalog {
-	return &UpdateCatalog{Context: ctx, Handler: handler}
+func NewUpdateCatalog(ctx *middleware.Context, handler UpdateCatalogHandler) UpdateCatalog {
+	return UpdateCatalog{Context: ctx, Handler: handler}
 }
 
 /*
@@ -36,7 +36,7 @@ type UpdateCatalog struct {
 	Handler UpdateCatalogHandler
 }
 
-func (o *UpdateCatalog) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (o UpdateCatalog) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
 
 	if err := o.Context.BindValidRequest(r, route, &o.Params); err != nil { // bind params
