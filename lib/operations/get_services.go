@@ -23,8 +23,8 @@ type GetServicesHandler interface {
 }
 
 // NewGetServices creates a new http.Handler for the get services operation
-func NewGetServices(ctx *middleware.Context, handler GetServicesHandler) *GetServices {
-	return &GetServices{Context: ctx, Handler: handler}
+func NewGetServices(ctx *middleware.Context, handler GetServicesHandler) GetServices {
+	return GetServices{Context: ctx, Handler: handler}
 }
 
 /*
@@ -37,7 +37,7 @@ type GetServices struct {
 	Handler GetServicesHandler
 }
 
-func (o *GetServices) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (o GetServices) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
 
 	if err := o.Context.BindValidRequest(r, route, &o.Params); err != nil { // bind params

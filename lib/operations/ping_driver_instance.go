@@ -22,8 +22,8 @@ type PingDriverInstanceHandler interface {
 }
 
 // NewPingDriverInstance creates a new http.Handler for the ping driver instance operation
-func NewPingDriverInstance(ctx *middleware.Context, handler PingDriverInstanceHandler) *PingDriverInstance {
-	return &PingDriverInstance{Context: ctx, Handler: handler}
+func NewPingDriverInstance(ctx *middleware.Context, handler PingDriverInstanceHandler) PingDriverInstance {
+	return PingDriverInstance{Context: ctx, Handler: handler}
 }
 
 /*
@@ -36,7 +36,7 @@ type PingDriverInstance struct {
 	Handler PingDriverInstanceHandler
 }
 
-func (o *PingDriverInstance) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (o PingDriverInstance) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
 
 	if err := o.Context.BindValidRequest(r, route, &o.Params); err != nil { // bind params

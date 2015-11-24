@@ -23,8 +23,8 @@ type CreateDialHandler interface {
 }
 
 // NewCreateDial creates a new http.Handler for the create dial operation
-func NewCreateDial(ctx *middleware.Context, handler CreateDialHandler) *CreateDial {
-	return &CreateDial{Context: ctx, Handler: handler}
+func NewCreateDial(ctx *middleware.Context, handler CreateDialHandler) CreateDial {
+	return CreateDial{Context: ctx, Handler: handler}
 }
 
 /*
@@ -36,7 +36,7 @@ type CreateDial struct {
 	Handler CreateDialHandler
 }
 
-func (o *CreateDial) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (o CreateDial) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
 
 	if err := o.Context.BindValidRequest(r, route, &o.Params); err != nil { // bind params

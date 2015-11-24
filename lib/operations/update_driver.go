@@ -23,8 +23,8 @@ type UpdateDriverHandler interface {
 }
 
 // NewUpdateDriver creates a new http.Handler for the update driver operation
-func NewUpdateDriver(ctx *middleware.Context, handler UpdateDriverHandler) *UpdateDriver {
-	return &UpdateDriver{Context: ctx, Handler: handler}
+func NewUpdateDriver(ctx *middleware.Context, handler UpdateDriverHandler) UpdateDriver {
+	return UpdateDriver{Context: ctx, Handler: handler}
 }
 
 /*
@@ -36,7 +36,7 @@ type UpdateDriver struct {
 	Handler UpdateDriverHandler
 }
 
-func (o *UpdateDriver) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (o UpdateDriver) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
 
 	if err := o.Context.BindValidRequest(r, route, &o.Params); err != nil { // bind params

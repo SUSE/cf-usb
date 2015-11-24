@@ -23,8 +23,8 @@ type CreateServiceHandler interface {
 }
 
 // NewCreateService creates a new http.Handler for the create service operation
-func NewCreateService(ctx *middleware.Context, handler CreateServiceHandler) *CreateService {
-	return &CreateService{Context: ctx, Handler: handler}
+func NewCreateService(ctx *middleware.Context, handler CreateServiceHandler) CreateService {
+	return CreateService{Context: ctx, Handler: handler}
 }
 
 /*
@@ -36,7 +36,7 @@ type CreateService struct {
 	Handler CreateServiceHandler
 }
 
-func (o *CreateService) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (o CreateService) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
 
 	if err := o.Context.BindValidRequest(r, route, &o.Params); err != nil { // bind params

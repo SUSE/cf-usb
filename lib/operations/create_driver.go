@@ -23,8 +23,8 @@ type CreateDriverHandler interface {
 }
 
 // NewCreateDriver creates a new http.Handler for the create driver operation
-func NewCreateDriver(ctx *middleware.Context, handler CreateDriverHandler) *CreateDriver {
-	return &CreateDriver{Context: ctx, Handler: handler}
+func NewCreateDriver(ctx *middleware.Context, handler CreateDriverHandler) CreateDriver {
+	return CreateDriver{Context: ctx, Handler: handler}
 }
 
 /*
@@ -37,7 +37,7 @@ type CreateDriver struct {
 	Handler CreateDriverHandler
 }
 
-func (o *CreateDriver) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (o CreateDriver) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
 
 	if err := o.Context.BindValidRequest(r, route, &o.Params); err != nil { // bind params

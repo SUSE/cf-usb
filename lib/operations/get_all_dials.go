@@ -23,8 +23,8 @@ type GetAllDialsHandler interface {
 }
 
 // NewGetAllDials creates a new http.Handler for the get all dials operation
-func NewGetAllDials(ctx *middleware.Context, handler GetAllDialsHandler) *GetAllDials {
-	return &GetAllDials{Context: ctx, Handler: handler}
+func NewGetAllDials(ctx *middleware.Context, handler GetAllDialsHandler) GetAllDials {
+	return GetAllDials{Context: ctx, Handler: handler}
 }
 
 /*
@@ -36,7 +36,7 @@ type GetAllDials struct {
 	Handler GetAllDialsHandler
 }
 
-func (o *GetAllDials) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (o GetAllDials) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
 
 	if err := o.Context.BindValidRequest(r, route, &o.Params); err != nil { // bind params

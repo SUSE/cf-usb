@@ -23,8 +23,8 @@ type GetDialHandler interface {
 }
 
 // NewGetDial creates a new http.Handler for the get dial operation
-func NewGetDial(ctx *middleware.Context, handler GetDialHandler) *GetDial {
-	return &GetDial{Context: ctx, Handler: handler}
+func NewGetDial(ctx *middleware.Context, handler GetDialHandler) GetDial {
+	return GetDial{Context: ctx, Handler: handler}
 }
 
 /*
@@ -36,7 +36,7 @@ type GetDial struct {
 	Handler GetDialHandler
 }
 
-func (o *GetDial) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (o GetDial) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
 
 	if err := o.Context.BindValidRequest(r, route, &o.Params); err != nil { // bind params

@@ -23,8 +23,8 @@ type UpdateDialHandler interface {
 }
 
 // NewUpdateDial creates a new http.Handler for the update dial operation
-func NewUpdateDial(ctx *middleware.Context, handler UpdateDialHandler) *UpdateDial {
-	return &UpdateDial{Context: ctx, Handler: handler}
+func NewUpdateDial(ctx *middleware.Context, handler UpdateDialHandler) UpdateDial {
+	return UpdateDial{Context: ctx, Handler: handler}
 }
 
 /*
@@ -36,7 +36,7 @@ type UpdateDial struct {
 	Handler UpdateDialHandler
 }
 
-func (o *UpdateDial) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (o UpdateDial) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
 
 	if err := o.Context.BindValidRequest(r, route, &o.Params); err != nil { // bind params
