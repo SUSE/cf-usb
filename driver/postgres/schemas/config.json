@@ -1,7 +1,7 @@
 {  
    "type":"object",
    "properties":{  
-      "server":{  
+      "host":{  
          "type":"string"
       },
       "port":{  
@@ -21,7 +21,7 @@
 	  }
    },
    "required":[  
-      "server",
+      "host",
       "port",
 	  "user",
 	  "password"
