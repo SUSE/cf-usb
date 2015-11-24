@@ -84,7 +84,7 @@ func schemasConfigJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "schemas/config.json", size: 166, mode: os.FileMode(420), modTime: time.Unix(1446801967, 0)}
+	info := bindataFileInfo{name: "schemas/config.json", size: 166, mode: os.FileMode(420), modTime: time.Unix(1447251051, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -104,7 +104,7 @@ func schemasDialsJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "schemas/dials.json", size: 2, mode: os.FileMode(420), modTime: time.Unix(1446801902, 0)}
+	info := bindataFileInfo{name: "schemas/dials.json", size: 2, mode: os.FileMode(420), modTime: time.Unix(1447251051, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -162,7 +162,7 @@ func AssetNames() []string {
 // _bindata is a table, holding each asset generator, mapped to its name.
 var _bindata = map[string]func() (*asset, error){
 	"schemas/config.json": schemasConfigJson,
-	"schemas/dials.json":  schemasDialsJson,
+	"schemas/dials.json": schemasDialsJson,
 }
 
 // AssetDir returns the file names below a certain
@@ -204,11 +204,10 @@ type bintree struct {
 	Func     func() (*asset, error)
 	Children map[string]*bintree
 }
-
 var _bintree = &bintree{nil, map[string]*bintree{
 	"schemas": &bintree{nil, map[string]*bintree{
 		"config.json": &bintree{schemasConfigJson, map[string]*bintree{}},
-		"dials.json":  &bintree{schemasDialsJson, map[string]*bintree{}},
+		"dials.json": &bintree{schemasDialsJson, map[string]*bintree{}},
 	}},
 }}
 
@@ -258,3 +257,4 @@ func _filePath(dir, name string) string {
 	cannonicalName := strings.Replace(name, "\\", "/", -1)
 	return filepath.Join(append([]string{dir}, strings.Split(cannonicalName, "/")...)...)
 }
+
