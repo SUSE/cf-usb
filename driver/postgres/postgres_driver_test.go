@@ -40,7 +40,7 @@ func Test_Provision(t *testing.T) {
 	assert := assert.New(t)
 
 	mockProv, postgresDriver := getMockProvisioner()
-	mockProv.On("CreateDatabase", "testId").Return(nil)
+	mockProv.On("CreateDatabase", mock.Anything).Return(nil)
 
 	var req usbDriver.ProvisionInstanceRequest
 
@@ -90,7 +90,7 @@ func Test_GetConfigSchema(t *testing.T) {
 func Test_GetCredentials(t *testing.T) {
 	assert := assert.New(t)
 	mockProv, postgresDriver := getMockProvisioner()
-	mockProv.On("UserExists", "testIduser").Return(true, nil)
+	mockProv.On("UserExists", mock.Anything).Return(true, nil)
 
 	var req usbDriver.GetCredentialsRequest
 	req.Config = getEnptyConfig()
@@ -108,7 +108,7 @@ func Test_GenerateCredentials(t *testing.T) {
 	assert := assert.New(t)
 
 	mockProv, postgresDriver := getMockProvisioner()
-	mockProv.On("CreateUser", "testId", mock.Anything, mock.Anything).Return(nil)
+	mockProv.On("CreateUser", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 	var req usbDriver.GenerateCredentialsRequest
 	req.CredentialsID = "user"
@@ -124,7 +124,7 @@ func Test_RevokeCredentials(t *testing.T) {
 	assert := assert.New(t)
 
 	mockProv, postgresDriver := getMockProvisioner()
-	mockProv.On("DeleteUser", "testId", "testIduser").Return(nil)
+	mockProv.On("DeleteUser", mock.Anything, mock.Anything).Return(nil)
 
 	var req usbDriver.RevokeCredentialsRequest
 	req.CredentialsID = "user"
@@ -140,7 +140,7 @@ func Test_Deprovision(t *testing.T) {
 	assert := assert.New(t)
 
 	mockProv, postgresDriver := getMockProvisioner()
-	mockProv.On("DeleteDatabase", "testId").Return(nil)
+	mockProv.On("DeleteDatabase", mock.Anything).Return(nil)
 
 	var req usbDriver.DeprovisionInstanceRequest
 	req.Config = getEnptyConfig()

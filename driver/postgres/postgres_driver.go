@@ -1,9 +1,12 @@
 package postgres
 
 import (
+	"crypto/md5"
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
+	"regexp"
 
 	"github.com/hpcloud/cf-usb/driver"
 	"github.com/hpcloud/cf-usb/driver/postgres/config"
@@ -74,7 +77,13 @@ func (d *PostgresDriver) ProvisionInstance(request driver.ProvisionInstanceReque
 		return err
 	}
 
-	err = d.postgresProvisioner.CreateDatabase(request.InstanceID)
+	dbName, err := d.getMD5Hash(request.InstanceID)
+	if err != nil {
+		d.logger.Fatal("provision-error", err)
+		return err
+	}
+
+	err = d.postgresProvisioner.CreateDatabase(dbName)
 	if err != nil {
 		d.logger.Fatal("provision-error", err)
 		return err
@@ -90,8 +99,14 @@ func (d *PostgresDriver) GetInstance(request driver.GetInstanceRequest, response
 		return err
 	}
 
+	dbName, err := d.getMD5Hash(request.InstanceID)
+	if err != nil {
+		d.logger.Fatal("get-instance-error", err)
+		return err
+	}
+
 	response.Status = status.DoesNotExist
-	exist, err := d.postgresProvisioner.DatabaseExists(request.InstanceID)
+	exist, err := d.postgresProvisioner.DatabaseExists(dbName)
 	if err != nil {
 		d.logger.Fatal("get-instance-error", err)
 		return err
@@ -109,15 +124,26 @@ func (d *PostgresDriver) GenerateCredentials(request driver.GenerateCredentialsR
 		return err
 	}
 
-	username := request.InstanceID + request.CredentialsID
+	dbName, err := d.getMD5Hash(request.InstanceID)
+	if err != nil {
+		d.logger.Fatal("generate-credentials", err)
+		return err
+	}
+
+	username, err := d.getMD5Hash(request.InstanceID + request.CredentialsID)
+	if err != nil {
+		d.logger.Fatal("generate-credentials", err)
+		return err
+	}
+
 	password, err := secureRandomString(32)
 	if err != nil {
 		return err
 	}
 
-	err = d.postgresProvisioner.CreateUser(request.InstanceID, username, password)
+	err = d.postgresProvisioner.CreateUser(dbName, username, password)
 	if err != nil {
-		d.logger.Fatal("provision-error", err)
+		d.logger.Fatal("generate-credentials", err)
 		return err
 	}
 
@@ -127,7 +153,7 @@ func (d *PostgresDriver) GenerateCredentials(request driver.GenerateCredentialsR
 		Password:         password,
 		Port:             d.conf.Port,
 		Username:         username,
-		ConnectionString: generateConnectionString(d.conf.Host, d.conf.Port, request.InstanceID, username, password),
+		ConnectionString: generateConnectionString(d.conf.Host, d.conf.Port, dbName, username, password),
 	}
 	*response = data
 	return nil
@@ -141,11 +167,15 @@ func (d *PostgresDriver) GetCredentials(request driver.GetCredentialsRequest, re
 
 	response.Status = status.DoesNotExist
 
-	username := request.InstanceID + request.CredentialsID
+	username, err := d.getMD5Hash(request.InstanceID + request.CredentialsID)
+	if err != nil {
+		d.logger.Fatal("get-credentials", err)
+		return err
+	}
 
 	exist, err := d.postgresProvisioner.UserExists(username)
 	if err != nil {
-		d.logger.Fatal("provision-error", err)
+		d.logger.Fatal("get-credentials", err)
 	}
 	if exist {
 		response.Status = status.Exists
@@ -158,13 +188,24 @@ func (d *PostgresDriver) RevokeCredentials(request driver.RevokeCredentialsReque
 	if err != nil {
 		return err
 	}
+	dbName, err := d.getMD5Hash(request.InstanceID)
+	if err != nil {
+		d.logger.Fatal("revoke-credentials", err)
+		return err
+	}
+
+	username, err := d.getMD5Hash(request.InstanceID + request.CredentialsID)
+	if err != nil {
+		d.logger.Fatal("revoke-credentials", err)
+		return err
+	}
 
 	d.logger.Info("unbind-request", lager.Data{"credentialsID": request.CredentialsID, "InstanceID": request.InstanceID})
-	username := request.InstanceID + request.CredentialsID
+	d.logger.Info("unbind-request-hashed", lager.Data{"Username": username, "DbName": dbName})
 
-	err = d.postgresProvisioner.DeleteUser(request.InstanceID, username)
+	err = d.postgresProvisioner.DeleteUser(dbName, username)
 	if err != nil {
-		d.logger.Fatal("provision-error", err)
+		d.logger.Fatal("revoke-credentials", err)
 		return err
 	}
 	response.Status = status.Deleted
@@ -178,14 +219,30 @@ func (d *PostgresDriver) DeprovisionInstance(request driver.DeprovisionInstanceR
 	}
 	d.logger.Info("deprovision-request", lager.Data{"instance-id": request.InstanceID})
 
-	err = d.postgresProvisioner.DeleteDatabase(request.InstanceID)
+	dbName, err := d.getMD5Hash(request.InstanceID)
 	if err != nil {
-		d.logger.Fatal("provision-error", err)
+		d.logger.Fatal("deprovision-error", err)
+		return err
+	}
+
+	err = d.postgresProvisioner.DeleteDatabase(dbName)
+	if err != nil {
+		d.logger.Fatal("deprovision-error", err)
 		return err
 	}
 
 	response.Status = status.Deleted
 	return nil
+}
+
+func (d *PostgresDriver) getMD5Hash(text string) (string, error) {
+	hasher := md5.New()
+	hasher.Write([]byte(text))
+	generated := hex.EncodeToString(hasher.Sum(nil))
+
+	reg := regexp.MustCompile("[^A-Za-z0-9]+")
+
+	return reg.ReplaceAllString(generated, ""), nil
 }
 
 func secureRandomString(bytesOfEntpry int) (string, error) {

@@ -103,7 +103,6 @@ func (provisioner *PostgresProvisioner) DeleteDatabase(dbname string) error {
 
 func (provisioner *PostgresProvisioner) DatabaseExists(dbname string) (bool, error) {
 	res, err := provisioner.executeQueryRow(dbCountQuery, map[string]string{"Database": dbname})
-	fmt.Println("count res: ", res)
 	if err != nil {
 		return false, err
 	}
