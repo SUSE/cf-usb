@@ -37,8 +37,13 @@ func (d *PostgresDriver) init(conf *json.RawMessage) error {
 }
 
 func (d *PostgresDriver) Ping(request *json.RawMessage, response *bool) error {
+	*response = false
 	err := d.init(request)
-	return err
+	if err != nil {
+		return err
+	}
+	*response = true
+	return nil
 }
 
 func (d *PostgresDriver) GetDailsSchema(request string, response *string) error {

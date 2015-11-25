@@ -125,7 +125,7 @@ func (usb *UsbApp) Run(configProvider config.ConfigProvider) {
 			http.ListenAndServe(mgmtaddr, mgmtAPI.Serve())
 		}()
 	}
-	logger.Info("run", lager.Data{"addr": addr})
+	logger.Info("run-brokerapi", lager.Data{"addr": addr})
 	err = http.ListenAndServe(addr, brokerAPI)
 	if err != nil {
 		logger.Fatal("error-listening", err)
