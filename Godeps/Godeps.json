@@ -38,6 +38,10 @@
 			"Rev": "c701457aaa1ff6709d5e35fccb5c129448e0a37b"
 		},
 		{
+			"ImportPath": "github.com/frodenas/brokerapi/auth",
+			"Rev": "ac1ed76a08954bbd7b40a8794738539404a84313"
+		},
+		{
 			"ImportPath": "github.com/fsouza/go-dockerclient",
 			"Rev": "2bd40eb3ca54e74e8181ecbbc9b91902cb03d1df"
 		},
@@ -100,6 +104,11 @@
 			"Rev": "5df5ddc69534f1a4697289f1dca2193fbb40213f"
 		},
 		{
+			"ImportPath": "github.com/hashicorp/serf/coordinate",
+			"Comment": "v0.6.4-145-ga72c045",
+			"Rev": "a72c0453da2ba628a013e98bf323a76be4aa1443"
+		},
+		{
 			"ImportPath": "github.com/lib/pq",
 			"Comment": "go1.0-cutoff-60-gffe986a",
 			"Rev": "ffe986aba3e6cfcded8b06615965941408891ef0"
@@ -133,7 +142,7 @@
 		},
 		{
 			"ImportPath": "github.com/pivotal-cf/brokerapi",
-			"Rev": "922ff83950220a7c2ed4b59fcd0cd98ec8844350"
+			"Rev": "ac1ed76a08954bbd7b40a8794738539404a84313"
 		},
 		{
 			"ImportPath": "github.com/pivotal-golang/lager",
