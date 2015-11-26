@@ -98,7 +98,9 @@ func Test_CreateDriver(t *testing.T) {
 	params.Driver.ID = "testDriverID"
 	params.Driver.Name = "testDriver"
 	params.Driver.DriverType = "testType"
+	provider.On("DriverTypeExists", mock.Anything).Return(false, nil)
 	provider.On("SetDriver", mock.Anything).Return(nil)
+
 	info, err := UnitTest.MgmtAPI.CreateDriverHandler.Handle(params)
 	t.Log(info)
 	assert.NoError(err)
@@ -321,6 +323,9 @@ func Test_UpdateService(t *testing.T) {
 		t.Error(err)
 	}
 
+	var testConfig config.Config
+	provider.On("LoadConfiguration").Return(&testConfig, nil)
+
 	params := operations.UpdateServiceParams{}
 	params.ServiceID = "testServiceID"
 	params.Service.Bindable = true
@@ -329,6 +334,7 @@ func Test_UpdateService(t *testing.T) {
 	params.Service.Name = "updatedTestService"
 	params.Service.Tags = []string{"test", "test Service"}
 	provider.On("SetService", mock.Anything, mock.Anything).Return(nil)
+	provider.On("ServiceNameExists", mock.Anything).Return(false, nil)
 	info, err := UnitTest.MgmtAPI.UpdateServiceHandler.Handle(params)
 	t.Log(info)
 	assert.NoError(err)

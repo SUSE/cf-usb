@@ -215,3 +215,37 @@ func Test_IntGetDial(t *testing.T) {
 	assert.Equal(dialInfo.Plan.Name, "free")
 	assert.NoError(err)
 }
+
+func Test_IntServiceNameExists(t *testing.T) {
+	initialized, err := initProvider()
+	if initialized == false {
+		t.Skip("Skipping Consul Set Driver test, environment variables not set: CONSUL_ADDRESS(host:port), CONSUL_DATACENTER, CONSUL_TOKEN / CONSUL_USER + CONSUL_PASSWORD, CONSUL_SCHEMA")
+		t.Log(err)
+	}
+
+	assert := assert.New(t)
+
+	exist, err := IntegrationConfig.Provider.ServiceNameExists("testService")
+	if err != nil {
+		assert.Error(err, "Unable to check service name existance")
+	}
+	assert.NoError(err)
+	assert.True(exist)
+}
+
+func Test_IntDriverTypeExists(t *testing.T) {
+	initialized, err := initProvider()
+	if initialized == false {
+		t.Skip("Skipping Consul Set Driver test, environment variables not set: CONSUL_ADDRESS(host:port), CONSUL_DATACENTER, CONSUL_TOKEN / CONSUL_USER + CONSUL_PASSWORD, CONSUL_SCHEMA")
+		t.Log(err)
+	}
+
+	assert := assert.New(t)
+
+	exist, err := IntegrationConfig.Provider.DriverTypeExists("testID")
+	if err != nil {
+		assert.Error(err, "Unable to check driver type existance")
+	}
+	assert.NoError(err)
+	assert.True(exist)
+}

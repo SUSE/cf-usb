@@ -159,3 +159,35 @@ func TestGetUaaAuthConfig(t *testing.T) {
 	assert.Equal("usb.management.admin", uaaAuth.Scope)
 	assert.True(strings.Contains(uaaAuth.PublicKey, "public key"))
 }
+
+func TestServiceNameExists(t *testing.T) {
+	assert := assert.New(t)
+
+	_, configuration, err := loadConfigAsset()
+	if err != nil {
+		assert.Error(err, "Unable to load from temp config file")
+	}
+
+	exist, err := configuration.ServiceNameExists("echo")
+	if err != nil {
+		assert.Error(err, "Unable to check service name existance")
+	}
+
+	assert.True(exist)
+}
+
+func TestDriverTypeExists(t *testing.T) {
+	assert := assert.New(t)
+
+	_, configuration, err := loadConfigAsset()
+	if err != nil {
+		assert.Error(err, "Unable to load from temp config file")
+	}
+
+	exist, err := configuration.DriverTypeExists("dummy")
+	if err != nil {
+		assert.Error(err, "Unable to check driver type existance")
+	}
+
+	assert.True(exist)
+}

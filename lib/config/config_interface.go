@@ -79,4 +79,6 @@ type ConfigProvider interface {
 	SetDial(string, Dial) error
 	GetDial(string, string) (Dial, error)
 	DeleteDial(string, string) error
+	ServiceNameExists(string) (bool, error)
+	DriverTypeExists(string) (bool, error)
 }

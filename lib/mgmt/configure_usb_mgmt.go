@@ -8,6 +8,7 @@ import (
 	"bufio"
 	"crypto/sha1"
 	"encoding/base64"
+	goErrors "errors"
 	"fmt"
 	"github.com/go-swagger/go-swagger/errors"
 	"github.com/go-swagger/go-swagger/httpkit"
@@ -198,6 +199,14 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 			return nil, err
 		}
 
+		exist, err := configProvider.DriverTypeExists(params.Driver.DriverType)
+		if err != nil {
+			return nil, err
+		}
+		if exist {
+			return nil, goErrors.New("Driver type already exists")
+		}
+
 		var driver config.Driver
 
 		driver.DriverType = params.Driver.DriverType
@@ -218,6 +227,19 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 			return nil, err
 		}
 
+		config, err := configProvider.LoadConfiguration()
+		if err != nil {
+			return nil, err
+		}
+
+		exist, err := configProvider.ServiceNameExists(params.Service.Name)
+		if err != nil {
+			return nil, err
+		}
+		if exist {
+			return nil, goErrors.New("Service name already exists")
+		}
+
 		var service brokerapi.Service
 
 		service.Bindable = params.Service.Bindable
@@ -227,6 +249,26 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		service.Tags = params.Service.Tags
 
 		err = configProvider.SetService(params.Service.DriverInstanceID, service)
+		if err != nil {
+			return nil, err
+		}
+
+		logger.Info("update-service", lager.Data{"get-broker": brokerName})
+		guid, err := ccServiceBroker.GetServiceBrokerGuidByName(brokerName)
+
+		logger.Info("update-service", lager.Data{"broker-guid": guid})
+		if err != nil {
+			return nil, err
+		}
+
+		logger.Info("update-service", lager.Data{"service-broker-update": service.Name})
+		err = ccServiceBroker.Update(guid, brokerName, config.BrokerAPI.ExternalUrl, config.BrokerAPI.Credentials.Username, config.BrokerAPI.Credentials.Password)
+		if err != nil {
+			return nil, err
+		}
+
+		logger.Info("update-service", lager.Data{"enable-access": service.Name})
+		err = ccServiceBroker.EnableServiceAccess(service.Name)
 		if err != nil {
 			return nil, err
 		}
