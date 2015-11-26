@@ -62,12 +62,12 @@ TODO:
 
 **cf-usb** works with multiple configuration providers:
 
-###File configuration provider## 
+###File configuration provider###
 **cf-usb** can take it's configuration from a .json file. The json file format is similar to a standard broker configuration file. 
 To start the broker with a file configuration provider you must provide the following cli options:
 
 ```sh
- ./usb fileConfigProvider --path {path_to_jsonfile}
+./usb fileConfigProvider --path {path_to_jsonfile}
 ```
 
 `dials`
@@ -75,7 +75,20 @@ To start the broker with a file configuration provider you must provide the foll
 `driver_configs`
 
 ### Consul configuration provider###
-The state and the configuration of USB can be stored in consul
+The state and the configuration of USB can be stored in consul.
+To start the broker using a consul provider you must provide the following cli options:
+
+```sh
+./usb consulConfigProvider  -with the following options, depending on the consul server configuration:
+
+OPTIONS:
+--address, -a 	Consul address and port (mandatory)
+--datacenter, -d 	Consul datacenter
+--username, -u 	Consul username
+--password, -p 	Consul password
+--schema, -s 	Consul schema
+--token, -t 		Consul token
+```
 
 ## Drivers
 
@@ -97,37 +110,6 @@ The state and the configuration of USB can be stored in consul
 - USB must be able to validate all incoming CC requests using the driver interface.
 
 ### Driver Interface
-#### Init
-Initializes the driver
-
-**Request** 
-
-| Object | Description |
-| :---: | :---: |
-| DriverConfig | Information used by the driver to connect to the service |
-
-Example *DriverConfig* for MSSQL
-
-```sh
-{  
-	"brokerGoSqlDriver":"mssql",
-    "brokerMssqlConnection":{  
-    	"server":"127.0.0.1",
-        "port":"38017",
-        "database":"master",
-        "user id":"sa",
-        "password":"mysapassword"
- }
-```
-
-**Response**
-
-| Type | Description |
-| :---: | :---: |
-| interface{} | *reserved |
-| error | Driver Initialization error |
-
-
 
 ### Ping
 Checks if the driver can reach the server.
@@ -136,7 +118,7 @@ Checks if the driver can reach the server.
 
 | Type | Description |
 | :---: | :---: |
-| string | empty string |
+| *json.RawMessage | Driver configuration object |
 
 
 **Response**
@@ -166,10 +148,10 @@ Example schema for MSSQL *dials*
 {
 "type": "object",
 "properties": {
-	"max_dbsize_mb": {
-		"type": "integer",
-		"minimum": 0
-	}
+"max_dbsize_mb": {
+"type": "integer",
+"minimum": 0
+}
 },
 "required": ["max_dbsize_mb"]
 }
@@ -195,36 +177,36 @@ Gets the JSON schema for the *driver_config*
 Example schema for MSSQL *driver_config*
 ```sh
 {
-  "type": "object",
-  "properties": {
-    "brokerGoSqlDriver": {
-      "type": "string"
-    },
-    "brokerMssqlConnection": {
-      "type": "object",
-      "properties": {
-        "server": {
-          "type": "string"
-        },
-        "port": {
-          "type": "string"
-        },
-        "database": {
-          "type": "string"
-        },
-        "user id": {
-          "type": "string"
-        },
-        "password": {
-          "type": "string"
-        }
-      }
-    }
-  },
-  "required": [
-    "brokerGoSqlDriver",
-    "brokerMssqlConnection"
-  ]
+"type": "object",
+"properties": {
+"brokerGoSqlDriver": {
+"type": "string"
+},
+"brokerMssqlConnection": {
+"type": "object",
+"properties": {
+"server": {
+"type": "string"
+},
+"port": {
+"type": "string"
+},
+"database": {
+"type": "string"
+},
+"user id": {
+"type": "string"
+},
+"password": {
+"type": "string"
+}
+}
+}
+},
+"required": [
+"brokerGoSqlDriver",
+"brokerMssqlConnection"
+]
 }
 ```
 
@@ -235,39 +217,37 @@ Creates a service instance
 
 | Type | Description |
 | :---: | :---: |
-| ProvisionInstanceRequest | Object containing the *instanceID* and a *dails* object |
+| ProvisionInstanceRequest | Object containing the *instanceID*, *config* object and  *dails* object |
 
 Dials are restrictions that can be applied to instances.
 Example for MSSQL:
 ```sh
 {
-	"max_dbsize_mb": 1500
+"max_dbsize_mb": 1500
 }
 ```
-
 
 **Response**
 
 | Type | Description |
 | :---: | :---: |
-| bool | *true* if the instance was created. |
+| Instance | Instance type object containing *instanceID*, *status* and *description* |
 | error | Provision Instance error |
 
-### InstanceExists
+### GetInstance
 
-Checks if the specified service exists.
+Retrieves an existing instance.
 
 **Request**
 
 | Type | Description |
 | :---: | :---: |
-| string | The ID of the instance |
-
+| GetInstanceRequest | Object containing the *instanceID* and a *config* object |
 **Response**
 
 | Type | Description |
 | :---: | :---: |
-| bool | *true* if the instance exists. |
+| Instance | Instance type object containing *instanceID*, *status* and *description*  |
 | error | Instance Exists error |
 
 ### GenerateCredentials
@@ -278,7 +258,7 @@ Generates for the for the specified instance
 
 | Type | Description |
 | :---: | :---: |
-| CredentialsRequest | Object containing the *instanceID* and the *credentialsID* |
+| GenerateCredentialsRequest | Object containing the *instanceID*, the *credentialsID* and the *config* object |
 
 **Response**
 
@@ -291,29 +271,29 @@ Example for MSSQL:
 
 ```sh
 type MssqlCredentials struct {
-	Hostname         string `json:"hostname"`
-	Port             int    `json:"port"`
-	Name             string `json:"name"`
-	Username         string `json:"username"`
-	Password         string `json:"password"`
-	ConnectionString string `json:"connectionString"`
+Hostname         string `json:"hostname"`
+Port             int    `json:"port"`
+Name             string `json:"name"`
+Username         string `json:"username"`
+Password         string `json:"password"`
+ConnectionString string `json:"connectionString"`
 }
 ```
 
-### CredentialsExist
+### GetCredentials
 
-Checks if the specified credentials exist.
+Retrieves existing credentials.
 
 **Request**
 
 | Type | Description |
 | :---: | :---: |
-| CredentialsRequest | Object containing the *instanceID* and the *credentialsID* |
+| GetCredentialsRequest | Object containing the *instanceID*, the *credentialsID* and the *config* object |
 **Response**
 
 | Type | Description |
 | :---: | :---: |
-| bool | *true* if the credentials exist |
+| Credentials | Credentials type object containing *credentialsID*, *status* and *description* |
 | error | CredentialsExists error |
 
 ### RevokeCedentials
@@ -324,12 +304,12 @@ Revoke the credentials of the specified *credentialsID*
 
 | Type | Description |
 | :---: | :---: |
-| CredentialsRequest | Object containing the *instanceID* and the *credentialsID* |
+| RevokeCredentialsRequest | Object containing the *instanceID*, the *credentialsID* and the *config* object |
 **Response**
 
 | Type | Description |
 | :---: | :---: |
-| interface{} | *reserved |
+| Credentials | Credentials type object containing *credentialsID*, *status* and *description* |
 | error | RevokeCedentials error |
 
 
@@ -341,13 +321,13 @@ Deprovisions the instance having the specified *instanceID*
 
 | Type | Description |
 | :---: | :---: |
-| string | *instanceID* |
+| DeprovisionInstanceRequest | Object containing the *instanceID* and the *config* object |
 
 **Response**
 
 | Type | Description |
 | :---: | :---: |
-| interface{} | *reserved |
+| Instance | Instance type object containing *instanceID*, *status* and *description*  |
 | error | DeprovisionInstance error |
 
 
@@ -368,7 +348,7 @@ godep restore
 make
 ```
 ### Running:
-To run one or more drivers, you need to copy the driver executable to *{path_to_usb}/drivers/*
+To run one or more drivers, you need to copy the driver executable to *{path_to_usb}/drivers/* or set the USB_DRIVER_PATH environment variable with the path to the driver executable 
 ```sh
-./usb {fileConfigProvider} --{path} {path_to_jsonfile}
+./usb {ConfigProvider} --{options}
 ```
