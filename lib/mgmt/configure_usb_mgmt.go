@@ -415,7 +415,10 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 			Bindable:         di.Service.Bindable,
 			Name:             di.Service.Name,
 			Tags:             di.Service.Tags,
-			Metadata:         structs.Map(di.Service.Metadata),
+		}
+
+		if di.Service.Metadata != nil {
+			service.Metadata = structs.Map(*di.Service.Metadata)
 		}
 
 		services = append(services, service)
@@ -467,7 +470,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		var meta brokerapi.ServicePlanMetadata
 		meta.DisplayName = "default plan"
 
-		plan.Metadata = meta
+		plan.Metadata = &meta
 
 		defaultDial.Plan = plan
 		defaultDialConfig := json.RawMessage([]byte("{}"))
@@ -627,7 +630,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 							plan.Name = params.Plan.Name
 
 							meta.DisplayName = params.Plan.Name
-							plan.Metadata = meta
+							plan.Metadata = &meta
 							dial.Plan = plan
 							err = configProvider.SetDial(instance.ID, dial)
 
@@ -692,7 +695,10 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 						Name:             instance.Service.Name,
 						Description:      instance.Service.Description,
 						Tags:             instance.Service.Tags,
-						Metadata:         structs.Map(instance.Service.Metadata),
+					}
+
+					if instance.Service.Metadata != nil {
+						svc.Metadata = structs.Map(*instance.Service.Metadata)
 					}
 
 					return svc, nil
@@ -945,7 +951,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 						plan.Name = params.Plan.Name
 
 						meta.DisplayName = params.Plan.Name
-						plan.Metadata = meta
+						plan.Metadata = &meta
 
 						dial.Plan = plan
 						err = configProvider.SetDial(instance.ID, dial)

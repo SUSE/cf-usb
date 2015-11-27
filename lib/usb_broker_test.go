@@ -42,12 +42,12 @@ func TestGetCatalog(t *testing.T) {
 
 	serviceCatalog := broker.Services()
 
-	assert.Equal(1, len(serviceCatalog))
-	assert.Equal("GUID", serviceCatalog[0].ID)
-	assert.Equal("testService", serviceCatalog[0].Name)
-	assert.Equal(2, len(serviceCatalog[0].Plans))
+	assert.Equal(1, len(serviceCatalog.Services))
+	assert.Equal("GUID", serviceCatalog.Services[0].ID)
+	assert.Equal("testService", serviceCatalog.Services[0].Name)
+	assert.Equal(2, len(serviceCatalog.Services[0].Plans))
 
-	for _, plan := range serviceCatalog[0].Plans {
+	for _, plan := range serviceCatalog.Services[0].Plans {
 		if plan.Name == "planone" {
 			assert.Equal("53425178-F731-49E7-9E53-5CF4BE9D807A", plan.ID)
 			assert.Equal("This is the first plan", plan.Description)
@@ -72,9 +72,9 @@ func TestProvisionService(t *testing.T) {
 		assert.Fail(err.Error())
 	}
 
-	err = broker.Provision("newInstanceID", brokerapi.ProvisionDetails{
-		ID: "GUID",
-	})
+	_, _, err = broker.Provision("newInstanceID", brokerapi.ProvisionDetails{
+		ServiceID: "GUID",
+	}, false)
 	assert.Nil(err)
 }
 
@@ -85,9 +85,9 @@ func TestProvisionServiceExists(t *testing.T) {
 		assert.Fail(err.Error())
 	}
 
-	err = broker.Provision("instanceID", brokerapi.ProvisionDetails{
-		ID: "GUID",
-	})
+	_, _, err = broker.Provision("instanceID", brokerapi.ProvisionDetails{
+		ServiceID: "GUID",
+	}, false)
 	assert.Equal(brokerapi.ErrInstanceAlreadyExists.Error(), err.Error())
 }
 
@@ -99,9 +99,9 @@ func TestDeprovision(t *testing.T) {
 		assert.Fail(err.Error())
 	}
 
-	err = broker.Deprovision("instanceID", brokerapi.DeprovisionDetails{
+	_, err = broker.Deprovision("instanceID", brokerapi.DeprovisionDetails{
 		ServiceID: "GUID",
-	})
+	}, false)
 	assert.Nil(err)
 }
 
@@ -113,9 +113,9 @@ func TestDeprovisionDoesNotExist(t *testing.T) {
 		assert.Fail(err.Error())
 	}
 
-	err = broker.Deprovision("wrongInstanceID", brokerapi.DeprovisionDetails{
+	_, err = broker.Deprovision("wrongInstanceID", brokerapi.DeprovisionDetails{
 		ServiceID: "GUID",
-	})
+	}, false)
 
 	assert.NotNil(err)
 	assert.Equal(brokerapi.ErrInstanceDoesNotExist.Error(), err.Error())
@@ -132,7 +132,7 @@ func TestBind(t *testing.T) {
 		ServiceID: "GUID",
 	})
 
-	response := bindResponse.(map[string]interface{})
+	response := bindResponse.Credentials.(map[string]interface{})
 
 	assert.Equal("user", response["username"].(string))
 	assert.Equal("pass", response["password"].(string))
@@ -165,7 +165,7 @@ func TestBindExists(t *testing.T) {
 		ServiceID: "GUID",
 	})
 
-	assert.Nil(bindResponse)
+	assert.Nil(bindResponse.Credentials)
 	assert.NotNil(err)
 	assert.Equal(brokerapi.ErrBindingAlreadyExists.Error(), err.Error())
 }

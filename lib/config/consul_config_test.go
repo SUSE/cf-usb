@@ -131,7 +131,7 @@ func Test_SetService(t *testing.T) {
 	serv.Bindable = true
 	serv.Description = "testService desc"
 	serv.ID = "testServiceID"
-	serv.Metadata = brokerapi.ServiceMetadata{DisplayName: "test service"}
+	serv.Metadata = &brokerapi.ServiceMetadata{DisplayName: "test service"}
 	serv.Name = "testService"
 	serv.Tags = []string{"serv1", "serv2"}
 
@@ -139,7 +139,7 @@ func Test_SetService(t *testing.T) {
 	plan.Description = "testPlan desc"
 	plan.ID = "testPlanID"
 	plan.Name = "free"
-	plan.Metadata = brokerapi.ServicePlanMetadata{DisplayName: "test plan"}
+	plan.Metadata = &brokerapi.ServicePlanMetadata{DisplayName: "test plan"}
 
 	serv.Plans = []brokerapi.ServicePlan{plan}
 
@@ -199,7 +199,7 @@ func Test_SetDial(t *testing.T) {
 	plan.Description = "testPlan desc"
 	plan.ID = "testPlanID"
 	plan.Name = "free"
-	plan.Metadata = brokerapi.ServicePlanMetadata{DisplayName: "test plan"}
+	plan.Metadata = &brokerapi.ServicePlanMetadata{DisplayName: "test plan"}
 
 	raw := json.RawMessage("{\"a1\":\"b1\"}")
 
