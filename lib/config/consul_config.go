@@ -361,3 +361,57 @@ func (c *consulConfig) GetUaaAuthConfig() (*UaaAuth, error) {
 	}
 	return &uaa.UaaAuth, nil
 }
+
+func (c *consulConfig) ServiceNameExists(serviceName string) (bool, error) {
+	drivers, err := c.provisioner.GetAllKeys("usb/drivers/", "/", nil)
+	if err != nil {
+		return false, err
+	}
+
+	for _, driver := range drivers {
+
+		instances, err := c.provisioner.GetAllKeys(driver+"/instances/", "/", nil)
+		if err != nil {
+			return false, err
+		}
+
+		for _, instance := range instances {
+
+			var service brokerapi.Service
+
+			value, err := c.provisioner.GetValue(instance + "service")
+			if err != nil {
+				return false, err
+			}
+
+			err = json.Unmarshal(value, &service)
+			if err != nil {
+				return false, err
+			}
+
+			if service.Name == serviceName {
+				return true, nil
+			}
+		}
+	}
+
+	return false, nil
+}
+
+func (c *consulConfig) DriverTypeExists(driverType string) (bool, error) {
+	drivers, err := c.provisioner.GetAllKeys("usb/drivers/", "/", nil)
+	if err != nil {
+		return false, err
+	}
+
+	for _, driver := range drivers {
+		driver = strings.TrimSuffix(driver, "/")
+		driver = strings.TrimPrefix(driver, "usb/drivers/")
+
+		if driver == driverType {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}

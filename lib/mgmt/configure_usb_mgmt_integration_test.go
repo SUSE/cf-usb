@@ -277,6 +277,11 @@ func Test_IntUpdate(t *testing.T) {
 	serviceParams.Service = instace
 	serviceParams.ServiceID = instace.ID
 
+	IntegrationConfig.CcServiceBroker.Mock.On("GetServiceBrokerGuidByName", mock.Anything).Return("aguid", nil)
+	IntegrationConfig.CcServiceBroker.Mock.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	IntegrationConfig.CcServiceBroker.Mock.On("Update", "aguid", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	IntegrationConfig.CcServiceBroker.Mock.On("EnableServiceAccess", mock.Anything).Return(nil)
+
 	infoServiceUpdate, err := IntegrationConfig.MgmtAPI.UpdateServiceHandler.Handle(serviceParams)
 	t.Log(infoServiceUpdate)
 	assert.NoError(err)

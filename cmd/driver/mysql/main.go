@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"net/rpc/jsonrpc"
 	"os"
 
@@ -12,7 +11,6 @@ import (
 )
 
 func main() {
-	log.SetPrefix("[mysql log] ")
 
 	var logger = lager.NewLogger("mysql-driver")
 
@@ -24,7 +22,7 @@ func main() {
 	mysqldriver := driver.NewMysqlDriver(logger, provisioner)
 
 	if err := p.RegisterName("mysql", mysqldriver); err != nil {
-		log.Fatalf("failed to register Plugin: %s", err)
+		logger.Fatal("register-plugin", err)
 	}
 
 	p.ServeCodec(jsonrpc.NewServerCodec)

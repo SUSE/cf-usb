@@ -155,6 +155,42 @@ func (c *fileConfig) DeleteDial(instanceID string, dialID string) error {
 	return errors.New("DeleteDial not available for file config provider")
 }
 
+func (c *fileConfig) ServiceNameExists(serviceName string) (bool, error) {
+	if !c.loaded {
+		_, err := c.LoadConfiguration()
+		if err != nil {
+			return false, err
+		}
+	}
+
+	for _, d := range c.config.Drivers {
+		for _, di := range d.DriverInstances {
+			if di.Service.Name == serviceName {
+				return true, nil
+			}
+		}
+	}
+
+	return false, nil
+}
+
+func (c *fileConfig) DriverTypeExists(driverType string) (bool, error) {
+	if !c.loaded {
+		_, err := c.LoadConfiguration()
+		if err != nil {
+			return false, err
+		}
+	}
+
+	for _, d := range c.config.Drivers {
+		if d.DriverType == driverType {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
 func parseJson(jsonConf []byte) (*Config, error) {
 	config := &Config{}
 
