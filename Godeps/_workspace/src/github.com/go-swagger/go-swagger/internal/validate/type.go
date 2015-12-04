@@ -1,3 +1,17 @@
+// Copyright 2015 go-swagger maintainers
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package validate
 
 import (
@@ -105,8 +119,9 @@ func (t *typeValidator) SetPath(path string) {
 }
 
 func (t *typeValidator) Applies(source interface{}, kind reflect.Kind) bool {
-	r := (len(t.Type) > 0 || t.Format != "") && reflect.TypeOf(source) == specSchemaType
-	// fmt.Printf("type validator for %q applies %t for %T (kind: %v)\n", t.Path, r, source, kind)
+	stpe := reflect.TypeOf(source)
+	r := (len(t.Type) > 0 || t.Format != "") && (stpe == specSchemaType || stpe == specParameterType || stpe == specHeaderType)
+	//fmt.Printf("type validator for %q applies %t for %T (kind: %v)\n", t.Path, r, source, kind)
 	return r
 }
 
@@ -122,20 +137,22 @@ func (t *typeValidator) Validate(data interface{}) *Result {
 
 	// check if the type matches, should be used in every validator chain as first item
 	val := reflect.Indirect(reflect.ValueOf(data))
+	kind := val.Kind()
 
 	schType, format := t.schemaInfoForType(data)
+	//fmt.Println("path:", t.Path, "schType:", schType, "format:", format, "expType:", t.Type, "expFmt:", t.Format, "kind:", val.Kind().String())
 	isLowerInt := t.Format == "int64" && format == "int32"
 	isLowerFloat := t.Format == "float64" && format == "float32"
+	isFloatInt := schType == "number" && swag.IsFloat64AJSONInteger(val.Float()) && t.Type.Contains("integer")
+	isIntFloat := schType == "integer" && t.Type.Contains("number")
 
-	if val.Kind() != reflect.String && t.Format != "" && !(format == t.Format || isLowerInt || isLowerFloat) {
+	if kind != reflect.String && kind != reflect.Slice && t.Format != "" && !(t.Type.Contains(schType) || format == t.Format || isFloatInt || isIntFloat || isLowerInt || isLowerFloat) {
 		return sErr(errors.InvalidType(t.Path, t.In, t.Format, format))
 	}
-	if t.Format != "" && val.Kind() == reflect.String {
+	if !(t.Type.Contains("number") || t.Type.Contains("integer")) && t.Format != "" && (kind == reflect.String || kind == reflect.Slice) {
 		return result
 	}
 
-	isFloatInt := schType == "number" && swag.IsFloat64AJSONInteger(val.Float()) && t.Type.Contains("integer")
-	isIntFloat := schType == "integer" && t.Type.Contains("number")
 	if !(t.Type.Contains(schType) || isFloatInt || isIntFloat) {
 		return sErr(errors.InvalidType(t.Path, t.In, strings.Join(t.Type, ","), schType))
 	}

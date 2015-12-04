@@ -1,3 +1,17 @@
+// Copyright 2015 go-swagger maintainers
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package spec
 
 import (
@@ -17,6 +31,11 @@ const (
 	SwaggerSchemaURL = "http://swagger.io/v2/schema.json#"
 	// JSONSchemaURL the url for the json schema schema
 	JSONSchemaURL = "http://json-schema.org/draft-04/schema#"
+)
+
+var (
+	jsonSchema    = MustLoadJSONSchemaDraft04()
+	swaggerSchema = MustLoadSwagger20Schema()
 )
 
 // DocLoader represents a doc loader type
@@ -96,14 +115,6 @@ type Document struct {
 	raw  json.RawMessage
 }
 
-var swaggerSchema *Schema
-var jsonSchema *Schema
-
-func init() {
-	jsonSchema = MustLoadJSONSchemaDraft04()
-	swaggerSchema = MustLoadSwagger20Schema()
-}
-
 // Load loads a new spec document
 func Load(path string) (*Document, error) {
 	specURL, err := url.Parse(path)
@@ -140,6 +151,13 @@ func New(data json.RawMessage, version string) (*Document, error) {
 			produces:    make(map[string]struct{}),
 			authSchemes: make(map[string]struct{}),
 			operations:  make(map[string]map[string]*Operation),
+			referenced: referenceAnalysis{
+				schemas:    make(map[string]SchemaRef),
+				responses:  make(map[string]*Response),
+				parameters: make(map[string]*Parameter),
+			},
+			allSchemas: make(map[string]SchemaRef),
+			allOfs:     make(map[string]SchemaRef),
 		},
 		spec: spec,
 		raw:  data,
@@ -165,6 +183,13 @@ func (d *Document) Expanded() (*Document, error) {
 			produces:    make(map[string]struct{}),
 			authSchemes: make(map[string]struct{}),
 			operations:  make(map[string]map[string]*Operation),
+			referenced: referenceAnalysis{
+				schemas:    make(map[string]SchemaRef),
+				responses:  make(map[string]*Response),
+				parameters: make(map[string]*Parameter),
+			},
+			allSchemas: make(map[string]SchemaRef),
+			allOfs:     make(map[string]SchemaRef),
 		},
 		spec: spec,
 		raw:  d.raw,
@@ -211,6 +236,13 @@ func (d *Document) Reload() *Document {
 		produces:    make(map[string]struct{}),
 		authSchemes: make(map[string]struct{}),
 		operations:  make(map[string]map[string]*Operation),
+		referenced: referenceAnalysis{
+			schemas:    make(map[string]SchemaRef),
+			responses:  make(map[string]*Response),
+			parameters: make(map[string]*Parameter),
+		},
+		allSchemas: make(map[string]SchemaRef),
+		allOfs:     make(map[string]SchemaRef),
 	}
 	d.initialize()
 	return d

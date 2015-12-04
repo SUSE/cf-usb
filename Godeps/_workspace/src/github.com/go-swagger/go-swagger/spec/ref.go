@@ -1,8 +1,21 @@
+// Copyright 2015 go-swagger maintainers
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package spec
 
 import (
 	"encoding/json"
-	"errors"
 
 	"github.com/go-swagger/go-swagger/jsonreference"
 )
@@ -24,38 +37,14 @@ type Ref struct {
 	jsonreference.Ref
 }
 
-// // PointsToRoot returns true when this reference should point to root
-// func (r *Ref) PointsToRoot() bool {
-// 	return r.RawURL == "#"
-// }
-
-// // IsResolved returns true if the reference has been resolved
-// func (r Ref) IsResolved() bool {
-// 	return r.Resolved != nil
-// }
-
-// // NeedsResolving returns true if the reference needs to be resolved
-// func (r Ref) NeedsResolving() bool {
-// 	return r.Ref.GetURL() != nil && r.Resolved == nil
-// }
-
 // Inherits creates a new reference from a parent and a child
 // If the child cannot inherit from the parent, an error is returned
 func (r *Ref) Inherits(child Ref) (*Ref, error) {
-	childURL := child.GetURL()
-	parentURL := r.GetURL()
-	if childURL == nil {
-		return nil, errors.New("child url is nil")
-	}
-	if parentURL == nil {
-		return &child, nil
-	}
-
-	ref, err := NewRef(parentURL.ResolveReference(childURL).String())
+	ref, err := r.Ref.Inherits(child.Ref)
 	if err != nil {
 		return nil, err
 	}
-	return &ref, err
+	return &Ref{Ref: *ref}, nil
 }
 
 // NewRef creates a new instance of a ref object

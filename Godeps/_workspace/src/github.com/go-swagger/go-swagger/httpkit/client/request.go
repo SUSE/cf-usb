@@ -1,3 +1,17 @@
+// Copyright 2015 go-swagger maintainers
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package client
 
 import (
@@ -120,8 +134,10 @@ func (r *request) BuildHTTP(producer httpkit.Producer, registry strfmt.Registry)
 
 	// write the form values as body
 	// if there is payload, use the producer to write the payload
-	if err := producer.Produce(body, r.payload); err != nil {
-		return nil, err
+	if r.payload != nil {
+		if err := producer.Produce(body, r.payload); err != nil {
+			return nil, err
+		}
 	}
 	return req, nil
 }
@@ -133,7 +149,7 @@ func (r *request) SetHeaderParam(name string, values ...string) error {
 	if r.header == nil {
 		r.header = make(http.Header)
 	}
-	r.header[name] = values
+	r.header[http.CanonicalHeaderKey(name)] = values
 	return nil
 }
 
