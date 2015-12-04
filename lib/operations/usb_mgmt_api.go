@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-swagger/go-swagger/httpkit"
 	"github.com/go-swagger/go-swagger/httpkit/middleware"
+	"github.com/go-swagger/go-swagger/httpkit/security"
 	"github.com/go-swagger/go-swagger/spec"
 	"github.com/go-swagger/go-swagger/strfmt"
 )
@@ -27,7 +28,7 @@ func NewUsbMgmtAPI(spec *spec.Document) *UsbMgmtAPI {
 	return o
 }
 
-/* UsbMgmtAPI Universal service broker management API */
+/*UsbMgmtAPI Universal service broker management API */
 type UsbMgmtAPI struct {
 	spec            *spec.Document
 	context         *middleware.Context
@@ -41,104 +42,68 @@ type UsbMgmtAPI struct {
 	// JSONProducer registers a producer for a "application/json" mime type
 	JSONProducer httpkit.Producer
 
-	// GetDialHandler sets the operation handler for the get dial operation
-	GetDialHandler GetDialHandler
-
-	// GetDriverSchemaHandler sets the operation handler for the get driver schema operation
-	GetDriverSchemaHandler GetDriverSchemaHandler
-
-	// GetDriverHandler sets the operation handler for the get driver operation
-	GetDriverHandler GetDriverHandler
-
-	// GetInfoHandler sets the operation handler for the get info operation
-	GetInfoHandler GetInfoHandler
-
-	// GetServicesHandler sets the operation handler for the get services operation
-	GetServicesHandler GetServicesHandler
-
-	// UploadDriverHandler sets the operation handler for the upload driver operation
-	UploadDriverHandler UploadDriverHandler
-
-	// GetBrokerInfoHandler sets the operation handler for the get broker info operation
-	GetBrokerInfoHandler GetBrokerInfoHandler
-
-	// UpdateBrokerInfoHandler sets the operation handler for the update broker info operation
-	UpdateBrokerInfoHandler UpdateBrokerInfoHandler
-
-	// DeleteDialHandler sets the operation handler for the delete dial operation
-	DeleteDialHandler DeleteDialHandler
-
-	// DeleteDriverHandler sets the operation handler for the delete driver operation
-	DeleteDriverHandler DeleteDriverHandler
-
-	// CreateServicePlanHandler sets the operation handler for the create service plan operation
-	CreateServicePlanHandler CreateServicePlanHandler
+	// AuthorizationAuth registers a function that takes a token and returns a principal
+	// it performs authentication based on an api key Authorization provided in the header
+	AuthorizationAuth func(string) (interface{}, error)
 
 	// CreateDialHandler sets the operation handler for the create dial operation
 	CreateDialHandler CreateDialHandler
-
-	// GetDialSchemaHandler sets the operation handler for the get dial schema operation
-	GetDialSchemaHandler GetDialSchemaHandler
-
-	// GetServiceHandler sets the operation handler for the get service operation
-	GetServiceHandler GetServiceHandler
-
-	// GetAllDialsHandler sets the operation handler for the get all dials operation
-	GetAllDialsHandler GetAllDialsHandler
-
-	// UpdateDialHandler sets the operation handler for the update dial operation
-	UpdateDialHandler UpdateDialHandler
-
-	// DeleteDriverInstanceHandler sets the operation handler for the delete driver instance operation
-	DeleteDriverInstanceHandler DeleteDriverInstanceHandler
-
-	// GetDriversHandler sets the operation handler for the get drivers operation
-	GetDriversHandler GetDriversHandler
-
-	// GetServicePlanHandler sets the operation handler for the get service plan operation
-	GetServicePlanHandler GetServicePlanHandler
-
-	// GetServicePlansHandler sets the operation handler for the get service plans operation
-	GetServicePlansHandler GetServicePlansHandler
-
-	// PingDriverInstanceHandler sets the operation handler for the ping driver instance operation
-	PingDriverInstanceHandler PingDriverInstanceHandler
-
 	// CreateDriverHandler sets the operation handler for the create driver operation
 	CreateDriverHandler CreateDriverHandler
-
 	// CreateDriverInstanceHandler sets the operation handler for the create driver instance operation
 	CreateDriverInstanceHandler CreateDriverInstanceHandler
-
-	// UpdateCatalogHandler sets the operation handler for the update catalog operation
-	UpdateCatalogHandler UpdateCatalogHandler
-
-	// GetDriverInstanceHandler sets the operation handler for the get driver instance operation
-	GetDriverInstanceHandler GetDriverInstanceHandler
-
-	// UpdateDriverInstanceHandler sets the operation handler for the update driver instance operation
-	UpdateDriverInstanceHandler UpdateDriverInstanceHandler
-
-	// UpdateServicePlanHandler sets the operation handler for the update service plan operation
-	UpdateServicePlanHandler UpdateServicePlanHandler
-
-	// DeleteServiceHandler sets the operation handler for the delete service operation
-	DeleteServiceHandler DeleteServiceHandler
-
+	// CreateServicePlanHandler sets the operation handler for the create service plan operation
+	CreateServicePlanHandler CreateServicePlanHandler
+	// DeleteDialHandler sets the operation handler for the delete dial operation
+	DeleteDialHandler DeleteDialHandler
+	// DeleteDriverHandler sets the operation handler for the delete driver operation
+	DeleteDriverHandler DeleteDriverHandler
+	// DeleteDriverInstanceHandler sets the operation handler for the delete driver instance operation
+	DeleteDriverInstanceHandler DeleteDriverInstanceHandler
 	// DeleteServicePlanHandler sets the operation handler for the delete service plan operation
 	DeleteServicePlanHandler DeleteServicePlanHandler
-
+	// GetAllDialsHandler sets the operation handler for the get all dials operation
+	GetAllDialsHandler GetAllDialsHandler
+	// GetDialHandler sets the operation handler for the get dial operation
+	GetDialHandler GetDialHandler
+	// GetDialSchemaHandler sets the operation handler for the get dial schema operation
+	GetDialSchemaHandler GetDialSchemaHandler
+	// GetDriverHandler sets the operation handler for the get driver operation
+	GetDriverHandler GetDriverHandler
+	// GetDriverInstanceHandler sets the operation handler for the get driver instance operation
+	GetDriverInstanceHandler GetDriverInstanceHandler
 	// GetDriverInstancesHandler sets the operation handler for the get driver instances operation
 	GetDriverInstancesHandler GetDriverInstancesHandler
-
-	// UpdateServiceHandler sets the operation handler for the update service operation
-	UpdateServiceHandler UpdateServiceHandler
-
+	// GetDriverSchemaHandler sets the operation handler for the get driver schema operation
+	GetDriverSchemaHandler GetDriverSchemaHandler
+	// GetDriversHandler sets the operation handler for the get drivers operation
+	GetDriversHandler GetDriversHandler
+	// GetInfoHandler sets the operation handler for the get info operation
+	GetInfoHandler GetInfoHandler
+	// GetServiceHandler sets the operation handler for the get service operation
+	GetServiceHandler GetServiceHandler
+	// GetServicePlanHandler sets the operation handler for the get service plan operation
+	GetServicePlanHandler GetServicePlanHandler
+	// GetServicePlansHandler sets the operation handler for the get service plans operation
+	GetServicePlansHandler GetServicePlansHandler
+	// GetServicesHandler sets the operation handler for the get services operation
+	GetServicesHandler GetServicesHandler
+	// PingDriverInstanceHandler sets the operation handler for the ping driver instance operation
+	PingDriverInstanceHandler PingDriverInstanceHandler
+	// UpdateCatalogHandler sets the operation handler for the update catalog operation
+	UpdateCatalogHandler UpdateCatalogHandler
+	// UpdateDialHandler sets the operation handler for the update dial operation
+	UpdateDialHandler UpdateDialHandler
 	// UpdateDriverHandler sets the operation handler for the update driver operation
 	UpdateDriverHandler UpdateDriverHandler
-
-	// CreateServiceHandler sets the operation handler for the create service operation
-	CreateServiceHandler CreateServiceHandler
+	// UpdateDriverInstanceHandler sets the operation handler for the update driver instance operation
+	UpdateDriverInstanceHandler UpdateDriverInstanceHandler
+	// UpdateServiceHandler sets the operation handler for the update service operation
+	UpdateServiceHandler UpdateServiceHandler
+	// UpdateServicePlanHandler sets the operation handler for the update service plan operation
+	UpdateServicePlanHandler UpdateServicePlanHandler
+	// UploadDriverHandler sets the operation handler for the upload driver operation
+	UploadDriverHandler UploadDriverHandler
 
 	// ServeError is called when an error is received, there is a default handler
 	// but you can set your own with this
@@ -187,88 +152,12 @@ func (o *UsbMgmtAPI) Validate() error {
 		unregistered = append(unregistered, "JSONProducer")
 	}
 
-	if o.GetDialHandler == nil {
-		unregistered = append(unregistered, "GetDialHandler")
-	}
-
-	if o.GetDriverSchemaHandler == nil {
-		unregistered = append(unregistered, "GetDriverSchemaHandler")
-	}
-
-	if o.GetDriverHandler == nil {
-		unregistered = append(unregistered, "GetDriverHandler")
-	}
-
-	if o.GetInfoHandler == nil {
-		unregistered = append(unregistered, "GetInfoHandler")
-	}
-
-	if o.GetServicesHandler == nil {
-		unregistered = append(unregistered, "GetServicesHandler")
-	}
-
-	if o.UploadDriverHandler == nil {
-		unregistered = append(unregistered, "UploadDriverHandler")
-	}
-
-	if o.GetBrokerInfoHandler == nil {
-		unregistered = append(unregistered, "GetBrokerInfoHandler")
-	}
-
-	if o.UpdateBrokerInfoHandler == nil {
-		unregistered = append(unregistered, "UpdateBrokerInfoHandler")
-	}
-
-	if o.DeleteDialHandler == nil {
-		unregistered = append(unregistered, "DeleteDialHandler")
-	}
-
-	if o.DeleteDriverHandler == nil {
-		unregistered = append(unregistered, "DeleteDriverHandler")
-	}
-
-	if o.CreateServicePlanHandler == nil {
-		unregistered = append(unregistered, "CreateServicePlanHandler")
+	if o.AuthorizationAuth == nil {
+		unregistered = append(unregistered, "AuthorizationAuth")
 	}
 
 	if o.CreateDialHandler == nil {
 		unregistered = append(unregistered, "CreateDialHandler")
-	}
-
-	if o.GetDialSchemaHandler == nil {
-		unregistered = append(unregistered, "GetDialSchemaHandler")
-	}
-
-	if o.GetServiceHandler == nil {
-		unregistered = append(unregistered, "GetServiceHandler")
-	}
-
-	if o.GetAllDialsHandler == nil {
-		unregistered = append(unregistered, "GetAllDialsHandler")
-	}
-
-	if o.UpdateDialHandler == nil {
-		unregistered = append(unregistered, "UpdateDialHandler")
-	}
-
-	if o.DeleteDriverInstanceHandler == nil {
-		unregistered = append(unregistered, "DeleteDriverInstanceHandler")
-	}
-
-	if o.GetDriversHandler == nil {
-		unregistered = append(unregistered, "GetDriversHandler")
-	}
-
-	if o.GetServicePlanHandler == nil {
-		unregistered = append(unregistered, "GetServicePlanHandler")
-	}
-
-	if o.GetServicePlansHandler == nil {
-		unregistered = append(unregistered, "GetServicePlansHandler")
-	}
-
-	if o.PingDriverInstanceHandler == nil {
-		unregistered = append(unregistered, "PingDriverInstanceHandler")
 	}
 
 	if o.CreateDriverHandler == nil {
@@ -279,44 +168,108 @@ func (o *UsbMgmtAPI) Validate() error {
 		unregistered = append(unregistered, "CreateDriverInstanceHandler")
 	}
 
-	if o.UpdateCatalogHandler == nil {
-		unregistered = append(unregistered, "UpdateCatalogHandler")
+	if o.CreateServicePlanHandler == nil {
+		unregistered = append(unregistered, "CreateServicePlanHandler")
 	}
 
-	if o.GetDriverInstanceHandler == nil {
-		unregistered = append(unregistered, "GetDriverInstanceHandler")
+	if o.DeleteDialHandler == nil {
+		unregistered = append(unregistered, "DeleteDialHandler")
 	}
 
-	if o.UpdateDriverInstanceHandler == nil {
-		unregistered = append(unregistered, "UpdateDriverInstanceHandler")
+	if o.DeleteDriverHandler == nil {
+		unregistered = append(unregistered, "DeleteDriverHandler")
 	}
 
-	if o.UpdateServicePlanHandler == nil {
-		unregistered = append(unregistered, "UpdateServicePlanHandler")
-	}
-
-	if o.DeleteServiceHandler == nil {
-		unregistered = append(unregistered, "DeleteServiceHandler")
+	if o.DeleteDriverInstanceHandler == nil {
+		unregistered = append(unregistered, "DeleteDriverInstanceHandler")
 	}
 
 	if o.DeleteServicePlanHandler == nil {
 		unregistered = append(unregistered, "DeleteServicePlanHandler")
 	}
 
+	if o.GetAllDialsHandler == nil {
+		unregistered = append(unregistered, "GetAllDialsHandler")
+	}
+
+	if o.GetDialHandler == nil {
+		unregistered = append(unregistered, "GetDialHandler")
+	}
+
+	if o.GetDialSchemaHandler == nil {
+		unregistered = append(unregistered, "GetDialSchemaHandler")
+	}
+
+	if o.GetDriverHandler == nil {
+		unregistered = append(unregistered, "GetDriverHandler")
+	}
+
+	if o.GetDriverInstanceHandler == nil {
+		unregistered = append(unregistered, "GetDriverInstanceHandler")
+	}
+
 	if o.GetDriverInstancesHandler == nil {
 		unregistered = append(unregistered, "GetDriverInstancesHandler")
 	}
 
-	if o.UpdateServiceHandler == nil {
-		unregistered = append(unregistered, "UpdateServiceHandler")
+	if o.GetDriverSchemaHandler == nil {
+		unregistered = append(unregistered, "GetDriverSchemaHandler")
+	}
+
+	if o.GetDriversHandler == nil {
+		unregistered = append(unregistered, "GetDriversHandler")
+	}
+
+	if o.GetInfoHandler == nil {
+		unregistered = append(unregistered, "GetInfoHandler")
+	}
+
+	if o.GetServiceHandler == nil {
+		unregistered = append(unregistered, "GetServiceHandler")
+	}
+
+	if o.GetServicePlanHandler == nil {
+		unregistered = append(unregistered, "GetServicePlanHandler")
+	}
+
+	if o.GetServicePlansHandler == nil {
+		unregistered = append(unregistered, "GetServicePlansHandler")
+	}
+
+	if o.GetServicesHandler == nil {
+		unregistered = append(unregistered, "GetServicesHandler")
+	}
+
+	if o.PingDriverInstanceHandler == nil {
+		unregistered = append(unregistered, "PingDriverInstanceHandler")
+	}
+
+	if o.UpdateCatalogHandler == nil {
+		unregistered = append(unregistered, "UpdateCatalogHandler")
+	}
+
+	if o.UpdateDialHandler == nil {
+		unregistered = append(unregistered, "UpdateDialHandler")
 	}
 
 	if o.UpdateDriverHandler == nil {
 		unregistered = append(unregistered, "UpdateDriverHandler")
 	}
 
-	if o.CreateServiceHandler == nil {
-		unregistered = append(unregistered, "CreateServiceHandler")
+	if o.UpdateDriverInstanceHandler == nil {
+		unregistered = append(unregistered, "UpdateDriverInstanceHandler")
+	}
+
+	if o.UpdateServiceHandler == nil {
+		unregistered = append(unregistered, "UpdateServiceHandler")
+	}
+
+	if o.UpdateServicePlanHandler == nil {
+		unregistered = append(unregistered, "UpdateServicePlanHandler")
+	}
+
+	if o.UploadDriverHandler == nil {
+		unregistered = append(unregistered, "UploadDriverHandler")
 	}
 
 	if len(unregistered) > 0 {
@@ -334,7 +287,17 @@ func (o *UsbMgmtAPI) ServeErrorFor(operationID string) func(http.ResponseWriter,
 // AuthenticatorsFor gets the authenticators for the specified security schemes
 func (o *UsbMgmtAPI) AuthenticatorsFor(schemes map[string]spec.SecurityScheme) map[string]httpkit.Authenticator {
 
-	return nil
+	result := make(map[string]httpkit.Authenticator)
+	for name, scheme := range schemes {
+		switch name {
+
+		case "Authorization":
+
+			result[name] = security.APIKeyAuth(scheme.Name, scheme.In, func(tok string) (interface{}, error) { return o.AuthorizationAuth(tok) })
+
+		}
+	}
+	return result
 
 }
 
@@ -386,71 +349,63 @@ func (o *UsbMgmtAPI) initHandlerCache() {
 
 	o.handlers = make(map[string]http.Handler)
 
-	o.handlers["getDial"] = NewGetDial(o.context, o.GetDialHandler)
-
-	o.handlers["getDriverSchema"] = NewGetDriverSchema(o.context, o.GetDriverSchemaHandler)
-
-	o.handlers["getDriver"] = NewGetDriver(o.context, o.GetDriverHandler)
-
-	o.handlers["getInfo"] = NewGetInfo(o.context, o.GetInfoHandler)
-
-	o.handlers["getServices"] = NewGetServices(o.context, o.GetServicesHandler)
-
-	o.handlers["uploadDriver"] = NewUploadDriver(o.context, o.UploadDriverHandler)
-
-	o.handlers["getBrokerInfo"] = NewGetBrokerInfo(o.context, o.GetBrokerInfoHandler)
-
-	o.handlers["updateBrokerInfo"] = NewUpdateBrokerInfo(o.context, o.UpdateBrokerInfoHandler)
-
-	o.handlers["deleteDial"] = NewDeleteDial(o.context, o.DeleteDialHandler)
-
-	o.handlers["deleteDriver"] = NewDeleteDriver(o.context, o.DeleteDriverHandler)
-
-	o.handlers["createServicePlan"] = NewCreateServicePlan(o.context, o.CreateServicePlanHandler)
-
 	o.handlers["createDial"] = NewCreateDial(o.context, o.CreateDialHandler)
-
-	o.handlers["getDialSchema"] = NewGetDialSchema(o.context, o.GetDialSchemaHandler)
-
-	o.handlers["getService"] = NewGetService(o.context, o.GetServiceHandler)
-
-	o.handlers["getAllDials"] = NewGetAllDials(o.context, o.GetAllDialsHandler)
-
-	o.handlers["updateDial"] = NewUpdateDial(o.context, o.UpdateDialHandler)
-
-	o.handlers["deleteDriverInstance"] = NewDeleteDriverInstance(o.context, o.DeleteDriverInstanceHandler)
-
-	o.handlers["getDrivers"] = NewGetDrivers(o.context, o.GetDriversHandler)
-
-	o.handlers["getServicePlan"] = NewGetServicePlan(o.context, o.GetServicePlanHandler)
-
-	o.handlers["getServicePlans"] = NewGetServicePlans(o.context, o.GetServicePlansHandler)
-
-	o.handlers["pingDriverInstance"] = NewPingDriverInstance(o.context, o.PingDriverInstanceHandler)
 
 	o.handlers["createDriver"] = NewCreateDriver(o.context, o.CreateDriverHandler)
 
 	o.handlers["createDriverInstance"] = NewCreateDriverInstance(o.context, o.CreateDriverInstanceHandler)
 
-	o.handlers["updateCatalog"] = NewUpdateCatalog(o.context, o.UpdateCatalogHandler)
+	o.handlers["createServicePlan"] = NewCreateServicePlan(o.context, o.CreateServicePlanHandler)
 
-	o.handlers["getDriverInstance"] = NewGetDriverInstance(o.context, o.GetDriverInstanceHandler)
+	o.handlers["deleteDial"] = NewDeleteDial(o.context, o.DeleteDialHandler)
 
-	o.handlers["updateDriverInstance"] = NewUpdateDriverInstance(o.context, o.UpdateDriverInstanceHandler)
+	o.handlers["deleteDriver"] = NewDeleteDriver(o.context, o.DeleteDriverHandler)
 
-	o.handlers["updateServicePlan"] = NewUpdateServicePlan(o.context, o.UpdateServicePlanHandler)
-
-	o.handlers["deleteService"] = NewDeleteService(o.context, o.DeleteServiceHandler)
+	o.handlers["deleteDriverInstance"] = NewDeleteDriverInstance(o.context, o.DeleteDriverInstanceHandler)
 
 	o.handlers["deleteServicePlan"] = NewDeleteServicePlan(o.context, o.DeleteServicePlanHandler)
 
+	o.handlers["getAllDials"] = NewGetAllDials(o.context, o.GetAllDialsHandler)
+
+	o.handlers["getDial"] = NewGetDial(o.context, o.GetDialHandler)
+
+	o.handlers["getDialSchema"] = NewGetDialSchema(o.context, o.GetDialSchemaHandler)
+
+	o.handlers["getDriver"] = NewGetDriver(o.context, o.GetDriverHandler)
+
+	o.handlers["getDriverInstance"] = NewGetDriverInstance(o.context, o.GetDriverInstanceHandler)
+
 	o.handlers["getDriverInstances"] = NewGetDriverInstances(o.context, o.GetDriverInstancesHandler)
 
-	o.handlers["updateService"] = NewUpdateService(o.context, o.UpdateServiceHandler)
+	o.handlers["getDriverSchema"] = NewGetDriverSchema(o.context, o.GetDriverSchemaHandler)
+
+	o.handlers["getDrivers"] = NewGetDrivers(o.context, o.GetDriversHandler)
+
+	o.handlers["getInfo"] = NewGetInfo(o.context, o.GetInfoHandler)
+
+	o.handlers["getService"] = NewGetService(o.context, o.GetServiceHandler)
+
+	o.handlers["getServicePlan"] = NewGetServicePlan(o.context, o.GetServicePlanHandler)
+
+	o.handlers["getServicePlans"] = NewGetServicePlans(o.context, o.GetServicePlansHandler)
+
+	o.handlers["getServices"] = NewGetServices(o.context, o.GetServicesHandler)
+
+	o.handlers["pingDriverInstance"] = NewPingDriverInstance(o.context, o.PingDriverInstanceHandler)
+
+	o.handlers["updateCatalog"] = NewUpdateCatalog(o.context, o.UpdateCatalogHandler)
+
+	o.handlers["updateDial"] = NewUpdateDial(o.context, o.UpdateDialHandler)
 
 	o.handlers["updateDriver"] = NewUpdateDriver(o.context, o.UpdateDriverHandler)
 
-	o.handlers["createService"] = NewCreateService(o.context, o.CreateServiceHandler)
+	o.handlers["updateDriverInstance"] = NewUpdateDriverInstance(o.context, o.UpdateDriverInstanceHandler)
+
+	o.handlers["updateService"] = NewUpdateService(o.context, o.UpdateServiceHandler)
+
+	o.handlers["updateServicePlan"] = NewUpdateServicePlan(o.context, o.UpdateServicePlanHandler)
+
+	o.handlers["uploadDriver"] = NewUploadDriver(o.context, o.UploadDriverHandler)
 
 }
 

@@ -9,8 +9,7 @@ import (
 	"github.com/go-swagger/go-swagger/strfmt"
 )
 
-/*
-Plan plan
+/*Plan plan
 
 swagger:model plan
 */
@@ -24,7 +23,7 @@ type Plan struct {
 
 	Required: true
 	*/
-	DialID string `json:"dial_id"`
+	DialID string `json:"dial_id,omitempty"`
 
 	/* Free free
 	 */
@@ -38,26 +37,26 @@ type Plan struct {
 
 	Required: true
 	*/
-	Name string `json:"name"`
+	Name string `json:"name,omitempty"`
 }
 
 // Validate validates this plan
 func (m *Plan) Validate(formats strfmt.Registry) error {
-
 	var res []error
 
 	if err := m.validateDialID(formats); err != nil {
+		// prop
 		res = append(res, err)
 	}
 
 	if err := m.validateName(formats); err != nil {
+		// prop
 		res = append(res, err)
 	}
 
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-
 	return nil
 }
 

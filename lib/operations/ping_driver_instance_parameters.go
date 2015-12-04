@@ -8,16 +8,18 @@ import (
 
 	"github.com/go-swagger/go-swagger/errors"
 	"github.com/go-swagger/go-swagger/httpkit/middleware"
-	"github.com/go-swagger/go-swagger/httpkit/validate"
 	"github.com/go-swagger/go-swagger/strfmt"
 )
 
 // PingDriverInstanceParams contains all the bound params for the ping driver instance operation
 // typically these are obtained from a http.Request
+//
+// swagger:parameters pingDriverInstance
 type PingDriverInstanceParams struct {
-	// Authorization token
-	Authorization string
-	// Driver Instance ID
+	/* Driver Instance ID
+	Required: true
+	In: path
+	*/
 	DriverInstanceID string
 }
 
@@ -26,10 +28,6 @@ type PingDriverInstanceParams struct {
 func (o *PingDriverInstanceParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
 
-	if err := o.bindAuthorization(r.Header.Get("authorization"), route.Formats); err != nil {
-		res = append(res, err)
-	}
-
 	if err := o.bindDriverInstanceID(route.Params.Get("driver_instance_id"), route.Formats); err != nil {
 		res = append(res, err)
 	}
@@ -37,16 +35,6 @@ func (o *PingDriverInstanceParams) BindRequest(r *http.Request, route *middlewar
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-	return nil
-}
-
-func (o *PingDriverInstanceParams) bindAuthorization(raw string, formats strfmt.Registry) error {
-	if err := validate.RequiredString("authorization", "header", raw); err != nil {
-		return err
-	}
-
-	o.Authorization = raw
-
 	return nil
 }
 

@@ -10,24 +10,27 @@ import (
 )
 
 // PingDriverInstanceHandlerFunc turns a function with the right signature into a ping driver instance handler
-type PingDriverInstanceHandlerFunc func(PingDriverInstanceParams) error
+type PingDriverInstanceHandlerFunc func(PingDriverInstanceParams, interface{}) middleware.Responder
 
-func (fn PingDriverInstanceHandlerFunc) Handle(params PingDriverInstanceParams) error {
-	return fn(params)
+// Handle executing the request and returning a response
+func (fn PingDriverInstanceHandlerFunc) Handle(params PingDriverInstanceParams, principal interface{}) middleware.Responder {
+	return fn(params, principal)
 }
 
 // PingDriverInstanceHandler interface for that can handle valid ping driver instance params
 type PingDriverInstanceHandler interface {
-	Handle(PingDriverInstanceParams) error
+	Handle(PingDriverInstanceParams, interface{}) middleware.Responder
 }
 
 // NewPingDriverInstance creates a new http.Handler for the ping driver instance operation
-func NewPingDriverInstance(ctx *middleware.Context, handler PingDriverInstanceHandler) PingDriverInstance {
-	return PingDriverInstance{Context: ctx, Handler: handler}
+func NewPingDriverInstance(ctx *middleware.Context, handler PingDriverInstanceHandler) *PingDriverInstance {
+	return &PingDriverInstance{Context: ctx, Handler: handler}
 }
 
-/*
+/*PingDriverInstance swagger:route GET /driver_instances/{driver_instance_id}/ping pingDriverInstance
+
 Pings the driver
+
 
 */
 type PingDriverInstance struct {
@@ -36,19 +39,26 @@ type PingDriverInstance struct {
 	Handler PingDriverInstanceHandler
 }
 
-func (o PingDriverInstance) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (o *PingDriverInstance) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
+
+	uprinc, err := o.Context.Authorize(r, route)
+	if err != nil {
+		o.Context.Respond(rw, r, route.Produces, route, err)
+		return
+	}
+	var principal interface{}
+	if uprinc != nil {
+		principal = uprinc
+	}
 
 	if err := o.Context.BindValidRequest(r, route, &o.Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	err := o.Handler.Handle(o.Params) // actually handle the request
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	o.Context.Respond(rw, r, route.Produces, route, nil)
+	res := o.Handler.Handle(o.Params, principal) // actually handle the request
+
+	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

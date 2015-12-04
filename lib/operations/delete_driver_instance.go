@@ -10,24 +10,27 @@ import (
 )
 
 // DeleteDriverInstanceHandlerFunc turns a function with the right signature into a delete driver instance handler
-type DeleteDriverInstanceHandlerFunc func(DeleteDriverInstanceParams) error
+type DeleteDriverInstanceHandlerFunc func(DeleteDriverInstanceParams, interface{}) middleware.Responder
 
-func (fn DeleteDriverInstanceHandlerFunc) Handle(params DeleteDriverInstanceParams) error {
-	return fn(params)
+// Handle executing the request and returning a response
+func (fn DeleteDriverInstanceHandlerFunc) Handle(params DeleteDriverInstanceParams, principal interface{}) middleware.Responder {
+	return fn(params, principal)
 }
 
 // DeleteDriverInstanceHandler interface for that can handle valid delete driver instance params
 type DeleteDriverInstanceHandler interface {
-	Handle(DeleteDriverInstanceParams) error
+	Handle(DeleteDriverInstanceParams, interface{}) middleware.Responder
 }
 
 // NewDeleteDriverInstance creates a new http.Handler for the delete driver instance operation
-func NewDeleteDriverInstance(ctx *middleware.Context, handler DeleteDriverInstanceHandler) DeleteDriverInstance {
-	return DeleteDriverInstance{Context: ctx, Handler: handler}
+func NewDeleteDriverInstance(ctx *middleware.Context, handler DeleteDriverInstanceHandler) *DeleteDriverInstance {
+	return &DeleteDriverInstance{Context: ctx, Handler: handler}
 }
 
-/*
+/*DeleteDriverInstance swagger:route DELETE /driver_instances/{driver_instance_id} deleteDriverInstance
+
 Delete a driver instance
+
 */
 type DeleteDriverInstance struct {
 	Context *middleware.Context
@@ -35,19 +38,26 @@ type DeleteDriverInstance struct {
 	Handler DeleteDriverInstanceHandler
 }
 
-func (o DeleteDriverInstance) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (o *DeleteDriverInstance) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
+
+	uprinc, err := o.Context.Authorize(r, route)
+	if err != nil {
+		o.Context.Respond(rw, r, route.Produces, route, err)
+		return
+	}
+	var principal interface{}
+	if uprinc != nil {
+		principal = uprinc
+	}
 
 	if err := o.Context.BindValidRequest(r, route, &o.Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	err := o.Handler.Handle(o.Params) // actually handle the request
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	o.Context.Respond(rw, r, route.Produces, route, nil)
+	res := o.Handler.Handle(o.Params, principal) // actually handle the request
+
+	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

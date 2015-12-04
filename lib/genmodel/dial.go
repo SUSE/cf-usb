@@ -9,8 +9,7 @@ import (
 	"github.com/go-swagger/go-swagger/strfmt"
 )
 
-/*
-Dial dial
+/*Dial dial
 
 swagger:model dial
 */
@@ -18,13 +17,13 @@ type Dial struct {
 
 	/* Configuration configuration
 	 */
-	Configuration map[string]interface{} `json:"configuration,omitempty"`
+	Configuration interface{} `json:"configuration,omitempty"`
 
 	/* DriverInstanceID driver instance id
 
 	Required: true
 	*/
-	DriverInstanceID string `json:"driver_instance_id"`
+	DriverInstanceID string `json:"driver_instance_id,omitempty"`
 
 	/* ID id
 	 */
@@ -37,17 +36,16 @@ type Dial struct {
 
 // Validate validates this dial
 func (m *Dial) Validate(formats strfmt.Registry) error {
-
 	var res []error
 
 	if err := m.validateDriverInstanceID(formats); err != nil {
+		// prop
 		res = append(res, err)
 	}
 
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-
 	return nil
 }
 

@@ -15,15 +15,24 @@ import (
 
 // UploadDriverParams contains all the bound params for the upload driver operation
 // typically these are obtained from a http.Request
+//
+// swagger:parameters uploadDriver
 type UploadDriverParams struct {
-	// Authorization token
-	Authorization string
-	// Driver ID
+	/* Driver ID
+	Required: true
+	In: path
+	*/
 	DriverID string
-	// file sha
-	Sha string
-	// Driver executable
+	/* Driver executable
+	Required: true
+	In: formData
+	*/
 	File httpkit.File
+	/* file sha1 base64 encoded
+	Required: true
+	In: formData
+	*/
+	Sha string
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
@@ -31,15 +40,7 @@ type UploadDriverParams struct {
 func (o *UploadDriverParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
 
-	if err := o.bindAuthorization(r.Header.Get("authorization"), route.Formats); err != nil {
-		res = append(res, err)
-	}
-
 	if err := o.bindDriverID(route.Params.Get("driver_id"), route.Formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := o.bindSha(r.FormValue("sha"), route.Formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -50,19 +51,13 @@ func (o *UploadDriverParams) BindRequest(r *http.Request, route *middleware.Matc
 		o.File = httpkit.File{Data: file, Header: fileHeader}
 	}
 
+	if err := o.bindSha(r.FormValue("sha"), route.Formats); err != nil {
+		res = append(res, err)
+	}
+
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-	return nil
-}
-
-func (o *UploadDriverParams) bindAuthorization(raw string, formats strfmt.Registry) error {
-	if err := validate.RequiredString("authorization", "header", raw); err != nil {
-		return err
-	}
-
-	o.Authorization = raw
-
 	return nil
 }
 

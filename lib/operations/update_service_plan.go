@@ -7,28 +7,30 @@ import (
 	"net/http"
 
 	"github.com/go-swagger/go-swagger/httpkit/middleware"
-	"github.com/hpcloud/cf-usb/lib/genmodel"
 )
 
 // UpdateServicePlanHandlerFunc turns a function with the right signature into a update service plan handler
-type UpdateServicePlanHandlerFunc func(UpdateServicePlanParams) (*genmodel.Plan, error)
+type UpdateServicePlanHandlerFunc func(UpdateServicePlanParams, interface{}) middleware.Responder
 
-func (fn UpdateServicePlanHandlerFunc) Handle(params UpdateServicePlanParams) (*genmodel.Plan, error) {
-	return fn(params)
+// Handle executing the request and returning a response
+func (fn UpdateServicePlanHandlerFunc) Handle(params UpdateServicePlanParams, principal interface{}) middleware.Responder {
+	return fn(params, principal)
 }
 
 // UpdateServicePlanHandler interface for that can handle valid update service plan params
 type UpdateServicePlanHandler interface {
-	Handle(UpdateServicePlanParams) (*genmodel.Plan, error)
+	Handle(UpdateServicePlanParams, interface{}) middleware.Responder
 }
 
 // NewUpdateServicePlan creates a new http.Handler for the update service plan operation
-func NewUpdateServicePlan(ctx *middleware.Context, handler UpdateServicePlanHandler) UpdateServicePlan {
-	return UpdateServicePlan{Context: ctx, Handler: handler}
+func NewUpdateServicePlan(ctx *middleware.Context, handler UpdateServicePlanHandler) *UpdateServicePlan {
+	return &UpdateServicePlan{Context: ctx, Handler: handler}
 }
 
-/*
+/*UpdateServicePlan swagger:route PUT /plans/{plan_id} updateServicePlan
+
 Updates the plan with the id **planID** for the service id **serviceID**
+
 */
 type UpdateServicePlan struct {
 	Context *middleware.Context
@@ -36,19 +38,26 @@ type UpdateServicePlan struct {
 	Handler UpdateServicePlanHandler
 }
 
-func (o UpdateServicePlan) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (o *UpdateServicePlan) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
+
+	uprinc, err := o.Context.Authorize(r, route)
+	if err != nil {
+		o.Context.Respond(rw, r, route.Produces, route, err)
+		return
+	}
+	var principal interface{}
+	if uprinc != nil {
+		principal = uprinc
+	}
 
 	if err := o.Context.BindValidRequest(r, route, &o.Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res, err := o.Handler.Handle(o.Params) // actually handle the request
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
+	res := o.Handler.Handle(o.Params, principal) // actually handle the request
+
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

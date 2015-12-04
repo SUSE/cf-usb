@@ -8,16 +8,17 @@ import (
 
 	"github.com/go-swagger/go-swagger/errors"
 	"github.com/go-swagger/go-swagger/httpkit/middleware"
-	"github.com/go-swagger/go-swagger/httpkit/validate"
 	"github.com/go-swagger/go-swagger/strfmt"
 )
 
 // GetAllDialsParams contains all the bound params for the get all dials operation
 // typically these are obtained from a http.Request
+//
+// swagger:parameters getAllDials
 type GetAllDialsParams struct {
-	// Authorization token
-	Authorization string
-	// Driver instance ID
+	/* Driver instance ID
+	In: query
+	*/
 	DriverInstanceID string
 }
 
@@ -27,10 +28,6 @@ func (o *GetAllDialsParams) BindRequest(r *http.Request, route *middleware.Match
 	var res []error
 	qs := r.URL.Query()
 
-	if err := o.bindAuthorization(r.Header.Get("authorization"), route.Formats); err != nil {
-		res = append(res, err)
-	}
-
 	if err := o.bindDriverInstanceID(qs.Get("driver_instance_id"), route.Formats); err != nil {
 		res = append(res, err)
 	}
@@ -38,16 +35,6 @@ func (o *GetAllDialsParams) BindRequest(r *http.Request, route *middleware.Match
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-	return nil
-}
-
-func (o *GetAllDialsParams) bindAuthorization(raw string, formats strfmt.Registry) error {
-	if err := validate.RequiredString("authorization", "header", raw); err != nil {
-		return err
-	}
-
-	o.Authorization = raw
-
 	return nil
 }
 

@@ -7,28 +7,30 @@ import (
 	"net/http"
 
 	"github.com/go-swagger/go-swagger/httpkit/middleware"
-	"github.com/hpcloud/cf-usb/lib/genmodel"
 )
 
 // GetDriverSchemaHandlerFunc turns a function with the right signature into a get driver schema handler
-type GetDriverSchemaHandlerFunc func(GetDriverSchemaParams) (*genmodel.DriverSchema, error)
+type GetDriverSchemaHandlerFunc func(GetDriverSchemaParams, interface{}) middleware.Responder
 
-func (fn GetDriverSchemaHandlerFunc) Handle(params GetDriverSchemaParams) (*genmodel.DriverSchema, error) {
-	return fn(params)
+// Handle executing the request and returning a response
+func (fn GetDriverSchemaHandlerFunc) Handle(params GetDriverSchemaParams, principal interface{}) middleware.Responder {
+	return fn(params, principal)
 }
 
 // GetDriverSchemaHandler interface for that can handle valid get driver schema params
 type GetDriverSchemaHandler interface {
-	Handle(GetDriverSchemaParams) (*genmodel.DriverSchema, error)
+	Handle(GetDriverSchemaParams, interface{}) middleware.Responder
 }
 
 // NewGetDriverSchema creates a new http.Handler for the get driver schema operation
-func NewGetDriverSchema(ctx *middleware.Context, handler GetDriverSchemaHandler) GetDriverSchema {
-	return GetDriverSchema{Context: ctx, Handler: handler}
+func NewGetDriverSchema(ctx *middleware.Context, handler GetDriverSchemaHandler) *GetDriverSchema {
+	return &GetDriverSchema{Context: ctx, Handler: handler}
 }
 
-/*
+/*GetDriverSchema swagger:route GET /drivers/{driver_id}/schema getDriverSchema
+
 Get driver config schema
+
 */
 type GetDriverSchema struct {
 	Context *middleware.Context
@@ -36,19 +38,26 @@ type GetDriverSchema struct {
 	Handler GetDriverSchemaHandler
 }
 
-func (o GetDriverSchema) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (o *GetDriverSchema) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
+
+	uprinc, err := o.Context.Authorize(r, route)
+	if err != nil {
+		o.Context.Respond(rw, r, route.Produces, route, err)
+		return
+	}
+	var principal interface{}
+	if uprinc != nil {
+		principal = uprinc
+	}
 
 	if err := o.Context.BindValidRequest(r, route, &o.Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res, err := o.Handler.Handle(o.Params) // actually handle the request
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
+	res := o.Handler.Handle(o.Params, principal) // actually handle the request
+
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

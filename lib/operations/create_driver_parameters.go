@@ -8,18 +8,20 @@ import (
 
 	"github.com/go-swagger/go-swagger/errors"
 	"github.com/go-swagger/go-swagger/httpkit/middleware"
-	"github.com/go-swagger/go-swagger/httpkit/validate"
-	"github.com/go-swagger/go-swagger/strfmt"
+
 	"github.com/hpcloud/cf-usb/lib/genmodel"
 )
 
 // CreateDriverParams contains all the bound params for the create driver operation
 // typically these are obtained from a http.Request
+//
+// swagger:parameters createDriver
 type CreateDriverParams struct {
-	// Authorization token
-	Authorization string
-	// Driver to be created
-	Driver genmodel.Driver
+	/* Driver to be created
+	Required: true
+	In: body
+	*/
+	Driver *genmodel.Driver
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
@@ -27,31 +29,21 @@ type CreateDriverParams struct {
 func (o *CreateDriverParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
 
-	if err := o.bindAuthorization(r.Header.Get("authorization"), route.Formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := route.Consumer.Consume(r.Body, &o.Driver); err != nil {
+	var body genmodel.Driver
+	if err := route.Consumer.Consume(r.Body, &body); err != nil {
 		res = append(res, errors.NewParseError("driver", "body", "", err))
 	} else {
-		if err := o.Driver.Validate(route.Formats); err != nil {
+		if err := body.Validate(route.Formats); err != nil {
 			res = append(res, err)
 		}
 
+		if len(res) == 0 {
+			o.Driver = &body
+		}
 	}
 
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-	return nil
-}
-
-func (o *CreateDriverParams) bindAuthorization(raw string, formats strfmt.Registry) error {
-	if err := validate.RequiredString("authorization", "header", raw); err != nil {
-		return err
-	}
-
-	o.Authorization = raw
-
 	return nil
 }

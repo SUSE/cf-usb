@@ -7,28 +7,30 @@ import (
 	"net/http"
 
 	"github.com/go-swagger/go-swagger/httpkit/middleware"
-	"github.com/hpcloud/cf-usb/lib/genmodel"
 )
 
 // GetServicesHandlerFunc turns a function with the right signature into a get services handler
-type GetServicesHandlerFunc func(GetServicesParams) (*[]genmodel.Service, error)
+type GetServicesHandlerFunc func(GetServicesParams, interface{}) middleware.Responder
 
-func (fn GetServicesHandlerFunc) Handle(params GetServicesParams) (*[]genmodel.Service, error) {
-	return fn(params)
+// Handle executing the request and returning a response
+func (fn GetServicesHandlerFunc) Handle(params GetServicesParams, principal interface{}) middleware.Responder {
+	return fn(params, principal)
 }
 
 // GetServicesHandler interface for that can handle valid get services params
 type GetServicesHandler interface {
-	Handle(GetServicesParams) (*[]genmodel.Service, error)
+	Handle(GetServicesParams, interface{}) middleware.Responder
 }
 
 // NewGetServices creates a new http.Handler for the get services operation
-func NewGetServices(ctx *middleware.Context, handler GetServicesHandler) GetServices {
-	return GetServices{Context: ctx, Handler: handler}
+func NewGetServices(ctx *middleware.Context, handler GetServicesHandler) *GetServices {
+	return &GetServices{Context: ctx, Handler: handler}
 }
 
-/*
+/*GetServices swagger:route GET /services getServices
+
 Gets the existing `service`
+
 
 */
 type GetServices struct {
@@ -37,19 +39,26 @@ type GetServices struct {
 	Handler GetServicesHandler
 }
 
-func (o GetServices) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (o *GetServices) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
+
+	uprinc, err := o.Context.Authorize(r, route)
+	if err != nil {
+		o.Context.Respond(rw, r, route.Produces, route, err)
+		return
+	}
+	var principal interface{}
+	if uprinc != nil {
+		principal = uprinc
+	}
 
 	if err := o.Context.BindValidRequest(r, route, &o.Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res, err := o.Handler.Handle(o.Params) // actually handle the request
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
+	res := o.Handler.Handle(o.Params, principal) // actually handle the request
+
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

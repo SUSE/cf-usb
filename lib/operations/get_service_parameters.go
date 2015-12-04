@@ -8,16 +8,18 @@ import (
 
 	"github.com/go-swagger/go-swagger/errors"
 	"github.com/go-swagger/go-swagger/httpkit/middleware"
-	"github.com/go-swagger/go-swagger/httpkit/validate"
 	"github.com/go-swagger/go-swagger/strfmt"
 )
 
 // GetServiceParams contains all the bound params for the get service operation
 // typically these are obtained from a http.Request
+//
+// swagger:parameters getService
 type GetServiceParams struct {
-	// Authorization token
-	Authorization string
-	// ID of the service
+	/* ID of the service
+	Required: true
+	In: path
+	*/
 	ServiceID string
 }
 
@@ -26,10 +28,6 @@ type GetServiceParams struct {
 func (o *GetServiceParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
 
-	if err := o.bindAuthorization(r.Header.Get("authorization"), route.Formats); err != nil {
-		res = append(res, err)
-	}
-
 	if err := o.bindServiceID(route.Params.Get("service_id"), route.Formats); err != nil {
 		res = append(res, err)
 	}
@@ -37,16 +35,6 @@ func (o *GetServiceParams) BindRequest(r *http.Request, route *middleware.Matche
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-	return nil
-}
-
-func (o *GetServiceParams) bindAuthorization(raw string, formats strfmt.Registry) error {
-	if err := validate.RequiredString("authorization", "header", raw); err != nil {
-		return err
-	}
-
-	o.Authorization = raw
-
 	return nil
 }
 
