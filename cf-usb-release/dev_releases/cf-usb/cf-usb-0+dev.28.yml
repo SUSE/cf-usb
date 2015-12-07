@@ -1,0 +1,22 @@
+---
+packages:
+- name: cf-usb
+  version: f243765e2fd3c00df7be1b2779700440649850ed
+  fingerprint: f243765e2fd3c00df7be1b2779700440649850ed
+  sha1: e0955bfb16f6db2682a9bce1894b4006dc8cbbd6
+  dependencies:
+  - golang_1.4
+- name: golang_1.4
+  version: 714698bc352d2a1dbe321376f0676037568147bb
+  fingerprint: 714698bc352d2a1dbe321376f0676037568147bb
+  sha1: ec0fa17d4ad293dd26d4f556cba5cd5e089c539e
+  dependencies: []
+jobs:
+- name: cf-usb
+  version: 61871db764b1d104a01e1c61d9e77898650abdbb
+  fingerprint: 61871db764b1d104a01e1c61d9e77898650abdbb
+  sha1: 020b55924790fdcaf5e88b0f7122a030c0b33606
+commit_hash: 4195c7d6
+uncommitted_changes: true
+name: cf-usb
+version: 0+dev.28

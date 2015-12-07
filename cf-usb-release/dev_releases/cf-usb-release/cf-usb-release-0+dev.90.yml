@@ -1,0 +1,55 @@
+---
+packages:
+- name: golang_1.4
+  version: !binary |-
+    NzE0Njk4YmMzNTJkMmExZGJlMzIxMzc2ZjA2NzYwMzc1NjgxNDdiYg==
+  fingerprint: !binary |-
+    NzE0Njk4YmMzNTJkMmExZGJlMzIxMzc2ZjA2NzYwMzc1NjgxNDdiYg==
+  sha1: !binary |-
+    YjUxODUxMTllMWRhNDk1MDJlMTQ3NGFiMWZkM2ZiMmViYmY3ODg4Yw==
+  dependencies: []
+- name: cf-usb
+  version: !binary |-
+    ZTIzMDk0NTY2MWY0ZjMwMWY1OGZjZDIxNmFhNDQwNWJmYjVhNWZjNw==
+  fingerprint: !binary |-
+    ZTIzMDk0NTY2MWY0ZjMwMWY1OGZjZDIxNmFhNDQwNWJmYjVhNWZjNw==
+  sha1: !binary |-
+    Mjg4NGU1YzA5NzkzNjQ1ZTE2NzY2ODRhN2JiY2U1NjM0NmUyNzY2NQ==
+  dependencies:
+  - debian_nfs_server
+  - golang_1.4
+- name: debian_nfs_server
+  version: !binary |-
+    YWFjMDVmMjI1ODJiMmY5ZmFhNjg0MGRhMDU2MDg0ZWQxNTc3MjU5NA==
+  fingerprint: !binary |-
+    YWFjMDVmMjI1ODJiMmY5ZmFhNjg0MGRhMDU2MDg0ZWQxNTc3MjU5NA==
+  sha1: !binary |-
+    YjgzODg3YzA3MjFhZmQwMTZiYjVjMTJhMzdlOWU1NzAzZjhiNzBiYg==
+  dependencies: []
+- name: common
+  version: !binary |-
+    ZTQwMTgxNmE0NzQ4MjkyMTYzNjc5ZmFmY2JkOGY4MThlZDgxNTRhNQ==
+  fingerprint: !binary |-
+    ZTQwMTgxNmE0NzQ4MjkyMTYzNjc5ZmFmY2JkOGY4MThlZDgxNTRhNQ==
+  sha1: !binary |-
+    MDVjZTRkMzEyNzVmNjUzN2QxYWU5ZDE3MzU4MDNlNjFlZjQxMGMxZA==
+  dependencies: []
+jobs:
+- name: cf-usb
+  version: !binary |-
+    MWRkYjE2NWY5OWU4M2ZhZDljYTU2MjFjOWM0ODgyMGUwNjlkMDQyYQ==
+  fingerprint: !binary |-
+    MWRkYjE2NWY5OWU4M2ZhZDljYTU2MjFjOWM0ODgyMGUwNjlkMDQyYQ==
+  sha1: !binary |-
+    OTFkOWYxNGM1ZjY5ZDlmNTY5NmM0MTVmNTExY2QyODg4Y2RkYWZmMQ==
+- name: debian_nfs_server
+  version: !binary |-
+    MDcwZWE3OTE5ZGNkZjk2NTRlNGIyMzlkM2E4ZjQ2NTIxYWQ0YzgzZA==
+  fingerprint: !binary |-
+    MDcwZWE3OTE5ZGNkZjk2NTRlNGIyMzlkM2E4ZjQ2NTIxYWQ0YzgzZA==
+  sha1: !binary |-
+    YzhjMThiNWUxYTFmMzVmMTUyMjg4OGRiNTQ5NzY5ZTI1ZjYwYzY1Ng==
+commit_hash: '00000000'
+uncommitted_changes: false
+name: cf-usb-release
+version: 0+dev.90

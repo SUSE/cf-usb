@@ -1,0 +1,30 @@
+---
+packages:
+- name: cf-usb
+  version: !binary |-
+    MDExN2FkOWRjZmM3YTQxMWI2MWFkMDMyNGViMTg3ZWIyOTNjMDY5MA==
+  fingerprint: !binary |-
+    MDExN2FkOWRjZmM3YTQxMWI2MWFkMDMyNGViMTg3ZWIyOTNjMDY5MA==
+  sha1: !binary |-
+    YTlmNDU0NzkzZDcxZjU4ZWM1ZWY1Y2M4ZjVhYWQ4OWQxNTcxMDhiZQ==
+  dependencies: []
+- name: golang_1.4
+  version: !binary |-
+    NzE0Njk4YmMzNTJkMmExZGJlMzIxMzc2ZjA2NzYwMzc1NjgxNDdiYg==
+  fingerprint: !binary |-
+    NzE0Njk4YmMzNTJkMmExZGJlMzIxMzc2ZjA2NzYwMzc1NjgxNDdiYg==
+  sha1: !binary |-
+    MDY2MTIyMDdlZmVmY2U2NDFhMjNjOWNhMjJmYzZhY2VlYzBhODZiNQ==
+  dependencies: []
+jobs:
+- name: cf-usb
+  version: !binary |-
+    OTgzMTk1MWZjOGY4N2IyOTgwOTRiM2IxMjg2NzQ3MWFiNWEzNzk0Mg==
+  fingerprint: !binary |-
+    OTgzMTk1MWZjOGY4N2IyOTgwOTRiM2IxMjg2NzQ3MWFiNWEzNzk0Mg==
+  sha1: !binary |-
+    NWRhNWRmNjQxYTE4MzRjNGY3Nzc5MDk5NzVkYWUyMjI5ZjQ3YWE0NA==
+commit_hash: '00000000'
+uncommitted_changes: false
+name: cf-usb-release
+version: 0+dev.22

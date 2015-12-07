@@ -1,0 +1,22 @@
+---
+packages:
+- name: cf-usb
+  version: !binary |-
+    YzA5NTJlYmM1OTkyNzgyZTQzYTA3OWY4NWIzNDM5MzdmZjYwYWU3Yg==
+  fingerprint: !binary |-
+    YzA5NTJlYmM1OTkyNzgyZTQzYTA3OWY4NWIzNDM5MzdmZjYwYWU3Yg==
+  sha1: !binary |-
+    ZGEyZTliYTk1MGFhNGNmODBlMjMyN2ZhYjBkMGU3NGRlOGNiZGZjZA==
+  dependencies: []
+jobs:
+- name: cf-usb
+  version: !binary |-
+    MmNkNGExYTA5YzZkMjk3NmRhMWIyODI3ZTgyNGMyODdkMzEwMTQ1MQ==
+  fingerprint: !binary |-
+    MmNkNGExYTA5YzZkMjk3NmRhMWIyODI3ZTgyNGMyODdkMzEwMTQ1MQ==
+  sha1: !binary |-
+    ZmM2YWFjMWY2ZDU3YmI2YzI5ZjA4MDAzNWEwMzZmYTc2M2JhYTg4OQ==
+commit_hash: '00000000'
+uncommitted_changes: false
+name: cf-usb-release
+version: 0+dev.10

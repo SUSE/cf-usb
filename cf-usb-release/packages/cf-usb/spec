@@ -1,0 +1,8 @@
+---
+name: cf-usb
+
+files:
+  - cf-usb/**/*
+
+dependencies:
+  - golang_1.4

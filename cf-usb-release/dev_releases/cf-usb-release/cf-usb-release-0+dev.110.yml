@@ -1,0 +1,62 @@
+---
+packages:
+- name: golang_1.4
+  version: !binary |-
+    NzE0Njk4YmMzNTJkMmExZGJlMzIxMzc2ZjA2NzYwMzc1NjgxNDdiYg==
+  fingerprint: !binary |-
+    NzE0Njk4YmMzNTJkMmExZGJlMzIxMzc2ZjA2NzYwMzc1NjgxNDdiYg==
+  sha1: !binary |-
+    YjUxODUxMTllMWRhNDk1MDJlMTQ3NGFiMWZkM2ZiMmViYmY3ODg4Yw==
+  dependencies: []
+- name: cf-usb
+  version: !binary |-
+    YzZjNzI4Njg1NTE1ZGNlNGEwYTk4ZDc5ZmE2NmNiODNkYTk4NDhiNQ==
+  fingerprint: !binary |-
+    YzZjNzI4Njg1NTE1ZGNlNGEwYTk4ZDc5ZmE2NmNiODNkYTk4NDhiNQ==
+  sha1: !binary |-
+    MDIyYTNjYjJlYjczZDRhZWU0ZDgzNjk3NjI4MmVlYWFiZjQzNDJhYw==
+  dependencies:
+  - debian_nfs_server
+  - golang_1.4
+- name: debian_nfs_server
+  version: !binary |-
+    YWFjMDVmMjI1ODJiMmY5ZmFhNjg0MGRhMDU2MDg0ZWQxNTc3MjU5NA==
+  fingerprint: !binary |-
+    YWFjMDVmMjI1ODJiMmY5ZmFhNjg0MGRhMDU2MDg0ZWQxNTc3MjU5NA==
+  sha1: !binary |-
+    YjgzODg3YzA3MjFhZmQwMTZiYjVjMTJhMzdlOWU1NzAzZjhiNzBiYg==
+  dependencies: []
+- name: common
+  version: !binary |-
+    ZTQwMTgxNmE0NzQ4MjkyMTYzNjc5ZmFmY2JkOGY4MThlZDgxNTRhNQ==
+  fingerprint: !binary |-
+    ZTQwMTgxNmE0NzQ4MjkyMTYzNjc5ZmFmY2JkOGY4MThlZDgxNTRhNQ==
+  sha1: !binary |-
+    MDVjZTRkMzEyNzVmNjUzN2QxYWU5ZDE3MzU4MDNlNjFlZjQxMGMxZA==
+  dependencies: []
+jobs:
+- name: nfs_mounter
+  version: !binary |-
+    ZTU5N2U2MTYwMDM3OTFlYTI0M2NmMWQ0OTg4MGE5MDA4OGMxMTI5ZQ==
+  fingerprint: !binary |-
+    ZTU5N2U2MTYwMDM3OTFlYTI0M2NmMWQ0OTg4MGE5MDA4OGMxMTI5ZQ==
+  sha1: !binary |-
+    YzI1M2Y0ODlmNGQ4MjQ1NTg0NDNjYTc5NmM1MDMwMGQ1OGUwMTc1NQ==
+- name: cf-usb
+  version: !binary |-
+    NjIzZmMyMjliM2JiNTYyZjgzZjJhZDdkZWNjYmFhOTk1MmNlZjk1Ng==
+  fingerprint: !binary |-
+    NjIzZmMyMjliM2JiNTYyZjgzZjJhZDdkZWNjYmFhOTk1MmNlZjk1Ng==
+  sha1: !binary |-
+    YTNmMmIwNzU2NTRjMzE0ZWJhN2FhZDQzYzg4MTA3MzBmOTZlYzkzMw==
+- name: debian_nfs_server
+  version: !binary |-
+    MDcwZWE3OTE5ZGNkZjk2NTRlNGIyMzlkM2E4ZjQ2NTIxYWQ0YzgzZA==
+  fingerprint: !binary |-
+    MDcwZWE3OTE5ZGNkZjk2NTRlNGIyMzlkM2E4ZjQ2NTIxYWQ0YzgzZA==
+  sha1: !binary |-
+    YzhjMThiNWUxYTFmMzVmMTUyMjg4OGRiNTQ5NzY5ZTI1ZjYwYzY1Ng==
+commit_hash: '00000000'
+uncommitted_changes: false
+name: cf-usb-release
+version: 0+dev.110
