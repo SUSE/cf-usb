@@ -64,6 +64,7 @@ func (usb *UsbApp) GetCommands() []CLICommandProvider {
 	return []CLICommandProvider{
 		&FileConfigProvider{},
 		&ConsulConfigProvider{},
+		&RedisConfigProvider{},
 	}
 }
 

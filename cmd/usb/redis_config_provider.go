@@ -56,7 +56,7 @@ func redisConfigProviderCommand(app Usb) func(c *cli.Context) {
 		if redisDatabase != "" {
 			db, err := strconv.ParseInt(redisDatabase, 10, 64)
 			if err != nil {
-				panic("database must be a 64bit integer")
+				logger.Fatal("database must be a 64bit integer", err)
 			}
 			provisioner, err := redis.New(redisAddress, redisPass, db)
 			if err != nil {
