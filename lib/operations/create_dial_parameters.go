@@ -8,18 +8,20 @@ import (
 
 	"github.com/go-swagger/go-swagger/errors"
 	"github.com/go-swagger/go-swagger/httpkit/middleware"
-	"github.com/go-swagger/go-swagger/httpkit/validate"
-	"github.com/go-swagger/go-swagger/strfmt"
+
 	"github.com/hpcloud/cf-usb/lib/genmodel"
 )
 
 // CreateDialParams contains all the bound params for the create dial operation
 // typically these are obtained from a http.Request
+//
+// swagger:parameters createDial
 type CreateDialParams struct {
-	// Authorization token
-	Authorization string
-	// New dial
-	Dial genmodel.Dial
+	/* New dial
+	Required: true
+	In: body
+	*/
+	Dial *genmodel.Dial
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
@@ -27,31 +29,21 @@ type CreateDialParams struct {
 func (o *CreateDialParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
 
-	if err := o.bindAuthorization(r.Header.Get("authorization"), route.Formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := route.Consumer.Consume(r.Body, &o.Dial); err != nil {
+	var body genmodel.Dial
+	if err := route.Consumer.Consume(r.Body, &body); err != nil {
 		res = append(res, errors.NewParseError("dial", "body", "", err))
 	} else {
-		if err := o.Dial.Validate(route.Formats); err != nil {
+		if err := body.Validate(route.Formats); err != nil {
 			res = append(res, err)
 		}
 
+		if len(res) == 0 {
+			o.Dial = &body
+		}
 	}
 
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-	return nil
-}
-
-func (o *CreateDialParams) bindAuthorization(raw string, formats strfmt.Registry) error {
-	if err := validate.RequiredString("authorization", "header", raw); err != nil {
-		return err
-	}
-
-	o.Authorization = raw
-
 	return nil
 }

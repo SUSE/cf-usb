@@ -1,3 +1,17 @@
+// Copyright 2015 go-swagger maintainers
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package untyped
 
 import (
@@ -16,13 +30,13 @@ import (
 func NewAPI(spec *spec.Document) *API {
 	return &API{
 		spec:            spec,
-		DefaultProduces: "application/json",
-		DefaultConsumes: "application/json",
+		DefaultProduces: httpkit.JSONMime,
+		DefaultConsumes: httpkit.JSONMime,
 		consumers: map[string]httpkit.Consumer{
-			"application/json": httpkit.JSONConsumer(),
+			httpkit.JSONMime: httpkit.JSONConsumer(),
 		},
 		producers: map[string]httpkit.Producer{
-			"application/json": httpkit.JSONProducer(),
+			httpkit.JSONMime: httpkit.JSONProducer(),
 		},
 		authenticators: make(map[string]httpkit.Authenticator),
 		operations:     make(map[string]httpkit.OperationHandler),
@@ -48,26 +62,41 @@ type API struct {
 
 // Formats returns the registered string formats
 func (d *API) Formats() strfmt.Registry {
+	if d.formats == nil {
+		d.formats = strfmt.NewFormats()
+	}
 	return d.formats
 }
 
 // RegisterFormat registers a custom format validator
 func (d *API) RegisterFormat(name string, format strfmt.Format, validator strfmt.Validator) {
+	if d.formats == nil {
+		d.formats = strfmt.NewFormats()
+	}
 	d.formats.Add(name, format, validator)
 }
 
 // RegisterAuth registers an auth handler in this api
 func (d *API) RegisterAuth(scheme string, handler httpkit.Authenticator) {
+	if d.authenticators == nil {
+		d.authenticators = make(map[string]httpkit.Authenticator)
+	}
 	d.authenticators[scheme] = handler
 }
 
 // RegisterConsumer registers a consumer for a media type.
 func (d *API) RegisterConsumer(mediaType string, handler httpkit.Consumer) {
+	if d.consumers == nil {
+		d.consumers = map[string]httpkit.Consumer{httpkit.JSONMime: httpkit.JSONConsumer()}
+	}
 	d.consumers[strings.ToLower(mediaType)] = handler
 }
 
 // RegisterProducer registers a producer for a media type
 func (d *API) RegisterProducer(mediaType string, handler httpkit.Producer) {
+	if d.producers == nil {
+		d.producers = map[string]httpkit.Producer{httpkit.JSONMime: httpkit.JSONProducer()}
+	}
 	d.producers[strings.ToLower(mediaType)] = handler
 }
 
@@ -157,7 +186,7 @@ func (d *API) validate() error {
 		return err
 	}
 
-	requiredAuths := d.spec.RequiredSchemes()
+	requiredAuths := d.spec.RequiredSecuritySchemes()
 	if err := d.verify("auth scheme", authenticators, requiredAuths); err != nil {
 		return err
 	}

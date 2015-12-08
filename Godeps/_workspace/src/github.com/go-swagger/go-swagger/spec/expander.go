@@ -1,3 +1,17 @@
+// Copyright 2015 go-swagger maintainers
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package spec
 
 import (
@@ -312,7 +326,7 @@ func ExpandSchema(schema *Schema, root interface{}, cache ResolutionCache) error
 
 	nrr, _ := NewRef(schema.ID)
 	var rrr *Ref
-	if nrr.GetURL() != nil {
+	if nrr.String() != "" {
 		switch root.(type) {
 		case *Schema:
 			rid, _ := NewRef(root.(*Schema).ID)
@@ -356,6 +370,7 @@ func expandSchema(schema *Schema, resolver *schemaLoader) error {
 		}
 		*schema = currentSchema
 	}
+
 	if schema.Items != nil {
 		if schema.Items.Schema != nil {
 			sch := schema.Items.Schema
@@ -477,6 +492,11 @@ func expandPathItem(pathItem *PathItem, resolver *schemaLoader) error {
 		return err
 	}
 
+	for idx := range pathItem.Parameters {
+		if err := expandParameter(&(pathItem.Parameters[idx]), resolver); err != nil {
+			return err
+		}
+	}
 	if err := expandOperation(pathItem.Get, resolver); err != nil {
 		return err
 	}

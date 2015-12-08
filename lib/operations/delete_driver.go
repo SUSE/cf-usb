@@ -10,24 +10,27 @@ import (
 )
 
 // DeleteDriverHandlerFunc turns a function with the right signature into a delete driver handler
-type DeleteDriverHandlerFunc func(DeleteDriverParams) error
+type DeleteDriverHandlerFunc func(DeleteDriverParams, interface{}) middleware.Responder
 
-func (fn DeleteDriverHandlerFunc) Handle(params DeleteDriverParams) error {
-	return fn(params)
+// Handle executing the request and returning a response
+func (fn DeleteDriverHandlerFunc) Handle(params DeleteDriverParams, principal interface{}) middleware.Responder {
+	return fn(params, principal)
 }
 
 // DeleteDriverHandler interface for that can handle valid delete driver params
 type DeleteDriverHandler interface {
-	Handle(DeleteDriverParams) error
+	Handle(DeleteDriverParams, interface{}) middleware.Responder
 }
 
 // NewDeleteDriver creates a new http.Handler for the delete driver operation
-func NewDeleteDriver(ctx *middleware.Context, handler DeleteDriverHandler) DeleteDriver {
-	return DeleteDriver{Context: ctx, Handler: handler}
+func NewDeleteDriver(ctx *middleware.Context, handler DeleteDriverHandler) *DeleteDriver {
+	return &DeleteDriver{Context: ctx, Handler: handler}
 }
 
-/*
+/*DeleteDriver swagger:route DELETE /drivers/{driver_id} deleteDriver
+
 Update driver
+
 */
 type DeleteDriver struct {
 	Context *middleware.Context
@@ -35,19 +38,26 @@ type DeleteDriver struct {
 	Handler DeleteDriverHandler
 }
 
-func (o DeleteDriver) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (o *DeleteDriver) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
+
+	uprinc, err := o.Context.Authorize(r, route)
+	if err != nil {
+		o.Context.Respond(rw, r, route.Produces, route, err)
+		return
+	}
+	var principal interface{}
+	if uprinc != nil {
+		principal = uprinc
+	}
 
 	if err := o.Context.BindValidRequest(r, route, &o.Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	err := o.Handler.Handle(o.Params) // actually handle the request
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	o.Context.Respond(rw, r, route.Produces, route, nil)
+	res := o.Handler.Handle(o.Params, principal) // actually handle the request
+
+	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

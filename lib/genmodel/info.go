@@ -9,8 +9,7 @@ import (
 	"github.com/go-swagger/go-swagger/strfmt"
 )
 
-/*
-Info info
+/*Info info
 
 swagger:model info
 */
@@ -20,22 +19,21 @@ type Info struct {
 
 	Required: true
 	*/
-	Version string `json:"version"`
+	Version string `json:"version,omitempty"`
 }
 
 // Validate validates this info
 func (m *Info) Validate(formats strfmt.Registry) error {
-
 	var res []error
 
 	if err := m.validateVersion(formats); err != nil {
+		// prop
 		res = append(res, err)
 	}
 
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-
 	return nil
 }
 

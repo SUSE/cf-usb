@@ -127,25 +127,24 @@ func Test_IntCreate(t *testing.T) {
 	driver.DriverType = "mysql"
 
 	params := operations.CreateDriverParams{}
-	params.Driver = driver
+	params.Driver = &driver
 
-	info, err := IntegrationConfig.MgmtAPI.CreateDriverHandler.Handle(params)
-	if err != nil {
-		t.Errorf("Error get info: %v", err)
-	}
-	t.Log(info)
-	assert.NoError(err)
+	response := IntegrationConfig.MgmtAPI.CreateDriverHandler.Handle(params, true)
+
+	assert.IsType(&operations.CreateDriverCreated{}, response)
 
 	IntegrationConfig.CcServiceBroker.Mock.On("GetServiceBrokerGuidByName", mock.Anything).Return("aguid", nil)
 	IntegrationConfig.CcServiceBroker.Mock.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	IntegrationConfig.CcServiceBroker.Mock.On("Update", "aguid", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	IntegrationConfig.CcServiceBroker.Mock.On("EnableServiceAccess", mock.Anything).Return(nil)
 
-	instanceParams := operations.CreateDriverInstanceParams{}
+	instanceParams := &operations.CreateDriverInstanceParams{}
 	var instace genmodel.DriverInstance
 
+	driverInstance := response.(*operations.CreateDriverCreated).Payload
+
 	instace.Name = "testInstanceName"
-	instace.DriverID = info.ID
+	instace.DriverID = driverInstance.ID
 	instanceConfig := make(map[string]interface{})
 
 	instanceConfig["userid"] = "testUser"
@@ -153,14 +152,15 @@ func Test_IntCreate(t *testing.T) {
 	instanceConfig["server"] = "127.0.0.1"
 	instanceConfig["port"] = "3306"
 
-	instanceParams.DriverInstance = instace
-	instanceParams.DriverInstance.DriverID = info.ID
+	instanceParams.DriverInstance = &instace
+	instanceParams.DriverInstance.DriverID = driverInstance.ID
 	instanceParams.DriverInstance.Configuration = instanceConfig
-	infoInstance, err := IntegrationConfig.MgmtAPI.CreateDriverInstanceHandler.Handle(instanceParams)
-	t.Log(infoInstance)
-	assert.NoError(err)
+	response = IntegrationConfig.MgmtAPI.CreateDriverInstanceHandler.Handle(*instanceParams, true)
+	assert.IsType(&operations.CreateDriverInstanceCreated{}, response)
 
-	dialParams := operations.CreateDialParams{}
+	infoInstance := response.(*operations.CreateDriverInstanceCreated).Payload
+
+	dialParams := &operations.CreateDialParams{}
 	var instaceDial genmodel.Dial
 
 	instaceDial.DriverInstanceID = infoInstance.ID
@@ -168,29 +168,29 @@ func Test_IntCreate(t *testing.T) {
 
 	dialConfig := make(map[string]interface{})
 	dialConfig["max_db_size_mb"] = "200"
-	instaceDial.Configuration = dialConfig
-	dialParams.Dial = instaceDial
+	instaceDial.Configuration = &dialConfig
+	dialParams.Dial = &instaceDial
 
-	infoDial, err := IntegrationConfig.MgmtAPI.CreateDialHandler.Handle(dialParams)
-	t.Log(infoDial)
-	assert.NoError(err)
+	response = IntegrationConfig.MgmtAPI.CreateDialHandler.Handle(*dialParams, true)
+	assert.IsType(&operations.CreateDialCreated{}, response)
 
-	serviceParams := operations.CreateServiceParams{}
-	var instaceService genmodel.Service
+	infoDial := response.(*operations.CreateDialCreated).Payload
+	//	serviceParams := operations.CreateServiceParams{}
+	//	var instaceService genmodel.Service
 
-	instaceService.Bindable = true
-	instaceService.DriverInstanceID = infoInstance.ID
-	instaceService.Name = "testService"
-	instaceService.Tags = []string{"test", "test service"}
-	instaceService.Metadata = make(map[string]interface{})
+	//	instaceService.Bindable = true
+	//	instaceService.DriverInstanceID = infoInstance.ID
+	//	instaceService.Name = "testService"
+	//	instaceService.Tags = []string{"test", "test service"}
+	//	instaceService.Metadata = make(map[string]interface{})
 
-	serviceParams.Service = instaceService
+	//	serviceParams.Service = instaceService
 
-	infoService, err := IntegrationConfig.MgmtAPI.CreateServiceHandler.Handle(serviceParams)
-	t.Log(infoService)
-	assert.NoError(err)
+	//	infoService, err := IntegrationConfig.MgmtAPI.CreateServiceHandler.Handle(serviceParams)
+	//	t.Log(infoService)
+	//	assert.NoError(err)
 
-	splanParams := operations.CreateServicePlanParams{}
+	splanParams := &operations.CreateServicePlanParams{}
 	var plan genmodel.Plan
 
 	plan.DialID = infoDial.ID
@@ -199,11 +199,11 @@ func Test_IntCreate(t *testing.T) {
 	plan.ID = "testPlanID"
 	plan.Name = "testPlan"
 
-	splanParams.Plan = plan
+	splanParams.Plan = &plan
 
-	infoPlan, err := IntegrationConfig.MgmtAPI.CreateServicePlanHandler.Handle(splanParams)
-	t.Log(infoPlan)
-	assert.NoError(err)
+	response = IntegrationConfig.MgmtAPI.CreateServicePlanHandler.Handle(*splanParams, true)
+
+	assert.IsType(&operations.CreateServicePlanCreated{}, response)
 }
 
 func Test_IntUpdate(t *testing.T) {
@@ -218,28 +218,25 @@ func Test_IntUpdate(t *testing.T) {
 		t.Error(err)
 	}
 
-	callparams := operations.GetDriversParams{}
+	response := IntegrationConfig.MgmtAPI.GetDriversHandler.Handle(true)
 
-	drivers, err := IntegrationConfig.MgmtAPI.GetDriversHandler.Handle(callparams)
-	if err != nil {
-		t.Skip(err)
-	}
-	assert.NotNil(drivers)
+	assert.IsType(&operations.GetDriversOK{}, response)
+	drivers := response.(*operations.GetDriversOK).Payload
 
-	firstDriver := (*drivers)[0]
+	firstDriver := drivers[0]
 
 	t.Log(firstDriver)
-	dialParams := operations.GetAllDialsParams{}
+	dialParams := &operations.GetAllDialsParams{}
 	dialParams.DriverInstanceID = firstDriver.DriverInstances[0]
-	dials, err := IntegrationConfig.MgmtAPI.GetAllDialsHandler.Handle(dialParams)
-	if err != nil {
-		t.Skip(err)
-	}
-	assert.NotNil(dials)
+	response = IntegrationConfig.MgmtAPI.GetAllDialsHandler.Handle(*dialParams, true)
 
-	firstDial := (*dials)[0]
+	assert.IsType(&operations.GetAllDialsOK{}, response)
 
-	params := operations.UpdateServicePlanParams{}
+	dials := response.(*operations.GetAllDialsOK).Payload
+
+	firstDial := dials[0]
+
+	params := &operations.UpdateServicePlanParams{}
 	var plan genmodel.Plan
 
 	plan.DialID = firstDial.ID
@@ -249,21 +246,20 @@ func Test_IntUpdate(t *testing.T) {
 	plan.Name = "testPlanUpdated"
 
 	params.PlanID = firstDial.Plan
-	params.Plan = plan
+	params.Plan = &plan
 
-	info, err := IntegrationConfig.MgmtAPI.UpdateServicePlanHandler.Handle(params)
-	t.Log(info)
-	assert.NoError(err)
+	response = IntegrationConfig.MgmtAPI.UpdateServicePlanHandler.Handle(*params, true)
+	assert.IsType(&operations.UpdateServicePlanOK{}, response)
 
-	instanceParams := operations.GetDriverInstanceParams{}
+	instanceParams := &operations.GetDriverInstanceParams{}
 	instanceParams.DriverInstanceID = firstDriver.DriverInstances[0]
 
-	existingInstace, err := IntegrationConfig.MgmtAPI.GetDriverInstanceHandler.Handle(instanceParams)
-	if err != nil {
-		t.Skip(err)
-	}
+	response = IntegrationConfig.MgmtAPI.GetDriverInstanceHandler.Handle(*instanceParams, true)
 
-	serviceParams := operations.UpdateServiceParams{}
+	assert.IsType(&operations.GetDriverInstanceOK{}, response)
+	existingInstace := response.(*operations.GetDriverInstanceOK).Payload
+
+	serviceParams := &operations.UpdateServiceParams{}
 	var instace genmodel.Service
 
 	instace.ID = existingInstace.Service
@@ -272,9 +268,9 @@ func Test_IntUpdate(t *testing.T) {
 	instace.Name = "testUpdatedService"
 	instace.Tags = []string{"test update", "test service"}
 	instace.Metadata = make(map[string]interface{})
-	instace.Metadata["guid"] = "testUpdateGuid"
+	instace.Metadata.(map[string]interface{})["guid"] = "testUpdateGuid"
 
-	serviceParams.Service = instace
+	serviceParams.Service = &instace
 	serviceParams.ServiceID = instace.ID
 
 	IntegrationConfig.CcServiceBroker.Mock.On("GetServiceBrokerGuidByName", mock.Anything).Return("aguid", nil)
@@ -282,25 +278,23 @@ func Test_IntUpdate(t *testing.T) {
 	IntegrationConfig.CcServiceBroker.Mock.On("Update", "aguid", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	IntegrationConfig.CcServiceBroker.Mock.On("EnableServiceAccess", mock.Anything).Return(nil)
 
-	infoServiceUpdate, err := IntegrationConfig.MgmtAPI.UpdateServiceHandler.Handle(serviceParams)
-	t.Log(infoServiceUpdate)
-	assert.NoError(err)
+	response = IntegrationConfig.MgmtAPI.UpdateServiceHandler.Handle(*serviceParams, true)
+	assert.IsType(&operations.UpdateServiceOK{}, response)
 
-	dialUpdateParams := operations.UpdateDialParams{}
+	dialUpdateParams := &operations.UpdateDialParams{}
 
 	var dial genmodel.Dial
 	dial.DriverInstanceID = existingInstace.ID
 	dial.ID = firstDial.ID
 
 	dial.Configuration = make(map[string]interface{})
-	dial.Configuration["max_dbsize_mb"] = "400"
+	dial.Configuration.(map[string]interface{})["max_dbsize_mb"] = "400"
 
-	dialUpdateParams.Dial = dial
+	dialUpdateParams.Dial = &dial
 	dialUpdateParams.DialID = dial.ID
 
-	infoDial, err := IntegrationConfig.MgmtAPI.UpdateDialHandler.Handle(dialUpdateParams)
-	t.Log(infoDial)
-	assert.NoError(err)
+	response = IntegrationConfig.MgmtAPI.UpdateDialHandler.Handle(*dialUpdateParams, true)
+	assert.IsType(&operations.UpdateDialOK{}, response)
 }
 
 //Cleanup
@@ -317,54 +311,40 @@ func Test_IntDelete(t *testing.T) {
 		t.Error(err)
 	}
 
-	callparams := operations.GetDriversParams{}
+	response := IntegrationConfig.MgmtAPI.GetDriversHandler.Handle(true)
+	assert.IsType(&operations.GetDriversOK{}, response)
+	drivers := response.(*operations.GetDriversOK).Payload
 
-	drivers, err := IntegrationConfig.MgmtAPI.GetDriversHandler.Handle(callparams)
-	if err != nil {
-		t.Skip(err)
-	}
-	assert.NotNil(drivers)
+	firstDriver := drivers[0]
 
-	firstDriver := (*drivers)[0]
-
-	dialParams := operations.GetAllDialsParams{}
+	dialParams := &operations.GetAllDialsParams{}
 	dialParams.DriverInstanceID = firstDriver.DriverInstances[0]
-	dials, err := IntegrationConfig.MgmtAPI.GetAllDialsHandler.Handle(dialParams)
+	response = IntegrationConfig.MgmtAPI.GetAllDialsHandler.Handle(*dialParams, true)
+	assert.IsType(&operations.GetAllDialsOK{}, response)
+	dials := response.(*operations.GetAllDialsOK).Payload
 
-	if err != nil {
-		t.Skip(err)
-	}
-	assert.NotNil(dials)
+	firstDial := dials[0]
 
-	firstDial := (*dials)[0]
-
-	dialDeleteParams := operations.DeleteDialParams{}
+	dialDeleteParams := &operations.DeleteDialParams{}
 	dialDeleteParams.DialID = firstDial.ID
 
-	instanceParams := operations.GetDriverInstanceParams{}
+	instanceParams := &operations.GetDriverInstanceParams{}
 	instanceParams.DriverInstanceID = firstDriver.DriverInstances[0]
 
-	existingInstace, err := IntegrationConfig.MgmtAPI.GetDriverInstanceHandler.Handle(instanceParams)
-	if err != nil {
-		t.Skip(err)
-	}
+	response = IntegrationConfig.MgmtAPI.GetDriverInstanceHandler.Handle(*instanceParams, true)
+	assert.IsType(&operations.GetDriverInstanceOK{}, response)
+	existingInstace := response.(*operations.GetDriverInstanceOK).Payload
 
-	err = IntegrationConfig.MgmtAPI.DeleteDialHandler.Handle(dialDeleteParams)
-	assert.NoError(err)
+	response = IntegrationConfig.MgmtAPI.DeleteDialHandler.Handle(*dialDeleteParams, true)
+	assert.IsType(&operations.DeleteDialNoContent{}, response)
 
-	deleteServiceParams := operations.DeleteServiceParams{}
-	deleteServiceParams.ServiceID = existingInstace.Service
-
-	err = IntegrationConfig.MgmtAPI.DeleteServiceHandler.Handle(deleteServiceParams)
-	assert.NoError(err)
-
-	deleteInstanceParams := operations.DeleteDriverInstanceParams{}
+	deleteInstanceParams := &operations.DeleteDriverInstanceParams{}
 	deleteInstanceParams.DriverInstanceID = existingInstace.ID
-	err = IntegrationConfig.MgmtAPI.DeleteDriverInstanceHandler.Handle(deleteInstanceParams)
-	assert.NoError(err)
+	response = IntegrationConfig.MgmtAPI.DeleteDriverInstanceHandler.Handle(*deleteInstanceParams, true)
+	assert.IsType(&operations.DeleteDriverInstanceNoContent{}, response)
 
-	deleteDriverParams := operations.DeleteDriverParams{}
+	deleteDriverParams := &operations.DeleteDriverParams{}
 	deleteDriverParams.DriverID = firstDriver.ID
-	err = IntegrationConfig.MgmtAPI.DeleteDriverHandler.Handle(deleteDriverParams)
-	assert.NoError(err)
+	response = IntegrationConfig.MgmtAPI.DeleteDriverHandler.Handle(*deleteDriverParams, true)
+	assert.IsType(&operations.DeleteDriverNoContent{}, response)
 }

@@ -9,8 +9,7 @@ import (
 	"github.com/go-swagger/go-swagger/strfmt"
 )
 
-/*
-DriverInstance driver instance
+/*DriverInstance driver instance
 
 swagger:model driver_instance
 */
@@ -18,7 +17,7 @@ type DriverInstance struct {
 
 	/* Configuration configuration
 	 */
-	Configuration map[string]interface{} `json:"configuration,omitempty"`
+	Configuration interface{} `json:"configuration,omitempty"`
 
 	/* Dials dials
 	 */
@@ -28,7 +27,7 @@ type DriverInstance struct {
 
 	Required: true
 	*/
-	DriverID string `json:"driver_id"`
+	DriverID string `json:"driver_id,omitempty"`
 
 	/* ID id
 	 */
@@ -38,7 +37,7 @@ type DriverInstance struct {
 
 	Required: true
 	*/
-	Name string `json:"name"`
+	Name string `json:"name,omitempty"`
 
 	/* Service service
 	 */
@@ -47,21 +46,21 @@ type DriverInstance struct {
 
 // Validate validates this driver instance
 func (m *DriverInstance) Validate(formats strfmt.Registry) error {
-
 	var res []error
 
 	if err := m.validateDriverID(formats); err != nil {
+		// prop
 		res = append(res, err)
 	}
 
 	if err := m.validateName(formats); err != nil {
+		// prop
 		res = append(res, err)
 	}
 
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-
 	return nil
 }
 

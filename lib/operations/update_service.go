@@ -7,28 +7,30 @@ import (
 	"net/http"
 
 	"github.com/go-swagger/go-swagger/httpkit/middleware"
-	"github.com/hpcloud/cf-usb/lib/genmodel"
 )
 
 // UpdateServiceHandlerFunc turns a function with the right signature into a update service handler
-type UpdateServiceHandlerFunc func(UpdateServiceParams) (*genmodel.Service, error)
+type UpdateServiceHandlerFunc func(UpdateServiceParams, interface{}) middleware.Responder
 
-func (fn UpdateServiceHandlerFunc) Handle(params UpdateServiceParams) (*genmodel.Service, error) {
-	return fn(params)
+// Handle executing the request and returning a response
+func (fn UpdateServiceHandlerFunc) Handle(params UpdateServiceParams, principal interface{}) middleware.Responder {
+	return fn(params, principal)
 }
 
 // UpdateServiceHandler interface for that can handle valid update service params
 type UpdateServiceHandler interface {
-	Handle(UpdateServiceParams) (*genmodel.Service, error)
+	Handle(UpdateServiceParams, interface{}) middleware.Responder
 }
 
 // NewUpdateService creates a new http.Handler for the update service operation
-func NewUpdateService(ctx *middleware.Context, handler UpdateServiceHandler) UpdateService {
-	return UpdateService{Context: ctx, Handler: handler}
+func NewUpdateService(ctx *middleware.Context, handler UpdateServiceHandler) *UpdateService {
+	return &UpdateService{Context: ctx, Handler: handler}
 }
 
-/*
+/*UpdateService swagger:route PUT /services/{service_id} updateService
+
 Updates the `service` with the id **serviceID**
+
 */
 type UpdateService struct {
 	Context *middleware.Context
@@ -36,19 +38,26 @@ type UpdateService struct {
 	Handler UpdateServiceHandler
 }
 
-func (o UpdateService) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (o *UpdateService) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
+
+	uprinc, err := o.Context.Authorize(r, route)
+	if err != nil {
+		o.Context.Respond(rw, r, route.Produces, route, err)
+		return
+	}
+	var principal interface{}
+	if uprinc != nil {
+		principal = uprinc
+	}
 
 	if err := o.Context.BindValidRequest(r, route, &o.Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res, err := o.Handler.Handle(o.Params) // actually handle the request
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
+	res := o.Handler.Handle(o.Params, principal) // actually handle the request
+
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

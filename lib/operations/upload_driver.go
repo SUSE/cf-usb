@@ -10,24 +10,27 @@ import (
 )
 
 // UploadDriverHandlerFunc turns a function with the right signature into a upload driver handler
-type UploadDriverHandlerFunc func(UploadDriverParams) error
+type UploadDriverHandlerFunc func(UploadDriverParams, interface{}) middleware.Responder
 
-func (fn UploadDriverHandlerFunc) Handle(params UploadDriverParams) error {
-	return fn(params)
+// Handle executing the request and returning a response
+func (fn UploadDriverHandlerFunc) Handle(params UploadDriverParams, principal interface{}) middleware.Responder {
+	return fn(params, principal)
 }
 
 // UploadDriverHandler interface for that can handle valid upload driver params
 type UploadDriverHandler interface {
-	Handle(UploadDriverParams) error
+	Handle(UploadDriverParams, interface{}) middleware.Responder
 }
 
 // NewUploadDriver creates a new http.Handler for the upload driver operation
-func NewUploadDriver(ctx *middleware.Context, handler UploadDriverHandler) UploadDriver {
-	return UploadDriver{Context: ctx, Handler: handler}
+func NewUploadDriver(ctx *middleware.Context, handler UploadDriverHandler) *UploadDriver {
+	return &UploadDriver{Context: ctx, Handler: handler}
 }
 
-/*
+/*UploadDriver swagger:route PUT /drivers/{driver_id}/bits uploadDriver
+
 Upload driver bits
+
 */
 type UploadDriver struct {
 	Context *middleware.Context
@@ -35,19 +38,26 @@ type UploadDriver struct {
 	Handler UploadDriverHandler
 }
 
-func (o UploadDriver) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (o *UploadDriver) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
+
+	uprinc, err := o.Context.Authorize(r, route)
+	if err != nil {
+		o.Context.Respond(rw, r, route.Produces, route, err)
+		return
+	}
+	var principal interface{}
+	if uprinc != nil {
+		principal = uprinc
+	}
 
 	if err := o.Context.BindValidRequest(r, route, &o.Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	err := o.Handler.Handle(o.Params) // actually handle the request
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	o.Context.Respond(rw, r, route.Produces, route, nil)
+	res := o.Handler.Handle(o.Params, principal) // actually handle the request
+
+	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

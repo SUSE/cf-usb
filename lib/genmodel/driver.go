@@ -9,8 +9,7 @@ import (
 	"github.com/go-swagger/go-swagger/strfmt"
 )
 
-/*
-Driver driver
+/*Driver driver
 
 swagger:model driver
 */
@@ -32,22 +31,21 @@ type Driver struct {
 
 	Required: true
 	*/
-	Name string `json:"name"`
+	Name string `json:"name,omitempty"`
 }
 
 // Validate validates this driver
 func (m *Driver) Validate(formats strfmt.Registry) error {
-
 	var res []error
 
 	if err := m.validateName(formats); err != nil {
+		// prop
 		res = append(res, err)
 	}
 
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-
 	return nil
 }
 

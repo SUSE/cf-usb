@@ -7,28 +7,30 @@ import (
 	"net/http"
 
 	"github.com/go-swagger/go-swagger/httpkit/middleware"
-	"github.com/hpcloud/cf-usb/lib/genmodel"
 )
 
 // GetDialHandlerFunc turns a function with the right signature into a get dial handler
-type GetDialHandlerFunc func(GetDialParams) (*genmodel.Dial, error)
+type GetDialHandlerFunc func(GetDialParams, interface{}) middleware.Responder
 
-func (fn GetDialHandlerFunc) Handle(params GetDialParams) (*genmodel.Dial, error) {
-	return fn(params)
+// Handle executing the request and returning a response
+func (fn GetDialHandlerFunc) Handle(params GetDialParams, principal interface{}) middleware.Responder {
+	return fn(params, principal)
 }
 
 // GetDialHandler interface for that can handle valid get dial params
 type GetDialHandler interface {
-	Handle(GetDialParams) (*genmodel.Dial, error)
+	Handle(GetDialParams, interface{}) middleware.Responder
 }
 
 // NewGetDial creates a new http.Handler for the get dial operation
-func NewGetDial(ctx *middleware.Context, handler GetDialHandler) GetDial {
-	return GetDial{Context: ctx, Handler: handler}
+func NewGetDial(ctx *middleware.Context, handler GetDialHandler) *GetDial {
+	return &GetDial{Context: ctx, Handler: handler}
 }
 
-/*
+/*GetDial swagger:route GET /dials/{dial_id} getDial
+
 Gets the `dial` with the **dial_id**
+
 */
 type GetDial struct {
 	Context *middleware.Context
@@ -36,19 +38,26 @@ type GetDial struct {
 	Handler GetDialHandler
 }
 
-func (o GetDial) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (o *GetDial) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
+
+	uprinc, err := o.Context.Authorize(r, route)
+	if err != nil {
+		o.Context.Respond(rw, r, route.Produces, route, err)
+		return
+	}
+	var principal interface{}
+	if uprinc != nil {
+		principal = uprinc
+	}
 
 	if err := o.Context.BindValidRequest(r, route, &o.Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res, err := o.Handler.Handle(o.Params) // actually handle the request
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
+	res := o.Handler.Handle(o.Params, principal) // actually handle the request
+
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

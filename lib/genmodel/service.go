@@ -9,8 +9,7 @@ import (
 	"github.com/go-swagger/go-swagger/strfmt"
 )
 
-/*
-Service service
+/*Service service
 
 swagger:model service
 */
@@ -28,7 +27,7 @@ type Service struct {
 
 	Required: true
 	*/
-	DriverInstanceID string `json:"driver_instance_id"`
+	DriverInstanceID string `json:"driver_instance_id,omitempty"`
 
 	/* ID id
 	 */
@@ -36,13 +35,13 @@ type Service struct {
 
 	/* Metadata metadata
 	 */
-	Metadata map[string]interface{} `json:"metadata,omitempty"`
+	Metadata interface{} `json:"metadata,omitempty"`
 
 	/* Name name
 
 	Required: true
 	*/
-	Name string `json:"name"`
+	Name string `json:"name,omitempty"`
 
 	/* Tags tags
 	 */
@@ -51,21 +50,21 @@ type Service struct {
 
 // Validate validates this service
 func (m *Service) Validate(formats strfmt.Registry) error {
-
 	var res []error
 
 	if err := m.validateDriverInstanceID(formats); err != nil {
+		// prop
 		res = append(res, err)
 	}
 
 	if err := m.validateName(formats); err != nil {
+		// prop
 		res = append(res, err)
 	}
 
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-
 	return nil
 }
 

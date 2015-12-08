@@ -1,3 +1,17 @@
+// Copyright 2015 go-swagger maintainers
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package validate
 
 import (
@@ -9,6 +23,9 @@ import (
 )
 
 var specSchemaType = reflect.TypeOf(&spec.Schema{})
+var specParameterType = reflect.TypeOf(&spec.Parameter{})
+var specItemsType = reflect.TypeOf(&spec.Items{})
+var specHeaderType = reflect.TypeOf(&spec.Header{})
 
 // SchemaValidator like param validator but for a full json schema
 type SchemaValidator struct {
@@ -36,7 +53,6 @@ func NewSchemaValidator(schema *spec.Schema, rootSchema interface{}, root string
 			panic(err)
 		}
 	}
-
 	s := SchemaValidator{Path: root, in: "body", Schema: schema, Root: rootSchema, KnownFormats: formats}
 	s.validators = []valueValidator{
 		s.typeValidator(),
@@ -148,9 +164,9 @@ func (s *SchemaValidator) stringValidator() valueValidator {
 
 func (s *SchemaValidator) formatValidator() valueValidator {
 	return &formatValidator{
-		Path:         s.Path,
-		In:           s.in,
-		Default:      s.Schema.Default,
+		Path: s.Path,
+		In:   s.in,
+		//Default:      s.Schema.Default,
 		Format:       s.Schema.Format,
 		KnownFormats: s.KnownFormats,
 	}

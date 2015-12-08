@@ -8,20 +8,26 @@ import (
 
 	"github.com/go-swagger/go-swagger/errors"
 	"github.com/go-swagger/go-swagger/httpkit/middleware"
-	"github.com/go-swagger/go-swagger/httpkit/validate"
 	"github.com/go-swagger/go-swagger/strfmt"
+
 	"github.com/hpcloud/cf-usb/lib/genmodel"
 )
 
 // UpdateDriverInstanceParams contains all the bound params for the update driver instance operation
 // typically these are obtained from a http.Request
+//
+// swagger:parameters updateDriverInstance
 type UpdateDriverInstanceParams struct {
-	// Authorization token
-	Authorization string
-	// Driver Instance ID
+	/* Add driver_config
+	Required: true
+	In: body
+	*/
+	DriverConfig *genmodel.DriverInstance
+	/* Driver Instance ID
+	Required: true
+	In: path
+	*/
 	DriverInstanceID string
-	// Add driver_config
-	DriverConfig genmodel.DriverInstance
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
@@ -29,36 +35,26 @@ type UpdateDriverInstanceParams struct {
 func (o *UpdateDriverInstanceParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
 
-	if err := o.bindAuthorization(r.Header.Get("authorization"), route.Formats); err != nil {
-		res = append(res, err)
+	var body genmodel.DriverInstance
+	if err := route.Consumer.Consume(r.Body, &body); err != nil {
+		res = append(res, errors.NewParseError("driverConfig", "body", "", err))
+	} else {
+		if err := body.Validate(route.Formats); err != nil {
+			res = append(res, err)
+		}
+
+		if len(res) == 0 {
+			o.DriverConfig = &body
+		}
 	}
 
 	if err := o.bindDriverInstanceID(route.Params.Get("driver_instance_id"), route.Formats); err != nil {
 		res = append(res, err)
 	}
 
-	if err := route.Consumer.Consume(r.Body, &o.DriverConfig); err != nil {
-		res = append(res, errors.NewParseError("driverConfig", "body", "", err))
-	} else {
-		if err := o.DriverConfig.Validate(route.Formats); err != nil {
-			res = append(res, err)
-		}
-
-	}
-
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-	return nil
-}
-
-func (o *UpdateDriverInstanceParams) bindAuthorization(raw string, formats strfmt.Registry) error {
-	if err := validate.RequiredString("authorization", "header", raw); err != nil {
-		return err
-	}
-
-	o.Authorization = raw
-
 	return nil
 }
 

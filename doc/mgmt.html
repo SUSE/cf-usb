@@ -188,12 +188,6 @@ code {
   
   
   
-  <li><a href="#getBrokerInfo"><code><span class="http-method">get</span> /broker</code></a></li>
-  
-  <li><a href="#updateBrokerInfo"><code><span class="http-method">put</span> /broker</code></a></li>
-  
-  <li><a href="#updateCatalog"><code><span class="http-method">get</span> /broker/update_catalog</code></a></li>
-  
   <li><a href="#getAllDials"><code><span class="http-method">get</span> /dials</code></a></li>
   
   <li><a href="#createDial"><code><span class="http-method">post</span> /dials</code></a></li>
@@ -246,13 +240,11 @@ code {
   
   <li><a href="#getServices"><code><span class="http-method">get</span> /services</code></a></li>
   
-  <li><a href="#createService"><code><span class="http-method">post</span> /services</code></a></li>
-  
   <li><a href="#getService"><code><span class="http-method">get</span> /services/{service_id}</code></a></li>
   
   <li><a href="#updateService"><code><span class="http-method">put</span> /services/{service_id}</code></a></li>
   
-  <li><a href="#deleteService"><code><span class="http-method">delete</span> /services/{service_id}</code></a></li>
+  <li><a href="#updateCatalog"><code><span class="http-method">post</span> /update_catalog</code></a></li>
   
   
   
@@ -262,208 +254,6 @@ code {
   
   
   
-  
-  <div class="method"><a name="getBrokerInfo"/>
-    <div class="method-path">
-    <a class="up" href="#__Methods">Up</a>
-    <pre class="get"><code class="huge"><span class="http-method">get</span> /broker</code></pre></div>
-    <div class="method-summary"> (<span class="nickname">getBrokerInfo</span>)</div>
-    
-    <div class="method-notes">Gets the broker api connection info</div>
-
-    
-
-    
-    <h3 class="field-label">Consumes</h3>
-    This API call consumes the following media types via the <span class="heaader">Content-Type</span> request header:
-    <ul>
-    
-      <li><code>application/json</code></li>
-    
-    </ul>
-    
-
-    
-
-    
-
-    
-
-    
-
-    <!-- Remove Return type... unclear where this comes from;
-         for our swagger.json files, it is always empty and there is no boolean guard or hasReturnType
-         do we end up with a heading but not content
-
-    
-    <h3 class="field-label">Return type</h3>
-    <div class="return-type"><a href="#">broker</a></div>
-    
-
-    Todo: process Response Object and its headers, schema, examples
-    -->
-
-    
-
-    
-    <h3 class="field-label">Produces</h3>
-    This API call produces the following media types according to the <span class="header">Accept</span> request header;
-    the media type will be conveyed by the <span class="heaader">Content-Type</span> response header.
-    <ul>
-    
-      <li><code>application/json</code></li>
-    
-    </ul>
-    
-
-    <h3 class="field-label">Responses</h3>
-    
-    <h4 class="field-label">200</h4>
-    Successful response
-    
-    
-    <h4 class="field-label">0</h4>
-    Unexpected error
-    
-    
-  </div> <!-- method -->
-  <hr/>
-  
-  <div class="method"><a name="updateBrokerInfo"/>
-    <div class="method-path">
-    <a class="up" href="#__Methods">Up</a>
-    <pre class="put"><code class="huge"><span class="http-method">put</span> /broker</code></pre></div>
-    <div class="method-summary"> (<span class="nickname">updateBrokerInfo</span>)</div>
-    
-    <div class="method-notes">Sets the broker api connection info</div>
-
-    
-
-    
-    <h3 class="field-label">Consumes</h3>
-    This API call consumes the following media types via the <span class="heaader">Content-Type</span> request header:
-    <ul>
-    
-      <li><code>application/json</code></li>
-    
-    </ul>
-    
-
-    
-    <h3 class="field-label">Request body</h3>
-    <div class="field-items">
-      <div class="param">broker (required)</div>
-
-      <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash; Updated broker </div>
-    </div>  <!-- field-items -->
-    
-
-    
-
-    
-
-    
-
-    <!-- Remove Return type... unclear where this comes from;
-         for our swagger.json files, it is always empty and there is no boolean guard or hasReturnType
-         do we end up with a heading but not content
-
-    
-    <h3 class="field-label">Return type</h3>
-    <div class="return-type"><a href="#">broker</a></div>
-    
-
-    Todo: process Response Object and its headers, schema, examples
-    -->
-
-    
-
-    
-    <h3 class="field-label">Produces</h3>
-    This API call produces the following media types according to the <span class="header">Accept</span> request header;
-    the media type will be conveyed by the <span class="heaader">Content-Type</span> response header.
-    <ul>
-    
-      <li><code>application/json</code></li>
-    
-    </ul>
-    
-
-    <h3 class="field-label">Responses</h3>
-    
-    <h4 class="field-label">200</h4>
-    Successful response
-    
-    
-    <h4 class="field-label">0</h4>
-    Unexpected error
-    
-    
-  </div> <!-- method -->
-  <hr/>
-  
-  <div class="method"><a name="updateCatalog"/>
-    <div class="method-path">
-    <a class="up" href="#__Methods">Up</a>
-    <pre class="get"><code class="huge"><span class="http-method">get</span> /broker/update_catalog</code></pre></div>
-    <div class="method-summary"> (<span class="nickname">updateCatalog</span>)</div>
-    
-    <div class="method-notes">Updates the broker catalog</div>
-
-    
-
-    
-    <h3 class="field-label">Consumes</h3>
-    This API call consumes the following media types via the <span class="heaader">Content-Type</span> request header:
-    <ul>
-    
-      <li><code>application/json</code></li>
-    
-    </ul>
-    
-
-    
-
-    
-
-    
-
-    
-
-    <!-- Remove Return type... unclear where this comes from;
-         for our swagger.json files, it is always empty and there is no boolean guard or hasReturnType
-         do we end up with a heading but not content
-
-    
-
-    Todo: process Response Object and its headers, schema, examples
-    -->
-
-    
-
-    
-    <h3 class="field-label">Produces</h3>
-    This API call produces the following media types according to the <span class="header">Accept</span> request header;
-    the media type will be conveyed by the <span class="heaader">Content-Type</span> response header.
-    <ul>
-    
-      <li><code>application/json</code></li>
-    
-    </ul>
-    
-
-    <h3 class="field-label">Responses</h3>
-    
-    <h4 class="field-label">200</h4>
-    Successful response
-    
-    
-    <h4 class="field-label">0</h4>
-    Unexpected error
-    
-    
-  </div> <!-- method -->
-  <hr/>
   
   <div class="method"><a name="getAllDials"/>
     <div class="method-path">
@@ -531,7 +321,7 @@ code {
     Sucessfull response
     
     
-    <h4 class="field-label">0</h4>
+    <h4 class="field-label">500</h4>
     Unexpected error
     
     
@@ -604,7 +394,7 @@ code {
     Sucessfull response
     
     
-    <h4 class="field-label">0</h4>
+    <h4 class="field-label">500</h4>
     Unexpected error
     
     
@@ -677,7 +467,11 @@ code {
     Sucessfull response
     
     
-    <h4 class="field-label">0</h4>
+    <h4 class="field-label">404</h4>
+    Not Found
+    
+    
+    <h4 class="field-label">500</h4>
     Unexpected error
     
     
@@ -757,7 +551,11 @@ code {
     Sucessfull response
     
     
-    <h4 class="field-label">0</h4>
+    <h4 class="field-label">404</h4>
+    Not Found
+    
+    
+    <h4 class="field-label">500</h4>
     Unexpected error
     
     
@@ -827,7 +625,11 @@ code {
     Sucessfull response
     
     
-    <h4 class="field-label">0</h4>
+    <h4 class="field-label">404</h4>
+    Not Found
+    
+    
+    <h4 class="field-label">500</h4>
     Unexpected error
     
     
@@ -900,7 +702,11 @@ code {
     Sucessfull response
     
     
-    <h4 class="field-label">0</h4>
+    <h4 class="field-label">404</h4>
+    Not Found
+    
+    
+    <h4 class="field-label">500</h4>
     Unexpected error
     
     
@@ -973,6 +779,10 @@ code {
     OK
     
     
+    <h4 class="field-label">500</h4>
+    Unexpected error
+    
+    
   </div> <!-- method -->
   <hr/>
   
@@ -1001,7 +811,7 @@ code {
     <div class="field-items">
       <div class="param">driverInstance (required)</div>
 
-      <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash;  </div>
+      <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash; driver instance to be created </div>
     </div>  <!-- field-items -->
     
 
@@ -1042,7 +852,7 @@ code {
     Instance created
     
     
-    <h4 class="field-label">0</h4>
+    <h4 class="field-label">500</h4>
     Unexpected error
     
     
@@ -1115,7 +925,11 @@ code {
     OK
     
     
-    <h4 class="field-label">0</h4>
+    <h4 class="field-label">404</h4>
+    Not Found
+    
+    
+    <h4 class="field-label">500</h4>
     Unexpected error
     
     
@@ -1195,7 +1009,11 @@ code {
     Sucessfull response
     
     
-    <h4 class="field-label">0</h4>
+    <h4 class="field-label">404</h4>
+    Not Found
+    
+    
+    <h4 class="field-label">500</h4>
     Unexpected error
     
     
@@ -1265,7 +1083,11 @@ code {
     Driver deleted
     
     
-    <h4 class="field-label">0</h4>
+    <h4 class="field-label">404</h4>
+    Not Found
+    
+    
+    <h4 class="field-label">500</h4>
     Unexpected error
     
     
@@ -1335,7 +1157,11 @@ code {
     OK
     
     
-    <h4 class="field-label">0</h4>
+    <h4 class="field-label">404</h4>
+    Not Found
+    
+    
+    <h4 class="field-label">500</h4>
     Unexpected error
     
     
@@ -1401,7 +1227,7 @@ code {
     Successful response
     
     
-    <h4 class="field-label">0</h4>
+    <h4 class="field-label">500</h4>
     Unexpected error
     
     
@@ -1474,7 +1300,11 @@ code {
     Driver created
     
     
-    <h4 class="field-label">0</h4>
+    <h4 class="field-label">409</h4>
+    A driver with the same type already exists
+    
+    
+    <h4 class="field-label">500</h4>
     Unexpected error
     
     
@@ -1547,7 +1377,11 @@ code {
     OK
     
     
-    <h4 class="field-label">0</h4>
+    <h4 class="field-label">404</h4>
+    Not Found
+    
+    
+    <h4 class="field-label">500</h4>
     Unexpected error
     
     
@@ -1627,7 +1461,11 @@ code {
     Driver updated
     
     
-    <h4 class="field-label">0</h4>
+    <h4 class="field-label">404</h4>
+    Not Found
+    
+    
+    <h4 class="field-label">500</h4>
     Unexpected error
     
     
@@ -1697,7 +1535,11 @@ code {
     Driver deleted
     
     
-    <h4 class="field-label">0</h4>
+    <h4 class="field-label">404</h4>
+    Not Found
+    
+    
+    <h4 class="field-label">500</h4>
     Unexpected error
     
     
@@ -1742,7 +1584,7 @@ code {
     <div class="field-items">
       <div class="param">sha (required)</div>
 
-      <div class="param-desc"><span class="param-type">Form Parameter</span> &mdash; file sha </div><div class="param">file (required)</div>
+      <div class="param-desc"><span class="param-type">Form Parameter</span> &mdash; file sha1 base64 encoded </div><div class="param">file (required)</div>
 
       <div class="param-desc"><span class="param-type">Form Parameter</span> &mdash; Driver executable </div>
     </div>  <!-- field-items -->
@@ -1776,7 +1618,11 @@ code {
     Driver uploaded
     
     
-    <h4 class="field-label">0</h4>
+    <h4 class="field-label">404</h4>
+    Not Found
+    
+    
+    <h4 class="field-label">500</h4>
     Unexpected error
     
     
@@ -1849,7 +1695,11 @@ code {
     OK
     
     
-    <h4 class="field-label">0</h4>
+    <h4 class="field-label">404</h4>
+    Not Found
+    
+    
+    <h4 class="field-label">500</h4>
     Unexpected error
     
     
@@ -1915,7 +1765,7 @@ code {
     Successful response
     
     
-    <h4 class="field-label">0</h4>
+    <h4 class="field-label">500</h4>
     Unexpected error
     
     
@@ -1988,7 +1838,7 @@ code {
     Sucessfull response
     
     
-    <h4 class="field-label">0</h4>
+    <h4 class="field-label">500</h4>
     Unexpected error
     
     
@@ -2061,7 +1911,7 @@ code {
     Sucessfull response
     
     
-    <h4 class="field-label">0</h4>
+    <h4 class="field-label">500</h4>
     Unexpected error
     
     
@@ -2134,7 +1984,11 @@ code {
     Sucessfull response
     
     
-    <h4 class="field-label">0</h4>
+    <h4 class="field-label">404</h4>
+    Not Found
+    
+    
+    <h4 class="field-label">500</h4>
     Unexpected error
     
     
@@ -2214,7 +2068,11 @@ code {
     Sucessfull response
     
     
-    <h4 class="field-label">0</h4>
+    <h4 class="field-label">404</h4>
+    Not Found
+    
+    
+    <h4 class="field-label">500</h4>
     Unexpected error
     
     
@@ -2284,7 +2142,11 @@ code {
     Sucessfull response
     
     
-    <h4 class="field-label">0</h4>
+    <h4 class="field-label">404</h4>
+    Not Found
+    
+    
+    <h4 class="field-label">500</h4>
     Unexpected error
     
     
@@ -2357,80 +2219,7 @@ code {
     Sucessfull response
     
     
-    <h4 class="field-label">0</h4>
-    Unexpected error
-    
-    
-  </div> <!-- method -->
-  <hr/>
-  
-  <div class="method"><a name="createService"/>
-    <div class="method-path">
-    <a class="up" href="#__Methods">Up</a>
-    <pre class="post"><code class="huge"><span class="http-method">post</span> /services</code></pre></div>
-    <div class="method-summary"> (<span class="nickname">createService</span>)</div>
-    
-    <div class="method-notes">Create a new `service` definition</div>
-
-    
-
-    
-    <h3 class="field-label">Consumes</h3>
-    This API call consumes the following media types via the <span class="heaader">Content-Type</span> request header:
-    <ul>
-    
-      <li><code>application/json</code></li>
-    
-    </ul>
-    
-
-    
-    <h3 class="field-label">Request body</h3>
-    <div class="field-items">
-      <div class="param">service (required)</div>
-
-      <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash; Add service definition </div>
-    </div>  <!-- field-items -->
-    
-
-    
-
-    
-
-    
-
-    <!-- Remove Return type... unclear where this comes from;
-         for our swagger.json files, it is always empty and there is no boolean guard or hasReturnType
-         do we end up with a heading but not content
-
-    
-    <h3 class="field-label">Return type</h3>
-    <div class="return-type"><a href="#">service</a></div>
-    
-
-    Todo: process Response Object and its headers, schema, examples
-    -->
-
-    
-
-    
-    <h3 class="field-label">Produces</h3>
-    This API call produces the following media types according to the <span class="header">Accept</span> request header;
-    the media type will be conveyed by the <span class="heaader">Content-Type</span> response header.
-    <ul>
-    
-      <li><code>application/json</code></li>
-    
-    </ul>
-    
-
-    <h3 class="field-label">Responses</h3>
-    
-    <h4 class="field-label">201</h4>
-    Sucessfull response
-    
-    
-    <h4 class="field-label">0</h4>
+    <h4 class="field-label">500</h4>
     Unexpected error
     
     
@@ -2503,7 +2292,11 @@ code {
     Sucessfull response
     
     
-    <h4 class="field-label">0</h4>
+    <h4 class="field-label">404</h4>
+    Not Found
+    
+    
+    <h4 class="field-label">500</h4>
     Unexpected error
     
     
@@ -2583,28 +2376,25 @@ code {
     Sucessfull response
     
     
-    <h4 class="field-label">0</h4>
+    <h4 class="field-label">404</h4>
+    Not Found
+    
+    
+    <h4 class="field-label">500</h4>
     Unexpected error
     
     
   </div> <!-- method -->
   <hr/>
   
-  <div class="method"><a name="deleteService"/>
+  <div class="method"><a name="updateCatalog"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
-    <pre class="delete"><code class="huge"><span class="http-method">delete</span> /services/{service_id}</code></pre></div>
-    <div class="method-summary"> (<span class="nickname">deleteService</span>)</div>
+    <pre class="post"><code class="huge"><span class="http-method">post</span> /update_catalog</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">updateCatalog</span>)</div>
     
-    <div class="method-notes">Deletes a `service`</div>
+    <div class="method-notes">Updates the broker catalog</div>
 
-    
-    <h3 class="field-label">Path parameters</h3>
-    <div class="field-items">
-      <div class="param">serviceId (required)</div>
-
-      <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash; ID of the service </div>
-    </div>  <!-- field-items -->
     
 
     
@@ -2649,11 +2439,11 @@ code {
 
     <h3 class="field-label">Responses</h3>
     
-    <h4 class="field-label">204</h4>
-    Sucessfull response
+    <h4 class="field-label">200</h4>
+    Successful response
     
     
-    <h4 class="field-label">0</h4>
+    <h4 class="field-label">500</h4>
     Unexpected error
     
     
@@ -2670,10 +2460,6 @@ code {
 
   <h2>Table of Contents</h2>
   <ol>
-  
-  
-    <li><a href="#Broker"><code>Broker</code></a></li>
-  
   
   
     <li><a href="#Info"><code>Info</code></a></li>
@@ -2699,29 +2485,8 @@ code {
     <li><a href="#Driver"><code>Driver</code></a></li>
   
   
-  
-    <li><a href="#Error"><code>Error</code></a></li>
-  
-  
-  
-    <li><a href="#Broker_credentials"><code>Broker_credentials</code></a></li>
-  
-  
   </ol>
 
-  
-  
-  <div class="model">
-    <h3 class="field-label"><a name="Broker">Broker</a> <a class="up" href="#__Models">Up</a></h3>
-    <div class="field-items">
-      <div class="param">listen </div><div class="param-desc"><span class="param-type">String</span> </div>
-      <div class="param">external_url </div><div class="param-desc"><span class="param-type">String</span> </div>
-      <div class="param">dev_mode </div><div class="param-desc"><span class="param-type">Boolean</span> </div>
-      <div class="param">credentials </div><div class="param-desc"><span class="param-type">broker_credentials</span> </div>
-      
-    </div>  <!-- field-items -->
-  </div>
-  
   
   
   <div class="model">
@@ -2799,28 +2564,6 @@ code {
       <div class="param">name </div><div class="param-desc"><span class="param-type">String</span> </div>
       <div class="param">driver_type </div><div class="param-desc"><span class="param-type">String</span> </div>
       <div class="param">driver_instances </div><div class="param-desc"><span class="param-type">array[String]</span> </div>
-      
-    </div>  <!-- field-items -->
-  </div>
-  
-  
-  
-  <div class="model">
-    <h3 class="field-label"><a name="Error">Error</a> <a class="up" href="#__Models">Up</a></h3>
-    <div class="field-items">
-      <div class="param">message </div><div class="param-desc"><span class="param-type">String</span> </div>
-      <div class="param">code </div><div class="param-desc"><span class="param-type">Integer</span> </div>
-      
-    </div>  <!-- field-items -->
-  </div>
-  
-  
-  
-  <div class="model">
-    <h3 class="field-label"><a name="Broker_credentials">Broker_credentials</a> <a class="up" href="#__Models">Up</a></h3>
-    <div class="field-items">
-      <div class="param">username </div><div class="param-desc"><span class="param-type">String</span> </div>
-      <div class="param">password </div><div class="param-desc"><span class="param-type">String</span> </div>
       
     </div>  <!-- field-items -->
   </div>

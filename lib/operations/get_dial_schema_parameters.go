@@ -8,16 +8,18 @@ import (
 
 	"github.com/go-swagger/go-swagger/errors"
 	"github.com/go-swagger/go-swagger/httpkit/middleware"
-	"github.com/go-swagger/go-swagger/httpkit/validate"
 	"github.com/go-swagger/go-swagger/strfmt"
 )
 
 // GetDialSchemaParams contains all the bound params for the get dial schema operation
 // typically these are obtained from a http.Request
+//
+// swagger:parameters getDialSchema
 type GetDialSchemaParams struct {
-	// Authorization token
-	Authorization string
-	// ID of the dial
+	/* ID of the dial
+	Required: true
+	In: path
+	*/
 	DialID string
 }
 
@@ -26,10 +28,6 @@ type GetDialSchemaParams struct {
 func (o *GetDialSchemaParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
 
-	if err := o.bindAuthorization(r.Header.Get("authorization"), route.Formats); err != nil {
-		res = append(res, err)
-	}
-
 	if err := o.bindDialID(route.Params.Get("dial_id"), route.Formats); err != nil {
 		res = append(res, err)
 	}
@@ -37,16 +35,6 @@ func (o *GetDialSchemaParams) BindRequest(r *http.Request, route *middleware.Mat
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-	return nil
-}
-
-func (o *GetDialSchemaParams) bindAuthorization(raw string, formats strfmt.Registry) error {
-	if err := validate.RequiredString("authorization", "header", raw); err != nil {
-		return err
-	}
-
-	o.Authorization = raw
-
 	return nil
 }
 

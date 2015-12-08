@@ -1,7 +1,23 @@
+// Copyright 2015 go-swagger maintainers
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package validate
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
 	"regexp"
 	"strings"
 
@@ -14,6 +30,7 @@ import (
 type SpecValidator struct {
 	schema       *spec.Schema // swagger 2.0 schema
 	spec         *spec.Document
+	expanded     *spec.Document
 	KnownFormats strfmt.Registry
 }
 
@@ -43,27 +60,50 @@ func (s *SpecValidator) Validate(data interface{}) (errs *Result, warnings *Resu
 	warnings = new(Result)
 
 	schv := NewSchemaValidator(s.schema, nil, "", s.KnownFormats)
-	errs.Merge(schv.Validate(sd.Spec())) // error -
+	var obj interface{}
+	if err := json.Unmarshal(sd.Raw(), &obj); err != nil {
+		errs.AddErrors(err)
+		return
+	}
+	errs.Merge(schv.Validate(obj)) // error -
 	if errs.HasErrors() {
 		return // no point in continuing
 	}
 
-	errs.Merge(s.validateReferencesValid()) // error
+	errs.Merge(s.validateReferencesValid()) // error -
 	if errs.HasErrors() {
 		return // no point in continuing
 	}
 
-	errs.Merge(s.validateDuplicatePropertyNames())         // error
+	errs.Merge(s.validateDuplicateOperationIDs())
+	errs.Merge(s.validateDuplicatePropertyNames())         // error -
 	errs.Merge(s.validateParameters())                     // error -
 	errs.Merge(s.validateItems())                          // error -
 	errs.Merge(s.validateRequiredDefinitions())            // error -
-	errs.Merge(s.validateDefaultValueValidAgainstSchema()) // error
+	errs.Merge(s.validateDefaultValueValidAgainstSchema()) // error -
+	errs.Merge(s.validateExamplesValidAgainstSchema())     // error -
 
 	warnings.Merge(s.validateUniqueSecurityScopes())            // warning
 	warnings.Merge(s.validateUniqueScopesSecurityDefinitions()) // warning
 	warnings.Merge(s.validateReferenced())                      // warning
 
 	return
+}
+
+func (s *SpecValidator) validateDuplicateOperationIDs() *Result {
+	res := new(Result)
+	known := make(map[string]int)
+	for _, v := range s.spec.OperationIDs() {
+		if v != "" {
+			known[v]++
+		}
+	}
+	for k, v := range known {
+		if v > 1 {
+			res.AddErrors(errors.New(422, "%q is defined %d times", k, v))
+		}
+	}
+	return res
 }
 
 type dupProp struct {
@@ -108,9 +148,9 @@ func (s *SpecValidator) validateSchemaPropertyNames(nm string, sch spec.Schema, 
 
 	schn := nm
 	schc := &sch
-	if sch.Ref.GetURL() != nil {
+	for schc.Ref.String() != "" {
 		// gather property names
-		reso, err := spec.ResolveRef(s.spec.Spec(), &sch.Ref)
+		reso, err := spec.ResolveRef(s.spec.Spec(), &schc.Ref)
 		if err != nil {
 			panic(err)
 		}
@@ -138,32 +178,40 @@ func (s *SpecValidator) validateSchemaPropertyNames(nm string, sch spec.Schema, 
 }
 
 func (s *SpecValidator) validateCircularAncestry(nm string, sch spec.Schema, knowns map[string]struct{}) []string {
+	if sch.Ref.String() == "" && len(sch.AllOf) == 0 {
+		return nil
+	}
 	var ancs []string
 
 	schn := nm
 	schc := &sch
-	if sch.Ref.GetURL() != nil {
-		reso, err := spec.ResolveRef(s.spec.Spec(), &sch.Ref)
+	for schc.Ref.String() != "" {
+		reso, err := spec.ResolveRef(s.spec.Spec(), &schc.Ref)
 		if err != nil {
 			panic(err)
 		}
 		schc = reso
 		schn = sch.Ref.String()
-		knowns[schn] = struct{}{}
 	}
 
-	if _, ok := knowns[schn]; ok {
-		ancs = append(ancs, schn)
-	}
-	if len(ancs) > 0 {
-		return ancs
+	if schn != nm && schn != "" {
+		if _, ok := knowns[schn]; ok {
+			ancs = append(ancs, schn)
+		}
+		knowns[schn] = struct{}{}
+
+		if len(ancs) > 0 {
+			return ancs
+		}
 	}
 
 	if len(schc.AllOf) > 0 {
 		for _, chld := range schc.AllOf {
-			ancs = append(ancs, s.validateCircularAncestry(schn, chld, knowns)...)
-			if len(ancs) > 0 {
-				return ancs
+			if chld.Ref.String() != "" || len(chld.AllOf) > 0 {
+				ancs = append(ancs, s.validateCircularAncestry(schn, chld, knowns)...)
+				if len(ancs) > 0 {
+					return ancs
+				}
 			}
 		}
 	}
@@ -358,9 +406,20 @@ func (s *SpecValidator) validateParameters() *Result {
 
 			ptypes := make(map[string]map[string]struct{})
 			var firstBodyParam string
-
+			sw := s.spec.Spec()
 			var paramNames []string
-			for _, pr := range op.Parameters {
+		PARAMETERS:
+			for _, ppr := range op.Parameters {
+				pr := ppr
+				for pr.Ref.String() != "" {
+					obj, _, err := pr.Ref.GetPointer().Get(sw)
+					if err != nil {
+						log.Println(err)
+						res.AddErrors(err)
+						break PARAMETERS
+					}
+					pr = obj.(spec.Parameter)
+				}
 				pnames, ok := ptypes[pr.In]
 				if !ok {
 					pnames = make(map[string]struct{})
@@ -373,7 +432,19 @@ func (s *SpecValidator) validateParameters() *Result {
 				}
 				pnames[pr.Name] = struct{}{}
 			}
-			for _, pr := range s.spec.ParamsFor(method, path) {
+
+		PARAMETERS2:
+			for _, ppr := range s.spec.ParamsFor(method, path) {
+				pr := ppr
+				for pr.Ref.String() != "" {
+					obj, _, err := pr.Ref.GetPointer().Get(sw)
+					if err != nil {
+						res.AddErrors(err)
+						break PARAMETERS2
+					}
+					pr = obj.(spec.Parameter)
+				}
+
 				if pr.In == "body" {
 					if firstBodyParam != "" {
 						res.AddErrors(errors.New(422, "operation %q has more than 1 body param (accepted: %q, dropped: %q)", op.ID, firstBodyParam, pr.Name))
@@ -404,10 +475,53 @@ func parsePath(path string) (segments []string, params []int) {
 func (s *SpecValidator) validateReferencesValid() *Result {
 	// each reference must point to a valid object
 	res := new(Result)
-	_, err := s.spec.Expanded()
+	exp, err := s.spec.Expanded()
 	if err != nil {
 		res.AddErrors(err)
 	}
+	s.expanded = exp
+	return res
+}
+
+func (s *SpecValidator) validateResponseExample(path string, r *spec.Response) *Result {
+	res := new(Result)
+	if r.Ref.String() != "" {
+		nr, _, err := r.Ref.GetPointer().Get(s.spec.Spec())
+		if err != nil {
+			res.AddErrors(err)
+			return res
+		}
+		rr := nr.(spec.Response)
+		return s.validateResponseExample(path, &rr)
+	}
+
+	if r.Examples != nil {
+		if r.Schema != nil {
+			if example, ok := r.Examples["application/json"]; ok {
+				res.Merge(NewSchemaValidator(r.Schema, s.spec.Spec(), path, s.KnownFormats).Validate(example))
+			}
+
+			// TODO: validate other media types too
+		}
+	}
+	return res
+}
+
+func (s *SpecValidator) validateExamplesValidAgainstSchema() *Result {
+	res := new(Result)
+
+	for _, pathItem := range s.spec.Operations() {
+		for path, op := range pathItem {
+			if op.Responses.Default != nil {
+				dr := op.Responses.Default
+				res.Merge(s.validateResponseExample(path, dr))
+			}
+			for _, r := range op.Responses.StatusCodeResponses {
+				res.Merge(s.validateResponseExample(path, &r))
+			}
+		}
+	}
+
 	return res
 }
 
@@ -415,5 +529,117 @@ func (s *SpecValidator) validateDefaultValueValidAgainstSchema() *Result {
 	// every default value that is specified must validate against the schema for that property
 	// headers, items, parameters, schema
 
-	return nil
+	res := new(Result)
+
+	for method, pathItem := range s.spec.Operations() {
+		for path, op := range pathItem {
+			// parameters
+		PARAMETERS:
+			for _, pr := range s.spec.ParamsFor(method, path) {
+				// expand ref is necessary
+				param := pr
+				for param.Ref.String() != "" {
+					obj, _, err := param.Ref.GetPointer().Get(s.spec.Spec())
+					if err != nil {
+						res.AddErrors(err)
+						break PARAMETERS
+					}
+					param = obj.(spec.Parameter)
+				}
+				// check simple paramters first
+				if param.Default != nil && param.Schema == nil {
+					//fmt.Println(param.Name, "in", param.In, "has a default without a schema")
+					// check param valid
+					res.Merge(NewParamValidator(&param, s.KnownFormats).Validate(param.Default))
+				}
+
+				if param.Items != nil {
+					res.Merge(s.validateDefaultValueItemsAgainstSchema(param.Name, param.In, &param, param.Items))
+				}
+
+				if param.Schema != nil {
+					res.Merge(s.validateDefaultValueSchemaAgainstSchema(param.Name, param.In, param.Schema))
+				}
+			}
+
+			if op.Responses.Default != nil {
+				dr := op.Responses.Default
+				for nm, h := range dr.Headers {
+					if h.Default != nil {
+						res.Merge(NewHeaderValidator(nm, &h, s.KnownFormats).Validate(h.Default))
+					}
+					if h.Items != nil {
+						res.Merge(s.validateDefaultValueItemsAgainstSchema(nm, "header", &h, h.Items))
+					}
+				}
+			}
+			for _, r := range op.Responses.StatusCodeResponses {
+				for nm, h := range r.Headers {
+					if h.Default != nil {
+						res.Merge(NewHeaderValidator(nm, &h, s.KnownFormats).Validate(h.Default))
+					}
+					if h.Items != nil {
+						res.Merge(s.validateDefaultValueItemsAgainstSchema(nm, "header", &h, h.Items))
+					}
+				}
+			}
+
+		}
+	}
+
+	for nm, sch := range s.spec.Spec().Definitions {
+		res.Merge(s.validateDefaultValueSchemaAgainstSchema(fmt.Sprintf("definitions.%s", nm), "body", &sch))
+	}
+
+	return res
+}
+
+func (s *SpecValidator) validateDefaultValueSchemaAgainstSchema(path, in string, schema *spec.Schema) *Result {
+	res := new(Result)
+	if schema != nil {
+		if schema.Default != nil {
+			res.Merge(NewSchemaValidator(schema, s.spec.Spec(), path, s.KnownFormats).Validate(schema.Default))
+		}
+		if schema.Items != nil {
+			if schema.Items.Schema != nil {
+				res.Merge(s.validateDefaultValueSchemaAgainstSchema(path+".items", in, schema.Items.Schema))
+			}
+			for i, sch := range schema.Items.Schemas {
+				res.Merge(s.validateDefaultValueSchemaAgainstSchema(fmt.Sprintf("%s.items[%d]", path, i), in, &sch))
+			}
+		}
+		if schema.AdditionalItems != nil && schema.AdditionalItems.Schema != nil {
+			res.Merge(s.validateDefaultValueSchemaAgainstSchema(fmt.Sprintf("%s.additionalItems", path), in, schema.AdditionalItems.Schema))
+		}
+		for propName, prop := range schema.Properties {
+			res.Merge(s.validateDefaultValueSchemaAgainstSchema(path+"."+propName, in, &prop))
+		}
+		for propName, prop := range schema.PatternProperties {
+			res.Merge(s.validateDefaultValueSchemaAgainstSchema(path+"."+propName, in, &prop))
+		}
+		if schema.AdditionalProperties != nil && schema.AdditionalProperties.Schema != nil {
+			res.Merge(s.validateDefaultValueSchemaAgainstSchema(fmt.Sprintf("%s.additionalProperties", path), in, schema.AdditionalProperties.Schema))
+		}
+		for i, aoSch := range schema.AllOf {
+			res.Merge(s.validateDefaultValueSchemaAgainstSchema(fmt.Sprintf("%s.allOf[%d]", path, i), in, &aoSch))
+		}
+
+	}
+	return res
+}
+
+func (s *SpecValidator) validateDefaultValueItemsAgainstSchema(path, in string, root interface{}, items *spec.Items) *Result {
+	res := new(Result)
+	if items != nil {
+		if items.Default != nil {
+			res.Merge(newItemsValidator(path, in, items, root, s.KnownFormats).Validate(0, items.Default))
+		}
+		if items.Items != nil {
+			res.Merge(s.validateDefaultValueItemsAgainstSchema(path+"[0]", in, root, items.Items))
+		}
+	}
+	return res
+}
+
+func (s *SpecValidator) isSwaggerType(tpe, format string, value interface{}) {
 }

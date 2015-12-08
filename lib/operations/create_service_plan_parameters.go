@@ -8,18 +8,20 @@ import (
 
 	"github.com/go-swagger/go-swagger/errors"
 	"github.com/go-swagger/go-swagger/httpkit/middleware"
-	"github.com/go-swagger/go-swagger/httpkit/validate"
-	"github.com/go-swagger/go-swagger/strfmt"
+
 	"github.com/hpcloud/cf-usb/lib/genmodel"
 )
 
 // CreateServicePlanParams contains all the bound params for the create service plan operation
 // typically these are obtained from a http.Request
+//
+// swagger:parameters createServicePlan
 type CreateServicePlanParams struct {
-	// Authorization token
-	Authorization string
-	// Add a plan for a **dialID**
-	Plan genmodel.Plan
+	/* Add a plan for a **dialID**
+	Required: true
+	In: body
+	*/
+	Plan *genmodel.Plan
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
@@ -27,31 +29,21 @@ type CreateServicePlanParams struct {
 func (o *CreateServicePlanParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
 
-	if err := o.bindAuthorization(r.Header.Get("authorization"), route.Formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := route.Consumer.Consume(r.Body, &o.Plan); err != nil {
+	var body genmodel.Plan
+	if err := route.Consumer.Consume(r.Body, &body); err != nil {
 		res = append(res, errors.NewParseError("plan", "body", "", err))
 	} else {
-		if err := o.Plan.Validate(route.Formats); err != nil {
+		if err := body.Validate(route.Formats); err != nil {
 			res = append(res, err)
 		}
 
+		if len(res) == 0 {
+			o.Plan = &body
+		}
 	}
 
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-	return nil
-}
-
-func (o *CreateServicePlanParams) bindAuthorization(raw string, formats strfmt.Registry) error {
-	if err := validate.RequiredString("authorization", "header", raw); err != nil {
-		return err
-	}
-
-	o.Authorization = raw
-
 	return nil
 }

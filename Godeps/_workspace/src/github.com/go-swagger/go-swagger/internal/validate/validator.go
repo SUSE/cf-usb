@@ -1,3 +1,17 @@
+// Copyright 2015 go-swagger maintainers
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package validate
 
 import (
@@ -10,6 +24,7 @@ import (
 	"github.com/go-swagger/go-swagger/strfmt"
 )
 
+// An EntityValidator is an interface for things that can validate entities
 type EntityValidator interface {
 	Validate(interface{}) *Result
 }
@@ -32,6 +47,12 @@ type itemsValidator struct {
 func newItemsValidator(path, in string, items *spec.Items, root interface{}, formats strfmt.Registry) *itemsValidator {
 	iv := &itemsValidator{path: path, in: in, items: items, root: root, KnownFormats: formats}
 	iv.validators = []valueValidator{
+		&typeValidator{
+			Type:   spec.StringOrArray([]string{items.Type}),
+			Format: items.Format,
+			In:     in,
+			Path:   path,
+		},
 		iv.stringValidator(),
 		iv.formatValidator(),
 		iv.numberValidator(),
@@ -106,23 +127,62 @@ func (i *itemsValidator) stringValidator() valueValidator {
 
 func (i *itemsValidator) formatValidator() valueValidator {
 	return &formatValidator{
-		In:           i.in,
-		Default:      i.items.Default,
+		In: i.in,
+		//Default:      i.items.Default,
 		Format:       i.items.Format,
 		KnownFormats: i.KnownFormats,
 	}
 }
 
-// a param has very limited subset of validations to apply
-type ParamValidator struct {
-	param        *spec.Parameter
+type basicCommonValidator struct {
+	Path    string
+	In      string
+	Default interface{}
+	Enum    []interface{}
+}
+
+func (b *basicCommonValidator) SetPath(path string) {
+	b.Path = path
+}
+
+func (b *basicCommonValidator) Applies(source interface{}, kind reflect.Kind) bool {
+	switch source.(type) {
+	case *spec.Parameter, *spec.Schema, *spec.Header:
+		return true
+	}
+	return false
+}
+
+func (b *basicCommonValidator) Validate(data interface{}) (res *Result) {
+	if len(b.Enum) > 0 {
+		for _, enumValue := range b.Enum {
+			if data != nil && reflect.DeepEqual(enumValue, data) {
+				return nil
+			}
+		}
+		return sErr(errors.EnumFail(b.Path, b.In, data, b.Enum))
+	}
+	return nil
+}
+
+// A HeaderValidator has very limited subset of validations to apply
+type HeaderValidator struct {
+	name         string
+	header       *spec.Header
 	validators   []valueValidator
 	KnownFormats strfmt.Registry
 }
 
-func NewParamValidator(param *spec.Parameter, formats strfmt.Registry) *ParamValidator {
-	p := &ParamValidator{param: param, KnownFormats: formats}
+// NewHeaderValidator creates a new header validator object
+func NewHeaderValidator(name string, header *spec.Header, formats strfmt.Registry) *HeaderValidator {
+	p := &HeaderValidator{name: name, header: header, KnownFormats: formats}
 	p.validators = []valueValidator{
+		&typeValidator{
+			Type:   spec.StringOrArray([]string{header.Type}),
+			Format: header.Format,
+			In:     "header",
+			Path:   name,
+		},
 		p.stringValidator(),
 		p.formatValidator(),
 		p.numberValidator(),
@@ -132,11 +192,116 @@ func NewParamValidator(param *spec.Parameter, formats strfmt.Registry) *ParamVal
 	return p
 }
 
+// Validate the value of the header against its schema
+func (p *HeaderValidator) Validate(data interface{}) *Result {
+	result := new(Result)
+	tpe := reflect.TypeOf(data)
+	kind := tpe.Kind()
+
+	for _, validator := range p.validators {
+		if validator.Applies(p.header, kind) {
+			if err := validator.Validate(data); err != nil {
+				result.Merge(err)
+				if err.HasErrors() {
+					return result
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func (p *HeaderValidator) commonValidator() valueValidator {
+	return &basicCommonValidator{
+		Path:    p.name,
+		In:      "response",
+		Default: p.header.Default,
+		Enum:    p.header.Enum,
+	}
+}
+
+func (p *HeaderValidator) sliceValidator() valueValidator {
+	return &basicSliceValidator{
+		Path:         p.name,
+		In:           "response",
+		Default:      p.header.Default,
+		MaxItems:     p.header.MaxItems,
+		MinItems:     p.header.MinItems,
+		UniqueItems:  p.header.UniqueItems,
+		Items:        p.header.Items,
+		Source:       p.header,
+		KnownFormats: p.KnownFormats,
+	}
+}
+
+func (p *HeaderValidator) numberValidator() valueValidator {
+	return &numberValidator{
+		Path:             p.name,
+		In:               "response",
+		Default:          p.header.Default,
+		MultipleOf:       p.header.MultipleOf,
+		Maximum:          p.header.Maximum,
+		ExclusiveMaximum: p.header.ExclusiveMaximum,
+		Minimum:          p.header.Minimum,
+		ExclusiveMinimum: p.header.ExclusiveMinimum,
+	}
+}
+
+func (p *HeaderValidator) stringValidator() valueValidator {
+	return &stringValidator{
+		Path:      p.name,
+		In:        "response",
+		Default:   p.header.Default,
+		Required:  true,
+		MaxLength: p.header.MaxLength,
+		MinLength: p.header.MinLength,
+		Pattern:   p.header.Pattern,
+	}
+}
+
+func (p *HeaderValidator) formatValidator() valueValidator {
+	return &formatValidator{
+		Path: p.name,
+		In:   "response",
+		//Default:      p.header.Default,
+		Format:       p.header.Format,
+		KnownFormats: p.KnownFormats,
+	}
+}
+
+// A ParamValidator has very limited subset of validations to apply
+type ParamValidator struct {
+	param        *spec.Parameter
+	validators   []valueValidator
+	KnownFormats strfmt.Registry
+}
+
+// NewParamValidator creates a new param validator object
+func NewParamValidator(param *spec.Parameter, formats strfmt.Registry) *ParamValidator {
+	p := &ParamValidator{param: param, KnownFormats: formats}
+	p.validators = []valueValidator{
+		&typeValidator{
+			Type:   spec.StringOrArray([]string{param.Type}),
+			Format: param.Format,
+			In:     param.In,
+			Path:   param.Name,
+		},
+		p.stringValidator(),
+		p.formatValidator(),
+		p.numberValidator(),
+		p.sliceValidator(),
+		p.commonValidator(),
+	}
+	return p
+}
+
+// Validate the data against the description of the parameter
 func (p *ParamValidator) Validate(data interface{}) *Result {
 	result := new(Result)
 	tpe := reflect.TypeOf(data)
 	kind := tpe.Kind()
 
+	// TODO: validate type
 	for _, validator := range p.validators {
 		if validator.Applies(p.param, kind) {
 			if err := validator.Validate(data); err != nil {
@@ -157,37 +322,6 @@ func (p *ParamValidator) commonValidator() valueValidator {
 		Default: p.param.Default,
 		Enum:    p.param.Enum,
 	}
-}
-
-type basicCommonValidator struct {
-	Path    string
-	In      string
-	Default interface{}
-	Enum    []interface{}
-}
-
-func (b *basicCommonValidator) SetPath(path string) {
-	b.Path = path
-}
-
-func (b *basicCommonValidator) Applies(source interface{}, kind reflect.Kind) bool {
-	switch source.(type) {
-	case *spec.Parameter, *spec.Schema:
-		return true
-	}
-	return false
-}
-
-func (b *basicCommonValidator) Validate(data interface{}) (res *Result) {
-	if len(b.Enum) > 0 {
-		for _, enumValue := range b.Enum {
-			if data != nil && reflect.DeepEqual(enumValue, data) {
-				return nil
-			}
-		}
-		return sErr(errors.EnumFail(b.Path, b.In, data, b.Enum))
-	}
-	return nil
 }
 
 func (p *ParamValidator) sliceValidator() valueValidator {
@@ -231,9 +365,9 @@ func (p *ParamValidator) stringValidator() valueValidator {
 
 func (p *ParamValidator) formatValidator() valueValidator {
 	return &formatValidator{
-		Path:         p.param.Name,
-		In:           p.param.In,
-		Default:      p.param.Default,
+		Path: p.param.Name,
+		In:   p.param.In,
+		//Default:      p.param.Default,
 		Format:       p.param.Format,
 		KnownFormats: p.KnownFormats,
 	}
@@ -258,7 +392,7 @@ func (s *basicSliceValidator) SetPath(path string) {
 
 func (s *basicSliceValidator) Applies(source interface{}, kind reflect.Kind) bool {
 	switch source.(type) {
-	case *spec.Parameter, *spec.Items:
+	case *spec.Parameter, *spec.Items, *spec.Header:
 		return kind == reflect.Slice
 	}
 	return false
@@ -334,7 +468,7 @@ func (n *numberValidator) SetPath(path string) {
 
 func (n *numberValidator) Applies(source interface{}, kind reflect.Kind) bool {
 	switch source.(type) {
-	case *spec.Parameter, *spec.Schema, *spec.Items:
+	case *spec.Parameter, *spec.Schema, *spec.Items, *spec.Header:
 		isInt := kind >= reflect.Int && kind <= reflect.Uint64
 		isFloat := kind == reflect.Float32 || kind == reflect.Float64
 		r := isInt || isFloat
@@ -397,7 +531,7 @@ func (s *stringValidator) SetPath(path string) {
 
 func (s *stringValidator) Applies(source interface{}, kind reflect.Kind) bool {
 	switch source.(type) {
-	case *spec.Parameter, *spec.Schema, *spec.Items:
+	case *spec.Parameter, *spec.Schema, *spec.Items, *spec.Header:
 		r := kind == reflect.String
 		// fmt.Printf("string validator for %q applies %t for %T (kind: %v)\n", s.Path, r, source, kind)
 		return r

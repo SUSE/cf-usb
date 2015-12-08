@@ -8,16 +8,18 @@ import (
 
 	"github.com/go-swagger/go-swagger/errors"
 	"github.com/go-swagger/go-swagger/httpkit/middleware"
-	"github.com/go-swagger/go-swagger/httpkit/validate"
 	"github.com/go-swagger/go-swagger/strfmt"
 )
 
 // DeleteServicePlanParams contains all the bound params for the delete service plan operation
 // typically these are obtained from a http.Request
+//
+// swagger:parameters deleteServicePlan
 type DeleteServicePlanParams struct {
-	// Authorization token
-	Authorization string
-	// ID of the plan
+	/* ID of the plan
+	Required: true
+	In: path
+	*/
 	PlanID string
 }
 
@@ -26,10 +28,6 @@ type DeleteServicePlanParams struct {
 func (o *DeleteServicePlanParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
 
-	if err := o.bindAuthorization(r.Header.Get("authorization"), route.Formats); err != nil {
-		res = append(res, err)
-	}
-
 	if err := o.bindPlanID(route.Params.Get("plan_id"), route.Formats); err != nil {
 		res = append(res, err)
 	}
@@ -37,16 +35,6 @@ func (o *DeleteServicePlanParams) BindRequest(r *http.Request, route *middleware
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-	return nil
-}
-
-func (o *DeleteServicePlanParams) bindAuthorization(raw string, formats strfmt.Registry) error {
-	if err := validate.RequiredString("authorization", "header", raw); err != nil {
-		return err
-	}
-
-	o.Authorization = raw
-
 	return nil
 }
 

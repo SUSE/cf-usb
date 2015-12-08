@@ -10,24 +10,27 @@ import (
 )
 
 // DeleteServicePlanHandlerFunc turns a function with the right signature into a delete service plan handler
-type DeleteServicePlanHandlerFunc func(DeleteServicePlanParams) error
+type DeleteServicePlanHandlerFunc func(DeleteServicePlanParams, interface{}) middleware.Responder
 
-func (fn DeleteServicePlanHandlerFunc) Handle(params DeleteServicePlanParams) error {
-	return fn(params)
+// Handle executing the request and returning a response
+func (fn DeleteServicePlanHandlerFunc) Handle(params DeleteServicePlanParams, principal interface{}) middleware.Responder {
+	return fn(params, principal)
 }
 
 // DeleteServicePlanHandler interface for that can handle valid delete service plan params
 type DeleteServicePlanHandler interface {
-	Handle(DeleteServicePlanParams) error
+	Handle(DeleteServicePlanParams, interface{}) middleware.Responder
 }
 
 // NewDeleteServicePlan creates a new http.Handler for the delete service plan operation
-func NewDeleteServicePlan(ctx *middleware.Context, handler DeleteServicePlanHandler) DeleteServicePlan {
-	return DeleteServicePlan{Context: ctx, Handler: handler}
+func NewDeleteServicePlan(ctx *middleware.Context, handler DeleteServicePlanHandler) *DeleteServicePlan {
+	return &DeleteServicePlan{Context: ctx, Handler: handler}
 }
 
-/*
+/*DeleteServicePlan swagger:route DELETE /plans/{plan_id} deleteServicePlan
+
 Delets the `plan` with the **planID** for the **serviceID**
+
 */
 type DeleteServicePlan struct {
 	Context *middleware.Context
@@ -35,19 +38,26 @@ type DeleteServicePlan struct {
 	Handler DeleteServicePlanHandler
 }
 
-func (o DeleteServicePlan) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (o *DeleteServicePlan) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
+
+	uprinc, err := o.Context.Authorize(r, route)
+	if err != nil {
+		o.Context.Respond(rw, r, route.Produces, route, err)
+		return
+	}
+	var principal interface{}
+	if uprinc != nil {
+		principal = uprinc
+	}
 
 	if err := o.Context.BindValidRequest(r, route, &o.Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	err := o.Handler.Handle(o.Params) // actually handle the request
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	o.Context.Respond(rw, r, route.Produces, route, nil)
+	res := o.Handler.Handle(o.Params, principal) // actually handle the request
+
+	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

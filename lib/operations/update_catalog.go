@@ -10,45 +10,54 @@ import (
 )
 
 // UpdateCatalogHandlerFunc turns a function with the right signature into a update catalog handler
-type UpdateCatalogHandlerFunc func(UpdateCatalogParams) error
+type UpdateCatalogHandlerFunc func(interface{}) middleware.Responder
 
-func (fn UpdateCatalogHandlerFunc) Handle(params UpdateCatalogParams) error {
-	return fn(params)
+// Handle executing the request and returning a response
+func (fn UpdateCatalogHandlerFunc) Handle(principal interface{}) middleware.Responder {
+	return fn(principal)
 }
 
 // UpdateCatalogHandler interface for that can handle valid update catalog params
 type UpdateCatalogHandler interface {
-	Handle(UpdateCatalogParams) error
+	Handle(interface{}) middleware.Responder
 }
 
 // NewUpdateCatalog creates a new http.Handler for the update catalog operation
-func NewUpdateCatalog(ctx *middleware.Context, handler UpdateCatalogHandler) UpdateCatalog {
-	return UpdateCatalog{Context: ctx, Handler: handler}
+func NewUpdateCatalog(ctx *middleware.Context, handler UpdateCatalogHandler) *UpdateCatalog {
+	return &UpdateCatalog{Context: ctx, Handler: handler}
 }
 
-/*
+/*UpdateCatalog swagger:route POST /update_catalog updateCatalog
+
 Updates the broker catalog
+
 
 */
 type UpdateCatalog struct {
 	Context *middleware.Context
-	Params  UpdateCatalogParams
 	Handler UpdateCatalogHandler
 }
 
-func (o UpdateCatalog) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (o *UpdateCatalog) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
 
-	if err := o.Context.BindValidRequest(r, route, &o.Params); err != nil { // bind params
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-
-	err := o.Handler.Handle(o.Params) // actually handle the request
+	uprinc, err := o.Context.Authorize(r, route)
 	if err != nil {
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
-	o.Context.Respond(rw, r, route.Produces, route, nil)
+	var principal interface{}
+	if uprinc != nil {
+		principal = uprinc
+	}
+
+	if err := o.Context.BindValidRequest(r, route, nil); err != nil { // bind params
+		o.Context.Respond(rw, r, route.Produces, route, err)
+		return
+	}
+
+	res := o.Handler.Handle(principal) // actually handle the request
+
+	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

@@ -1,3 +1,17 @@
+// Copyright 2015 go-swagger maintainers
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package errors
 
 import (
@@ -76,10 +90,16 @@ func flattenComposite(errs *CompositeError) *CompositeError {
 	for _, er := range errs.Errors {
 		switch e := er.(type) {
 		case *CompositeError:
-			flat := flattenComposite(e)
-			res = append(res, flat.Errors...)
+			if len(e.Errors) > 0 {
+				flat := flattenComposite(e)
+				if len(flat.Errors) > 0 {
+					res = append(res, flat.Errors...)
+				}
+			}
 		default:
-			res = append(res, e)
+			if e != nil {
+				res = append(res, e)
+			}
 		}
 	}
 	return CompositeValidationError(res...)
@@ -104,6 +124,11 @@ func ServeError(rw http.ResponseWriter, r *http.Request, err error) {
 			rw.Write(errorAsJSON(e))
 		}
 	case Error:
+		if e == nil {
+			rw.WriteHeader(http.StatusInternalServerError)
+			rw.Write(errorAsJSON(New(http.StatusInternalServerError, "Unknown error")))
+			return
+		}
 		rw.WriteHeader(int(e.Code()))
 		if r == nil || r.Method != "HEAD" {
 			rw.Write(errorAsJSON(e))

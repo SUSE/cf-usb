@@ -7,28 +7,30 @@ import (
 	"net/http"
 
 	"github.com/go-swagger/go-swagger/httpkit/middleware"
-	"github.com/hpcloud/cf-usb/lib/genmodel"
 )
 
 // GetDriverInstancesHandlerFunc turns a function with the right signature into a get driver instances handler
-type GetDriverInstancesHandlerFunc func(GetDriverInstancesParams) (*[]genmodel.DriverInstance, error)
+type GetDriverInstancesHandlerFunc func(GetDriverInstancesParams, interface{}) middleware.Responder
 
-func (fn GetDriverInstancesHandlerFunc) Handle(params GetDriverInstancesParams) (*[]genmodel.DriverInstance, error) {
-	return fn(params)
+// Handle executing the request and returning a response
+func (fn GetDriverInstancesHandlerFunc) Handle(params GetDriverInstancesParams, principal interface{}) middleware.Responder {
+	return fn(params, principal)
 }
 
 // GetDriverInstancesHandler interface for that can handle valid get driver instances params
 type GetDriverInstancesHandler interface {
-	Handle(GetDriverInstancesParams) (*[]genmodel.DriverInstance, error)
+	Handle(GetDriverInstancesParams, interface{}) middleware.Responder
 }
 
 // NewGetDriverInstances creates a new http.Handler for the get driver instances operation
-func NewGetDriverInstances(ctx *middleware.Context, handler GetDriverInstancesHandler) GetDriverInstances {
-	return GetDriverInstances{Context: ctx, Handler: handler}
+func NewGetDriverInstances(ctx *middleware.Context, handler GetDriverInstancesHandler) *GetDriverInstances {
+	return &GetDriverInstances{Context: ctx, Handler: handler}
 }
 
-/*
+/*GetDriverInstances swagger:route GET /driver_instances getDriverInstances
+
 Gets all driver configurations
+
 
 */
 type GetDriverInstances struct {
@@ -37,19 +39,26 @@ type GetDriverInstances struct {
 	Handler GetDriverInstancesHandler
 }
 
-func (o GetDriverInstances) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (o *GetDriverInstances) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
+
+	uprinc, err := o.Context.Authorize(r, route)
+	if err != nil {
+		o.Context.Respond(rw, r, route.Produces, route, err)
+		return
+	}
+	var principal interface{}
+	if uprinc != nil {
+		principal = uprinc
+	}
 
 	if err := o.Context.BindValidRequest(r, route, &o.Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res, err := o.Handler.Handle(o.Params) // actually handle the request
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
+	res := o.Handler.Handle(o.Params, principal) // actually handle the request
+
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
 }

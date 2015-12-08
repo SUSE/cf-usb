@@ -8,20 +8,26 @@ import (
 
 	"github.com/go-swagger/go-swagger/errors"
 	"github.com/go-swagger/go-swagger/httpkit/middleware"
-	"github.com/go-swagger/go-swagger/httpkit/validate"
 	"github.com/go-swagger/go-swagger/strfmt"
+
 	"github.com/hpcloud/cf-usb/lib/genmodel"
 )
 
 // UpdateServicePlanParams contains all the bound params for the update service plan operation
 // typically these are obtained from a http.Request
+//
+// swagger:parameters updateServicePlan
 type UpdateServicePlanParams struct {
-	// Authorization token
-	Authorization string
-	// ID of the plan
+	/* Update plan
+	Required: true
+	In: body
+	*/
+	Plan *genmodel.Plan
+	/* ID of the plan
+	Required: true
+	In: path
+	*/
 	PlanID string
-	// Update plan
-	Plan genmodel.Plan
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
@@ -29,36 +35,26 @@ type UpdateServicePlanParams struct {
 func (o *UpdateServicePlanParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
 
-	if err := o.bindAuthorization(r.Header.Get("authorization"), route.Formats); err != nil {
-		res = append(res, err)
+	var body genmodel.Plan
+	if err := route.Consumer.Consume(r.Body, &body); err != nil {
+		res = append(res, errors.NewParseError("plan", "body", "", err))
+	} else {
+		if err := body.Validate(route.Formats); err != nil {
+			res = append(res, err)
+		}
+
+		if len(res) == 0 {
+			o.Plan = &body
+		}
 	}
 
 	if err := o.bindPlanID(route.Params.Get("plan_id"), route.Formats); err != nil {
 		res = append(res, err)
 	}
 
-	if err := route.Consumer.Consume(r.Body, &o.Plan); err != nil {
-		res = append(res, errors.NewParseError("plan", "body", "", err))
-	} else {
-		if err := o.Plan.Validate(route.Formats); err != nil {
-			res = append(res, err)
-		}
-
-	}
-
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-	return nil
-}
-
-func (o *UpdateServicePlanParams) bindAuthorization(raw string, formats strfmt.Registry) error {
-	if err := validate.RequiredString("authorization", "header", raw); err != nil {
-		return err
-	}
-
-	o.Authorization = raw
-
 	return nil
 }
 
