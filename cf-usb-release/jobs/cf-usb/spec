@@ -1,7 +1,7 @@
 ---
 name: cf-usb
 templates:
-  cf-usb.ctl.erb:			bin/cf-usb.ctl
+  cf-usb.ctl.erb:                       bin/cf-usb.ctl
 packages:
   - golang_1.4
   - cf-usb
@@ -18,9 +18,14 @@ properties:
   cf-usb.broker.port:
     description: The broker's port
     default: 54054
+  cf-usb.broker.dev_mode:
+    description: Enable develop mode
+    default: true
   cf-usb.management.port:
     description: The management port
     default: 54053
+  cf-usb.management.public_key:
+    description: Management public key
   cf-usb.management.uaa.secret:
     description: UAA secret
   cf-usb.management.uaa.client:
