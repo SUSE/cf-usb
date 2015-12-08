@@ -38,9 +38,11 @@ function start()
         [ ! -e $USB_DRIVER_PATH/`basename $i` ] && cp $i/`basename $i` $USB_DRIVER_PATH/
     done
 
-    broker_api='{"external_url":"http://<%= p("cf-usb.broker.external_url") %>","listen":":<%= p("cf-usb.broker.port") %>","dev_mode":true,"credentials":{"username":"<%= p("cf-usb.broker.username") %>","password":"<%= p("cf-usb.broker.password") %>"}}'
+    broker_api='{"external_url":"http://<%= p("cf-usb.broker.external_url") %>","listen":":<%= p("cf-usb.broker.port") %>","dev_mode":<%= p("cf-usb.broker.dev_mode") %>,"credentials":{"username":"<%= p("cf-usb.broker.username") %>","password":"<%= p("cf-usb.broker.password") %>"}}'
     loglevel='<%= p("cf-usb.loglevel") %>'
-    management_api='{"listen":":<%= p("cf-usb.management.port") %>","uaa_secret":"<%= p("cf-usb.management.uaa.secret") %>","uaa_client":"<%= p("cf-usb.management.uaa.client") %>","authentication":{"uaa":{"adminscope":"usb.management.admin","public_key":"-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDHFr+KICms+tuT1OXJwhCUmR2d\nKVy7psa8xzElSyzqx7oJyfJ1JZyOzToj9T5SfTIq396agbHJWVfYphNahvZ/7uMX\nqHxf+ZH9BL1gk9Y6kCnbM5R60gfwjyW1/dQPjOzn9N394zd2FJoFHwdq9Qs0wBug\nspULZVNRxq7veq/fzwIDAQAB\n-----END PUBLIC KEY-----"}},"cloud_controller":{"api":"<%= p("cc.srv_api_uri") %>","skip_tsl_validation":true}}'
+    management_api='{"listen":":<%= p("cf-usb.management.port") %>","uaa_secret":"<%= p("cf-usb.management.uaa.secret") %>","uaa_client":"<%= p("cf-usb.management.uaa.client") %>","authentication":{"uaa":{"adminscope":"usb.management.admin","public_key":"-----BEGIN PUBLIC KEY-----\n<%= p("cf-usb.management.public_key") %>\n-----END PUBLIC KEY-----"}},"cloud_controller":{"api":"<%= p("cc.srv_api_uri") %>","skip_tsl_validation":<%= p("cf-usb.skip_tsl_validation") %>}}'
+
+
     curl -X PUT -d "$broker_api" http://127.0.0.1:8500/v1/kv/usb/broker_api
     curl -X PUT -d "$management_api" http://127.0.0.1:8500/v1/kv/usb/management_api
     curl -X PUT -d "$loglevel" http://127.0.0.1:8500/v1/kv/usb/loglevel
