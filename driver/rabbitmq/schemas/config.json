@@ -1,0 +1,23 @@
+{  
+   "type":"object",
+   "properties":{  
+      "vhost":{  
+         "type":"string"
+      },
+	  "port":{  
+         "type":"string"
+      },
+      "user":{  
+         "type":"string"
+      },
+      "password":{  
+         "type":"string"
+      }
+   },
+   "required":[  
+      "vhost",
+	  "port",
+	  "user",
+	  "password"
+   ]
+}
