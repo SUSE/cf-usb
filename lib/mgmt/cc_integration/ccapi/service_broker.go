@@ -48,13 +48,14 @@ func NewServiceBroker(client httpclient.HttpClient, token uaaapi.GetTokenInterfa
 		client:         client,
 		tokenGenerator: token,
 		ccApi:          ccApi,
-		logger:         logger,
+		logger:         logger.Session("cc-service-broker-client", lager.Data{"cc-api": ccApi}),
 	}
 }
 
 func (sb *ServiceBroker) Create(name, url, username, password string) error {
+	log := sb.logger.Session("create-broker", lager.Data{"name": name, "url": url})
+	log.Debug("starting")
 
-	sb.logger.Info("create-broker", lager.Data{"starting-create": name})
 	path := "/v2/service_brokers"
 	body := &BrokerValues{Name: name, BrokerUrl: url, AuthUsername: username, AuthPassword: password}
 
@@ -62,8 +63,6 @@ func (sb *ServiceBroker) Create(name, url, username, password string) error {
 	if err != nil {
 		return err
 	}
-
-	sb.logger.Debug("create-service-broker", lager.Data{"service-broker-name": name, "content": string(values)})
 
 	token, err := sb.tokenGenerator.GetToken()
 	if err != nil {
@@ -73,19 +72,25 @@ func (sb *ServiceBroker) Create(name, url, username, password string) error {
 	headers := make(map[string]string)
 	headers["Authorization"] = token
 
-	sb.logger.Info("create-broker", lager.Data{"create-api": sb.ccApi, "path": path, "values": string(values), "headers": headers})
+	log.Debug("preparing-request", lager.Data{"request-content": string(values), "headers": headers})
+
 	request := httpclient.Request{Verb: "POST", Endpoint: sb.ccApi, ApiUrl: path, Body: strings.NewReader(string(values)), Headers: headers, StatusCode: 201}
+
+	log.Info("starting-cc-request", lager.Data{"path": path})
 
 	_, err = sb.client.Request(request)
 	if err != nil {
 		return err
 	}
 
+	log.Info("finished-cc-request")
+
 	return nil
 }
 
 func (sb *ServiceBroker) Update(serviceBrokerGuid, name, url, username, password string) error {
-	sb.logger.Info("update-broker", lager.Data{"starting-update": name})
+	log := sb.logger.Session("update-broker", lager.Data{"name": name, "url": url})
+	log.Debug("starting")
 
 	token, err := sb.tokenGenerator.GetToken()
 	if err != nil {
@@ -103,32 +108,42 @@ func (sb *ServiceBroker) Update(serviceBrokerGuid, name, url, username, password
 		return err
 	}
 
-	sb.logger.Debug("update-service-broker", lager.Data{"service broker name": name})
+	log.Debug("preparing-request", lager.Data{"request-content": string(values), "headers": headers})
 
 	request := httpclient.Request{Verb: "PUT", Endpoint: sb.ccApi, ApiUrl: path, Body: strings.NewReader(string(values)), Headers: headers, StatusCode: 200}
+
+	log.Info("starting-cc-request", lager.Data{"path": path})
 
 	_, err = sb.client.Request(request)
 	if err != nil {
 		return err
 	}
 
+	log.Info("finished-cc-request")
+
 	return nil
 }
 
 func (sb *ServiceBroker) EnableServiceAccess(serviceId string) error {
-	sb.logger.Info("broker-enableservice-access", lager.Data{"serviceID": serviceId})
+	log := sb.logger.Session("enableservice-access", lager.Data{"serviceID": serviceId})
+	log.Debug("starting")
 
-	sp := NewServicePlan(sb.client, sb.tokenGenerator, sb.ccApi, sb.logger)
+	sp := NewServicePlan(sb.client, sb.tokenGenerator, sb.ccApi, log)
 
 	err := sp.Update(serviceId)
 	if err != nil {
 		return err
 	}
+
+	log.Debug("finished")
+
 	return nil
 }
 
 func (sb *ServiceBroker) GetServiceBrokerGuidByName(name string) (string, error) {
-	sb.logger.Info("get-service-broker-guid-by-name", lager.Data{"name": name})
+	log := sb.logger.Session("get-service-broker-guid-by-name", lager.Data{"name": name})
+	log.Debug("starting")
+
 	token, err := sb.tokenGenerator.GetToken()
 	if err != nil {
 		return "", err
@@ -141,15 +156,19 @@ func (sb *ServiceBroker) GetServiceBrokerGuidByName(name string) (string, error)
 	headers["Content-Type"] = "application/x-www-form-urlencoded; charset=UTF-8"
 	headers["Accept"] = "application/json; charset=utf-8"
 
-	sb.logger.Info("get-service-broker-guid-by-name", lager.Data{"api": sb.ccApi, "path": path, "headers": headers})
+	log.Debug("preparing-request", lager.Data{"path": path, "headers": headers})
 
 	findRequest := httpclient.Request{Verb: "GET", Endpoint: sb.ccApi, ApiUrl: path, Headers: headers, StatusCode: 200}
+
+	log.Info("starting-cc-request", lager.Data{"path": path})
 
 	response, err := sb.client.Request(findRequest)
 	if err != nil {
 		return "", err
 	}
-	sb.logger.Info("get-service-broker-guid-by-name", lager.Data{"response": string(response)})
+
+	log.Debug("cc-reponse", lager.Data{"response": string(response)})
+	log.Info("finished-cc-request")
 
 	resources := &BrokerResources{}
 	err = json.Unmarshal(response, resources)
@@ -158,13 +177,12 @@ func (sb *ServiceBroker) GetServiceBrokerGuidByName(name string) (string, error)
 	}
 
 	if len(resources.Resources) == 0 {
+		log.Debug("not-found")
 		return "", nil
 	}
-	sb.logger.Info("get-service-broker-guid-by-name", lager.Data{"resources": resources})
 
 	guid := resources.Resources[0].Values.Guid
-
-	sb.logger.Debug("get-service-broker-guid-by-name", lager.Data{"service broker guid": guid})
+	log.Debug("found", lager.Data{"service-broker-guid": guid})
 
 	return guid, nil
 }

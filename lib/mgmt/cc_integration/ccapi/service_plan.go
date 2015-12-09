@@ -60,11 +60,14 @@ func NewServicePlan(client httpclient.HttpClient, token uaaapi.GetTokenInterface
 		client:         client,
 		tokenGenerator: token,
 		ccApi:          ccApi,
-		logger:         logger,
+		logger:         logger.Session("cc-service-plans-client", lager.Data{"cc-api": ccApi}),
 	}
 }
 
 func (sp *ServicePlan) Update(serviceName string) error {
+	log := sp.logger.Session("update-service-plans", lager.Data{"service-name": serviceName})
+	log.Debug("starting")
+
 	token, err := sp.tokenGenerator.GetToken()
 	if err != nil {
 		return err
@@ -83,7 +86,7 @@ func (sp *ServicePlan) Update(serviceName string) error {
 	headers := make(map[string]string)
 	headers["Authorization"] = token
 
-	sp.logger.Debug("update-service-plans", lager.Data{"service guid": serviceGuid})
+	log.Debug("initializing", lager.Data{"service guid": serviceGuid})
 
 	for _, value := range servicePlans.Resources {
 		path := fmt.Sprintf("/v2/service_plans/%s", value.Values.Guid)
@@ -94,20 +97,27 @@ func (sp *ServicePlan) Update(serviceName string) error {
 			return err
 		}
 
+		log.Debug("preparing-request", lager.Data{"request-content": string(values)})
+
 		request := httpclient.Request{Verb: "PUT", Endpoint: sp.ccApi, ApiUrl: path, Body: strings.NewReader(string(values)), Headers: headers, StatusCode: 201}
+
+		log.Info("starting-cc-request", lager.Data{"path": path})
 
 		_, err = sp.client.Request(request)
 		if err != nil {
 			return err
 		}
 
-		sp.logger.Debug("update-service-plan", lager.Data{"service plan guid": value.Values.Guid})
+		log.Info("finished-cc-request")
 	}
 
 	return nil
 }
 
 func (sp *ServicePlan) getServiceGuidByLabel(serviceLabel, token string) (string, error) {
+	log := sp.logger.Session("get-service-guid-by-label", lager.Data{"service-label": serviceLabel})
+	log.Debug("starting")
+
 	path := fmt.Sprintf("/v2/services?q=label:%s", serviceLabel)
 
 	headers := make(map[string]string)
@@ -117,30 +127,36 @@ func (sp *ServicePlan) getServiceGuidByLabel(serviceLabel, token string) (string
 
 	findRequest := httpclient.Request{Verb: "GET", Endpoint: sp.ccApi, ApiUrl: path, Headers: headers, StatusCode: 200}
 
+	log.Info("starting-cc-request", lager.Data{"path": path, "verb": "GET"})
+
 	response, err := sp.client.Request(findRequest)
 	if err != nil {
 		return "", err
 	}
+
+	log.Debug("cc-reponse", lager.Data{"response": string(response)})
+	log.Info("finished-cc-request")
 
 	resources := &ServiceResources{}
 	err = json.Unmarshal(response, resources)
 	if err != nil {
 		return "", err
 	}
-	sp.logger.Debug("result", lager.Data{"response": string(response)})
 
 	if len(resources.Resources) == 0 {
 		return "", errors.New(fmt.Sprintf("Service %s not found", serviceLabel))
 	}
 
 	guid := resources.Resources[0].Values.Guid
-
-	sp.logger.Debug("get-service", lager.Data{"service guid by name": serviceLabel})
+	log.Debug("found", lager.Data{"service-guid": guid})
 
 	return guid, nil
 }
 
 func (sp *ServicePlan) getServicePlans(serviceGuid, token string) (*PlanResources, error) {
+	log := sp.logger.Session("get-service-plans", lager.Data{"service-guid": serviceGuid})
+	log.Debug("starting")
+
 	path := fmt.Sprintf("/v2/service_plans?q=service_guid:%s", serviceGuid)
 
 	headers := make(map[string]string)
@@ -150,10 +166,15 @@ func (sp *ServicePlan) getServicePlans(serviceGuid, token string) (*PlanResource
 
 	findRequest := httpclient.Request{Verb: "GET", Endpoint: sp.ccApi, ApiUrl: path, Headers: headers, StatusCode: 200}
 
+	log.Info("starting-cc-request", lager.Data{"path": path, "verb": "GET"})
+
 	response, err := sp.client.Request(findRequest)
 	if err != nil {
 		return nil, err
 	}
+
+	log.Debug("cc-reponse", lager.Data{"response": string(response)})
+	log.Info("finished-cc-request")
 
 	resources := &PlanResources{}
 	err = json.Unmarshal(response, resources)

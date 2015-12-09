@@ -80,41 +80,54 @@ func (usb *UsbApp) Run(configProvider config.ConfigProvider) {
 
 	usb.logger = logger
 
-	logger.Info("run", lager.Data{"action": "starting drivers"})
+	logger.Info("initializing-drivers")
+
 	usbService := lib.NewUsbBroker(configProvider, logger)
+
+	logger.Info("initializing-brokerapi")
+
 	brokerAPI := brokerapi.New(usbService, logger, usb.config.BrokerAPI.Credentials)
 
 	addr := usb.config.BrokerAPI.Listen
 
 	if usb.config.ManagementAPI != nil {
 		go func() {
+			logger := logger.Session("management-api")
+
+			logger.Info("starting")
+
 			mgmtaddr := usb.config.ManagementAPI.Listen
 			swaggerJSON, err := data.Asset("swagger-spec/api.json")
 			if err != nil {
-				logger.Fatal("error-start-mgmt-api", err)
+				logger.Fatal("loading-swagger-asset-failed", err)
 			}
 
 			swaggerSpec, err := spec.New(swaggerJSON, "")
 			if err != nil {
-				logger.Fatal("error-start-mgmt-api", err)
+				logger.Fatal("initializing-swagger-failed", err)
 			}
 
 			uaaAuthConfig, err := configProvider.GetUaaAuthConfig()
 			if err != nil {
-				logger.Error("error-start-mgmt-api", err)
+				logger.Error("initializing-uaa-config-failed", err)
 			}
-			auth, err := uaa.NewUaaAuth(uaaAuthConfig.PublicKey, uaaAuthConfig.Scope,
-				usb.config.ManagementAPI.DevMode, usb.logger)
+
+			auth, err := uaa.NewUaaAuth(
+				uaaAuthConfig.PublicKey,
+				uaaAuthConfig.Scope,
+				usb.config.ManagementAPI.DevMode,
+				logger)
 			if err != nil {
-				logger.Error("error-start-mgmt-api", err)
+				logger.Fatal("initializing-uaa-auth-failed", err)
 			}
 
 			client := httpclient.NewHttpClient(usb.config.ManagementAPI.CloudController.SkipTslValidation)
 			info := ccapi.NewGetInfo(usb.config.ManagementAPI.CloudController.Api, client, logger)
 			tokenUrl, err := info.GetTokenEndpoint()
 			if err != nil {
-				logger.Error("error-start-mgmt-api", err)
+				logger.Fatal("retrieving-uaa-endpoint-failed", err)
 			}
+
 			tokenGenerator := uaaapi.NewTokenGenerator(tokenUrl, usb.config.ManagementAPI.UaaClient, usb.config.ManagementAPI.UaaSecret, client, logger)
 
 			ccServiceBroker := ccapi.NewServiceBroker(client, tokenGenerator, usb.config.ManagementAPI.CloudController.Api, logger)
@@ -122,14 +135,17 @@ func (usb *UsbApp) Run(configProvider config.ConfigProvider) {
 			mgmtAPI := operations.NewUsbMgmtAPI(swaggerSpec)
 			mgmt.ConfigureAPI(mgmtAPI, auth, configProvider, ccServiceBroker, logger)
 
-			logger.Info("run", lager.Data{"mgmtadd": mgmtaddr})
-			http.ListenAndServe(mgmtaddr, mgmtAPI.Serve())
+			logger.Info("start-listening", lager.Data{"address": mgmtaddr})
+			err = http.ListenAndServe(mgmtaddr, mgmtAPI.Serve())
+			if err != nil {
+				logger.Fatal("listening-failed", err)
+			}
 		}()
 	}
-	logger.Info("run-brokerapi", lager.Data{"addr": addr})
+
+	logger.Info("start-listening-brokerapi", lager.Data{"address": addr})
 	err = http.ListenAndServe(addr, brokerAPI)
 	if err != nil {
-		logger.Fatal("error-listening", err)
+		logger.Fatal("listening-brokerapi-failed", err)
 	}
-
 }
