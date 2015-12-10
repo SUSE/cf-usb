@@ -84,14 +84,16 @@ func (_m *ConfigProvider) SetDriver(_a0 config.Driver) error {
 
 	return r0
 }
-func (_m *ConfigProvider) GetDriver(_a0 string) (config.Driver, error) {
+func (_m *ConfigProvider) GetDriver(_a0 string) (*config.Driver, error) {
 	ret := _m.Called(_a0)
 
-	var r0 config.Driver
-	if rf, ok := ret.Get(0).(func(string) config.Driver); ok {
+	var r0 *config.Driver
+	if rf, ok := ret.Get(0).(func(string) *config.Driver); ok {
 		r0 = rf(_a0)
 	} else {
-		r0 = ret.Get(0).(config.Driver)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*config.Driver)
+		}
 	}
 
 	var r1 error
@@ -127,14 +129,16 @@ func (_m *ConfigProvider) SetDriverInstance(_a0 string, _a1 config.DriverInstanc
 
 	return r0
 }
-func (_m *ConfigProvider) GetDriverInstance(_a0 string) (config.DriverInstance, error) {
+func (_m *ConfigProvider) GetDriverInstance(_a0 string) (*config.DriverInstance, error) {
 	ret := _m.Called(_a0)
 
-	var r0 config.DriverInstance
-	if rf, ok := ret.Get(0).(func(string) config.DriverInstance); ok {
+	var r0 *config.DriverInstance
+	if rf, ok := ret.Get(0).(func(string) *config.DriverInstance); ok {
 		r0 = rf(_a0)
 	} else {
-		r0 = ret.Get(0).(config.DriverInstance)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*config.DriverInstance)
+		}
 	}
 
 	var r1 error
@@ -170,14 +174,16 @@ func (_m *ConfigProvider) SetService(_a0 string, _a1 brokerapi.Service) error {
 
 	return r0
 }
-func (_m *ConfigProvider) GetService(_a0 string) (brokerapi.Service, error) {
+func (_m *ConfigProvider) GetService(_a0 string) (*brokerapi.Service, error) {
 	ret := _m.Called(_a0)
 
-	var r0 brokerapi.Service
-	if rf, ok := ret.Get(0).(func(string) brokerapi.Service); ok {
+	var r0 *brokerapi.Service
+	if rf, ok := ret.Get(0).(func(string) *brokerapi.Service); ok {
 		r0 = rf(_a0)
 	} else {
-		r0 = ret.Get(0).(brokerapi.Service)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*brokerapi.Service)
+		}
 	}
 
 	var r1 error
@@ -213,14 +219,16 @@ func (_m *ConfigProvider) SetDial(_a0 string, _a1 config.Dial) error {
 
 	return r0
 }
-func (_m *ConfigProvider) GetDial(_a0 string, _a1 string) (config.Dial, error) {
+func (_m *ConfigProvider) GetDial(_a0 string, _a1 string) (*config.Dial, error) {
 	ret := _m.Called(_a0, _a1)
 
-	var r0 config.Dial
-	if rf, ok := ret.Get(0).(func(string, string) config.Dial); ok {
+	var r0 *config.Dial
+	if rf, ok := ret.Get(0).(func(string, string) *config.Dial); ok {
 		r0 = rf(_a0, _a1)
 	} else {
-		r0 = ret.Get(0).(config.Dial)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*config.Dial)
+		}
 	}
 
 	var r1 error

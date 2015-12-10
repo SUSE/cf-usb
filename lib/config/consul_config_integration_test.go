@@ -58,8 +58,8 @@ func initProvider() (bool, error) {
 }
 
 func Test_IntConsulSetDriver(t *testing.T) {
-
 	initialized, err := initProvider()
+
 	if initialized == false {
 		t.Skip("Skipping Consul Set Driver test, environment variables not set: CONSUL_ADDRESS(host:port), CONSUL_DATACENTER, CONSUL_TOKEN / CONSUL_USER + CONSUL_PASSWORD, CONSUL_SCHEMA")
 		t.Log(err)

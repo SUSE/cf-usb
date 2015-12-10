@@ -47,7 +47,8 @@ func initRedisProvider() error {
 	if err != nil {
 		return err
 	}
-	err = provisioner.SetKV("drivers", "[{\"driver_type\":\"dummy\",\"id\":\"00000000-0000-0000-0000-000000000001\",\"driver_instances\":[{\"name\":\"dummy1\",\"id\":\"A0000000-0000-0000-0000-000000000002\",\"configuration\":{\"property_one\":\"one\",\"property_two\":\"two\"},\"dials\":[{\"id\":\"B0000000-0000-0000-0000-000000000001\",\"configuration\":{\"max_dbsize_mb\":2},\"plan\":{\"name\":\"free\",\"id\":\"53425178-F731-49E7-9E53-5CF4BE9D807D\",\"description\":\"This is the first plan\",\"free\":true}},{\"id\":\"B0000000-0000-0000-0000-000000000002\",\"configuration\":{\"max_dbsize_mb\":100},\"plan\":{\"name\":\"secondary\",\"id\":\"888B59E0-C2A1-4AB6-9335-2E90114A8F0D\",\"description\":\"This is the secondary plan\",\"free\":false}}],\"service\":{\"id\":\"GUID\",\"bindable\":true,\"name\":\"testService\",\"description\":\"test Service\",\"tags\":[\"testService\"],\"metadata\":{\"providerDisplayName\":\"Echo Service Ltd.\"}}}]}]", 5*time.Minute)
+
+	err = provisioner.SetKV("drivers", "{\"00000000-0000-0000-0000-000000000001\":{\"driver_type\":\"dummy\",\"driver_instances\":{\"A0000000-0000-0000-0000-000000000002\":{\"name\":\"dummy1\",\"id\":\"A0000000-0000-0000-0000-000000000002\",\"configuration\":{\"property_one\":\"one\",\"property_two\":\"two\"},\"dials\":{\"B0000000-0000-0000-0000-000000000001\":{\"configuration\":{\"max_dbsize_mb\":2},\"plan\":{\"name\":\"free\",\"id\":\"53425178-F731-49E7-9E53-5CF4BE9D807A\",\"description\":\"This is the first plan\",\"free\":true}},\"B0000000-0000-0000-0000-000000000002\":{\"configuration\":{\"max_dbsize_mb\":100},\"plan\":{\"name\":\"secondary\",\"id\":\"888B59E0-C2A1-4AB6-9335-2E90114A8F07\",\"description\":\"This is the secondary plan\",\"free\":false}}},\"service\":{\"id\":\"83E94C97-C755-46A5-8653-461517EB442A\",\"bindable\":true,\"name\":\"echo\",\"description\":\"echo Service\",\"tags\":[\"echo\"],\"metadata\":{\"providerDisplayName\":\"Echo Service Ltd.\"}}},\"A0000000-0000-0000-0000-000000000003\":{\"name\":\"dummy2\",\"configuration\":{\"property_one\":\"onenew\",\"property_two\":\"twonew\"},\"dials\":{\"B0000000-0000-0000-0000-000000000001\":{\"plan\":{\"name\":\"plandummy2\",\"id\":\"888B59E0-C2A1-4AB6-9335-2E90114A8F01\",\"description\":\"This is the secondary plan\",\"free\":false}}},\"service\":{\"id\":\"83E94C97-C755-46A5-8653-461517EB442B\",\"bindable\":true,\"name\":\"echo\",\"description\":\"echo Service\",\"tags\":[\"echo\"],\"metadata\":{\"providerDisplayName\":\"Echo Service Ltd.\"}}}}},\"00000000-0000-0000-0000-000000000002\":{\"driver_type\":\"mssql\",\"driver_instances\":{\"A0000000-0000-0000-0000-000000000003\":{\"driver_id\":\"00000000-0000-0000-0000-000000000002\",\"name\":\"local-mssql\",\"configuration\":{\"brokerGoSqlDriver\":\"mssql\",\"brokerMssqlConnection\":{\"server\":\"127.0.0.1\",\"port\":\"38017\",\"database\":\"master\",\"user id\":\"sa\",\"password\":\"password1234!\"},\"servedMssqlBindingHostname\":\"192.168.1.10\",\"servedMssqlBindingPort\":38017},\"dials\":{\"C0000000-0000-0000-0000-000000000001\":{\"plan\":{\"name\":\"planmssql\",\"id\":\"888B59E0-C2A2-4AB6-9335-2E90114A8F01\",\"description\":\"This is the secondary plan\",\"free\":false}}},\"service\":{\"id\":\"83E94C97-C755-46A5-8653-461517EB442C\",\"bindable\":true,\"name\":\"mssql\",\"description\":\"MSSQL Service\",\"tags\":[\"mssql\",\"mssql\"],\"metadata\":{\"providerDisplayName\":\"MSSQL Service Ltd.\"}}}}}}", 5*time.Minute)
 	if err != nil {
 		return err
 	}
@@ -65,7 +66,9 @@ func Test_RedisLoadConfiguration(t *testing.T) {
 	err := initRedisProvider()
 	assert.NoError(err)
 	config, err := RedisIntegrationConfig.Provider.LoadConfiguration()
-	t.Log(config.LogLevel)
+	if config != nil {
+		t.Log(*config)
+	}
 	assert.NoError(err)
 }
 
@@ -145,8 +148,10 @@ func Test_RedisSetDriverInstance(t *testing.T) {
 	instance.Name = "testDriverInstance"
 	raw := json.RawMessage("{\"a1\":\"b1\"}")
 	instance.Configuration = &raw
+	instance.Dials = make(map[string]Dial)
+	instance.Service = brokerapi.Service{}
 
-	err = RedisIntegrationConfig.Provider.SetDriverInstance("00000000-0000-0000-0000-0000000000T1", instance)
+	err = RedisIntegrationConfig.Provider.SetDriverInstance("00000000-0000-0000-0000-000000000001", instance)
 	assert.NoError(err)
 }
 

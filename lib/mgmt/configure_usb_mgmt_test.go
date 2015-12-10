@@ -135,18 +135,20 @@ func Test_CreateDriverInstance(t *testing.T) {
 	instanceDriver.Name = "testInstance"
 	instanceDriverConf := []byte(`{"property_one":"one", "property_two":"two"}`)
 	instanceDriver.Configuration = (*json.RawMessage)(&instanceDriverConf)
+	instanceDriver.Dials = make(map[string]config.Dial)
+	instanceDriver.Dials[dial.ID] = dial
 
-	instanceDriver.Dials = append(instanceDriver.Dials, dial)
-
-	driver.DriverInstances = append(driver.DriverInstances, &instanceDriver)
+	driver.DriverInstances = make(map[string]config.DriverInstance)
+	driver.DriverInstances[instanceDriver.ID] = instanceDriver
 
 	provider.On("SetDriverInstance", mock.Anything, mock.Anything).Return(nil)
 	provider.On("SetDial", mock.Anything, mock.Anything).Return(nil)
-	provider.On("GetDriver", "testDriverID").Return(driver, nil)
+	provider.On("GetDriver", "testDriverID").Return(&driver, nil)
 	provider.On("SetService", mock.Anything, mock.Anything).Return(nil)
 
 	var testConfig config.Config
-	testConfig.Drivers = append(testConfig.Drivers, driver)
+	testConfig.Drivers = make(map[string]config.Driver)
+	testConfig.Drivers[driver.ID] = driver
 	provider.On("LoadConfiguration").Return(&testConfig, nil)
 
 	sbMocked.Mock.On("GetServiceBrokerGuidByName", mock.Anything).Return("aguid", nil)
@@ -206,11 +208,12 @@ func Test_CreateServicePlan(t *testing.T) {
 	dial.ID = "testDialID"
 	instace.ID = "testInstanceID"
 
-	instace.Dials = append(instace.Dials, dial)
-
-	driver.DriverInstances = append(driver.DriverInstances, &instace)
-
-	testConfig.Drivers = append(testConfig.Drivers, driver)
+	instace.Dials = make(map[string]config.Dial)
+	instace.Dials[dial.ID] = dial
+	driver.DriverInstances = make(map[string]config.DriverInstance)
+	driver.DriverInstances[instace.ID] = instace
+	testConfig.Drivers = make(map[string]config.Driver)
+	testConfig.Drivers[driver.ID] = driver
 
 	provider.On("LoadConfiguration").Return(&testConfig, nil)
 	provider.On("DeleteDial", mock.Anything, mock.Anything).Return(nil)
@@ -238,7 +241,7 @@ func Test_UpdateDriver(t *testing.T) {
 	params.Driver.Name = "testDriver"
 	params.Driver.DriverType = "testType"
 	provider.On("SetDriver", mock.Anything).Return(nil)
-	provider.On("GetDriver", mock.Anything).Return(driver, nil)
+	provider.On("GetDriver", mock.Anything).Return(&driver, nil)
 	response := UnitTest.MgmtAPI.UpdateDriverHandler.Handle(*params, true)
 	assert.IsType(&operations.UpdateDriverOK{}, response)
 }
@@ -259,7 +262,7 @@ func Test_UpdateDriverInstance(t *testing.T) {
 	instanceInfo.ID = "testInstanceID"
 	instanceInfo.Service = brokerapi.Service{ID: "testServiceID"}
 
-	provider.On("GetDriverInstance", mock.Anything).Return(instanceInfo, nil)
+	provider.On("GetDriverInstance", mock.Anything).Return(&instanceInfo, nil)
 
 	params := &operations.UpdateDriverInstanceParams{}
 	params.DriverConfig = &genmodel.DriverInstance{}
@@ -353,12 +356,12 @@ func Test_UpdateServicePlan(t *testing.T) {
 	driver.DriverType = "testDriver"
 	dial.ID = "testDialID"
 	instace.ID = "testInstanceID"
-
-	instace.Dials = append(instace.Dials, dial)
-
-	driver.DriverInstances = append(driver.DriverInstances, &instace)
-
-	testConfig.Drivers = append(testConfig.Drivers, driver)
+	instace.Dials = make(map[string]config.Dial)
+	instace.Dials[dial.ID] = dial
+	driver.DriverInstances = make(map[string]config.DriverInstance)
+	driver.DriverInstances[instace.ID] = instace
+	testConfig.Drivers = make(map[string]config.Driver)
+	testConfig.Drivers[driver.ID] = driver
 
 	provider.On("LoadConfiguration").Return(&testConfig, nil)
 	provider.On("SetDial", "testInstanceID", mock.Anything).Return(nil)
@@ -386,16 +389,17 @@ func Test_GetDriver(t *testing.T) {
 
 	dial.ID = "testDialID"
 	instace.ID = "testInstanceID"
-
-	instace.Dials = append(instace.Dials, dial)
+	instace.Dials = make(map[string]config.Dial)
+	instace.Dials[dial.ID] = dial
 
 	var driverInfo config.Driver
 
 	driverInfo.ID = "testDriverID"
 	driverInfo.DriverType = "testDriverType"
-	driverInfo.DriverInstances = append(driverInfo.DriverInstances, &instace)
+	driverInfo.DriverInstances = make(map[string]config.DriverInstance)
+	driverInfo.DriverInstances[instace.ID] = instace
 
-	provider.On("GetDriver", mock.Anything).Return(driverInfo, nil)
+	provider.On("GetDriver", mock.Anything).Return(&driverInfo, nil)
 
 	params := &operations.GetDriverParams{}
 	params.DriverID = "testDriverID"
@@ -429,12 +433,12 @@ func Test_GetDrivers(t *testing.T) {
 	driver.DriverType = "testDriver"
 	dial.ID = "testDialID"
 	instace.ID = "testInstanceID"
-
-	instace.Dials = append(instace.Dials, dial)
-
-	driver.DriverInstances = append(driver.DriverInstances, &instace)
-
-	testConfig.Drivers = append(testConfig.Drivers, driver)
+	instace.Dials = make(map[string]config.Dial)
+	instace.Dials[dial.ID] = dial
+	driver.DriverInstances = make(map[string]config.DriverInstance)
+	driver.DriverInstances[instace.ID] = instace
+	testConfig.Drivers = make(map[string]config.Driver)
+	testConfig.Drivers[driver.ID] = driver
 
 	provider.On("LoadConfiguration").Return(&testConfig, nil)
 
@@ -461,7 +465,7 @@ func Test_GetDriverInstance(t *testing.T) {
 	instanceInfo.ID = "testInstanceID"
 	instanceInfo.Service = brokerapi.Service{ID: "testServiceID"}
 
-	provider.On("GetDriverInstance", mock.Anything).Return(instanceInfo, nil)
+	provider.On("GetDriverInstance", mock.Anything).Return(&instanceInfo, nil)
 	params := &operations.GetDriverInstanceParams{}
 	params.DriverInstanceID = "testInstanceID"
 
@@ -500,11 +504,12 @@ func Test_GetDriverInstances(t *testing.T) {
 
 	instace.Configuration = &conf
 
-	instace.Dials = append(instace.Dials, dial)
-
-	driver.DriverInstances = append(driver.DriverInstances, &instace)
-
-	testConfig.Drivers = append(testConfig.Drivers, driver)
+	instace.Dials = make(map[string]config.Dial)
+	instace.Dials[dial.ID] = dial
+	driver.DriverInstances = make(map[string]config.DriverInstance)
+	driver.DriverInstances[instace.ID] = instace
+	testConfig.Drivers = make(map[string]config.Driver)
+	testConfig.Drivers[driver.ID] = driver
 
 	provider.On("LoadConfiguration").Return(&testConfig, nil)
 
@@ -547,11 +552,12 @@ func Test_GetDial(t *testing.T) {
 	instace.Configuration = &conf
 	dial.Configuration = &conf
 
-	instace.Dials = append(instace.Dials, dial)
-
-	driver.DriverInstances = append(driver.DriverInstances, &instace)
-
-	testConfig.Drivers = append(testConfig.Drivers, driver)
+	instace.Dials = make(map[string]config.Dial)
+	instace.Dials[dial.ID] = dial
+	driver.DriverInstances = make(map[string]config.DriverInstance)
+	driver.DriverInstances[instace.ID] = instace
+	testConfig.Drivers = make(map[string]config.Driver)
+	testConfig.Drivers[driver.ID] = driver
 
 	provider.On("LoadConfiguration").Return(&testConfig, nil)
 
@@ -596,14 +602,13 @@ func Test_GetAllDials(t *testing.T) {
 	instace.Configuration = &conf
 	dial.Configuration = &conf
 	dial2.Configuration = &conf
-
-	instace.Dials = append(instace.Dials, dial)
-
-	instace.Dials = append(instace.Dials, dial2)
-
-	driver.DriverInstances = append(driver.DriverInstances, &instace)
-
-	testConfig.Drivers = append(testConfig.Drivers, driver)
+	instace.Dials = make(map[string]config.Dial)
+	instace.Dials[dial.ID] = dial
+	instace.Dials[dial2.ID] = dial2
+	driver.DriverInstances = make(map[string]config.DriverInstance)
+	driver.DriverInstances[instace.ID] = instace
+	testConfig.Drivers = make(map[string]config.Driver)
+	testConfig.Drivers[driver.ID] = driver
 
 	provider.On("LoadConfiguration").Return(&testConfig, nil)
 
@@ -654,11 +659,12 @@ func Test_GetService(t *testing.T) {
 
 	instace.Service = service
 
-	instace.Dials = append(instace.Dials, dial)
-
-	driver.DriverInstances = append(driver.DriverInstances, &instace)
-
-	testConfig.Drivers = append(testConfig.Drivers, driver)
+	instace.Dials = make(map[string]config.Dial)
+	instace.Dials[dial.ID] = dial
+	driver.DriverInstances = make(map[string]config.DriverInstance)
+	driver.DriverInstances[instace.ID] = instace
+	testConfig.Drivers = make(map[string]config.Driver)
+	testConfig.Drivers[driver.ID] = driver
 
 	provider.On("LoadConfiguration").Return(&testConfig, nil)
 
@@ -688,7 +694,7 @@ func Test_GetServices(t *testing.T) {
 	instanceInfo.ID = "testInstanceID"
 	instanceInfo.Service = brokerapi.Service{ID: "testServiceID", Name: "testService"}
 
-	provider.On("GetDriverInstance", mock.Anything).Return(instanceInfo, nil)
+	provider.On("GetDriverInstance", mock.Anything).Return(&instanceInfo, nil)
 	params := &operations.GetServicesParams{}
 	params.DriverInstanceID = "testInstanceID"
 
@@ -736,11 +742,12 @@ func Test_GetServicePlan(t *testing.T) {
 
 	instace.Service = service
 
-	instace.Dials = append(instace.Dials, dial)
-
-	driver.DriverInstances = append(driver.DriverInstances, &instace)
-
-	testConfig.Drivers = append(testConfig.Drivers, driver)
+	instace.Dials = make(map[string]config.Dial)
+	instace.Dials[dial.ID] = dial
+	driver.DriverInstances = make(map[string]config.DriverInstance)
+	driver.DriverInstances[instace.ID] = instace
+	testConfig.Drivers = make(map[string]config.Driver)
+	testConfig.Drivers[driver.ID] = driver
 
 	provider.On("LoadConfiguration").Return(&testConfig, nil)
 

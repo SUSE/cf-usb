@@ -45,22 +45,22 @@ type DriverInstance struct {
 	ID            string            `json:"id"`
 	Name          string            `json:"name"`
 	Configuration *json.RawMessage  `json:"configuration"`
-	Dials         []Dial            `json:"dials"`
+	Dials         map[string]Dial   `json:"dials"`
 	Service       brokerapi.Service `json:"service"`
 }
 
 type Driver struct {
-	ID              string            `json:"id"`
-	DriverType      string            `json:"driver_type"`
-	DriverInstances []*DriverInstance `json:"driver_instances,omitempty"`
+	ID              string                    `json:"id"`
+	DriverType      string                    `json:"driver_type"`
+	DriverInstances map[string]DriverInstance `json:"driver_instances,omitempty"`
 }
 
 type Config struct {
-	APIVersion    string         `json:"api_version"`
-	LogLevel      string         `json:"logLevel"`
-	BrokerAPI     BrokerAPI      `json:"broker_api"`
-	ManagementAPI *ManagementAPI `json:"management_api,omitempty"`
-	Drivers       []Driver       `json:"drivers"`
+	APIVersion    string            `json:"api_version"`
+	LogLevel      string            `json:"logLevel"`
+	BrokerAPI     BrokerAPI         `json:"broker_api"`
+	ManagementAPI *ManagementAPI    `json:"management_api,omitempty"`
+	Drivers       map[string]Driver `json:"drivers"`
 }
 
 type ConfigProvider interface {
@@ -68,16 +68,16 @@ type ConfigProvider interface {
 	LoadDriverInstance(driverInstanceID string) (*DriverInstance, error)
 	GetUaaAuthConfig() (*UaaAuth, error)
 	SetDriver(Driver) error
-	GetDriver(string) (Driver, error)
+	GetDriver(string) (*Driver, error)
 	DeleteDriver(string) error
 	SetDriverInstance(string, DriverInstance) error
-	GetDriverInstance(string) (DriverInstance, error)
+	GetDriverInstance(string) (*DriverInstance, error)
 	DeleteDriverInstance(string) error
 	SetService(string, brokerapi.Service) error
-	GetService(string) (brokerapi.Service, error)
+	GetService(string) (*brokerapi.Service, error)
 	DeleteService(string) error
 	SetDial(string, Dial) error
-	GetDial(string, string) (Dial, error)
+	GetDial(string, string) (*Dial, error)
 	DeleteDial(string, string) error
 	ServiceNameExists(string) (bool, error)
 	DriverTypeExists(string) (bool, error)

@@ -55,7 +55,7 @@ func (c *fileConfig) LoadDriverInstance(instanceID string) (*DriverInstance, err
 	for _, d := range c.config.Drivers {
 		for _, di := range d.DriverInstances {
 			if di.ID == instanceID {
-				instance = *di
+				instance = di
 				exists = true
 				break
 			}
@@ -81,46 +81,46 @@ func (c *fileConfig) GetUaaAuthConfig() (*UaaAuth, error) {
 	return &uaa.UaaAuth, nil
 }
 
-func (c *fileConfig) GetDriver(driverID string) (Driver, error) {
+func (c *fileConfig) GetDriver(driverID string) (*Driver, error) {
 	for _, d := range c.config.Drivers {
 		if d.ID == driverID {
-			return d, nil
+			return &d, nil
 		}
 	}
-	return Driver{}, errors.New(fmt.Sprintf("Driver ID: %s not found", driverID))
+	return nil, errors.New(fmt.Sprintf("Driver ID: %s not found", driverID))
 }
 
-func (c *fileConfig) GetDriverInstance(instanceID string) (DriverInstance, error) {
+func (c *fileConfig) GetDriverInstance(instanceID string) (*DriverInstance, error) {
 	for _, d := range c.config.Drivers {
 		for _, i := range d.DriverInstances {
 			if i.ID == instanceID {
-				return *i, nil
+				return &i, nil
 			}
 		}
 	}
-	return DriverInstance{}, errors.New(fmt.Sprintf("Driver Instance ID: %s not found", instanceID))
+	return nil, errors.New(fmt.Sprintf("Driver Instance ID: %s not found", instanceID))
 }
 
-func (c *fileConfig) GetService(instanceID string) (brokerapi.Service, error) {
+func (c *fileConfig) GetService(instanceID string) (*brokerapi.Service, error) {
 	instance, err := c.GetDriverInstance(instanceID)
 	if err != nil {
-		return brokerapi.Service{}, errors.New(fmt.Sprintf("Driver Instance ID: %s not found", instanceID))
+		return nil, errors.New(fmt.Sprintf("Driver Instance ID: %s not found", instanceID))
 	}
 
-	return instance.Service, nil
+	return &instance.Service, nil
 }
 
-func (c *fileConfig) GetDial(instanceID string, dialID string) (Dial, error) {
+func (c *fileConfig) GetDial(instanceID string, dialID string) (*Dial, error) {
 	instance, err := c.GetDriverInstance(instanceID)
 	if err != nil {
-		return Dial{}, errors.New(fmt.Sprintf("Driver Instance ID: %s not found", instanceID))
+		return nil, errors.New(fmt.Sprintf("Driver Instance ID: %s not found", instanceID))
 	}
 	for _, dial := range instance.Dials {
 		if dial.ID == dialID {
-			return dial, nil
+			return &dial, nil
 		}
 	}
-	return Dial{}, errors.New(fmt.Sprintf("Dial ID: %s not found for Driver Instance ID:%s", dialID, instanceID))
+	return nil, errors.New(fmt.Sprintf("Dial ID: %s not found for Driver Instance ID:%s", dialID, instanceID))
 }
 
 func (c *fileConfig) SetDriver(driverInfo Driver) error {

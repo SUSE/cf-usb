@@ -371,11 +371,13 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 		err = lib.Validate(instance, existingDriver.DriverType, logger)
 		if err != nil {
+			logger.Error("error validating", err)
 			return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
 		}
 
 		err = configProvider.SetDriverInstance(params.DriverInstance.DriverID, instance)
 		if err != nil {
+			logger.Error("error set driver instance", err)
 			return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
 		}
 
@@ -399,6 +401,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 		err = configProvider.SetDial(instance.ID, defaultDial)
 		if err != nil {
+			logger.Error("error set dial", err)
 			return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
 		}
 
@@ -414,12 +417,14 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 		err = configProvider.SetService(instance.ID, service)
 		if err != nil {
+			logger.Error("error set service", err)
 			return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
 		}
 
 		params.DriverInstance.Service = service.ID
 		config, err := configProvider.LoadConfiguration()
 		if err != nil {
+			logger.Error("error load configuration", err)
 			return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
 		}
 
@@ -446,6 +451,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		logger.Info("create-instance", lager.Data{"enable-access": service.Name})
 		err = ccServiceBroker.EnableServiceAccess(service.Name)
 		if err != nil {
+			logger.Error("error service access", err)
 			return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
 		}
 
@@ -453,11 +459,12 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.UpdateDriverInstanceHandler = UpdateDriverInstanceHandlerFunc(func(params UpdateDriverInstanceParams, principal interface{}) middleware.Responder {
-		instance, err := configProvider.GetDriverInstance(params.DriverInstanceID)
+		instanceInfo, err := configProvider.GetDriverInstance(params.DriverInstanceID)
 		if err != nil {
 			return &UpdateDriverInstanceNotFound{}
 		}
 
+		instance := *instanceInfo
 		instanceConfig, err := json.Marshal(params.DriverConfig.Configuration)
 		if err != nil {
 			return &UpdateDriverInstanceInternalServerError{Payload: err.Error()}
