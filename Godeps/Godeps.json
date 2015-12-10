@@ -1,6 +1,6 @@
 {
 	"ImportPath": "github.com/hpcloud/cf-usb",
-	"GoVersion": "go1.4.2",
+	"GoVersion": "go1.5.1",
 	"Packages": [
 		"./..."
 	],
@@ -122,14 +122,9 @@
 			"Rev": "1b59c57df76ede42c08590546916e6a18685857d"
 		},
 		{
-			"ImportPath": "github.com/onsi/gomega/format",
-			"Comment": "v1.0-67-gd6dbcad",
-			"Rev": "d6dbcadd097a94624226ca555d70a0d14d4d6181"
-		},
-		{
-			"ImportPath": "github.com/onsi/gomega/gbytes",
-			"Comment": "v1.0-67-gd6dbcad",
-			"Rev": "d6dbcadd097a94624226ca555d70a0d14d4d6181"
+			"ImportPath": "github.com/onsi/gomega",
+			"Comment": "v1.0-73-gb071aa6",
+			"Rev": "b071aa62b69453e2389f0a81d4db8a466d228242"
 		},
 		{
 			"ImportPath": "github.com/opennota/urlesc",
@@ -142,6 +137,10 @@
 		{
 			"ImportPath": "github.com/pivotal-golang/lager",
 			"Rev": "81d18ed6a75f16276fed99134f0e8397ec2e91e2"
+		},
+		{
+			"ImportPath": "github.com/pivotal-golang/localip",
+			"Rev": "c773e5fa43049a431973996f93afa7ee10312139"
 		},
 		{
 			"ImportPath": "github.com/satori/go.uuid",
@@ -160,6 +159,10 @@
 			"ImportPath": "github.com/stretchr/testify/mock",
 			"Comment": "v1.0-17-g089c718",
 			"Rev": "089c7181b8c728499929ff09b62d3fdd8df8adff"
+		},
+		{
+			"ImportPath": "github.com/tedsuo/ifrit",
+			"Rev": "3a41de6efdb78719e66467a1b170f2b7f1e1014d"
 		},
 		{
 			"ImportPath": "github.com/xeipuuv/gojsonpointer",
