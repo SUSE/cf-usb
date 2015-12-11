@@ -156,7 +156,7 @@ func GenerateUaaToken() (string, error) {
 }
 
 func Test_BrokerWithConsulConfigProviderCatalog(t *testing.T) {
-
+	RegisterTestingT(t)
 	architecture := fmt.Sprintf("%s-%s", runtime.GOOS, runtime.GOARCH)
 
 	dir, err := os.Getwd()
@@ -177,6 +177,38 @@ func Test_BrokerWithConsulConfigProviderCatalog(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	var consulClient consul.ConsulProvisionerInterface
+
+	getConsulReq, _ := http.NewRequest("GET", "http://localhost:8500", nil)
+	getConsulResp, _ := http.DefaultClient.Do(getConsulReq)
+	consulIsRunning := false
+	if getConsulResp != nil && getConsulResp.StatusCode == 200 {
+		consulIsRunning = true
+	}
+
+	if (strings.Contains(ConsulConfig.consulAddress, "127.0.0.1") || strings.Contains(ConsulConfig.consulAddress, "localhost")) && !consulIsRunning {
+		ConsulConfig.consulAddress = "127.0.0.1:8500"
+		ConsulConfig.consulSchema = "http"
+
+		consulProcess, err := start_consulProcess()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		defer func() {
+			consulProcess.Signal(os.Kill)
+			<-consulProcess.Wait()
+		}()
+
+		t.Log("consul started")
+	}
+
+	consulClient, err = init_consulProvisioner()
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	cmd := exec.Command(binpath, "consulConfigProvider", "-a", ConsulConfig.consulAddress)
 
 	err = cmd.Start()
@@ -186,7 +218,18 @@ func Test_BrokerWithConsulConfigProviderCatalog(t *testing.T) {
 
 	defer cmd.Process.Kill()
 
-	consulClient, err := init_consulProvisioner()
+	var list api.KVPairs
+
+	list = append(list, &api.KVPair{Key: "usb/loglevel", Value: []byte("debug")})
+	list = append(list, &api.KVPair{Key: "usb/broker_api", Value: []byte("{\"listen\":\":54054\",\"credentials\":{\"username\":\"demouser\",\"password\":\"demopassword\"}}")})
+	list = append(list, &api.KVPair{Key: "usb/management_api", Value: []byte("{\"listen\":\":54053\",\"uaa_secret\":\"myuaasecret\",\"uaa_client\":\"myuaaclient\",\"authentication\":{\"uaa\":{\"adminscope\":\"usb.management.admin\",\"public_key\":\"\"}},\"cloud_controller\":{\"api\":\"\",\"skip_tsl_validation\":true}}")})
+	list = append(list, &api.KVPair{Key: "usb/drivers/mysql", Value: []byte("mysql")})
+	list = append(list, &api.KVPair{Key: "usb/drivers/mysql/instances/00000000-0000-0000-0000-0000000000M1/Name", Value: []byte("mysql-local")})
+	list = append(list, &api.KVPair{Key: "usb/drivers/mysql/instances/00000000-0000-0000-0000-0000000000M1/Configuration", Value: []byte("{\"server\":\"127.0.0.1\",\"port\":\"3306\",\"userid\":\"root\",\"password\":\"password\"}")})
+	list = append(list, &api.KVPair{Key: "usb/drivers/mysql/instances/00000000-0000-0000-0000-0000000000M1/dials/B0000000-0000-0000-0000-000000000LM1", Value: []byte("{\"id\":\"B0000000-0000-0000-0000-000000000LM1\",\"configuration\":{},\"plan\":{\"name\":\"free\",\"id\":\"53425178-F731-49E7-9E53-5CF4BE9D807L\",\"description\":\"This is the first plan\",\"free\":true}}")})
+	list = append(list, &api.KVPair{Key: "usb/drivers/mysql/instances/00000000-0000-0000-0000-0000000000M1/service", Value: []byte("{\"id\":\"83E94C97-C755-46A5-8653-461517EB442L\",\"bindable\":true,\"name\":\"MysqlLocalService\",\"description\":\"Mysql Local Service\",\"tags\":[\"mysql\"],\"metadata\":{\"providerDisplayName\":\"Mysql Local Service\"}}")})
+
+	err = consulClient.PutKVs(&list, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -237,6 +280,10 @@ func Test_BrokerWithConsulConfigProviderCreateDriverInstance(t *testing.T) {
 	}
 	if err != nil {
 		t.Fatal(err)
+	}
+
+	if ConsulConfig.consulAddress == "" {
+		t.Skip("Skipping test as Consul env vars are not set: CONSUL_ADDRESS")
 	}
 
 	var uaaFakeServer *ghttp.Server
@@ -338,7 +385,14 @@ func Test_BrokerWithConsulConfigProviderCreateDriverInstance(t *testing.T) {
 
 	var consulClient consul.ConsulProvisionerInterface
 
-	if ConsulConfig.consulAddress == "" {
+	getConsulReq, _ := http.NewRequest("GET", "http://localhost:8500", nil)
+	getConsulResp, _ := http.DefaultClient.Do(getConsulReq)
+	consulIsRunning := false
+	if getConsulResp != nil && getConsulResp.StatusCode == 200 {
+		consulIsRunning = true
+	}
+
+	if (strings.Contains(ConsulConfig.consulAddress, "127.0.0.1") || strings.Contains(ConsulConfig.consulAddress, "localhost")) && !consulIsRunning {
 		ConsulConfig.consulAddress = "127.0.0.1:8500"
 		ConsulConfig.consulSchema = "http"
 
