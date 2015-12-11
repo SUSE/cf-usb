@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	_ "github.com/golang/protobuf/proto" //workaround for godep + gomega
 	"github.com/hashicorp/consul/api"
 	"github.com/hpcloud/cf-usb/lib/config/consul"
 	. "github.com/onsi/gomega"
