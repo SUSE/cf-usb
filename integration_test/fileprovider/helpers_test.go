@@ -26,21 +26,18 @@ var fileProviderConfig = `
             "password": "password"
         }
     },
-    "drivers": [
-        {
+    "drivers": {
+          "f533244b-e270-4ee0-aa9e-4733d52f097a":{
             "driver_type": "dummy",
-            "id": "f533244b-e270-4ee0-aa9e-4733d52f097a",
-            "driver_instances": [
-                {
+            "driver_instances": {
+                "dd4fcc63-b28f-4795-b398-36d9fc75efe7":{
                     "name": "dummy1",
-                    "id": "dd4fcc63-b28f-4795-b398-36d9fc75efe7",
                     "configuration": {
                         "property_one": "one",
                         "property_two": "two"
                     },
-                    "dials": [
-                        {
-                            "id": "881d876b-c933-4d9e-87c1-6d4b238abc0b",
+                    "dials": {
+                          "881d876b-c933-4d9e-87c1-6d4b238abc0b": {
                             "configuration": {
                                 "max_dbsize_mb": 2
                             },
@@ -51,7 +48,7 @@ var fileProviderConfig = `
                                 "free": true
                             }
                         }
-                    ],
+                    },
                     "service": {
                         "id": "de8464a4-1d05-4f25-8a74-9790448d13cd",
                         "bindable": true,
@@ -65,9 +62,9 @@ var fileProviderConfig = `
                         }
                     }
                 }
-            ]
+            }
         }
-    ]
+    }
 }
 `
 

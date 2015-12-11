@@ -165,13 +165,14 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 			return &GetDriversInternalServerError{Payload: err.Error()}
 		}
 
-		for _, d := range config.Drivers {
+		for dId, d := range config.Drivers {
 			var instances = make([]string, 0)
 			for instanceID, _ := range d.DriverInstances {
 				instances = append(instances, instanceID)
 			}
 
 			driver := &genmodel.Driver{
+				ID:              dId,
 				DriverType:      d.DriverType,
 				DriverInstances: instances,
 			}

@@ -103,9 +103,14 @@ func (c *consulConfig) LoadConfiguration() (*Config, error) {
 						if err != nil {
 							return nil, err
 						}
+						if driverInstanceInfo.Dials == nil {
+							driverInstanceInfo.Dials = make(map[string]Dial)
+						}
 						driverInstanceInfo.Dials[dialKey] = *dialInfo
 					}
-
+					if driverInfo.DriverInstances == nil {
+						driverInfo.DriverInstances = make(map[string]DriverInstance)
+					}
 					driverInfo.DriverInstances[instanceKey] = *driverInstanceInfo
 				}
 			}
@@ -184,18 +189,18 @@ func (c *consulConfig) GetDial(instanceID string, dialID string) (*Dial, error) 
 	var dialInfo Dial
 	key, err := c.getKey(instanceID)
 	if err != nil {
-		return &dialInfo, err
+		return nil, err
 	}
 	if key == "" {
-		return &dialInfo, errors.New(fmt.Sprintf("Instance %s not found", instanceID))
+		return nil, errors.New(fmt.Sprintf("Instance %s not found", instanceID))
 	}
 
 	data, err := c.provisioner.GetValue(key + "/dials/" + dialID)
 	if err != nil {
-		return &dialInfo, err
+		return nil, err
 	}
 	if data == nil {
-		return &dialInfo, errors.New(fmt.Sprintf("Dial %s not found", dialID))
+		return nil, errors.New(fmt.Sprintf("Dial %s not found", dialID))
 	}
 
 	err = json.Unmarshal(data, &dialInfo)

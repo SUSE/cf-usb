@@ -1,16 +1,16 @@
 package fileprovider_test
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"github.com/hpcloud/cf-usb/lib/config"
 	"io/ioutil"
 	"net/http"
 	"os"
-	"bytes"
 	"path"
 	"runtime"
 	"testing"
-	"encoding/json"
 
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
@@ -52,9 +52,8 @@ func initializeRunner() (UsbRunner, *config.Config) {
 
 func isValidJson(s []byte) bool {
 	var m map[string]interface{}
-    return json.Unmarshal(s, &m) == nil
+	return json.Unmarshal(s, &m) == nil
 }
-
 
 func Test_BrokerWithFileConfigProviderCatalog(t *testing.T) {
 	RegisterTestingT(t)
@@ -78,7 +77,7 @@ func Test_BrokerWithFileConfigProviderCatalog(t *testing.T) {
 	content, err := ioutil.ReadAll(resp.Body)
 	Expect(err).NotTo(HaveOccurred())
 
-	Expect(content).To(ContainSubstring(configInfo.Drivers[0].DriverInstances[0].Service.ID))
+	Expect(content).To(ContainSubstring(configInfo.Drivers["00000000-0000-0000-0000-000000000001"].DriverInstances["A0000000-0000-0000-0000-000000000002"].Service.ID))
 }
 
 func Test_BrokerWithFileConfigProviderProvision(t *testing.T) {
