@@ -93,16 +93,16 @@ func (c *redisConfig) GetUaaAuthConfig() (*UaaAuth, error) {
 	}
 	return &uaa.UaaAuth, nil
 }
-func (c *redisConfig) SetDriver(driver Driver) error {
+func (c *redisConfig) SetDriver(driverID string, driver Driver) error {
 
 	config, err := c.LoadConfiguration()
 	if err != nil {
 		return err
 	}
 	updated := false
-	for _, d := range config.Drivers {
-		if d.ID == driver.ID {
-			d = driver
+	for dId, _ := range config.Drivers {
+		if dId == driverID {
+			config.Drivers[dId] = driver
 			updated = true
 			break
 		}
@@ -111,7 +111,7 @@ func (c *redisConfig) SetDriver(driver Driver) error {
 		config.Drivers = make(map[string]Driver)
 	}
 	if !updated {
-		config.Drivers[driver.ID] = driver
+		config.Drivers[driverID] = driver
 	}
 
 	data, err := json.Marshal(config.Drivers)
@@ -132,8 +132,8 @@ func (c *redisConfig) GetDriver(driverID string) (*Driver, error) {
 		return nil, err
 	}
 
-	for _, d := range config.Drivers {
-		if d.ID == driverID {
+	for dID, d := range config.Drivers {
+		if dID == driverID {
 			return &d, nil
 		}
 	}
@@ -147,8 +147,8 @@ func (c *redisConfig) DeleteDriver(driverID string) error {
 		return err
 	}
 
-	for _, d := range config.Drivers {
-		if d.ID == driverID {
+	for dID, _ := range config.Drivers {
+		if dID == driverID {
 			delete(config.Drivers, driverID)
 			break
 		}
@@ -165,7 +165,7 @@ func (c *redisConfig) DeleteDriver(driverID string) error {
 	return nil
 }
 
-func (c *redisConfig) SetDriverInstance(driverID string, instance DriverInstance) error {
+func (c *redisConfig) SetDriverInstance(driverID string, instanceID string, instance DriverInstance) error {
 	config, err := c.LoadConfiguration()
 	if err != nil {
 		return err
@@ -174,10 +174,10 @@ func (c *redisConfig) SetDriverInstance(driverID string, instance DriverInstance
 		configuration := *config
 		instanceInfo := &instance
 		if driverInfo, ok := configuration.Drivers[driverID]; ok {
-			if _, ok := driverInfo.DriverInstances[instance.ID]; ok {
-				driverInfo.DriverInstances[(*instanceInfo).ID] = *instanceInfo
+			if _, ok := driverInfo.DriverInstances[instanceID]; ok {
+				driverInfo.DriverInstances[instanceID] = *instanceInfo
 			} else {
-				driverInfo.DriverInstances[(*instanceInfo).ID] = *instanceInfo
+				driverInfo.DriverInstances[instanceID] = *instanceInfo
 			}
 			data, err := json.Marshal(configuration)
 			if err != nil {
@@ -204,8 +204,8 @@ func (c *redisConfig) GetDriverInstance(instanceID string) (*DriverInstance, err
 	}
 
 	for _, d := range config.Drivers {
-		for _, i := range d.DriverInstances {
-			if i.ID == instanceID {
+		for diKey, i := range d.DriverInstances {
+			if diKey == instanceID {
 				return &i, nil
 			}
 		}
@@ -275,8 +275,8 @@ func (c *redisConfig) GetService(instanceID string) (*brokerapi.Service, error) 
 	}
 
 	for _, d := range config.Drivers {
-		for _, instanceInfo := range d.DriverInstances {
-			if instanceInfo.ID == instanceID {
+		for diKey, instanceInfo := range d.DriverInstances {
+			if diKey == instanceID {
 				return &instanceInfo.Service, nil
 			}
 		}
@@ -291,8 +291,8 @@ func (c *redisConfig) DeleteService(instanceID string) error {
 	}
 
 	for _, d := range config.Drivers {
-		for _, instanceInfo := range d.DriverInstances {
-			if instanceInfo.ID == instanceID {
+		for diKey, instanceInfo := range d.DriverInstances {
+			if diKey == instanceID {
 				instanceInfo.Service = brokerapi.Service{}
 				break
 			}
@@ -310,7 +310,7 @@ func (c *redisConfig) DeleteService(instanceID string) error {
 	return nil
 }
 
-func (c *redisConfig) SetDial(instanceID string, dial Dial) error {
+func (c *redisConfig) SetDial(instanceID string, dialID string, dial Dial) error {
 	config, err := c.LoadConfiguration()
 	if err != nil {
 		return err
@@ -321,10 +321,10 @@ func (c *redisConfig) SetDial(instanceID string, dial Dial) error {
 		for _, driverInfo := range configuration.Drivers {
 			for instanceInfoID, instanceInfo := range driverInfo.DriverInstances {
 				if instanceInfoID == instanceID {
-					if _, ok := instanceInfo.Dials[(*dialDetails).ID]; ok {
-						instanceInfo.Dials[(*dialDetails).ID] = *dialDetails
+					if _, ok := instanceInfo.Dials[dialID]; ok {
+						instanceInfo.Dials[dialID] = *dialDetails
 					} else {
-						instanceInfo.Dials[(*dialDetails).ID] = *dialDetails
+						instanceInfo.Dials[dialID] = *dialDetails
 					}
 
 				}
@@ -352,10 +352,10 @@ func (c *redisConfig) GetDial(instanceID string, dialID string) (*Dial, error) {
 	}
 
 	for _, d := range config.Drivers {
-		for _, instanceInfo := range d.DriverInstances {
-			if instanceInfo.ID == instanceID {
-				for _, dialInfo := range instanceInfo.Dials {
-					if dialInfo.ID == dialID {
+		for diKey, instanceInfo := range d.DriverInstances {
+			if diKey == instanceID {
+				for dialInfoID, dialInfo := range instanceInfo.Dials {
+					if dialInfoID == dialID {
 						return &dialInfo, nil
 					}
 				}
@@ -373,8 +373,8 @@ func (c *redisConfig) DeleteDial(instanceID string, dialID string) error {
 	}
 
 	for _, d := range config.Drivers {
-		for _, instanceInfo := range d.DriverInstances {
-			if instanceInfo.ID == instanceID {
+		for diKey, instanceInfo := range d.DriverInstances {
+			if diKey == instanceID {
 				delete(instanceInfo.Dials, dialID)
 				break
 			}

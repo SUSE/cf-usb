@@ -129,9 +129,8 @@ func Test_RedisSetDriver(t *testing.T) {
 	assert.NoError(err)
 
 	var driver Driver
-	driver.ID = "00000000-0000-0000-0000-0000000000T1"
 	driver.DriverType = "testDriver"
-	err = RedisIntegrationConfig.Provider.SetDriver(driver)
+	err = RedisIntegrationConfig.Provider.SetDriver("00000000-0000-0000-0000-0000000000T1", driver)
 	assert.NoError(err)
 }
 
@@ -144,14 +143,13 @@ func Test_RedisSetDriverInstance(t *testing.T) {
 	assert.NoError(err)
 
 	var instance DriverInstance
-	instance.ID = "I0000000-0000-0000-0000-0000000000T1"
 	instance.Name = "testDriverInstance"
 	raw := json.RawMessage("{\"a1\":\"b1\"}")
 	instance.Configuration = &raw
 	instance.Dials = make(map[string]Dial)
 	instance.Service = brokerapi.Service{}
 
-	err = RedisIntegrationConfig.Provider.SetDriverInstance("00000000-0000-0000-0000-000000000001", instance)
+	err = RedisIntegrationConfig.Provider.SetDriverInstance("00000000-0000-0000-0000-000000000001", "I0000000-0000-0000-0000-0000000000T1", instance)
 	assert.NoError(err)
 }
 
@@ -200,10 +198,9 @@ func Test_RedisSetDial(t *testing.T) {
 
 	var dial Dial
 	dial.Plan = plan
-	dial.ID = "P0000000-0000-0000-0000-0000000000T1"
 	raw := json.RawMessage("{\"d1\":\"d2\"}")
 	dial.Configuration = &raw
 
-	err = RedisIntegrationConfig.Provider.SetDial("I0000000-0000-0000-0000-0000000000T1", dial)
+	err = RedisIntegrationConfig.Provider.SetDial("I0000000-0000-0000-0000-0000000000T1", "P0000000-0000-0000-0000-0000000000T1", dial)
 	assert.NoError(err)
 }

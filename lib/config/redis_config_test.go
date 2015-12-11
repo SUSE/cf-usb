@@ -123,10 +123,9 @@ func Test_Redis_SetDriver(t *testing.T) {
 	RedisTestConfig.Provider = NewRedisConfig(provisioner)
 
 	var driver Driver
-	driver.ID = "testDriverID"
 	driver.DriverType = "testDriver"
 
-	err := RedisTestConfig.Provider.SetDriver(driver)
+	err := RedisTestConfig.Provider.SetDriver("testDriverID", driver)
 	assert.NoError(err)
 }
 
@@ -174,9 +173,8 @@ func Test_Redis_SetDial(t *testing.T) {
 	RedisTestConfig.Provider = NewRedisConfig(provisioner)
 
 	var dial Dial
-	dial.ID = "testDialID"
 
-	err := RedisTestConfig.Provider.SetDial("A0000000-0000-0000-0000-000000000002", dial)
+	err := RedisTestConfig.Provider.SetDial("A0000000-0000-0000-0000-000000000002", "testDialID", dial)
 	assert.NoError(err)
 }
 

@@ -36,13 +36,11 @@ type CloudController struct {
 }
 
 type Dial struct {
-	ID            string                `json:"id"`
 	Configuration *json.RawMessage      `json:"configuration,omitempty"`
 	Plan          brokerapi.ServicePlan `json:"plan"`
 }
 
 type DriverInstance struct {
-	ID            string            `json:"id"`
 	Name          string            `json:"name"`
 	Configuration *json.RawMessage  `json:"configuration"`
 	Dials         map[string]Dial   `json:"dials"`
@@ -50,7 +48,6 @@ type DriverInstance struct {
 }
 
 type Driver struct {
-	ID              string                    `json:"id"`
 	DriverType      string                    `json:"driver_type"`
 	DriverInstances map[string]DriverInstance `json:"driver_instances,omitempty"`
 }
@@ -67,16 +64,16 @@ type ConfigProvider interface {
 	LoadConfiguration() (*Config, error)
 	LoadDriverInstance(driverInstanceID string) (*DriverInstance, error)
 	GetUaaAuthConfig() (*UaaAuth, error)
-	SetDriver(Driver) error
+	SetDriver(string, Driver) error
 	GetDriver(string) (*Driver, error)
 	DeleteDriver(string) error
-	SetDriverInstance(string, DriverInstance) error
+	SetDriverInstance(string, string, DriverInstance) error
 	GetDriverInstance(string) (*DriverInstance, error)
 	DeleteDriverInstance(string) error
 	SetService(string, brokerapi.Service) error
 	GetService(string) (*brokerapi.Service, error)
 	DeleteService(string) error
-	SetDial(string, Dial) error
+	SetDial(string, string, Dial) error
 	GetDial(string, string) (*Dial, error)
 	DeleteDial(string, string) error
 	ServiceNameExists(string) (bool, error)

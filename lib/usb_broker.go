@@ -214,10 +214,10 @@ func (broker *UsbBroker) getDriver(serviceID string) (*DriverProvider, error) {
 	}
 
 	for _, driver := range config.Drivers {
-		for _, driverInstance := range driver.DriverInstances {
+		for driverInstanceID, driverInstance := range driver.DriverInstances {
 			if driverInstance.Service.ID == serviceID {
 				driverProvider := NewDriverProvider(driver.DriverType,
-					broker.configProvider, driverInstance.ID, broker.logger)
+					broker.configProvider, driverInstanceID, broker.logger)
 				return driverProvider, nil
 			}
 		}
@@ -233,9 +233,9 @@ func (broker *UsbBroker) getDriverForServiceInstanceId(instanceID string) (*Driv
 	}
 
 	for _, driver := range config.Drivers {
-		for _, driverInstance := range driver.DriverInstances {
+		for driverInstanceID, _ := range driver.DriverInstances {
 			driverProvider := NewDriverProvider(driver.DriverType,
-				broker.configProvider, driverInstance.ID, broker.logger)
+				broker.configProvider, driverInstanceID, broker.logger)
 
 			instance, err := driverProvider.GetInstance(instanceID)
 			if err != nil {

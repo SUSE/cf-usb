@@ -23,17 +23,16 @@ func Test_ConsulSetDriver(t *testing.T) {
 
 	k := []byte("testType")
 	var options *api.WriteOptions
-	provisioner.On("AddKV", "usb/drivers/testID", k, options).Return(nil)
+	provisioner.On("AddKV", "usb/drivers/testTypeID", k, options).Return(nil)
 
 	TestConfig.Provider = NewConsulConfig(provisioner)
 
 	assert := assert.New(t)
 
 	var driverInfo Driver
-	driverInfo.ID = "testID"
 	driverInfo.DriverType = "testType"
 
-	err := TestConfig.Provider.SetDriver(driverInfo)
+	err := TestConfig.Provider.SetDriver("testTypeID", driverInfo)
 	assert.NoError(err)
 }
 
@@ -76,11 +75,10 @@ func Test_SetDriverInstance(t *testing.T) {
 	assert := assert.New(t)
 
 	var instance DriverInstance
-	instance.ID = "testInstanceID"
 	instance.Name = "testInstance"
 	raw := json.RawMessage("{\"a1\":\"b1\"}")
 	instance.Configuration = &raw
-	err := TestConfig.Provider.SetDriverInstance("testID", instance)
+	err := TestConfig.Provider.SetDriverInstance("testID", "testInstanceID", instance)
 	assert.NoError(err)
 }
 
@@ -97,7 +95,6 @@ func Test_GetDriverInstance(t *testing.T) {
 
 	instance, err := TestConfig.Provider.GetDriverInstance("testInstanceID")
 
-	assert.Equal("testInstanceID", instance.ID)
 	assert.Equal("testInstance", instance.Name)
 	assert.NoError(err)
 }
@@ -204,10 +201,9 @@ func Test_SetDial(t *testing.T) {
 	raw := json.RawMessage("{\"a1\":\"b1\"}")
 
 	dialInfo.Configuration = &raw
-	dialInfo.ID = "dialID"
 	dialInfo.Plan = plan
 
-	err := TestConfig.Provider.SetDial("testInstanceID", dialInfo)
+	err := TestConfig.Provider.SetDial("testInstanceID", "testDialID", dialInfo)
 	assert.NoError(err)
 }
 
