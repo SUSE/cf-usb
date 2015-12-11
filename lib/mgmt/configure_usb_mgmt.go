@@ -8,6 +8,7 @@ import (
 	"bufio"
 	"crypto/sha1"
 	"encoding/base64"
+	goerrors "errors"
 	"fmt"
 	"github.com/go-swagger/go-swagger/errors"
 	"github.com/go-swagger/go-swagger/httpkit"
@@ -400,6 +401,11 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		configuration := json.RawMessage(instanceConfig)
 		instance.Configuration = &configuration
 		instance.Name = params.DriverInstance.Name
+
+		// maybe DriverType should be required
+		if existingDriver.DriverType == "" {
+			return &CreateDriverInstanceInternalServerError{Payload: goerrors.New("Driver type should be specified").Error()}
+		}
 
 		err = lib.Validate(instance, existingDriver.DriverType, logger)
 		if err != nil {
