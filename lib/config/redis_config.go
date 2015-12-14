@@ -176,10 +176,15 @@ func (c *redisConfig) SetDriverInstance(driverID string, instanceID string, inst
 		if driverInfo, ok := configuration.Drivers[driverID]; ok {
 			if _, ok := driverInfo.DriverInstances[instanceID]; ok {
 				driverInfo.DriverInstances[instanceID] = *instanceInfo
+				configuration.Drivers[driverID] = driverInfo
 			} else {
+				if driverInfo.DriverInstances == nil {
+					driverInfo.DriverInstances = make(map[string]DriverInstance)
+				}
 				driverInfo.DriverInstances[instanceID] = *instanceInfo
+				configuration.Drivers[driverID] = driverInfo
 			}
-			data, err := json.Marshal(configuration)
+			data, err := json.Marshal(configuration.Drivers)
 			if err != nil {
 				return err
 			}
@@ -246,10 +251,11 @@ func (c *redisConfig) SetService(instanceID string, service brokerapi.Service) e
 	}
 	if config != nil {
 		configuration := *config
-		for _, driverInfo := range configuration.Drivers {
+		for driverKey, driverInfo := range configuration.Drivers {
 			if _, ok := driverInfo.DriverInstances[instanceID]; ok {
 				instance := driverInfo.DriverInstances[instanceID]
 				instance.Service = service
+				configuration.Drivers[driverKey].DriverInstances[instanceID] = instance
 				break
 			}
 
@@ -315,17 +321,21 @@ func (c *redisConfig) SetDial(instanceID string, dialID string, dial Dial) error
 	if config != nil {
 		configuration := *config
 		dialDetails := &dial
-		for _, driverInfo := range configuration.Drivers {
+		for driverKey, driverInfo := range configuration.Drivers {
 			if instance, ok := driverInfo.DriverInstances[instanceID]; ok {
 				if _, ok := instance.Dials[dialID]; ok {
 					instance.Dials[dialID] = *dialDetails
 				} else {
+					if instance.Dials == nil {
+						instance.Dials = make(map[string]Dial)
+					}
 					instance.Dials[dialID] = *dialDetails
+					configuration.Drivers[driverKey].DriverInstances[instanceID] = instance
 				}
 			}
 		}
 
-		data, err := json.Marshal(configuration)
+		data, err := json.Marshal(configuration.Drivers)
 
 		if err != nil {
 			return err

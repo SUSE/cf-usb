@@ -47,3 +47,11 @@ func (e RedisProvisioner) KeyExists(key string) (bool, error) {
 	}
 	return exists, nil
 }
+
+func (e RedisProvisioner) RemoveKey(key string) (bool, error) {
+	_, err := e.RedisClient.Del(key).Result()
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}

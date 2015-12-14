@@ -176,7 +176,7 @@ func Test_RedisSetService(t *testing.T) {
 	plan.Description = " test plan"
 	plan.Metadata = &brokerapi.ServicePlanMetadata{DisplayName: "Test Service"}
 
-	err = RedisIntegrationConfig.Provider.SetService("I0000000-0000-0000-0000-0000000000T1", service)
+	err = RedisIntegrationConfig.Provider.SetService("A0000000-0000-0000-0000-000000000002", service)
 	assert.NoError(err)
 }
 
@@ -201,6 +201,6 @@ func Test_RedisSetDial(t *testing.T) {
 	raw := json.RawMessage("{\"d1\":\"d2\"}")
 	dial.Configuration = &raw
 
-	err = RedisIntegrationConfig.Provider.SetDial("I0000000-0000-0000-0000-0000000000T1", "P0000000-0000-0000-0000-0000000000T1", dial)
+	err = RedisIntegrationConfig.Provider.SetDial("A0000000-0000-0000-0000-000000000002", "P0000000-0000-0000-0000-0000000000T1", dial)
 	assert.NoError(err)
 }
