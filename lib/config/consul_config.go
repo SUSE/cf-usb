@@ -97,7 +97,6 @@ func (c *consulConfig) LoadConfiguration() (*Config, error) {
 					for _, dialKey := range dialkeys {
 						dialKey = strings.TrimSuffix(dialKey, "/")
 						dialKey = strings.TrimPrefix(dialKey, "usb/drivers/"+driverID+"/instances/"+instanceKey+"/dials/")
-						fmt.Println(dialKey)
 
 						dialInfo, err := c.GetDial(instanceKey, dialKey)
 						if err != nil {
@@ -345,7 +344,6 @@ func (c *consulConfig) LoadDriverInstance(instanceID string) (*DriverInstance, e
 	for _, dialKey := range dialkeys {
 		dialKey = strings.TrimSuffix(dialKey, "/")
 		dialKey = strings.TrimPrefix(dialKey, key+"/dials/")
-		fmt.Println(dialKey)
 
 		dialInfo, err := c.GetDial(instanceID, dialKey)
 		if err != nil {

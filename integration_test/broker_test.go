@@ -24,6 +24,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/ghttp"
 	"github.com/pivotal-golang/lager/lagertest"
+	uuid "github.com/satori/go.uuid"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/ginkgomon"
 )
@@ -48,6 +49,16 @@ HH6Qlq/6UOV5wP8+GAcCQFgRCcB+hrje8hfEEefHcFpyKH+5g1Eu1k0mLrxK2zd+
 -----END RSA PRIVATE KEY-----`
 
 var uaaPublicKey = `-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDHFr+KICms+tuT1OXJwhCUmR2d\nKVy7psa8xzElSyzqx7oJyfJ1JZyOzToj9T5SfTIq396agbHJWVfYphNahvZ/7uMX\nqHxf+ZH9BL1gk9Y6kCnbM5R60gfwjyW1/dQPjOzn9N394zd2FJoFHwdq9Qs0wBug\nspULZVNRxq7veq/fzwIDAQAB\n-----END PUBLIC KEY-----`
+
+var drivers = []struct {
+	driverType                  string
+	envVarsExistFunc            func() bool
+	setDriverInstanceValuesFunc func(driverName, driverId string) []byte
+}{
+	{"postgres", postgresEnvVarsExist, setPostgresDriverInstanceValues},
+	{"mongo", mongoEnvVarsExist, setMongoDriverInstanceValues},
+	{"mysql", mysqlEnvVarsExist, setMysqlDriverInstanceValues},
+}
 
 var ConsulConfig = struct {
 	consulAddress    string
@@ -223,11 +234,6 @@ func Test_BrokerWithConsulConfigProviderCatalog(t *testing.T) {
 	list = append(list, &api.KVPair{Key: "usb/loglevel", Value: []byte("debug")})
 	list = append(list, &api.KVPair{Key: "usb/broker_api", Value: []byte("{\"listen\":\":54054\",\"credentials\":{\"username\":\"demouser\",\"password\":\"demopassword\"}}")})
 	list = append(list, &api.KVPair{Key: "usb/management_api", Value: []byte("{\"listen\":\":54053\",\"uaa_secret\":\"myuaasecret\",\"uaa_client\":\"myuaaclient\",\"authentication\":{\"uaa\":{\"adminscope\":\"usb.management.admin\",\"public_key\":\"\"}},\"cloud_controller\":{\"api\":\"\",\"skip_tsl_validation\":true}}")})
-	list = append(list, &api.KVPair{Key: "usb/drivers/mysql", Value: []byte("mysql")})
-	list = append(list, &api.KVPair{Key: "usb/drivers/mysql/instances/00000000-0000-0000-0000-0000000000M1/Name", Value: []byte("mysql-local")})
-	list = append(list, &api.KVPair{Key: "usb/drivers/mysql/instances/00000000-0000-0000-0000-0000000000M1/Configuration", Value: []byte("{\"server\":\"127.0.0.1\",\"port\":\"3306\",\"userid\":\"root\",\"password\":\"password\"}")})
-	list = append(list, &api.KVPair{Key: "usb/drivers/mysql/instances/00000000-0000-0000-0000-0000000000M1/dials/B0000000-0000-0000-0000-000000000LM1", Value: []byte("{\"id\":\"B0000000-0000-0000-0000-000000000LM1\",\"configuration\":{},\"plan\":{\"name\":\"free\",\"id\":\"53425178-F731-49E7-9E53-5CF4BE9D807L\",\"description\":\"This is the first plan\",\"free\":true}}")})
-	list = append(list, &api.KVPair{Key: "usb/drivers/mysql/instances/00000000-0000-0000-0000-0000000000M1/service", Value: []byte("{\"id\":\"83E94C97-C755-46A5-8653-461517EB442L\",\"bindable\":true,\"name\":\"MysqlLocalService\",\"description\":\"Mysql Local Service\",\"tags\":[\"mysql\"],\"metadata\":{\"providerDisplayName\":\"Mysql Local Service\"}}")})
 
 	err = consulClient.PutKVs(&list, nil)
 	if err != nil {
@@ -292,27 +298,6 @@ func Test_BrokerWithConsulConfigProviderCreateDriverInstance(t *testing.T) {
 	var ccFakeServer *ghttp.Server
 	ccFakeServer = ghttp.NewServer()
 
-	uaaFakeServer.AppendHandlers(
-		ghttp.CombineHandlers(
-			ghttp.VerifyRequest("POST", "/oauth/token"),
-			ghttp.RespondWith(200, `{"access_token":"replace-me", "expires_in": 3404281214}`),
-		),
-	)
-
-	uaaFakeServer.AppendHandlers(
-		ghttp.CombineHandlers(
-			ghttp.VerifyRequest("POST", "/oauth/token"),
-			ghttp.RespondWith(200, `{"access_token":"replace-me", "expires_in": 3404281216}`),
-		),
-	)
-
-	uaaFakeServer.AppendHandlers(
-		ghttp.CombineHandlers(
-			ghttp.VerifyRequest("POST", "/oauth/token"),
-			ghttp.RespondWith(200, `{"access_token":"replace-me", "expires_in": 3404281218}`),
-		),
-	)
-
 	ccFakeServer.AppendHandlers(
 		ghttp.CombineHandlers(
 			ghttp.VerifyRequest("GET", "/v2/info"),
@@ -327,61 +312,9 @@ func Test_BrokerWithConsulConfigProviderCreateDriverInstance(t *testing.T) {
 		),
 	)
 
-	ccFakeServer.AppendHandlers(
-		ghttp.CombineHandlers(
-			ghttp.VerifyRequest("GET", "/v2/service_brokers"),
-			func(http.ResponseWriter, *http.Request) {
-				time.Sleep(0 * time.Second)
-			},
-			ghttp.RespondWith(200, `{"resources":[{"metadata":{"guid":""}}]}`),
-		),
-	)
-
-	ccFakeServer.AppendHandlers(
-		ghttp.CombineHandlers(
-			ghttp.VerifyRequest("POST", "/v2/service_brokers"),
-			func(http.ResponseWriter, *http.Request) {
-				time.Sleep(0 * time.Second)
-			},
-			ghttp.RespondWith(201, `{}`),
-		),
-	)
-
-	serviceGuid := "83E94C97-C755-46A5-8653-461517EB442M"
-
-	ccFakeServer.AppendHandlers(
-		ghttp.CombineHandlers(
-			ghttp.VerifyRequest("GET", "/v2/services"),
-			func(http.ResponseWriter, *http.Request) {
-				time.Sleep(0 * time.Second)
-			},
-			ghttp.RespondWith(200,
-				fmt.Sprintf(`{"resources":[{"metadata":{"guid":"%[1]s"}}]}`, serviceGuid)),
-		),
-	)
-
-	servicePlanGuid := "98E94C97-C755-46A5-8653-461517EB442M"
-
-	ccFakeServer.AppendHandlers(
-		ghttp.CombineHandlers(
-			ghttp.VerifyRequest("GET", "/v2/service_plans"),
-			func(http.ResponseWriter, *http.Request) {
-				time.Sleep(0 * time.Second)
-			},
-			ghttp.RespondWith(200,
-				fmt.Sprintf(`{"resources":[{"metadata":{"guid":"%[1]s"},"entity":{"name":"default","free":true,"description":"default plan","public":false,"service_guid":"%[2]s"}}]}`, servicePlanGuid, serviceGuid)),
-		),
-	)
-
-	ccFakeServer.AppendHandlers(
-		ghttp.CombineHandlers(
-			ghttp.VerifyRequest("PUT", fmt.Sprintf("/v2/service_plans/%[1]s", servicePlanGuid)),
-			func(http.ResponseWriter, *http.Request) {
-				time.Sleep(0 * time.Second)
-			},
-			ghttp.RespondWith(201, `{}`),
-		),
-	)
+	for i := 0; i < len(drivers); i++ {
+		setupCcHttpFakeResponses(uaaFakeServer, ccFakeServer)
+	}
 
 	var consulClient consul.ConsulProvisionerInterface
 
@@ -446,15 +379,99 @@ func Test_BrokerWithConsulConfigProviderCreateDriverInstance(t *testing.T) {
 
 	defer cmd.Process.Kill()
 	//wait for usb to start
-	time.Sleep(2 * time.Second)
+	time.Sleep(5 * time.Second)
 
-	token, err := GenerateUaaToken()
-	if err != nil {
-		t.Fatal(err)
+	for _, driver := range drivers {
+		executeTest(t, driver.driverType, driver.envVarsExistFunc, driver.setDriverInstanceValuesFunc)
 	}
+}
 
-	if postgresEnvVarsExist() {
-		driverName := "postgres"
+func setupCcHttpFakeResponses(uaaFakeServer, ccFakeServer *ghttp.Server) {
+	uaaFakeServer.AppendHandlers(
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("POST", "/oauth/token"),
+			ghttp.RespondWith(200, `{"access_token":"replace-me", "expires_in": 3404281214}`),
+		),
+	)
+
+	uaaFakeServer.AppendHandlers(
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("POST", "/oauth/token"),
+			ghttp.RespondWith(200, `{"access_token":"replace-me", "expires_in": 3404281216}`),
+		),
+	)
+
+	uaaFakeServer.AppendHandlers(
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("POST", "/oauth/token"),
+			ghttp.RespondWith(200, `{"access_token":"replace-me", "expires_in": 3404281218}`),
+		),
+	)
+
+	ccFakeServer.AppendHandlers(
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("GET", "/v2/service_brokers"),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(200, `{"resources":[{"metadata":{"guid":""}}]}`),
+		),
+	)
+
+	ccFakeServer.AppendHandlers(
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("POST", "/v2/service_brokers"),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(201, `{}`),
+		),
+	)
+
+	serviceGuid := uuid.NewV4().String()
+
+	ccFakeServer.AppendHandlers(
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("GET", "/v2/services"),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(200,
+				fmt.Sprintf(`{"resources":[{"metadata":{"guid":"%[1]s"}}]}`, serviceGuid)),
+		),
+	)
+
+	servicePlanGuid := uuid.NewV4().String()
+
+	ccFakeServer.AppendHandlers(
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("GET", "/v2/service_plans"),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(200,
+				fmt.Sprintf(`{"resources":[{"metadata":{"guid":"%[1]s"},"entity":{"name":"default","free":true,"description":"default plan","public":false,"service_guid":"%[2]s"}}]}`, servicePlanGuid, serviceGuid)),
+		),
+	)
+
+	ccFakeServer.AppendHandlers(
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("PUT", fmt.Sprintf("/v2/service_plans/%[1]s", servicePlanGuid)),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(201, `{}`),
+		),
+	)
+}
+
+func executeTest(t *testing.T, driverName string, envVarsExist func() bool, driverInstanceValues func(driverName, driverId string) []byte) {
+	if envVarsExist() {
+		token, err := GenerateUaaToken()
+		if err != nil {
+			t.Fatal(err)
+		}
+
 		newDriverReq, err := http.NewRequest("POST", "http://localhost:54053/drivers", strings.NewReader(fmt.Sprintf(`{"name":"%[1]s", "driver_type":"%[2]s"}`, driverName, driverName)))
 		newDriverReq.Header.Add("Content-Type", "application/json")
 		newDriverReq.Header.Add("Accept", "application/json")
@@ -483,11 +500,13 @@ func Test_BrokerWithConsulConfigProviderCreateDriverInstance(t *testing.T) {
 		if err != nil {
 			fmt.Println("error:", err)
 		}
+		t.Logf("create driver response content: %s", string(driverContent))
 
 		Expect(driver.Id).ToNot(BeNil())
 		Expect(driver.Name).To(Equal(driverName))
+		driverId := driver.Id
 
-		getDriverReq, err := http.NewRequest("GET", fmt.Sprintf("http://localhost:54053/drivers/%[1]s", driver.Id), nil)
+		getDriverReq, err := http.NewRequest("GET", fmt.Sprintf("http://localhost:54053/drivers/%[1]s", driverId), nil)
 		getDriverReq.Header.Add("Content-Type", "application/json")
 		getDriverReq.Header.Add("Accept", "application/json")
 		getDriverReq.Header.Add("Authorization", token)
@@ -506,18 +525,10 @@ func Test_BrokerWithConsulConfigProviderCreateDriverInstance(t *testing.T) {
 			t.Fatal(err)
 		}
 		t.Logf("get driver response content: %s", string(getDriverContent))
-		Expect(getDriverContent).To(ContainSubstring(driver.Id))
+		Expect(getDriverContent).To(ContainSubstring(driverId))
 
-		config := []byte(fmt.Sprintf(`{"name":"%[1]s", "driver_id":"%[2]s", "configuration": {"host":"%[3]s","port":"%[4]s","user":"%[5]s","password":"%[6]s","dbname":"%[7]s","sslmode":"%[8]s"}}`,
-			driverName,
-			driver.Id,
-			os.Getenv("POSTGRES_HOST"),
-			os.Getenv("POSTGRES_PORT"),
-			os.Getenv("POSTGRES_USER"),
-			os.Getenv("POSTGRES_PASSWORD"),
-			os.Getenv("POSTGRES_DBNAME"),
-			os.Getenv("POSTGRES_SSLMODE")))
-		newDriverInstReq, err := http.NewRequest("POST", "http://localhost:54053/driver_instances", bytes.NewBuffer(config))
+		instanceValues := driverInstanceValues(driverName, driverId)
+		newDriverInstReq, err := http.NewRequest("POST", "http://localhost:54053/driver_instances", bytes.NewBuffer(instanceValues))
 		newDriverInstReq.Header.Add("Content-Type", "application/json")
 		newDriverInstReq.Header.Add("Accept", "application/json")
 		newDriverInstReq.Header.Add("Authorization", token)
@@ -533,6 +544,7 @@ func Test_BrokerWithConsulConfigProviderCreateDriverInstance(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		t.Logf("driver instance: %s", string(driverInstContent))
 
 		type DriverInstanceResponse struct {
 			Id      string `json:"id"`
@@ -546,10 +558,9 @@ func Test_BrokerWithConsulConfigProviderCreateDriverInstance(t *testing.T) {
 		if err != nil {
 			fmt.Println("error:", err)
 		}
-		t.Logf("driver instance: %s", string(driverInstContent))
 		Expect(driverInstContent).To(ContainSubstring(driver.Name))
 
-		getPlanReq, err := http.NewRequest("GET", fmt.Sprintf("http://localhost:54053/plans?q=driverInstanceId:%[1]s", driver.Id), nil)
+		getPlanReq, err := http.NewRequest("GET", fmt.Sprintf("http://localhost:54053/plans?q=driverInstanceId:%[1]s", driverId), nil)
 		getPlanReq.Header.Add("Content-Type", "application/json")
 		getPlanReq.Header.Add("Accept", "application/json")
 		getPlanReq.Header.Add("Authorization", token)
@@ -596,4 +607,50 @@ func Test_BrokerWithConsulConfigProviderCreateDriverInstance(t *testing.T) {
 func postgresEnvVarsExist() bool {
 	return os.Getenv("POSTGRES_USER") != "" && os.Getenv("POSTGRES_PASSWORD") != "" && os.Getenv("POSTGRES_HOST") != "" &&
 		os.Getenv("POSTGRES_PORT") != "" && os.Getenv("POSTGRES_DBNAME") != "" && os.Getenv("POSTGRES_SSLMODE") != ""
+}
+
+func setPostgresDriverInstanceValues(driverName, driverId string) []byte {
+	values := []byte(fmt.Sprintf(`{"name":"%[1]s", "driver_id":"%[2]s", "configuration": {"host":"%[3]s","port":"%[4]s","user":"%[5]s","password":"%[6]s","dbname":"%[7]s","sslmode":"%[8]s"}}`,
+		driverName,
+		driverId,
+		os.Getenv("POSTGRES_HOST"),
+		os.Getenv("POSTGRES_PORT"),
+		os.Getenv("POSTGRES_USER"),
+		os.Getenv("POSTGRES_PASSWORD"),
+		os.Getenv("POSTGRES_DBNAME"),
+		os.Getenv("POSTGRES_SSLMODE")))
+
+	return values
+}
+
+func mongoEnvVarsExist() bool {
+	return os.Getenv("MONGO_USER") != "" && os.Getenv("MONGO_PASS") != "" && os.Getenv("MONGO_HOST") != "" && os.Getenv("MONGO_PORT") != ""
+}
+
+func setMongoDriverInstanceValues(driverName, driverId string) []byte {
+	values := []byte(fmt.Sprintf(`{"name":"%[1]s", "driver_id":"%[2]s", "configuration": {"server":"%[3]s","port":"%[4]s","userid":"%[5]s","password":"%[6]s"}}`,
+		driverName,
+		driverId,
+		os.Getenv("MONGO_HOST"),
+		os.Getenv("MONGO_PORT"),
+		os.Getenv("MONGO_USER"),
+		os.Getenv("MONGO_PASS")))
+
+	return values
+}
+
+func mysqlEnvVarsExist() bool {
+	return os.Getenv("MYSQL_USER") != "" && os.Getenv("MYSQL_PASS") != "" && os.Getenv("MYSQL_HOST") != "" && os.Getenv("MYSQL_PORT") != ""
+}
+
+func setMysqlDriverInstanceValues(driverName, driverId string) []byte {
+	values := []byte(fmt.Sprintf(`{"name":"%[1]s", "driver_id":"%[2]s", "configuration": {"server":"%[3]s","port":"%[4]s","userid":"%[5]s","password":"%[6]s"}}`,
+		driverName,
+		driverId,
+		os.Getenv("MYSQL_HOST"),
+		os.Getenv("MYSQL_PORT"),
+		os.Getenv("MYSQL_USER"),
+		os.Getenv("MYSQL_PASS")))
+
+	return values
 }
