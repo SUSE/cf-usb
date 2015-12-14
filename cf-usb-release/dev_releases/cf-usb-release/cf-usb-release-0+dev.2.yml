@@ -1,7 +1,0 @@
----
-packages: []
-jobs: []
-commit_hash: '00000000'
-uncommitted_changes: false
-name: cf-usb-release
-version: 0+dev.2
