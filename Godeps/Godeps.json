@@ -109,6 +109,10 @@
 			"Rev": "ffe986aba3e6cfcded8b06615965941408891ef0"
 		},
 		{
+			"ImportPath": "github.com/michaelklishin/rabbit-hole",
+			"Rev": "3c9494db6392f97616a68ceae63d4d461940c4ab"
+		},
+		{
 			"ImportPath": "github.com/naoina/denco",
 			"Rev": "9af2ba0e24214bac003821f4a501b131b2e04c75"
 		},
