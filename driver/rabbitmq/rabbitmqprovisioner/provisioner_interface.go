@@ -3,11 +3,12 @@ package rabbitmqprovisioner
 import "github.com/hpcloud/cf-usb/driver/rabbitmq/config"
 
 type RabbitmqProvisionerInterface interface {
-	Connect(conf config.RabbitmqDriverConfig) error
-	CreateDatabase(string) error
-	DeleteDatabase(string) error
-	DatabaseExists(string) (bool, error)
-	CreateUser(string, string, string) error
+	Connect(config.RabbitmqDriverConfig) error
+	CreateContainer(string) error
+	DeleteContainer(string) error
+	ContainerExists(string) (bool, error)
+	CreateUser(string, string) (map[string]string, error)
 	DeleteUser(string, string) error
-	UserExists(string) (bool, error)
+	UserExists(string, string) (bool, error)
+	PingServer() error
 }

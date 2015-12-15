@@ -1,23 +1,19 @@
 {  
-   "type":"object",
-   "properties":{  
-      "vhost":{  
-         "type":"string"
-      },
-	  "port":{  
-         "type":"string"
-      },
-      "user":{  
-         "type":"string"
-      },
-      "password":{  
-         "type":"string"
-      }
-   },
+	"type": "object"
+		"properties": {
+			"docker_endpoint": {
+				"type": "string"
+			},
+			"docker_image": {
+				"type": "string"
+			},
+			"docker_image_version": {
+				"type": "string"
+			}
+		},
    "required":[  
-      "vhost",
-	  "port",
-	  "user",
-	  "password"
+      "docker_image_version",
+	  "docker_image",
+	  "docker_endpoint"
    ]
 }

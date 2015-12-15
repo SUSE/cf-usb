@@ -1,239 +1,380 @@
 package rabbitmqprovisioner
 
 import (
+	"bytes"
+	"crypto/md5"
+	"crypto/rand"
+	"encoding/base64"
+	"encoding/hex"
 	"fmt"
-	"github.com/streadway/amqp"
-
 	"github.com/hpcloud/cf-usb/driver/rabbitmq/config"
+	"github.com/michaelklishin/rabbit-hole"
 	"github.com/pivotal-golang/lager"
+	"net"
+	"regexp"
+	"strings"
+
+	dockerclient "github.com/fsouza/go-dockerclient"
 )
 
+const CONTAINER_START_TIMEOUT int = 30
+
 type RabbitmqProvisioner struct {
-	amqpClient        *amqp.Connection
-	defaultConnParams config.RabbitmqDriverConfig
-	logger            lager.Logger
+	driverConfig config.RabbitmqDriverConfig
+	client       *dockerclient.Client
+	logger       lager.Logger
 }
 
 func NewRabbitmqProvisioner(logger lager.Logger) RabbitmqProvisionerInterface {
 	return &RabbitmqProvisioner{logger: logger}
 }
 
-func (provisioner *RabbitmqProvisioner) Connect(conf config.RabbitmqDriverConfig) error {
-	//var err error = nil
-	//connString := buildConnectionString(conf)
-	//provisioner.pgClient, err = sql.Open("postgres", connString)
+func (provisioner *RabbitmqProvisioner) Connect(driverConfig config.RabbitmqDriverConfig) error {
+	var err error
 
-	//if err != nil {
-	//	return err
-	//}
+	provisioner.driverConfig = driverConfig
+	provisioner.client, err = provisioner.getClient()
 
-	//err = provisioner.pgClient.Ping()
-	//if err != nil {
-	//	return err
-	//}
-
-	return nil
-}
-func (provisioner *RabbitmqProvisioner) Close() error {
-	//err := provisioner.pgClient.Close()
-	return nil
-}
-
-func (provisioner *RabbitmqProvisioner) CreateDatabase(dbname string) error {
-	//// for pg driver, create database can not be executed in transaction
-	//err := provisioner.executeQueryNoTx([]string{createDatabaseQuery}, map[string]string{"Database": dbname})
-	//if err != nil {
-	//	return err
-	//}
-
-	//err = provisioner.executeQueryTx([]string{revokeOnDatabaseQuery}, map[string]string{"Database": dbname})
-	//if err != nil {
-	//	return err
-	//}
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
 
-func (provisioner *RabbitmqProvisioner) DeleteDatabase(dbname string) error {
-	//version, err := provisioner.getServerVersion()
-	//if err != nil {
-	//	return err
-	//}
+func (provisioner *RabbitmqProvisioner) CreateContainer(containerName string) error {
+	err := provisioner.pullImage(provisioner.driverConfig.DockerImage, provisioner.driverConfig.ImageVersion)
+	if err != nil {
+		return err
+	}
 
-	//var pidColumn string
-	//if version > 90200 {
-	//	pidColumn = "pid"
-	//} else {
-	//	pidColumn = "procpid"
-	//}
+	admin_user, err := secureRandomString(32)
+	if err != nil {
+		return err
+	}
+	admin_pass, err := secureRandomString(32)
+	if err != nil {
+		return err
+	}
+	hostConfig := dockerclient.HostConfig{PublishAllPorts: true}
+	createOpts := dockerclient.CreateContainerOptions{
+		Config: &dockerclient.Config{
+			Image: provisioner.driverConfig.DockerImage + ":" + provisioner.driverConfig.ImageVersion,
+			Env: []string{"RABBITMQ_DEFAULT_USER=" + admin_user,
+				"RABBITMQ_DEFAULT_PASS=" + admin_pass},
+		},
+		HostConfig: &hostConfig,
+		Name:       containerName,
+	}
 
-	//err = provisioner.executeQueryTx([]string{terminateDatabaseConnQuery}, map[string]string{
-	//	"Database":  dbname,
-	//	"PidColumn": pidColumn,
-	//})
-	//if err != nil {
-	//	return err
-	//}
+	container, err := provisioner.client.CreateContainer(createOpts)
+	if err != nil {
+		return err
+	}
 
-	//// for pg driver, drop database can not be executed in transaction
-	//err = provisioner.executeQueryNoTx([]string{deleteDatabaseQuery}, map[string]string{"Database": dbname})
-	//if err != nil {
-	//	return err
-	//}
+	provisioner.client.StartContainer(container.ID, &hostConfig)
+	if err != nil {
+		return err
+	}
 
-	return nil
-}
-
-func (provisioner *RabbitmqProvisioner) DatabaseExists(dbname string) (bool, error) {
-	//res, err := provisioner.executeQueryRow(dbCountQuery, map[string]string{"Database": dbname})
-	//fmt.Println("count res: ", res)
-	//if err != nil {
-	//	return false, err
-	//}
-
-	//if res.(int64) == 1 {
-	//	return true, nil
-	//}
-
-	return false, nil
-}
-
-func (provisioner *RabbitmqProvisioner) CreateUser(dbname string, username string, password string) error {
-	//err := provisioner.executeQueryTx([]string{createRoleQuery, grantAllPrivToRoleQuery}, map[string]string{"User": username, "Password": password, "Database": dbname})
-	//if err != nil {
-	//	return err
-	//}
+	retry := 1
+	for retry < CONTAINER_START_TIMEOUT {
+		state, err := provisioner.getContainerState(containerName)
+		if err != nil {
+			return err
+		}
+		if state.Running {
+			break
+		}
+		retry++
+	}
 
 	return nil
 }
 
-func (provisioner *RabbitmqProvisioner) DeleteUser(dbname string, username string) error {
-	//err := provisioner.executeQueryTx([]string{revokeAllPrivFromRoleQuery, deleteRoleQuery}, map[string]string{"User": username, "Database": dbname})
-	//if err != nil {
-	//	return err
-	//}
+func (provisioner *RabbitmqProvisioner) DeleteContainer(containerName string) error {
 
+	containerID, err := provisioner.getContainerId(containerName)
+	if err != nil {
+		return err
+	}
+
+	err = provisioner.client.StopContainer(containerID, 5)
+	if err != nil {
+		return err
+	}
+
+	return provisioner.client.RemoveContainer(dockerclient.RemoveContainerOptions{
+		ID:    containerID,
+		Force: true,
+	})
+}
+
+func (provisioner *RabbitmqProvisioner) getClient() (*dockerclient.Client, error) {
+	client, err := dockerclient.NewClient(provisioner.driverConfig.DockerEndpoint)
+	if err != nil {
+		return nil, err
+	}
+
+	return client, nil
+}
+
+func (provisioner *RabbitmqProvisioner) pullImage(imageName, version string) error {
+	var buf bytes.Buffer
+	pullOpts := dockerclient.PullImageOptions{
+		Repository:   imageName,
+		Tag:          version,
+		OutputStream: &buf,
+	}
+
+	err := provisioner.client.PullImage(pullOpts, dockerclient.AuthConfiguration{})
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
-func (provisioner *RabbitmqProvisioner) UserExists(username string) (bool, error) {
-	//res, err := provisioner.executeQueryRow(userCountQuery, map[string]string{"User": username})
-	//if err != nil {
-	//	return false, err
-	//}
+func (provisioner *RabbitmqProvisioner) findImage(imageName string) (*dockerclient.Image, error) {
+	image, err := provisioner.client.InspectImage(imageName)
+	if err != nil {
+		return nil, fmt.Errorf("Could not find base image %s: %s", imageName, err.Error())
+	}
 
-	//if res.(int64) == 1 {
-	//	return true, nil
-	//}
-
-	return false, nil
+	return image, nil
 }
 
-func buildConnectionString(connectionParams config.RabbitmqDriverConfig) string {
-	var res string = fmt.Sprintf("user=%v password=%v host=%v port=%v dbname=%v sslmode=%v",
-		connectionParams.User, connectionParams.Password, connectionParams.Vhost)
-	return res
+func (provisioner *RabbitmqProvisioner) getContainerId(containerName string) (string, error) {
+	container, err := provisioner.getContainer(containerName)
+	if err != nil {
+		return "", err
+	}
+	return container.ID, nil
 }
 
-//func parametrizeQuery(query string, params map[string]string) (string, error) {
-//	queryTemplate := template.Must(template.New("query").Parse(query))
-//	output := bytes.Buffer{}
-//	queryTemplate.Execute(&output, params)
+func (provisioner *RabbitmqProvisioner) getContainer(containerName string) (dockerclient.APIContainers, error) {
+	opts := dockerclient.ListContainersOptions{
+		All: true,
+	}
+	containers, err := provisioner.client.ListContainers(opts)
+	if err != nil {
+		return dockerclient.APIContainers{}, err
+	}
 
-//	queryString := output.String()
+	for _, c := range containers {
+		for _, n := range c.Names {
+			if strings.TrimPrefix(n, "/") == containerName {
+				return c, nil
+			}
+		}
+	}
 
-//	if strings.Contains(queryString, "<no value>") {
-//		return queryString, errors.New("Invalid parameter passed to query")
-//	}
+	return dockerclient.APIContainers{}, fmt.Errorf("Container %s not found", containerName)
+}
 
-//	return queryString, nil
-//}
+func (provisioner *RabbitmqProvisioner) inspectContainer(containerId string) (*dockerclient.Container, error) {
+	return provisioner.client.InspectContainer(containerId)
+}
 
-//func (provisioner *PostgresProvisioner) executeQueryNoTx(queries []string, params map[string]string) error {
-//	for _, query := range queries {
-//		pQuery, err := parametrizeQuery(query, params)
+func (provisioner *RabbitmqProvisioner) getAdminCredentials(containerName string) (map[string]string, error) {
 
-//		provisioner.logger.Debug("postgres-exec", lager.Data{"query": pQuery})
-//		if err != nil {
-//			provisioner.logger.Error("postgres-exec", err, lager.Data{"query": pQuery})
-//			return err
-//		}
+	m := make(map[string]string)
+	containerId, err := provisioner.getContainerId(containerName)
+	if err != nil {
+		provisioner.logger.Debug(err.Error())
+		return nil, err
+	}
 
-//		_, err = provisioner.pgClient.Exec(pQuery)
-//		if err != nil {
-//			provisioner.logger.Error("postgres-exec", err, lager.Data{"query": pQuery})
-//			return err
-//		}
-//	}
+	container, err := provisioner.inspectContainer(containerId)
+	if err != nil {
+		provisioner.logger.Debug(err.Error())
+		return nil, err
+	}
 
-//	return nil
-//}
+	var env dockerclient.Env
+	env = make([]string, len(container.Config.Env)) // container.Config.Env.(dockerclient.Env)  // dockerclient.Env( []string{ container.Config.Env })
+	copy(env, container.Config.Env)
+	m["user"] = env.Get("RABBITMQ_DEFAULT_USER")
+	m["password"] = env.Get("RABBITMQ_DEFAULT_PASS")
+	fmt.Println(container.NetworkSettings.Ports)
+	for k, v := range container.NetworkSettings.Ports {
+		if k == "15672/tcp" {
+			m["port"] = v[0].HostPort
+		}
+	}
+	return m, nil
+}
 
-//func (provisioner *PostgresProvisioner) executeQueryTx(queries []string, params map[string]string) error {
-//	tx, err := provisioner.pgClient.Begin()
-//	if err != nil {
-//		return err
-//	}
+func (provisioner *RabbitmqProvisioner) ContainerExists(containerName string) (bool, error) {
+	_, err := provisioner.getContainer(containerName)
+	if err != nil {
+		return false, nil
+	}
 
-//	for _, query := range queries {
-//		pQuery, err := parametrizeQuery(query, params)
-//		provisioner.logger.Debug("postgres-exec", lager.Data{"query": pQuery})
-//		if err != nil {
-//			provisioner.logger.Error("postgres-exec", err, lager.Data{"query": pQuery})
-//			return err
-//		}
+	return true, nil
+}
 
-//		_, err = tx.Exec(pQuery)
-//		if err != nil {
-//			tx.Rollback()
-//			provisioner.logger.Error("postgres-exec", err, lager.Data{"query": pQuery})
-//			return err
-//		}
-//	}
+func (provisioner *RabbitmqProvisioner) PingServer() error {
+	_, err := provisioner.client.Info()
+	return err
+}
 
-//	err = tx.Commit()
-//	if err != nil {
-//		return err
-//	}
+func (provisioner *RabbitmqProvisioner) DeleteUser(containerName, credentialId string) error {
+	host, err := getLocalIP()
+	if err != nil {
+		return err
+	}
 
-//	return nil
-//}
+	admin, err := provisioner.getAdminCredentials(containerName)
+	if err != nil {
+		return err
+	}
 
-//func (provisioner *PostgresProvisioner) executeQueryRow(query string, params map[string]string) (interface{}, error) {
-//	pQuery, err := parametrizeQuery(query, params)
-//	provisioner.logger.Debug("postgres-exec", lager.Data{"query": pQuery})
-//	if err != nil {
-//		provisioner.logger.Error("postgres-exec", err, lager.Data{"query": pQuery})
-//		return nil, err
-//	}
+	rmqc, err := rabbithole.NewClient(fmt.Sprintf("http://%s:%s", host, admin["port"]), admin["user"], admin["password"])
+	if err != nil {
+		return err
+	}
+	user, err := getMD5Hash(credentialId)
+	if err != nil {
+		return err
+	}
+	_, err = rmqc.DeleteUser(user)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
-//	var res interface{}
-//	err = provisioner.pgClient.QueryRow(pQuery).Scan(&res)
-//	if err != nil && err == sql.ErrNoRows {
-//		provisioner.logger.Error("postgres-exec", err, lager.Data{"query": pQuery})
-//		return nil, err
-//	}
+func (provisioner *RabbitmqProvisioner) UserExists(containerName, credentialId string) (bool, error) {
+	host, err := getLocalIP()
+	if err != nil {
+		return false, err
+	}
 
-//	return res, nil
-//}
+	admin, err := provisioner.getAdminCredentials(containerName)
+	if err != nil {
+		return false, err
+	}
 
-func (provisioner *RabbitmqProvisioner) getServerVersion() (int, error) {
-	//res, err := provisioner.executeQueryRow("SHOW server_version_num", map[string]string{})
-	//if err != nil {
-	//	return 0, err
-	//}
+	rmqc, err := rabbithole.NewClient(fmt.Sprintf("http://%s:%s", host, admin["port"]), admin["user"], admin["password"])
+	if err != nil {
+		return false, err
+	}
+	user, err := getMD5Hash(credentialId)
+	if err != nil {
+		return false, err
+	}
+	u, err := rmqc.GetUser(user)
+	if err != nil {
+		return false, err
+	}
+	if u == nil {
+		return false, err
+	}
+	return true, nil
+}
 
-	//i := res.([]uint8)
-	//b := make([]byte, len(i))
-	//for i, v := range i {
-	//	if v < 0 {
-	//		b[i] = byte(256 + int(v))
-	//	} else {
-	//		b[i] = byte(v)
-	//	}
-	//}
+func (provisioner *RabbitmqProvisioner) getContainerState(containerName string) (dockerclient.State, error) {
+	container, err := provisioner.getContainer(containerName)
+	if err != nil {
+		return dockerclient.State{}, nil
+	}
 
-	//return strconv.Atoi(string(b))
+	c, err := provisioner.inspectContainer(container.ID)
+	if err != nil {
+		return dockerclient.State{}, nil
+	}
+	return c.State, nil
+}
 
-	return 0, nil
+func (provisioner *RabbitmqProvisioner) CreateUser(containerName, credentialId string) (map[string]string, error) {
+	host, err := getLocalIP()
+	if err != nil {
+		return nil, err
+	}
+
+	admin, err := provisioner.getAdminCredentials(containerName)
+	if err != nil {
+		return nil, err
+	}
+
+	rmqc, err := rabbithole.NewClient(fmt.Sprintf("http://%s:%s", host, admin["port"]), admin["user"], admin["password"])
+	if err != nil {
+		return nil, err
+	}
+	m := make(map[string]string)
+	newUser, err := getMD5Hash(credentialId)
+	if err != nil {
+		return nil, err
+	}
+
+	userPass, err := secureRandomString(32)
+	if err != nil {
+		return nil, err
+	}
+	_, err = rmqc.PutUser(newUser, rabbithole.UserSettings{Password: userPass, Tags: "management,policymaker"})
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = rmqc.UpdatePermissionsIn("/", newUser, rabbithole.Permissions{Configure: ".*", Write: ".*", Read: ".*"})
+	if err != nil {
+		return nil, err
+	}
+	m["host"] = host
+	m["user"] = newUser
+	m["password"] = userPass
+	m["port"] = admin["port"]
+	x, err := rmqc.GetVhost("/")
+	if err != nil {
+		return nil, err
+	}
+	m["vhost"] = x.Name
+
+	return m, nil
+}
+
+func secureRandomString(bytesOfEntpry int) (string, error) {
+	rb := make([]byte, bytesOfEntpry)
+	_, err := rand.Read(rb)
+
+	if err != nil {
+		return "", err
+	}
+
+	return base64.URLEncoding.EncodeToString(rb), nil
+}
+
+func getMD5Hash(text string) (string, error) {
+	hasher := md5.New()
+	hasher.Write([]byte(text))
+	generated := hex.EncodeToString(hasher.Sum(nil))
+
+	reg := regexp.MustCompile("[^A-Za-z0-9]+")
+
+	return reg.ReplaceAllString(generated, ""), nil
+}
+
+func getLocalIP() (string, error) {
+	interfaces, err := net.Interfaces()
+	if err != nil {
+		return "", err
+	}
+	for _, inface := range interfaces {
+		addresses, err := inface.Addrs()
+		if err != nil {
+			return "", err
+		}
+		for _, address := range addresses {
+			ipnet, ok := address.(*net.IPNet)
+			if !ok {
+				continue
+			}
+			ip := ipnet.IP.To4()
+			if ip == nil || ip.IsLoopback() {
+				continue
+			}
+			return ip.String(), nil
+		}
+	}
+	return "", fmt.Errorf("Could not find IP address")
 }

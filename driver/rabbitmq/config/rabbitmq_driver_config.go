@@ -1,8 +1,7 @@
 package config
 
 type RabbitmqDriverConfig struct {
-	Vhost    string `json:"vhost"`
-	Port     string `json:"port"`
-	User     string `json:"user"`
-	Password string `json:"password"`
+	DockerEndpoint string `json:"docker_endpoint"`
+	DockerImage    string `json:"docker_image"`
+	ImageVersion   string `json:"docker_image_version"`
 }
