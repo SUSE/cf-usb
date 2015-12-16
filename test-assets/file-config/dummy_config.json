@@ -1,82 +1,78 @@
 {
-    "api_version": "2.6",
-    "logLevel": "debug",
-    "broker_api": {
+	"api_version": "2.6",
+	"logLevel": "debug",
+	"broker_api": {
 		"external_url": "http://10.11.0.25:54054",
-        "listen": ":54054",		
-        "credentials": {
-            "username": "username",
-            "password": "password"
-        }
-    },
-    "management_api": {
-        "listen": ":54053",  
-		"dev_mode": true,    
-		"uaa_secret": "cc-usb-management-secret",
-        "uaa_client": "cc_usb_management",
-        "authentication": {
-            "uaa": {
-                "adminscope": "usb.management.admin",
-                "public_key": "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDHFr+KICms+tuT1OXJwhCUmR2d\nKVy7psa8xzElSyzqx7oJyfJ1JZyOzToj9T5SfTIq396agbHJWVfYphNahvZ/7uMX\nqHxf+ZH9BL1gk9Y6kCnbM5R60gfwjyW1/dQPjOzn9N394zd2FJoFHwdq9Qs0wBug\nspULZVNRxq7veq/fzwIDAQAB\n-----END PUBLIC KEY-----"
-            }
-        },
-		"cloud_controller": {
-			"api": "http://api.bosh-lite.com",	
-			"skip_tsl_validation": true 
+		"listen": ":54054",
+		"credentials": {
+			"username": "username",
+			"password": "password"
 		}
-    },
-    "drivers": [
-        {
-            "driver_type": "dummy",
-            "id": "00000000-0000-0000-0000-000000000001",
-            "driver_instances": [
-                {
-                    "name": "dummy1",
-                    "id": "A0000000-0000-0000-0000-000000000002",
-                    "configuration": {
-                        "property_one": "one",
-                        "property_two": "two"
-                    },
-                    "dials": [
-                        {
-                            "id": "B0000000-0000-0000-0000-000000000001",
-                            "configuration": {
-                                "max_dbsize_mb": 2
-                            },
-                            "plan": {
-                                "name": "planone",
-                                "id": "53425178-F731-49E7-9E53-5CF4BE9D807A",
-                                "description": "This is the first plan",
-                                "free": true
-                            }
-                        },
-                        {
-                            "id": "B0000000-0000-0000-0000-000000000002",
-                            "configuration": {
-                                "max_dbsize_mb": 100
-                            },
-                            "plan": {
-                                "name": "plantwo",
-                                "id": "888B59E0-C2A1-4AB6-9335-2E90114A8F07",
-                                "description": "This is the secondary plan",
-                                "free": false
-                            }
-                        }
-                    ],
-                    "service": {
-                        "id": "GUID",
-                        "bindable": true,
-                        "name": "testService",
-                        "description": "test Service",
-                        "tags": [
-                            "testService"
-                        ],
-                        "metadata": {
-                            "displayName": "Echo Service Ltd."
-                        }
-                    }
-                }
-            ]
-        }
-    ]
+	},
+	"management_api": {
+		"listen": ":54053",
+		"dev_mode": true,
+		"uaa_secret": "cc-usb-management-secret",
+		"uaa_client": "cc_usb_management",
+		"authentication": {
+			"uaa": {
+				"adminscope": "usb.management.admin",
+				"public_key": "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDHFr+KICms+tuT1OXJwhCUmR2d\nKVy7psa8xzElSyzqx7oJyfJ1JZyOzToj9T5SfTIq396agbHJWVfYphNahvZ/7uMX\nqHxf+ZH9BL1gk9Y6kCnbM5R60gfwjyW1/dQPjOzn9N394zd2FJoFHwdq9Qs0wBug\nspULZVNRxq7veq/fzwIDAQAB\n-----END PUBLIC KEY-----"
+			}
+		},
+		"cloud_controller": {
+			"api": "http://api.bosh-lite.com",
+			"skip_tsl_validation": true
+		}
+	},
+	"drivers": {
+		"00000000-0000-0000-0000-000000000001": {
+			"driver_type": "dummy",
+			"driver_instances": {
+				"A0000000-0000-0000-0000-000000000002": {
+					"name": "dummy1",
+					"configuration": {
+						"property_one": "one",
+						"property_two": "two"
+					},
+					"dials": {
+						"B0000000-0000-0000-0000-000000000001": {
+							"configuration": {
+								"max_dbsize_mb": 2
+							},
+							"plan": {
+								"name": "planone",
+								"id": "53425178-F731-49E7-9E53-5CF4BE9D807A",
+								"description": "This is the first plan",
+								"free": true
+							}
+						},
+						"B0000000-0000-0000-0000-000000000002": {
+							"configuration": {
+								"max_dbsize_mb": 100
+							},
+							"plan": {
+								"name": "plantwo",
+								"id": "888B59E0-C2A1-4AB6-9335-2E90114A8F07",
+								"description": "This is the secondary plan",
+								"free": false
+							}
+						}
+					},
+					"service": {
+						"id": "GUID",
+						"bindable": true,
+						"name": "testService",
+						"description": "test Service",
+						"tags": [
+							"testService"
+						],
+						"metadata": {
+							"displayName": "Echo Service Ltd."
+						}
+					}
+				}
+			}
+		}
+	}
 }

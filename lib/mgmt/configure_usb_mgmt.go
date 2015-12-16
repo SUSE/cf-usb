@@ -57,9 +57,8 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		var driver config.Driver
 
 		driver.DriverType = params.Driver.DriverType
-		driver.ID = params.Driver.ID
 
-		err = configProvider.SetDriver(driver)
+		err = configProvider.SetDriver(params.Driver.ID, driver)
 		if err != nil {
 			return &UpdateDriverInternalServerError{Payload: err.Error()}
 		}
@@ -119,10 +118,10 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		}
 
 		for _, driver := range config.Drivers {
-			for _, instance := range driver.DriverInstances {
-				for _, dial := range instance.Dials {
+			for instanceID, instance := range driver.DriverInstances {
+				for dialID, dial := range instance.Dials {
 					if dial.Plan.ID == params.PlanID {
-						err = configProvider.DeleteDial(instance.ID, dial.ID)
+						err = configProvider.DeleteDial(instanceID, dialID)
 						if err != nil {
 							return &DeleteServicePlanInternalServerError{Payload: err.Error()}
 						}
@@ -146,12 +145,11 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		}
 
 		var instances = make([]string, 0)
-		for _, instance := range d.DriverInstances {
-			instances = append(instances, instance.ID)
+		for instanceID, _ := range d.DriverInstances {
+			instances = append(instances, instanceID)
 		}
 
 		driver := &genmodel.Driver{
-			ID:              d.ID,
 			DriverType:      d.DriverType,
 			DriverInstances: instances,
 		}
@@ -167,14 +165,14 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 			return &GetDriversInternalServerError{Payload: err.Error()}
 		}
 
-		for _, d := range config.Drivers {
+		for dId, d := range config.Drivers {
 			var instances = make([]string, 0)
-			for _, instance := range d.DriverInstances {
-				instances = append(instances, instance.ID)
+			for instanceID, _ := range d.DriverInstances {
+				instances = append(instances, instanceID)
 			}
 
 			driver := &genmodel.Driver{
-				ID:              d.ID,
+				ID:              dId,
 				DriverType:      d.DriverType,
 				DriverInstances: instances,
 			}
@@ -199,13 +197,13 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 		driver.DriverType = params.Driver.DriverType
 
-		driver.ID = uuid.NewV4().String()
+		driverID := uuid.NewV4().String()
 
-		err = configProvider.SetDriver(driver)
+		err = configProvider.SetDriver(driverID, driver)
 		if err != nil {
 			return &CreateDriverInternalServerError{Payload: err.Error()}
 		}
-		params.Driver.ID = driver.ID
+		params.Driver.ID = driverID
 		return &CreateDriverCreated{Payload: params.Driver}
 	})
 
@@ -218,15 +216,15 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 			return &GetDriverInstanceInternalServerError{Payload: err.Error()}
 		}
 
-		for _, d := range config.Drivers {
-			if params.DriverID != "" && d.ID != params.DriverID {
+		for driverID, d := range config.Drivers {
+			if params.DriverID != "" && driverID != params.DriverID {
 				continue
 			}
 
 			for _, di := range d.DriverInstances {
 				var dials = make([]string, 0)
-				for _, dial := range di.Dials {
-					dials = append(dials, dial.ID)
+				for dialID, _ := range di.Dials {
+					dials = append(dials, dialID)
 				}
 
 				var conf map[string]interface{}
@@ -238,8 +236,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 				driverInstance := &genmodel.DriverInstance{
 					Configuration: conf,
 					Dials:         dials,
-					ID:            di.ID,
-					DriverID:      d.ID,
+					DriverID:      driverID,
 					Name:          di.Name,
 					Service:       di.Service.ID,
 				}
@@ -263,12 +260,12 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 		for _, d := range config.Drivers {
 			for _, di := range d.DriverInstances {
-				for _, dial := range di.Dials {
+				for dialID, dial := range di.Dials {
 					if dial.Plan.ID == params.PlanID {
 						plan := &genmodel.Plan{
 							Name:        dial.Plan.Name,
 							ID:          dial.Plan.ID,
-							DialID:      dial.ID,
+							DialID:      dialID,
 							Description: dial.Plan.Description,
 							// TODO add free
 						}
@@ -286,7 +283,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 		var dial config.Dial
 
-		dial.ID = uuid.NewV4().String()
+		dialID := uuid.NewV4().String()
 		dialconfig, err := json.Marshal(params.Dial.Configuration)
 		if err != nil {
 			return &CreateDialInternalServerError{Payload: err.Error()}
@@ -294,12 +291,12 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		configuration := json.RawMessage(dialconfig)
 		dial.Configuration = &configuration
 
-		err = configProvider.SetDial(params.Dial.DriverInstanceID, dial)
+		err = configProvider.SetDial(params.Dial.DriverInstanceID, dialID, dial)
 		if err != nil {
 			return &CreateDialInternalServerError{Payload: err.Error()}
 		}
 
-		params.Dial.ID = dial.ID
+		params.Dial.ID = dialID
 
 		return &CreateDialCreated{Payload: params.Dial}
 	})
@@ -307,7 +304,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	api.UpdateDialHandler = UpdateDialHandlerFunc(func(params UpdateDialParams, principal interface{}) middleware.Responder {
 		var dial config.Dial
 
-		dial.ID = params.Dial.ID
+		dialID := params.Dial.ID
 		dialconfig, err := json.Marshal(params.Dial.Configuration)
 		if err != nil {
 			return &UpdateDialInternalServerError{Payload: err.Error()}
@@ -316,7 +313,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		configuration := json.RawMessage(dialconfig)
 		dial.Configuration = &configuration
 		dial.Plan = brokerapi.ServicePlan{ID: params.Dial.Plan}
-		err = configProvider.SetDial(params.Dial.DriverInstanceID, dial)
+		err = configProvider.SetDial(params.Dial.DriverInstanceID, dialID, dial)
 		if err != nil {
 			return &UpdateDialInternalServerError{Payload: err.Error()}
 		}
@@ -337,7 +334,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 		service := &genmodel.Service{
 			ID:               di.Service.ID,
-			DriverInstanceID: di.ID,
+			DriverInstanceID: params.DriverInstanceID,
 			Bindable:         di.Service.Bindable,
 			Name:             di.Service.Name,
 			Tags:             di.Service.Tags,
@@ -360,7 +357,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		}
 
 		var instance config.DriverInstance
-		instance.ID = uuid.NewV4().String()
+		instanceID := uuid.NewV4().String()
 		instanceConfig, err := json.Marshal(params.DriverInstance.Configuration)
 		if err != nil {
 			return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
@@ -371,17 +368,19 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 		err = lib.Validate(instance, existingDriver.DriverType, logger)
 		if err != nil {
+			logger.Error("error validating", err)
 			return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
 		}
 
-		err = configProvider.SetDriverInstance(params.DriverInstance.DriverID, instance)
+		err = configProvider.SetDriverInstance(params.DriverInstance.DriverID, instanceID, instance)
 		if err != nil {
+			logger.Error("error set driver instance", err)
 			return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
 		}
 
 		var defaultDial config.Dial
 
-		defaultDial.ID = uuid.NewV4().String()
+		defaultDialID := uuid.NewV4().String()
 
 		var plan brokerapi.ServicePlan
 		plan.ID = uuid.NewV4().String()
@@ -397,13 +396,14 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		defaultDialConfig := json.RawMessage([]byte("{}"))
 		defaultDial.Configuration = &defaultDialConfig
 
-		err = configProvider.SetDial(instance.ID, defaultDial)
+		err = configProvider.SetDial(instanceID, defaultDialID, defaultDial)
 		if err != nil {
+			logger.Error("error set dial", err)
 			return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
 		}
 
-		params.DriverInstance.Dials = append(params.DriverInstance.Dials, defaultDial.ID)
-		params.DriverInstance.ID = instance.ID
+		params.DriverInstance.Dials = append(params.DriverInstance.Dials, defaultDialID)
+		params.DriverInstance.ID = instanceID
 
 		var service brokerapi.Service
 		service.ID = uuid.NewV4().String()
@@ -412,14 +412,16 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		service.Tags = []string{params.DriverInstance.Name}
 		service.Bindable = true
 
-		err = configProvider.SetService(instance.ID, service)
+		err = configProvider.SetService(instanceID, service)
 		if err != nil {
+			logger.Error("error set service", err)
 			return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
 		}
 
 		params.DriverInstance.Service = service.ID
 		config, err := configProvider.LoadConfiguration()
 		if err != nil {
+			logger.Error("error load configuration", err)
 			return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
 		}
 
@@ -446,6 +448,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		logger.Info("create-instance", lager.Data{"enable-access": service.Name})
 		err = ccServiceBroker.EnableServiceAccess(service.Name)
 		if err != nil {
+			logger.Error("error service access", err)
 			return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
 		}
 
@@ -453,11 +456,12 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.UpdateDriverInstanceHandler = UpdateDriverInstanceHandlerFunc(func(params UpdateDriverInstanceParams, principal interface{}) middleware.Responder {
-		instance, err := configProvider.GetDriverInstance(params.DriverInstanceID)
+		instanceInfo, err := configProvider.GetDriverInstance(params.DriverInstanceID)
 		if err != nil {
 			return &UpdateDriverInstanceNotFound{}
 		}
 
+		instance := *instanceInfo
 		instanceConfig, err := json.Marshal(params.DriverConfig.Configuration)
 		if err != nil {
 			return &UpdateDriverInstanceInternalServerError{Payload: err.Error()}
@@ -466,7 +470,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		instance.Configuration = &configuration
 		instance.Name = params.DriverConfig.Name
 
-		err = configProvider.SetDriverInstance(params.DriverConfig.DriverID, instance)
+		err = configProvider.SetDriverInstance(params.DriverConfig.DriverID, params.DriverInstanceID, instance)
 		if err != nil {
 			return &UpdateDriverInstanceInternalServerError{Payload: err.Error()}
 		}
@@ -510,12 +514,12 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		}
 
 		for _, d := range config.Drivers {
-			for _, di := range d.DriverInstances {
-				if params.DriverInstanceID != "" && di.ID != params.DriverInstanceID {
+			for diID, di := range d.DriverInstances {
+				if params.DriverInstanceID != "" && diID != params.DriverInstanceID {
 					continue
 				}
 
-				for _, dia := range di.Dials {
+				for diaID, dia := range di.Dials {
 
 					var conf map[string]interface{}
 					err := json.Unmarshal(*dia.Configuration, &conf)
@@ -525,8 +529,8 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 					dial := &genmodel.Dial{
 						Configuration:    conf,
-						DriverInstanceID: di.ID,
-						ID:               dia.ID,
+						DriverInstanceID: diID,
+						ID:               diaID,
 						Plan:             dia.Plan.ID,
 					}
 
@@ -546,9 +550,9 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		}
 
 		for _, driver := range config.Drivers {
-			for _, instance := range driver.DriverInstances {
-				for _, dial := range instance.Dials {
-					if dial.ID == params.Plan.DialID {
+			for instanceID, instance := range driver.DriverInstances {
+				for dialID, dial := range instance.Dials {
+					if dialID == params.Plan.DialID {
 						if dial.Plan.ID == params.PlanID {
 							var plan brokerapi.ServicePlan
 							var meta brokerapi.ServicePlanMetadata
@@ -560,7 +564,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 							meta.DisplayName = params.Plan.Name
 							plan.Metadata = &meta
 							dial.Plan = plan
-							err = configProvider.SetDial(instance.ID, dial)
+							err = configProvider.SetDial(instanceID, dialID, dial)
 
 							if err != nil {
 								return &UpdateServicePlanInternalServerError{Payload: err.Error()}
@@ -585,11 +589,11 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		}
 
 		for _, driver := range config.Drivers {
-			for _, instance := range driver.DriverInstances {
+			for instanceID, instance := range driver.DriverInstances {
 				if instance.Service.ID == params.ServiceID {
 					svc := &genmodel.Service{
 						Bindable:         instance.Service.Bindable,
-						DriverInstanceID: instance.ID,
+						DriverInstanceID: instanceID,
 						ID:               instance.Service.ID,
 						Name:             instance.Service.Name,
 						Description:      instance.Service.Description,
@@ -616,10 +620,10 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		}
 
 		for _, driver := range config.Drivers {
-			for _, instance := range driver.DriverInstances {
-				for _, dial := range instance.Dials {
-					if dial.ID == params.DialID {
-						err = configProvider.DeleteDial(instance.ID, dial.ID)
+			for instanceID, instance := range driver.DriverInstances {
+				for dialID, _ := range instance.Dials {
+					if dialID == params.DialID {
+						err = configProvider.DeleteDial(instanceID, dialID)
 						if err != nil {
 							return &DeleteDialInternalServerError{Payload: err.Error()}
 						}
@@ -658,16 +662,16 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		}
 
 		for _, d := range config.Drivers {
-			for _, di := range d.DriverInstances {
-				if params.DriverInstanceID != "" && di.ID != params.DriverInstanceID {
+			for diID, di := range d.DriverInstances {
+				if params.DriverInstanceID != "" && diID != params.DriverInstanceID {
 					continue
 				}
 
-				for _, dia := range di.Dials {
+				for diaID, dia := range di.Dials {
 					plan := &genmodel.Plan{
 						Name:        dia.Plan.Name,
 						ID:          dia.Plan.ID,
-						DialID:      dia.ID,
+						DialID:      diaID,
 						Description: dia.Plan.Description,
 						// TODO add free
 					}
@@ -687,9 +691,9 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		}
 
 		for _, d := range config.Drivers {
-			for _, di := range d.DriverInstances {
-				for _, dia := range di.Dials {
-					if dia.ID == params.DialID {
+			for diID, di := range d.DriverInstances {
+				for diaID, dia := range di.Dials {
+					if diaID == params.DialID {
 
 						var conf map[string]interface{}
 						err := json.Unmarshal(*dia.Configuration, &conf)
@@ -699,8 +703,8 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 						dial := &genmodel.Dial{
 							Configuration:    conf,
-							DriverInstanceID: di.ID,
-							ID:               dia.ID,
+							DriverInstanceID: diID,
+							ID:               diaID,
 							Plan:             dia.Plan.ID,
 						}
 
@@ -768,14 +772,14 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 			return &GetDriverInstanceInternalServerError{Payload: err.Error()}
 		}
 		var dials = make([]string, 0)
-		for _, dial := range instance.Dials {
-			dials = append(dials, dial.ID)
+		for dialID, _ := range instance.Dials {
+			dials = append(dials, dialID)
 		}
 
 		driverInstance := &genmodel.DriverInstance{
 			Configuration: conf,
 			Dials:         dials,
-			ID:            instance.ID,
+			ID:            params.DriverInstanceID,
 			Name:          instance.Name,
 			Service:       instance.Service.ID,
 		}
@@ -790,10 +794,10 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		}
 
 		for _, driver := range config.Drivers {
-			for _, instance := range driver.DriverInstances {
-				for _, dial := range instance.Dials {
-					if dial.ID == params.Plan.DialID {
-						err = configProvider.DeleteDial(instance.ID, dial.ID)
+			for instanceID, instance := range driver.DriverInstances {
+				for dialID, dial := range instance.Dials {
+					if dialID == params.Plan.DialID {
+						err = configProvider.DeleteDial(instanceID, dialID)
 						if err != nil {
 							return &CreateServicePlanInternalServerError{Payload: err.Error()}
 						}
@@ -809,7 +813,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 						plan.Metadata = &meta
 
 						dial.Plan = plan
-						err = configProvider.SetDial(instance.ID, dial)
+						err = configProvider.SetDial(instanceID, dialID, dial)
 						if err != nil {
 							return &CreateServicePlanInternalServerError{Payload: err.Error()}
 						}

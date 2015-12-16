@@ -1,158 +1,152 @@
 {
-    "api_version": "2.6",
-    "logLevel": "debug",
-    "broker_api": {
+	"api_version": "2.6",
+	"logLevel": "debug",
+	"broker_api": {
 		"external_url": "http://1.2.3.4:54054",
-        "listen": ":54054",		
-        "credentials": {
-            "username": "username",
-            "password": "password"
-        }
-    },
-    "management_api": {
-        "listen": ":54053",
-		"dev_mode": false,
-        "uaa_secret": "myuaasecret",
-        "uaa_client": "myuaaclient",
-        "authentication": {
-            "uaa": {
-                "adminscope": "usb.management.admin",
-                "public_key": "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDHFr+KICms+tuT1OXJwhCUmR2d\nKVy7psa8xzElSyzqx7oJyfJ1JZyOzToj9T5SfTIq396agbHJWVfYphNahvZ/7uMX\nqHxf+ZH9BL1gk9Y6kCnbM5R60gfwjyW1/dQPjOzn9N394zd2FJoFHwdq9Qs0wBug\nspULZVNRxq7veq/fzwIDAQAB\n-----END PUBLIC KEY-----"
-            }
-        },
-		"cloud_controller": {
-			"api": "http://api.bosh-lite.com",	
-			"skip_tsl_validation": true 
+		"listen": ":54054",
+		"credentials": {
+			"username": "username",
+			"password": "password"
 		}
-    },
-    "drivers": [
-        {
-            "driver_type": "dummy",
-            "id": "00000000-0000-0000-0000-000000000001",
-            "driver_instances": [
-                {
-                    "name": "dummy1",
-                    "id": "A0000000-0000-0000-0000-000000000002",
-                    "configuration": {
-                        "property_one": "one",
-                        "property_two": "two"
-                    },
-                    "dials": [
-                        {
-                            "id": "B0000000-0000-0000-0000-000000000001",
-                            "configuration": {
-                                "max_dbsize_mb": 2
-                            },
-                            "plan": {
-                                "name": "free",
-                                "id": "53425178-F731-49E7-9E53-5CF4BE9D807A",
-                                "description": "This is the first plan",
-                                "free": true
-                            }
-                        },
-                        {
-                            "id": "B0000000-0000-0000-0000-000000000002",
-                            "configuration": {
-                                "max_dbsize_mb": 100
-                            },
-                            "plan": {
-                                "name": "secondary",
-                                "id": "888B59E0-C2A1-4AB6-9335-2E90114A8F07",
-                                "description": "This is the secondary plan",
-                                "free": false
-                            }
-                        }
-                    ],
-                    "service": {
-                        "id": "83E94C97-C755-46A5-8653-461517EB442A",
-                        "bindable": true,
-                        "name": "echo",
-                        "description": "echo Service",
-                        "tags": [
-                            "echo"
-                        ],
-                        "metadata": {
-                            "providerDisplayName": "Echo Service Ltd."
-                        }
-                    }
-                },
-                {
-                    "name": "dummy2",
-                    "configuration": {
-                        "property_one": "onenew",
-                        "property_two": "twonew"
-                    },
-                    "dials": [
-                        {
-                            "id": "B0000000-0000-0000-0000-000000000001",
-                            "plan": {
-                                "name": "plandummy2",
-                                "id": "888B59E0-C2A1-4AB6-9335-2E90114A8F01",
-                                "description": "This is the secondary plan",
-                                "free": false
-                            }
-                        }
-                    ],
-                    "service": {
-                        "id": "83E94C97-C755-46A5-8653-461517EB442B",
-                        "bindable": true,
-                        "name": "echo",
-                        "description": "echo Service",
-                        "tags": [
-                            "echo"
-                        ],
-                        "metadata": {
-                            "providerDisplayName": "Echo Service Ltd."
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "driver_type": "mssql",
-            "driver_instances": [
-                {
-                    "driver_id": "00000000-0000-0000-0000-000000000002",
-                    "name": "local-mssql",
-                    "id": "A0000000-0000-0000-0000-000000000003",
-                    "configuration": {
-                        "brokerGoSqlDriver": "mssql",
-                        "brokerMssqlConnection": {
-                            "server": "127.0.0.1",
-                            "port": "38017",
-                            "database": "master",
-                            "user id": "sa",
-                            "password": "password1234!"
-                        },
-                        "servedMssqlBindingHostname": "192.168.1.10",
-                        "servedMssqlBindingPort": 38017
-                    },
-                    "dials": [
-                        {
-                            "id": "C0000000-0000-0000-0000-000000000001",
-                            "plan": {
-                                "name": "planmssql",
-                                "id": "888B59E0-C2A2-4AB6-9335-2E90114A8F01",
-                                "description": "This is the secondary plan",
-                                "free": false
-                            }
-                        }
-                    ],
-                    "service": {
-                        "id": "83E94C97-C755-46A5-8653-461517EB442C",
-                        "bindable": true,
-                        "name": "mssql",
-                        "description": "MSSQL Service",
-                        "tags": [
-                            "mssql",
-                            "mssql"
-                        ],
-                        "metadata": {
-                            "providerDisplayName": "MSSQL Service Ltd."
-                        }
-                    }
-                }
-            ]
-        }
-    ]
+	},
+	"management_api": {
+		"listen": ":54053",
+		"dev_mode": false,
+		"uaa_secret": "myuaasecret",
+		"uaa_client": "myuaaclient",
+		"authentication": {
+			"uaa": {
+				"adminscope": "usb.management.admin",
+		           "public_key": "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDHFr+KICms+tuT1OXJwhCUmR2d\nKVy7psa8xzElSyzqx7oJyfJ1JZyOzToj9T5SfTIq396agbHJWVfYphNahvZ/7uMX\nqHxf+ZH9BL1gk9Y6kCnbM5R60gfwjyW1/dQPjOzn9N394zd2FJoFHwdq9Qs0wBug\nspULZVNRxq7veq/fzwIDAQAB\n-----END PUBLIC KEY-----"
+			}
+		},
+		"cloud_controller": {
+			"api": "http://api.bosh-lite.com",
+			"skip_tsl_validation": true
+		}
+	},
+	"drivers": {
+		"00000000-0000-0000-0000-000000000001": {
+			"driver_type": "dummy",
+			"driver_instances": {
+				"A0000000-0000-0000-0000-000000000002": {
+					"name": "dummy1",
+					"configuration": {
+						"property_one": "one",
+						"property_two": "two"
+					},
+					"dials": {
+						"B0000000-0000-0000-0000-000000000001": {
+							"configuration": {
+								"max_dbsize_mb": 2
+							},
+							"plan": {
+								"name": "free",
+								"id": "53425178-F731-49E7-9E53-5CF4BE9D807A",
+								"description": "This is the first plan",
+								"free": true
+							}
+						},
+						"B0000000-0000-0000-0000-000000000002": {
+							"configuration": {
+								"max_dbsize_mb": 100
+							},
+							"plan": {
+								"name": "secondary",
+								"id": "888B59E0-C2A1-4AB6-9335-2E90114A8F07",
+								"description": "This is the secondary plan",
+								"free": false
+							}
+						}
+					},
+					"service": {
+						"id": "83E94C97-C755-46A5-8653-461517EB442A",
+						"bindable": true,
+						"name": "echo",
+						"description": "echo Service",
+						"tags": [
+							"echo"
+						],
+						"metadata": {
+							"providerDisplayName": "Echo Service Ltd."
+						}
+					}
+				},
+				"A0000000-0000-0000-0000-000000000003": {
+					"name": "dummy2",
+					"configuration": {
+						"property_one": "onenew",
+						"property_two": "twonew"
+					},
+					"dials": {
+						"B0000000-0000-0000-0000-000000000001": {
+							"plan": {
+								"name": "plandummy2",
+								"id": "888B59E0-C2A1-4AB6-9335-2E90114A8F01",
+								"description": "This is the secondary plan",
+								"free": false
+							}
+						}
+					},
+					"service": {
+						"id": "83E94C97-C755-46A5-8653-461517EB442B",
+						"bindable": true,
+						"name": "echo",
+						"description": "echo Service",
+						"tags": [
+							"echo"
+						],
+						"metadata": {
+							"providerDisplayName": "Echo Service Ltd."
+						}
+					}
+				}
+			}
+		},
+		"00000000-0000-0000-0000-000000000002": {
+			"driver_type": "mssql",
+			"driver_instances": {
+				"A0000000-0000-0000-0000-000000000003": {
+					"driver_id": "00000000-0000-0000-0000-000000000002",
+					"name": "local-mssql",
+
+					"configuration": {
+						"brokerGoSqlDriver": "mssql",
+						"brokerMssqlConnection": {
+							"server": "127.0.0.1",
+							"port": "38017",
+							"database": "master",
+							"user id": "sa",
+							"password": "password1234!"
+						},
+						"servedMssqlBindingHostname": "192.168.1.10",
+						"servedMssqlBindingPort": 38017
+					},
+					"dials": {
+						"C0000000-0000-0000-0000-000000000001": {
+							"plan": {
+								"name": "planmssql",
+								"id": "888B59E0-C2A2-4AB6-9335-2E90114A8F01",
+								"description": "This is the secondary plan",
+								"free": false
+							}
+						}
+					},
+					"service": {
+						"id": "83E94C97-C755-46A5-8653-461517EB442C",
+						"bindable": true,
+						"name": "mssql",
+						"description": "MSSQL Service",
+						"tags": [
+							"mssql",
+							"mssql"
+						],
+						"metadata": {
+							"providerDisplayName": "MSSQL Service Ltd."
+						}
+					}
+				}
+			}
+		}
+	}
 }

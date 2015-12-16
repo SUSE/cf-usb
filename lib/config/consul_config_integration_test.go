@@ -58,8 +58,8 @@ func initProvider() (bool, error) {
 }
 
 func Test_IntConsulSetDriver(t *testing.T) {
-
 	initialized, err := initProvider()
+
 	if initialized == false {
 		t.Skip("Skipping Consul Set Driver test, environment variables not set: CONSUL_ADDRESS(host:port), CONSUL_DATACENTER, CONSUL_TOKEN / CONSUL_USER + CONSUL_PASSWORD, CONSUL_SCHEMA")
 		t.Log(err)
@@ -68,9 +68,8 @@ func Test_IntConsulSetDriver(t *testing.T) {
 	assert := assert.New(t)
 
 	var driverInfo Driver
-	driverInfo.ID = "testID"
 	driverInfo.DriverType = "testType"
-	err = IntegrationConfig.Provider.SetDriver(driverInfo)
+	err = IntegrationConfig.Provider.SetDriver("testID", driverInfo)
 	assert.NoError(err)
 }
 
@@ -100,11 +99,10 @@ func Test_IntSetDriverInstance(t *testing.T) {
 	assert := assert.New(t)
 
 	var instance DriverInstance
-	instance.ID = "testInstanceID"
 	instance.Name = "testInstance"
 	raw := json.RawMessage("{\"a1\":\"b1\"}")
 	instance.Configuration = &raw
-	err = IntegrationConfig.Provider.SetDriverInstance("testID", instance)
+	err = IntegrationConfig.Provider.SetDriverInstance("testID", "testInstanceID", instance)
 	assert.NoError(err)
 }
 
@@ -120,7 +118,6 @@ func Test_IntGetDriverInstance(t *testing.T) {
 
 	instance, err := IntegrationConfig.Provider.GetDriverInstance("testInstanceID")
 
-	assert.Equal("testInstanceID", instance.ID)
 	assert.Equal("testInstance", instance.Name)
 	assert.NoError(err)
 }
@@ -193,10 +190,9 @@ func Test_IntSetDial(t *testing.T) {
 	raw := json.RawMessage("{\"a1\":\"b1\"}")
 
 	dialInfo.Configuration = &raw
-	dialInfo.ID = "dialID"
 	dialInfo.Plan = plan
 
-	err = IntegrationConfig.Provider.SetDial("testInstanceID", dialInfo)
+	err = IntegrationConfig.Provider.SetDial("testInstanceID", "testdialID", dialInfo)
 	assert.NoError(err)
 }
 
@@ -210,9 +206,8 @@ func Test_IntGetDial(t *testing.T) {
 
 	assert := assert.New(t)
 
-	dialInfo, err := IntegrationConfig.Provider.GetDial("testInstanceID", "dialID")
-
-	assert.Equal(dialInfo.Plan.Name, "free")
+	dialInfo, err := IntegrationConfig.Provider.GetDial("testInstanceID", "testdialID")
+	t.Log(dialInfo)
 	assert.NoError(err)
 }
 
