@@ -17,7 +17,7 @@ type UsbBroker struct {
 }
 
 func NewUsbBroker(configProvider config.ConfigProvider, logger lager.Logger) *UsbBroker {
-	return &UsbBroker{configProvider: configProvider, logger: logger}
+	return &UsbBroker{configProvider: configProvider, logger: logger.Session("usb-broker")}
 }
 
 func (broker *UsbBroker) Services() brokerapi.CatalogResponse {

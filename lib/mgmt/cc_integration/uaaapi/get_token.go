@@ -33,12 +33,13 @@ func NewTokenGenerator(tokenUrl, clientId, clientSecret string, client httpclien
 		clientId:     clientId,
 		clientSecret: clientSecret,
 		client:       client,
-		logger:       logger,
+		logger:       logger.Session("uaa-token-generator"),
 	}
 }
 
 func (generator *Generator) GetToken() (string, error) {
-	generator.logger.Info("get-token", lager.Data{"starting": "Called get token"})
+	log := generator.logger.Session("fetch-token", lager.Data{"uaa-api": generator.tokenUrl})
+	log.Debug("starting")
 
 	valuesBody := url.Values{}
 	valuesBody.Add("grant_type", "client_credentials")
@@ -52,12 +53,15 @@ func (generator *Generator) GetToken() (string, error) {
 	credentials := httpclient.BasicAuth{Username: generator.clientId, Password: generator.clientSecret}
 	request := httpclient.Request{Verb: "POST", Endpoint: generator.tokenUrl, ApiUrl: tokenURL, Body: strings.NewReader(requestBody), Headers: headers, Credentials: &credentials, StatusCode: 200}
 
-	response, err := generator.client.Request(request)
+	log.Info("starting-uaa-request", lager.Data{"path": tokenURL, "verb": "GET"})
 
-	generator.logger.Info("get-token", lager.Data{"response": string(response)})
+	response, err := generator.client.Request(request)
 	if err != nil {
 		return "", err
 	}
+
+	log.Debug("uaa-reponse", lager.Data{"response": string(response)})
+	log.Info("finished-uaa-request")
 
 	token := &Token{}
 	err = json.Unmarshal(response, token)

@@ -74,6 +74,7 @@ func Test_Provision(t *testing.T) {
 
 	req.InstanceID = "testId"
 	req.Config = getEmptyConfig()
+	req.Dials = getEmptyConfig()
 
 	var response usbDriver.Instance
 	err := rabbitDriver.ProvisionInstance(req, &response)
@@ -99,19 +100,19 @@ func Test_GetInstance(t *testing.T) {
 
 func Test_GetDialsSchema(t *testing.T) {
 	assert := assert.New(t)
-	driver := RabbitmqDriver{}
+	_, rabbitDriver := getMockProvisioner()
 
 	var response string
-	err := driver.GetDailsSchema("", &response)
+	err := rabbitDriver.GetDailsSchema("", &response)
 	assert.NoError(err)
 }
 
 func Test_GetConfigSchema(t *testing.T) {
 	assert := assert.New(t)
-	driver := RabbitmqDriver{}
+	_, rabbitDriver := getMockProvisioner()
 
 	var response string
-	err := driver.GetConfigSchema("", &response)
+	err := rabbitDriver.GetConfigSchema("", &response)
 	assert.NoError(err)
 }
 

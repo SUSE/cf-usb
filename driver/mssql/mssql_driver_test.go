@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func getEnptyConfig() *json.RawMessage {
+func getEmptyConfig() *json.RawMessage {
 	rawMessage := json.RawMessage([]byte("{}"))
 	return &rawMessage
 }
@@ -47,7 +47,8 @@ func Test_Provision(t *testing.T) {
 	var req usbDriver.ProvisionInstanceRequest
 
 	req.InstanceID = "testId"
-	req.Config = getEnptyConfig()
+	req.Config = getEmptyConfig()
+	req.Dials = getEmptyConfig()
 
 	var response usbDriver.Instance
 	err := mssqlDriver.ProvisionInstance(req, &response)
@@ -67,6 +68,7 @@ func Test_ProvisionWithPrefix(t *testing.T) {
 	req.Config = getConfigMessage(config.MssqlDriverConfig{
 		DbIdentifierPrefix: "cf-",
 	})
+	req.Dials = getEmptyConfig()
 
 	var response usbDriver.Instance
 	err := mssqlDriver.ProvisionInstance(req, &response)
@@ -81,7 +83,7 @@ func Test_GetInstance(t *testing.T) {
 	mockProv.On("IsDatabaseCreated", mock.Anything).Return(true, nil)
 	var req usbDriver.GetInstanceRequest
 	req.InstanceID = "testId"
-	req.Config = getEnptyConfig()
+	req.Config = getEmptyConfig()
 	var response usbDriver.Instance
 
 	err := mssqlDriver.GetInstance(req, &response)
@@ -92,19 +94,19 @@ func Test_GetInstance(t *testing.T) {
 
 func Test_GetDialsSchema(t *testing.T) {
 	assert := assert.New(t)
-	driver := MssqlDriver{}
+	_, mssqlDriver := getMockProvisioner()
 
 	var response string
-	err := driver.GetDailsSchema("", &response)
+	err := mssqlDriver.GetDailsSchema("", &response)
 	assert.NoError(err)
 }
 
 func Test_GetConfigSchema(t *testing.T) {
 	assert := assert.New(t)
-	driver := MssqlDriver{}
+	_, mssqlDriver := getMockProvisioner()
 
 	var response string
-	err := driver.GetConfigSchema("", &response)
+	err := mssqlDriver.GetConfigSchema("", &response)
 	assert.NoError(err)
 }
 
@@ -114,7 +116,7 @@ func Test_GetCredentials(t *testing.T) {
 	mockProv.On("IsUserCreated", "testId", "user").Return(true, nil)
 
 	var req usbDriver.GetCredentialsRequest
-	req.Config = getEnptyConfig()
+	req.Config = getEmptyConfig()
 	req.CredentialsID = "user"
 	req.InstanceID = "testId"
 
@@ -134,7 +136,7 @@ func Test_GenerateCredentials(t *testing.T) {
 	var req usbDriver.GenerateCredentialsRequest
 	req.CredentialsID = "user"
 	req.InstanceID = "testId"
-	req.Config = getEnptyConfig()
+	req.Config = getEmptyConfig()
 	var response interface{}
 
 	err := mssqlDriver.GenerateCredentials(req, &response)
@@ -150,7 +152,7 @@ func Test_RevokeCredentials(t *testing.T) {
 	var req usbDriver.RevokeCredentialsRequest
 	req.CredentialsID = "user"
 	req.InstanceID = "testId"
-	req.Config = getEnptyConfig()
+	req.Config = getEmptyConfig()
 	var response usbDriver.Credentials
 
 	err := mssqlDriver.RevokeCredentials(req, &response)
@@ -164,7 +166,7 @@ func Test_Deprovision(t *testing.T) {
 	mockProv.On("DeleteDatabase", "testId").Return(nil)
 
 	var req usbDriver.DeprovisionInstanceRequest
-	req.Config = getEnptyConfig()
+	req.Config = getEmptyConfig()
 	req.InstanceID = "testId"
 
 	var response usbDriver.Instance

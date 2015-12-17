@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func getEnptyConfig() *json.RawMessage {
+func getEmptyConfig() *json.RawMessage {
 	rawMessage := json.RawMessage([]byte("{}"))
 	emptyConfig := rawMessage
 	return &emptyConfig
@@ -42,7 +42,8 @@ func Test_Provision(t *testing.T) {
 	var req usbDriver.ProvisionInstanceRequest
 
 	req.InstanceID = "testId"
-	req.Config = getEnptyConfig()
+	req.Config = getEmptyConfig()
+	req.Dials = getEmptyConfig()
 
 	var response usbDriver.Instance
 	err := mysqlDriver.ProvisionInstance(req, &response)
@@ -57,7 +58,7 @@ func Test_GetInstance(t *testing.T) {
 	mockProv.On("IsDatabaseCreated", mock.Anything).Return(true, nil)
 	var req usbDriver.GetInstanceRequest
 	req.InstanceID = "testId"
-	req.Config = getEnptyConfig()
+	req.Config = getEmptyConfig()
 	var response usbDriver.Instance
 
 	err := mysqlDriver.GetInstance(req, &response)
@@ -68,19 +69,19 @@ func Test_GetInstance(t *testing.T) {
 
 func Test_GetDialsSchema(t *testing.T) {
 	assert := assert.New(t)
-	driver := MysqlDriver{}
+	_, mysqlDriver := getMockProvisioner()
 
 	var response string
-	err := driver.GetDailsSchema("", &response)
+	err := mysqlDriver.GetDailsSchema("", &response)
 	assert.NoError(err)
 }
 
 func Test_GetConfigSchema(t *testing.T) {
 	assert := assert.New(t)
-	driver := MysqlDriver{}
+	_, mysqlDriver := getMockProvisioner()
 
 	var response string
-	err := driver.GetConfigSchema("", &response)
+	err := mysqlDriver.GetConfigSchema("", &response)
 	assert.NoError(err)
 }
 
@@ -90,7 +91,7 @@ func Test_GetCredentials(t *testing.T) {
 	mockProv.On("IsUserCreated", "ee11cbb19052e40b").Return(true, nil)
 
 	var req usbDriver.GetCredentialsRequest
-	req.Config = getEnptyConfig()
+	req.Config = getEmptyConfig()
 	req.CredentialsID = "user"
 	req.InstanceID = "testId"
 
@@ -110,7 +111,7 @@ func Test_GenerateCredentials(t *testing.T) {
 	var req usbDriver.GenerateCredentialsRequest
 	req.CredentialsID = "user"
 	req.InstanceID = "testId"
-	req.Config = getEnptyConfig()
+	req.Config = getEmptyConfig()
 	var response interface{}
 
 	err := mysqlDriver.GenerateCredentials(req, &response)
@@ -126,7 +127,7 @@ func Test_RevokeCredentials(t *testing.T) {
 	var req usbDriver.RevokeCredentialsRequest
 	req.CredentialsID = "user"
 	req.InstanceID = "testId"
-	req.Config = getEnptyConfig()
+	req.Config = getEmptyConfig()
 	var response usbDriver.Credentials
 
 	err := mysqlDriver.RevokeCredentials(req, &response)
@@ -140,7 +141,7 @@ func Test_Deprovision(t *testing.T) {
 	mockProv.On("DeleteDatabase", "testId").Return(nil)
 
 	var req usbDriver.DeprovisionInstanceRequest
-	req.Config = getEnptyConfig()
+	req.Config = getEmptyConfig()
 	req.InstanceID = "testId"
 
 	var response usbDriver.Instance

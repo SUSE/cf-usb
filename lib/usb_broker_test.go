@@ -74,7 +74,7 @@ func TestProvisionService(t *testing.T) {
 
 	_, _, err = broker.Provision("newInstanceID", brokerapi.ProvisionDetails{
 		ServiceID: "GUID",
-		PlanID: "53425178-F731-49E7-9E53-5CF4BE9D807A",
+		PlanID:    "53425178-F731-49E7-9E53-5CF4BE9D807A",
 	}, false)
 	assert.Nil(err)
 }
