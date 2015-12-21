@@ -11,6 +11,11 @@
 			"Rev": "d69616f51cdfcd7514d6a380847a152dfc2a749d"
 		},
 		{
+			"ImportPath": "github.com/apcera/nats",
+			"Comment": "v1.1.6",
+			"Rev": "355b5b97e0842dc94f1106729aa88e33e06317ca"
+		},
+		{
 			"ImportPath": "github.com/asaskevich/govalidator",
 			"Comment": "v2-31-gc219af1",
 			"Rev": "c219af1eafcdacdb7fbb6fa33b926cadd541ca19"
@@ -18,6 +23,14 @@
 		{
 			"ImportPath": "github.com/cloudfoundry-incubator/routing-api/authentication",
 			"Rev": "857e95689af0290973c84a892e7bc135be44097f"
+		},
+		{
+			"ImportPath": "github.com/cloudfoundry/gibson",
+			"Rev": "6f731c969fa500ffb1e4ed42c094647fa1aa0de6"
+		},
+		{
+			"ImportPath": "github.com/cloudfoundry/yagnats",
+			"Rev": "e417c5169bf58c23f56125b0f0344b50d84e0887"
 		},
 		{
 			"ImportPath": "github.com/codegangsta/cli",
@@ -119,6 +132,15 @@
 		{
 			"ImportPath": "github.com/natefinch/pie",
 			"Rev": "83bfd1821ee0ba96a47d98cbed424313fb60f57a"
+		},
+		{
+			"ImportPath": "github.com/nats-io/nats/encoders/builtin",
+			"Comment": "v1.1.6",
+			"Rev": "355b5b97e0842dc94f1106729aa88e33e06317ca"
+		},
+		{
+			"ImportPath": "github.com/nu7hatch/gouuid",
+			"Rev": "179d4d0c4d8d407a32af483c2354df1d2c91e6c3"
 		},
 		{
 			"ImportPath": "github.com/onsi/ginkgo",
