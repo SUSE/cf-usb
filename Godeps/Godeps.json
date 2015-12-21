@@ -29,6 +29,10 @@
 			"Rev": "6f731c969fa500ffb1e4ed42c094647fa1aa0de6"
 		},
 		{
+			"ImportPath": "github.com/cloudfoundry/gunk/natsrunner",
+			"Rev": "b84f305af4938293a45d4551be00fc4e70a2ce95"
+		},
+		{
 			"ImportPath": "github.com/cloudfoundry/yagnats",
 			"Rev": "e417c5169bf58c23f56125b0f0344b50d84e0887"
 		},
