@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/hpcloud/cf-usb/lib/config"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -12,20 +11,80 @@ import (
 	"runtime"
 	"testing"
 
+	. "github.com/hpcloud/cf-usb/integration_test/test_utils"
+	"github.com/hpcloud/cf-usb/lib/config"
+
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
 	"github.com/pivotal-golang/localip"
 )
 
-func getBinPath() string {
-	architecture := fmt.Sprintf("%s-%s", runtime.GOOS, runtime.GOARCH)
+var fileProviderConfig = `
+{
+    "api_version": "2.6",
+    "logLevel": "debug",
+    "broker_api": {
+		"external_url": "http://127.0.0.1:54054",
+        "listen": ":54054",		
+        "credentials": {
+            "username": "username",
+            "password": "password"
+        }
+    },
+    "drivers": {
+          "f533244b-e270-4ee0-aa9e-4733d52f097a":{
+            "driver_type": "dummy",
+            "driver_instances": {
+                "dd4fcc63-b28f-4795-b398-36d9fc75efe7":{
+                    "name": "dummy1",
+                    "configuration": {
+                        "property_one": "one",
+                        "property_two": "two"
+                    },
+                    "dials": {
+                          "881d876b-c933-4d9e-87c1-6d4b238abc0b": {
+                            "configuration": {
+                                "max_dbsize_mb": 2
+                            },
+                            "plan": {
+                                "name": "free",
+                                "id": "1a7cc5ee-4a46-4af4-9af5-b6f2b6050ee9",
+                                "description": "free plan",
+                                "free": true
+                            }
+                        }
+                    },
+                    "service": {
+                        "id": "de8464a4-1d05-4f25-8a74-9790448d13cd",
+                        "bindable": true,
+                        "name": "dummy-test",
+                        "description": "Dummy test service",
+                        "tags": [
+                            "dummy"
+                        ],
+                        "metadata": {
+                            "providerDisplayName": "Dummy"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+`
 
+func getBinPath() string {
 	dir, err := os.Getwd()
 	Expect(err).NotTo(HaveOccurred())
 
-	os.Setenv("USB_DRIVER_PATH", path.Join(dir, "../../build", architecture))
+	return path.Join(dir, "../../build", fmt.Sprintf("%s-%s", runtime.GOOS, runtime.GOARCH), "usb")
+}
 
-	return path.Join(dir, "../../build", architecture, "usb")
+func setDriverPathEnv() {
+	dir, err := os.Getwd()
+	Expect(err).NotTo(HaveOccurred())
+
+	os.Setenv("USB_DRIVER_PATH", path.Join(dir, "../../build", fmt.Sprintf("%s-%s", runtime.GOOS, runtime.GOARCH)))
 }
 
 func initializeRunner() (UsbRunner, *config.Config) {
@@ -35,10 +94,14 @@ func initializeRunner() (UsbRunner, *config.Config) {
 	tempDir, err := ioutil.TempDir("", "cf-usb-test")
 	Expect(err).NotTo(HaveOccurred())
 
+	setDriverPathEnv()
+
 	usbRunner := UsbRunner{
-		UsbBrokerPort: freePort,
-		Path:          getBinPath(),
-		TempDir:       tempDir,
+		UsbBrokerPort:      freePort,
+		Path:               getBinPath(),
+		TempDir:            tempDir,
+		JsonConfigDefaults: fileProviderConfig,
+		Configurator:       func(conf *config.Config) {},
 	}
 
 	usbRunner.Start()
