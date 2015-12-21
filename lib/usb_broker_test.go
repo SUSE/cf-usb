@@ -9,9 +9,11 @@ import (
 
 	"github.com/hpcloud/cf-usb/lib/config"
 	"github.com/pivotal-cf/brokerapi"
-	"github.com/pivotal-golang/lager"
+	"github.com/pivotal-golang/lager/lagertest"
 	"github.com/stretchr/testify/assert"
 )
+
+var logger *lagertest.TestLogger = lagertest.NewTestLogger("usb-broker-test")
 
 func setupEnv() (*UsbBroker, error) {
 	workDir, err := os.Getwd()
@@ -21,15 +23,11 @@ func setupEnv() (*UsbBroker, error) {
 	buildDir := filepath.Join(workDir, "../build", fmt.Sprintf("%s-%s", runtime.GOOS, runtime.GOARCH))
 	os.Setenv("USB_DRIVER_PATH", buildDir)
 
-	var logger = lager.NewLogger("test")
-
-	logger.RegisterSink(lager.NewWriterSink(os.Stderr, lager.DEBUG))
-
 	configFile := filepath.Join(workDir, "../test-assets/file-config/dummy_config.json")
 
 	configProvider := config.NewFileConfig(configFile)
 
-	broker := NewUsbBroker(configProvider, lager.NewLogger("brokerTests"))
+	broker := NewUsbBroker(configProvider, logger)
 	return broker, nil
 }
 

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"net/rpc/jsonrpc"
 	"os"
 
@@ -12,8 +11,6 @@ import (
 )
 
 func main() {
-	log.SetPrefix("[redis log] ")
-
 	var logger = lager.NewLogger("redis-driver")
 
 	logger.RegisterSink(lager.NewWriterSink(os.Stderr, lager.DEBUG))
@@ -21,7 +18,7 @@ func main() {
 	provisioner := redisprovisioner.NewRedisProvisioner(logger)
 	p := pie.NewProvider()
 	if err := p.RegisterName("redis", redis.NewRedisDriver(logger, provisioner)); err != nil {
-		log.Fatalf("failed to register Plugin: %s", err)
+		logger.Fatal("register-plugin", err)
 	}
 
 	p.ServeCodec(jsonrpc.NewServerCodec)

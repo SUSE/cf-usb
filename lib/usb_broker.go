@@ -21,35 +21,39 @@ func NewUsbBroker(configProvider config.ConfigProvider, logger lager.Logger) *Us
 }
 
 func (broker *UsbBroker) Services() brokerapi.CatalogResponse {
+	broker.logger.Info("get-catalog-request", lager.Data{})
+
 	var catalog []brokerapi.Service
+
 	config, err := broker.configProvider.LoadConfiguration()
 	if err != nil {
-		broker.logger.Fatal("retrive-configuration", err)
+		broker.logger.Fatal("retrive-configuration-failed", err)
 	}
-
-	broker.logger.Info("get-catalog", lager.Data{})
 
 	for _, driver := range config.Drivers {
 		for _, instance := range driver.DriverInstances {
 			service := instance.Service
+
 			for _, dial := range instance.Dials {
 				service.Plans = append(service.Plans, dial.Plan)
 			}
-			catalog = append(catalog, service)
 
+			catalog = append(catalog, service)
 		}
 	}
+
+	broker.logger.Info("get-catalog-request-completed", lager.Data{"services-found": len(catalog)})
+
 	return brokerapi.CatalogResponse{Services: catalog}
 }
 
 func (broker *UsbBroker) Provision(instanceID string, serviceDetails brokerapi.ProvisionDetails, acceptsIncomplete bool) (brokerapi.ProvisioningResponse, bool, error) {
-	broker.logger.Info("provision", lager.Data{"instanceID": instanceID})
+	broker.logger.Info("provision-instance-request", lager.Data{"instance-id": instanceID, "service-id": serviceDetails.ServiceID, "accept-incomplete": acceptsIncomplete})
 
 	driver, err := broker.getDriver(serviceDetails.ServiceID)
 	if err != nil {
 		return brokerapi.ProvisioningResponse{}, false, err
 	}
-
 	if driver == nil {
 		return brokerapi.ProvisioningResponse{}, false, errors.New(fmt.Sprintf("Cannot find driver for %s", serviceDetails.ServiceID))
 	}
@@ -66,7 +70,8 @@ func (broker *UsbBroker) Provision(instanceID string, serviceDetails brokerapi.P
 	if err != nil {
 		return brokerapi.ProvisioningResponse{}, false, err
 	}
-	broker.logger.Info("provision", lager.Data{"provisioned": instance.InstanceID})
+
+	broker.logger.Info("provision-instance-request-completed", lager.Data{"instance-id": instance.InstanceID})
 
 	if instance.Status == status.Created {
 		return brokerapi.ProvisioningResponse{}, false, nil
@@ -89,6 +94,8 @@ func (broker *UsbBroker) Update(instanceID string, details brokerapi.UpdateDetai
 }
 
 func (broker *UsbBroker) Deprovision(instanceID string, deprovisionDetails brokerapi.DeprovisionDetails, acceptsIncomplete bool) (bool, error) {
+	broker.logger.Info("deprovision-instance-request", lager.Data{"instance-id": instanceID, "service-id": deprovisionDetails.ServiceID, "accept-incomplete": acceptsIncomplete})
+
 	driver, err := broker.getDriver(deprovisionDetails.ServiceID)
 	if err != nil {
 		return false, err
@@ -96,6 +103,7 @@ func (broker *UsbBroker) Deprovision(instanceID string, deprovisionDetails broke
 	if driver == nil {
 		return false, errors.New(fmt.Sprintf("Cannot find driver for %s", deprovisionDetails.ServiceID))
 	}
+
 	instance, err := driver.GetInstance(instanceID)
 	if err != nil {
 		return false, err
@@ -108,7 +116,8 @@ func (broker *UsbBroker) Deprovision(instanceID string, deprovisionDetails broke
 	if err != nil {
 		return false, err
 	}
-	broker.logger.Info("deprovision", lager.Data{"driver-response": instance.InstanceID})
+
+	broker.logger.Info("deprovision-instance-request-completed", lager.Data{"instance-id": instance.InstanceID})
 
 	if instance.Status == status.Deleted {
 		return false, nil
@@ -125,6 +134,8 @@ func (broker *UsbBroker) Deprovision(instanceID string, deprovisionDetails broke
 }
 
 func (broker *UsbBroker) Bind(instanceID, bindingID string, details brokerapi.BindDetails) (brokerapi.BindingResponse, error) {
+	broker.logger.Info("generate-credentials-request", lager.Data{"instance-id": instanceID, "binding-id": bindingID, "service-id": details.ServiceID})
+
 	var response brokerapi.BindingResponse
 
 	driver, err := broker.getDriver(details.ServiceID)
@@ -145,10 +156,14 @@ func (broker *UsbBroker) Bind(instanceID, bindingID string, details brokerapi.Bi
 		return response, err
 	}
 
+	broker.logger.Info("generate-credentials-request-completed", lager.Data{"instance-id": instanceID})
+
 	return response, nil
 }
 
 func (broker *UsbBroker) Unbind(instanceID, bindingID string, details brokerapi.UnbindDetails) error {
+	broker.logger.Info("revoke-credentials-request", lager.Data{"instance-id": instanceID, "binding-id": bindingID, "service-id": details.ServiceID})
+
 	driver, err := broker.getDriver(details.ServiceID)
 	if err != nil {
 		return err
@@ -166,13 +181,15 @@ func (broker *UsbBroker) Unbind(instanceID, bindingID string, details brokerapi.
 	if err != nil {
 		return err
 	}
-	broker.logger.Info("unbind", lager.Data{"driver-response": credentials.Status})
+
+	broker.logger.Info("revoke-credentials-request-completed", lager.Data{"driver-response": credentials.Status})
 
 	return nil
-
 }
 
 func (broker *UsbBroker) LastOperation(instanceID string) (brokerapi.LastOperationResponse, error) {
+	broker.logger.Info("last-operation-request", lager.Data{"instance-id": instanceID})
+
 	// TODO: how to get the driver for a instanceID. NOTE: the broker API does not require
 	// the client to inclide the serviceID in the request
 	driver, driverFound, err := broker.getDriverForServiceInstanceId(instanceID)
