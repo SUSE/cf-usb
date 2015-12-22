@@ -2,14 +2,12 @@ package postgres
 
 import (
 	"encoding/json"
-	//"os"
 	"testing"
 
 	usbDriver "github.com/hpcloud/cf-usb/driver"
 	"github.com/hpcloud/cf-usb/driver/postgres/config"
 	"github.com/hpcloud/cf-usb/driver/postgres/postgresprovisioner/mocks"
 	"github.com/hpcloud/cf-usb/driver/status"
-	//"github.com/pivotal-golang/lager"
 	"github.com/pivotal-golang/lager/lagertest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
