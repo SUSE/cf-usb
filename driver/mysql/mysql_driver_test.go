@@ -2,17 +2,18 @@ package driver
 
 import (
 	"encoding/json"
-	"os"
 	"testing"
 
 	usbDriver "github.com/hpcloud/cf-usb/driver"
 	"github.com/hpcloud/cf-usb/driver/mysql/config"
 	"github.com/hpcloud/cf-usb/driver/mysql/mysqlprovisioner/mocks"
 	"github.com/hpcloud/cf-usb/driver/status"
-	"github.com/pivotal-golang/lager"
+	"github.com/pivotal-golang/lager/lagertest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
+
+var logger *lagertest.TestLogger = lagertest.NewTestLogger("mysql-driver-test")
 
 func getEmptyConfig() *json.RawMessage {
 	rawMessage := json.RawMessage([]byte("{}"))
@@ -21,10 +22,6 @@ func getEmptyConfig() *json.RawMessage {
 }
 
 func getMockProvisioner() (*mocks.MysqlProvisionerInterface, usbDriver.Driver) {
-	var logger = lager.NewLogger("mongodb-driver-test")
-
-	logger.RegisterSink(lager.NewWriterSink(os.Stderr, lager.DEBUG))
-
 	mockProv := new(mocks.MysqlProvisionerInterface)
 	mysqlDriver := NewMysqlDriver(logger, mockProv)
 

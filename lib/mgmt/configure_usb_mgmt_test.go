@@ -22,7 +22,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-var logger *lagertest.TestLogger = lagertest.NewTestLogger("mgmt-api")
+var logger *lagertest.TestLogger = lagertest.NewTestLogger("mgmt-api-test")
 var sbMocked *sbMocks.ServiceBrokerInterface = new(sbMocks.ServiceBrokerInterface)
 
 var UnitTest = struct {

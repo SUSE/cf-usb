@@ -2,17 +2,18 @@ package driver
 
 import (
 	"encoding/json"
-	"os"
 	"testing"
 
 	usbDriver "github.com/hpcloud/cf-usb/driver"
 	"github.com/hpcloud/cf-usb/driver/mssql/config"
 	"github.com/hpcloud/cf-usb/driver/mssql/mssqlprovisioner/mocks"
 	"github.com/hpcloud/cf-usb/driver/status"
-	"github.com/pivotal-golang/lager"
+	"github.com/pivotal-golang/lager/lagertest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
+
+var logger *lagertest.TestLogger = lagertest.NewTestLogger("mssql-driver-test")
 
 func getEmptyConfig() *json.RawMessage {
 	rawMessage := json.RawMessage([]byte("{}"))
@@ -26,10 +27,6 @@ func getConfigMessage(conf config.MssqlDriverConfig) *json.RawMessage {
 }
 
 func getMockProvisioner() (*mocks.MssqlProvisionerInterface, usbDriver.Driver) {
-	var logger = lager.NewLogger("mssql-driver-test")
-
-	logger.RegisterSink(lager.NewWriterSink(os.Stderr, lager.DEBUG))
-
 	mockProv := new(mocks.MssqlProvisionerInterface)
 	mssqlDriver := NewMssqlDriver(logger, mockProv)
 

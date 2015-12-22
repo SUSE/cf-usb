@@ -3,20 +3,18 @@ package rabbitmq
 import (
 	"encoding/json"
 	"errors"
-	"os"
 	"testing"
 
 	usbDriver "github.com/hpcloud/cf-usb/driver"
 	"github.com/hpcloud/cf-usb/driver/rabbitmq/config"
 	"github.com/hpcloud/cf-usb/driver/rabbitmq/rabbitmqprovisioner/mocks"
 	"github.com/hpcloud/cf-usb/driver/status"
-	"github.com/pivotal-golang/lager"
 	"github.com/pivotal-golang/lager/lagertest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
-var logger *lagertest.TestLogger = lagertest.NewTestLogger("rabbitmq-provisioner")
+var logger *lagertest.TestLogger = lagertest.NewTestLogger("rabbitmq-driver-test")
 
 func getEmptyConfig() *json.RawMessage {
 	rawMessage := json.RawMessage([]byte("{}"))
@@ -25,10 +23,6 @@ func getEmptyConfig() *json.RawMessage {
 }
 
 func getMockProvisioner() (*mocks.RabbitmqProvisionerInterface, usbDriver.Driver) {
-	var logger = lager.NewLogger("rabbitmq-driver-test")
-
-	logger.RegisterSink(lager.NewWriterSink(os.Stderr, lager.DEBUG))
-
 	mockProv := new(mocks.RabbitmqProvisionerInterface)
 	rabbitDriver := NewRabbitmqDriver(logger, mockProv)
 

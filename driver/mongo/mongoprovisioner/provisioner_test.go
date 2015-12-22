@@ -6,8 +6,10 @@ import (
 	"testing"
 
 	"github.com/hpcloud/cf-usb/driver/mongo/config"
-	"github.com/pivotal-golang/lager"
+	"github.com/pivotal-golang/lager/lagertest"
 )
+
+var logger *lagertest.TestLogger = lagertest.NewTestLogger("mongo-provisioner-test")
 
 var mongoConConfig = struct {
 	User            string
@@ -23,10 +25,6 @@ func init() {
 	mongoConConfig.Pass = os.Getenv("MONGO_PASS")
 	mongoConConfig.Host = os.Getenv("MONGO_HOST")
 	mongoConConfig.Port = os.Getenv("MONGO_PORT")
-
-	var logger = lager.NewLogger("test-mongo-provider")
-
-	logger.RegisterSink(lager.NewWriterSink(os.Stderr, lager.DEBUG))
 
 	mongoConConfig.TestProvisioner = New(logger)
 
