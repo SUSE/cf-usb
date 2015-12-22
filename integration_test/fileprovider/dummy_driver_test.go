@@ -120,7 +120,7 @@ func Test_BrokerWithFileConfigProviderProvision(t *testing.T) {
 	Expect(isValidJson(content)).To(BeTrue())
 
 	Expect(resp.StatusCode).To(Equal(http.StatusCreated))
-	Expect(usb.Runner.Buffer()).Should(gbytes.Say("usb.provision"))
+	Expect(usb.Runner.Buffer()).Should(gbytes.Say("usb.usb-broker.provision"))
 }
 
 func Test_BrokerWithFileConfigProviderDeprovision(t *testing.T) {
@@ -156,7 +156,7 @@ func Test_BrokerWithFileConfigProviderDeprovision(t *testing.T) {
 	Expect(isValidJson(content)).To(BeTrue())
 
 	Expect(resp.StatusCode).To(Equal(http.StatusOK))
-	Expect(usb.Runner.Buffer()).Should(gbytes.Say("usb.deprovision"))
+	Expect(usb.Runner.Buffer()).Should(gbytes.Say("usb.usb-broker.deprovision"))
 }
 
 func Test_BrokerWithFileConfigProviderBind(t *testing.T) {

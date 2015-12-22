@@ -31,6 +31,8 @@ import (
 const brokerName string = "usb"
 
 func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, configProvider config.ConfigProvider, ccServiceBroker ccapi.ServiceBrokerInterface, logger lager.Logger) {
+	log := logger.Session("usb-mgmt")
+
 	// configure the api here
 	api.ServeError = errors.ServeError
 
@@ -45,17 +47,20 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 			return nil, err
 		}
 
+		log.Debug("authentication-succeeded")
+
 		return true, nil
 	}
 
 	api.UpdateDriverHandler = UpdateDriverHandlerFunc(func(params UpdateDriverParams, principal interface{}) middleware.Responder {
+		log.Debug("update-driver", lager.Data{"driver-id": params.DriverID})
+
 		_, err := configProvider.GetDriver(params.DriverID)
 		if err != nil {
 			return &UpdateDriverNotFound{}
 		}
 
 		var driver config.Driver
-
 		driver.DriverType = params.Driver.DriverType
 
 		err = configProvider.SetDriver(params.Driver.ID, driver)
@@ -67,6 +72,8 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.UploadDriverHandler = UploadDriverHandlerFunc(func(params UploadDriverParams, principal interface{}) middleware.Responder {
+		log.Debug("upload-driver-bits", lager.Data{"driver-id": params.DriverID})
+
 		driver, err := configProvider.GetDriver(params.DriverID)
 		if err != nil {
 			return &UploadDriverNotFound{}
@@ -112,6 +119,8 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.DeleteServicePlanHandler = DeleteServicePlanHandlerFunc(func(params DeleteServicePlanParams, principal interface{}) middleware.Responder {
+		log.Debug("delete-service-plan", lager.Data{"plan-id": params.PlanID})
+
 		config, err := configProvider.LoadConfiguration()
 		if err != nil {
 			return &DeleteServicePlanInternalServerError{Payload: err.Error()}
@@ -139,6 +148,8 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.GetDriverHandler = GetDriverHandlerFunc(func(params GetDriverParams, principal interface{}) middleware.Responder {
+		log.Debug("get-driver", lager.Data{"driver-id": params.DriverID})
+
 		d, err := configProvider.GetDriver(params.DriverID)
 		if err != nil {
 			return &GetDriverNotFound{}
@@ -153,10 +164,12 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 			DriverType:      d.DriverType,
 			DriverInstances: instances,
 		}
+
 		return &GetDriverOK{Payload: driver}
 	})
 
 	api.GetDriversHandler = GetDriversHandlerFunc(func(principal interface{}) middleware.Responder {
+		log = log.Session("get-drivers")
 
 		var drivers = make([]*genmodel.Driver, 0)
 
@@ -180,10 +193,13 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 			drivers = append(drivers, driver)
 		}
 
+		log.Debug("", lager.Data{"drivers-found": len(drivers)})
+
 		return &GetDriversOK{Payload: drivers}
 	})
 
 	api.CreateDriverHandler = CreateDriverHandlerFunc(func(params CreateDriverParams, principal interface{}) middleware.Responder {
+		log.Debug("create-driver", lager.Data{"driver-name": params.Driver.Name, "driver-type": params.Driver.DriverType})
 
 		exist, err := configProvider.DriverTypeExists(params.Driver.DriverType)
 		if err != nil {
@@ -203,11 +219,14 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		if err != nil {
 			return &CreateDriverInternalServerError{Payload: err.Error()}
 		}
+
 		params.Driver.ID = driverID
+
 		return &CreateDriverCreated{Payload: params.Driver}
 	})
 
 	api.GetDriverInstancesHandler = GetDriverInstancesHandlerFunc(func(params GetDriverInstancesParams, principal interface{}) middleware.Responder {
+		log.Debug("get-driver-instance", lager.Data{"driver-id": params.DriverID})
 
 		var driverInstances = make([]*genmodel.DriverInstance, 0)
 
@@ -253,6 +272,8 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.GetServicePlanHandler = GetServicePlanHandlerFunc(func(params GetServicePlanParams, principal interface{}) middleware.Responder {
+		log.Debug("get-service-plan", lager.Data{"plan-id": params.PlanID})
+
 		config, err := configProvider.LoadConfiguration()
 		if err != nil {
 			return &GetServicePlanInternalServerError{Payload: err.Error()}
@@ -280,6 +301,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.CreateDialHandler = CreateDialHandlerFunc(func(params CreateDialParams, principal interface{}) middleware.Responder {
+		log.Debug("create-dial", lager.Data{"driver-instance-id": params.Dial.DriverInstanceID})
 
 		var dial config.Dial
 
@@ -288,6 +310,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		if err != nil {
 			return &CreateDialInternalServerError{Payload: err.Error()}
 		}
+
 		configuration := json.RawMessage(dialconfig)
 		dial.Configuration = &configuration
 
@@ -302,6 +325,8 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.UpdateDialHandler = UpdateDialHandlerFunc(func(params UpdateDialParams, principal interface{}) middleware.Responder {
+		log.Debug("update-dial", lager.Data{"driver-instance-id": params.Dial.DriverInstanceID})
+
 		var dial config.Dial
 
 		dialID := params.Dial.ID
@@ -313,10 +338,12 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		configuration := json.RawMessage(dialconfig)
 		dial.Configuration = &configuration
 		dial.Plan = brokerapi.ServicePlan{ID: params.Dial.Plan}
+
 		err = configProvider.SetDial(params.Dial.DriverInstanceID, dialID, dial)
 		if err != nil {
 			return &UpdateDialInternalServerError{Payload: err.Error()}
 		}
+
 		return &UpdateDialOK{Payload: params.Dial}
 	})
 
@@ -325,6 +352,8 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.GetServicesHandler = GetServicesHandlerFunc(func(params GetServicesParams, principal interface{}) middleware.Responder {
+		log = log.Session("get-services", lager.Data{"driver-instance-id": params.DriverInstanceID})
+
 		var services = make([]*genmodel.Service, 0)
 
 		di, err := configProvider.GetDriverInstance(params.DriverInstanceID)
@@ -346,10 +375,13 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 		services = append(services, service)
 
+		log.Debug("", lager.Data{"services-found": len(services)})
+
 		return &GetServicesOK{Payload: services}
 	})
 
 	api.CreateDriverInstanceHandler = CreateDriverInstanceHandlerFunc(func(params CreateDriverInstanceParams, principal interface{}) middleware.Responder {
+		log = log.Session("create-driver-instance", lager.Data{"driver-id": params.DriverInstance.DriverID, "driver-instance-name": params.DriverInstance.Name})
 
 		existingDriver, err := configProvider.GetDriver(params.DriverInstance.DriverID)
 		if err != nil {
@@ -357,24 +389,27 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		}
 
 		var instance config.DriverInstance
+
 		instanceID := uuid.NewV4().String()
+
 		instanceConfig, err := json.Marshal(params.DriverInstance.Configuration)
 		if err != nil {
 			return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
 		}
+
 		configuration := json.RawMessage(instanceConfig)
 		instance.Configuration = &configuration
 		instance.Name = params.DriverInstance.Name
 
 		err = lib.Validate(instance, existingDriver.DriverType, logger)
 		if err != nil {
-			logger.Error("error validating", err)
+			log.Error("validation-failed", err)
 			return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
 		}
 
 		err = configProvider.SetDriverInstance(params.DriverInstance.DriverID, instanceID, instance)
 		if err != nil {
-			logger.Error("error set driver instance", err)
+			log.Error("set-driver-instance-failed", err)
 			return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
 		}
 
@@ -383,11 +418,13 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		defaultDialID := uuid.NewV4().String()
 
 		var plan brokerapi.ServicePlan
+
 		plan.ID = uuid.NewV4().String()
 		plan.Description = "default plan"
 		plan.Name = "default"
 
 		var meta brokerapi.ServicePlanMetadata
+
 		meta.DisplayName = "default plan"
 
 		plan.Metadata = &meta
@@ -398,7 +435,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 		err = configProvider.SetDial(instanceID, defaultDialID, defaultDial)
 		if err != nil {
-			logger.Error("error set dial", err)
+			log.Error("set-dial-failed", err)
 			return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
 		}
 
@@ -406,6 +443,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		params.DriverInstance.ID = instanceID
 
 		var service brokerapi.Service
+
 		service.ID = uuid.NewV4().String()
 		service.Name = fmt.Sprintf("%s-%s", params.DriverInstance.Name, GetRandomString(5))
 		service.Description = "Default service"
@@ -414,41 +452,37 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 		err = configProvider.SetService(instanceID, service)
 		if err != nil {
-			logger.Error("error set service", err)
+			log.Error("set-service-failed", err)
 			return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
 		}
 
 		params.DriverInstance.Service = service.ID
+
 		config, err := configProvider.LoadConfiguration()
 		if err != nil {
-			logger.Error("error load configuration", err)
+			log.Error("load-configuration-failed", err)
 			return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
 		}
 
-		logger.Info("create-instance", lager.Data{"get-broker": brokerName})
 		guid, err := ccServiceBroker.GetServiceBrokerGuidByName(brokerName)
-
-		logger.Info("create-instance", lager.Data{"broker-guid": guid})
 		if err != nil {
+			log.Error("get-service-broker-failed", err)
 			return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
 		}
 
 		if guid == "" {
-
-			logger.Info("create-instance", lager.Data{"service-broker-create": service.Name})
 			err = ccServiceBroker.Create(brokerName, config.BrokerAPI.ExternalUrl, config.BrokerAPI.Credentials.Username, config.BrokerAPI.Credentials.Password)
 		} else {
-
-			logger.Info("create-instance", lager.Data{"service-broker-update": service.Name})
 			err = ccServiceBroker.Update(guid, brokerName, config.BrokerAPI.ExternalUrl, config.BrokerAPI.Credentials.Username, config.BrokerAPI.Credentials.Password)
 		}
 		if err != nil {
+			log.Error("create-or-update-service-broker-failed", err)
 			return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
 		}
-		logger.Info("create-instance", lager.Data{"enable-access": service.Name})
+
 		err = ccServiceBroker.EnableServiceAccess(service.Name)
 		if err != nil {
-			logger.Error("error service access", err)
+			log.Error("enable-service-access-failed", err)
 			return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
 		}
 
@@ -456,6 +490,8 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.UpdateDriverInstanceHandler = UpdateDriverInstanceHandlerFunc(func(params UpdateDriverInstanceParams, principal interface{}) middleware.Responder {
+		log.Debug("update-driver-instance", lager.Data{"driver-instance-id": params.DriverInstanceID})
+
 		instanceInfo, err := configProvider.GetDriverInstance(params.DriverInstanceID)
 		if err != nil {
 			return &UpdateDriverInstanceNotFound{}
@@ -466,6 +502,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		if err != nil {
 			return &UpdateDriverInstanceInternalServerError{Payload: err.Error()}
 		}
+
 		configuration := json.RawMessage(instanceConfig)
 		instance.Configuration = &configuration
 		instance.Name = params.DriverConfig.Name
@@ -474,10 +511,13 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		if err != nil {
 			return &UpdateDriverInstanceInternalServerError{Payload: err.Error()}
 		}
+
 		return &UpdateDriverInstanceOK{Payload: params.DriverConfig}
 	})
 
 	api.DeleteDriverHandler = DeleteDriverHandlerFunc(func(params DeleteDriverParams, principal interface{}) middleware.Responder {
+		log.Debug("delete-driver", lager.Data{"driver-id": params.DriverID})
+
 		_, err := configProvider.GetDriver(params.DriverID)
 		if err != nil {
 			return &DeleteDriverNotFound{}
@@ -492,6 +532,8 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.DeleteDriverInstanceHandler = DeleteDriverInstanceHandlerFunc(func(params DeleteDriverInstanceParams, principal interface{}) middleware.Responder {
+		log.Debug("delete-driver-instance", lager.Data{"driver-instance-id": params.DriverInstanceID})
+
 		_, err := configProvider.GetDriverInstance(params.DriverInstanceID)
 		if err != nil {
 			return &DeleteDriverInstanceNotFound{}
@@ -506,6 +548,8 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.GetAllDialsHandler = GetAllDialsHandlerFunc(func(params GetAllDialsParams, principal interface{}) middleware.Responder {
+		log = log.Session("get-dials", lager.Data{"driver-instance-id": params.DriverInstanceID})
+
 		var dials = make([]*genmodel.Dial, 0)
 
 		config, err := configProvider.LoadConfiguration()
@@ -539,10 +583,13 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 			}
 		}
 
+		log.Debug("", lager.Data{"dials-found": len(dials)})
+
 		return &GetAllDialsOK{Payload: dials}
 	})
 
 	api.UpdateServicePlanHandler = UpdateServicePlanHandlerFunc(func(params UpdateServicePlanParams, principal interface{}) middleware.Responder {
+		log.Debug("update-service-plan", lager.Data{"plan-id": params.PlanID})
 
 		config, err := configProvider.LoadConfiguration()
 		if err != nil {
@@ -582,6 +629,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.GetServiceHandler = GetServiceHandlerFunc(func(params GetServiceParams, principal interface{}) middleware.Responder {
+		log.Debug("get-service", lager.Data{"service-id": params.ServiceID})
 
 		config, err := configProvider.LoadConfiguration()
 		if err != nil {
@@ -613,6 +661,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.DeleteDialHandler = DeleteDialHandlerFunc(func(params DeleteDialParams, principal interface{}) middleware.Responder {
+		log.Debug("delete-dial", lager.Data{"dial-id": params.DialID})
 
 		config, err := configProvider.LoadConfiguration()
 		if err != nil {
@@ -636,8 +685,9 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.GetInfoHandler = GetInfoHandlerFunc(func(principal interface{}) middleware.Responder {
-		config, err := configProvider.LoadConfiguration()
+		log.Debug("get-info")
 
+		config, err := configProvider.LoadConfiguration()
 		if err != nil {
 			return &GetInfoInternalServerError{
 				Payload: err.Error(),
@@ -654,6 +704,8 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.GetServicePlansHandler = GetServicePlansHandlerFunc(func(params GetServicePlansParams, principal interface{}) middleware.Responder {
+		log = log.Session("get-service-plans", lager.Data{"driver-instance-id": params.DriverInstanceID})
+
 		var servicePlans = make([]*genmodel.Plan, 0)
 
 		config, err := configProvider.LoadConfiguration()
@@ -681,10 +733,14 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 			}
 		}
 
+		log.Debug("", lager.Data{"service-plans-found": len(servicePlans)})
+
 		return &GetServicePlansOK{Payload: servicePlans}
 	})
 
 	api.GetDialHandler = GetDialHandlerFunc(func(params GetDialParams, principal interface{}) middleware.Responder {
+		log.Debug("get-dial", lager.Data{"dial-id": params.DialID})
+
 		config, err := configProvider.LoadConfiguration()
 		if err != nil {
 			return &GetDialInternalServerError{Payload: err.Error()}
@@ -718,6 +774,8 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.UpdateServiceHandler = UpdateServiceHandlerFunc(func(params UpdateServiceParams, principal interface{}) middleware.Responder {
+		log = log.Session("update-service", lager.Data{"service-id": params.ServiceID})
+
 		config, err := configProvider.LoadConfiguration()
 		if err != nil {
 			return &UpdateServiceInternalServerError{Payload: err.Error()}
@@ -736,42 +794,44 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 			return &UpdateServiceInternalServerError{Payload: err.Error()}
 		}
 
-		logger.Info("update-service", lager.Data{"get-broker": brokerName})
 		guid, err := ccServiceBroker.GetServiceBrokerGuidByName(brokerName)
-
-		logger.Info("update-service", lager.Data{"broker-guid": guid})
 		if err != nil {
+			log.Error("get-service-broker-failed", err)
 			return &UpdateServiceInternalServerError{Payload: err.Error()}
 		}
 
-		logger.Info("update-service", lager.Data{"service-broker-update": service.Name})
 		err = ccServiceBroker.Update(guid, brokerName, config.BrokerAPI.ExternalUrl, config.BrokerAPI.Credentials.Username, config.BrokerAPI.Credentials.Password)
 		if err != nil {
+			log.Error("update-service-broker-failed", err)
 			return &UpdateServiceInternalServerError{Payload: err.Error()}
 		}
 
-		logger.Info("update-service", lager.Data{"enable-access": service.Name})
 		err = ccServiceBroker.EnableServiceAccess(service.Name)
 		if err != nil {
+			log.Error("enable-service-access-failed", err)
 			return &UpdateServiceInternalServerError{Payload: err.Error()}
 		}
 
 		return &UpdateServiceOK{Payload: params.Service}
-
 	})
 
 	api.GetDriverInstanceHandler = GetDriverInstanceHandlerFunc(func(params GetDriverInstanceParams, principal interface{}) middleware.Responder {
+		log.Debug("get-driver-instance", lager.Data{"driver-instance-id": params.DriverInstanceID})
 
 		instance, err := configProvider.GetDriverInstance(params.DriverInstanceID)
 		if err != nil {
 			return &GetDriverInstanceNotFound{}
 		}
+
 		var conf map[string]interface{}
+
 		err = json.Unmarshal(*instance.Configuration, &conf)
 		if err != nil {
 			return &GetDriverInstanceInternalServerError{Payload: err.Error()}
 		}
+
 		var dials = make([]string, 0)
+
 		for dialID, _ := range instance.Dials {
 			dials = append(dials, dialID)
 		}
@@ -783,10 +843,12 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 			Name:          instance.Name,
 			Service:       instance.Service.ID,
 		}
+
 		return &GetDriverInstanceOK{Payload: driverInstance}
 	})
 
 	api.CreateServicePlanHandler = CreateServicePlanHandlerFunc(func(params CreateServicePlanParams, principal interface{}) middleware.Responder {
+		log.Debug("create-service-plan", lager.Data{"dial-id": params.Plan.DialID})
 
 		config, err := configProvider.LoadConfiguration()
 		if err != nil {
@@ -810,14 +872,18 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 						plan.Name = params.Plan.Name
 
 						meta.DisplayName = params.Plan.Name
+
 						plan.Metadata = &meta
 
 						dial.Plan = plan
+
 						err = configProvider.SetDial(instanceID, dialID, dial)
 						if err != nil {
 							return &CreateServicePlanInternalServerError{Payload: err.Error()}
 						}
+
 						params.Plan.ID = plan.ID
+
 						return &CreateServicePlanCreated{Payload: params.Plan}
 					}
 				}
@@ -830,5 +896,4 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	api.UpdateCatalogHandler = UpdateCatalogHandlerFunc(func(principal interface{}) middleware.Responder {
 		return middleware.NotImplemented("operation updateCatalog has not yet been implemented")
 	})
-
 }

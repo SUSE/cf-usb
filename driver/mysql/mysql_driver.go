@@ -45,33 +45,47 @@ func (e *MysqlDriver) getMD5Hash(text string) (string, error) {
 }
 
 func NewMysqlDriver(logger lager.Logger, db mysqlprovisioner.MysqlProvisionerInterface) driver.Driver {
-	return &MysqlDriver{logger: logger, db: db}
+	return &MysqlDriver{logger: logger.Session("mysql-driver"), db: db}
 }
 
 func (e *MysqlDriver) init(conf *json.RawMessage) error {
+	e.logger.Info("init-driver", lager.Data{"configValue": string(*conf)})
+
 	mysqlConfig := config.MysqlDriverConfig{}
+
 	err := json.Unmarshal(*conf, &mysqlConfig)
-	e.logger.Info("Mysql Driver initializing")
+	if err != nil {
+		return err
+	}
+
 	err = e.db.Connect(mysqlConfig)
 	if err != nil {
 		return err
 	}
+
 	e.conf = mysqlConfig
+
 	return nil
 }
 
 func (e *MysqlDriver) Ping(request *json.RawMessage, response *bool) error {
+	e.logger.Info("ping-request", lager.Data{"request": string(*request)})
+
 	*response = false
 
 	err := e.init(request)
 	if err != nil {
 		return err
 	}
+
 	*response = true
+
 	return nil
 }
 
 func (e *MysqlDriver) GetDailsSchema(empty string, response *string) error {
+	e.logger.Info("get-dails-schema-request", lager.Data{"request": empty})
+
 	dailsSchema, err := driverdata.Asset("schemas/dials.json")
 	if err != nil {
 		return err
@@ -83,6 +97,8 @@ func (e *MysqlDriver) GetDailsSchema(empty string, response *string) error {
 }
 
 func (e *MysqlDriver) GetConfigSchema(request string, response *string) error {
+	e.logger.Info("get-config-schema-request", lager.Data{"request": request})
+
 	configSchema, err := driverdata.Asset("schemas/config.json")
 	if err != nil {
 		return err
@@ -93,6 +109,8 @@ func (e *MysqlDriver) GetConfigSchema(request string, response *string) error {
 	return nil
 }
 func (e *MysqlDriver) ProvisionInstance(request driver.ProvisionInstanceRequest, response *driver.Instance) error {
+	e.logger.Info("provision-instance-request", lager.Data{"instance-id": request.InstanceID, "config": string(*request.Config), "dials": string(*request.Dials)})
+
 	err := e.init(request.Config)
 	if err != nil {
 		return err
@@ -102,21 +120,26 @@ func (e *MysqlDriver) ProvisionInstance(request driver.ProvisionInstanceRequest,
 	if err != nil {
 		return err
 	}
+
 	response.Status = status.Created
+
 	return nil
 }
 
 func (e *MysqlDriver) GetInstance(request driver.GetInstanceRequest, response *driver.Instance) error {
+	e.logger.Info("get-instance-request", lager.Data{"instance-id": request.InstanceID, "config": string(*request.Config)})
+
 	response.Status = status.DoesNotExist
+
 	err := e.init(request.Config)
 	if err != nil {
 		return err
 	}
+
 	created, err := e.db.IsDatabaseCreated(strings.Replace(request.InstanceID, "-", "", -1))
 	if err != nil {
 		return err
 	}
-
 	if created {
 		response.Status = status.Exists
 	}
@@ -125,10 +148,13 @@ func (e *MysqlDriver) GetInstance(request driver.GetInstanceRequest, response *d
 }
 
 func (e *MysqlDriver) GenerateCredentials(request driver.GenerateCredentialsRequest, response *interface{}) error {
+	e.logger.Info("generate-credentials-request", lager.Data{"instance-id": request.InstanceID, "credentials-id": request.CredentialsID, "config": string(*request.Config)})
+
 	err := e.init(request.Config)
 	if err != nil {
 		return err
 	}
+
 	username, err := e.getMD5Hash(request.CredentialsID)
 	if err != nil {
 		return err
@@ -142,6 +168,7 @@ func (e *MysqlDriver) GenerateCredentials(request driver.GenerateCredentialsRequ
 	if err != nil {
 		return err
 	}
+
 	data := MysqlBindingCredentials{
 		Host:     e.conf.Host,
 		Port:     e.conf.Port,
@@ -152,10 +179,13 @@ func (e *MysqlDriver) GenerateCredentials(request driver.GenerateCredentialsRequ
 	}
 
 	*response = data
+
 	return nil
 }
 
 func (e *MysqlDriver) GetCredentials(request driver.GetCredentialsRequest, response *driver.Credentials) error {
+	e.logger.Info("credentials-exists-request", lager.Data{"instance-id": request.InstanceID, "credentials-id": request.CredentialsID, "config": string(*request.Config)})
+
 	response.Status = status.DoesNotExist
 	err := e.init(request.Config)
 	if err != nil {
@@ -169,6 +199,7 @@ func (e *MysqlDriver) GetCredentials(request driver.GetCredentialsRequest, respo
 	if len(username) > 16 {
 		username = username[:16]
 	}
+
 	created, err := e.db.IsUserCreated(username)
 	if err != nil {
 		return err
@@ -176,10 +207,13 @@ func (e *MysqlDriver) GetCredentials(request driver.GetCredentialsRequest, respo
 	if created {
 		response.Status = status.Exists
 	}
+
 	return nil
 }
 
 func (e *MysqlDriver) RevokeCredentials(request driver.RevokeCredentialsRequest, response *driver.Credentials) error {
+	e.logger.Info("revoke-credentials-request", lager.Data{"credentials-id": request.CredentialsID, "instance-id": request.InstanceID})
+
 	err := e.init(request.Config)
 	if err != nil {
 		return err
@@ -192,16 +226,20 @@ func (e *MysqlDriver) RevokeCredentials(request driver.RevokeCredentialsRequest,
 	if len(username) > 16 {
 		username = username[:16]
 	}
+
 	err = e.db.DeleteUser(username)
 	if err != nil {
 		return err
 	}
 
 	response.Status = status.Deleted
+
 	return nil
 }
 
 func (e *MysqlDriver) DeprovisionInstance(request driver.DeprovisionInstanceRequest, response *driver.Instance) error {
+	e.logger.Info("deprovision-request", lager.Data{"instance-id": request})
+
 	err := e.init(request.Config)
 	if err != nil {
 		return err
@@ -211,6 +249,7 @@ func (e *MysqlDriver) DeprovisionInstance(request driver.DeprovisionInstanceRequ
 	if err != nil {
 		return err
 	}
+
 	response.Status = status.Deleted
 
 	return nil

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"net/rpc/jsonrpc"
 	"os"
 
@@ -12,8 +11,6 @@ import (
 )
 
 func main() {
-	log.SetPrefix("[mssql log] ")
-
 	var logger = lager.NewLogger("mssql-driver")
 
 	logger.RegisterSink(lager.NewWriterSink(os.Stderr, lager.DEBUG))
@@ -24,7 +21,7 @@ func main() {
 	mssqldriver := driver.NewMssqlDriver(logger, provisioner)
 
 	if err := p.RegisterName("mssql", mssqldriver); err != nil {
-		log.Fatalf("failed to register Plugin: %s", err)
+		logger.Fatal("register-plugin", err)
 	}
 
 	p.ServeCodec(jsonrpc.NewServerCodec)

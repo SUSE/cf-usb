@@ -23,33 +23,44 @@ type PostgresDriver struct {
 }
 
 func NewPostgresDriver(logger lager.Logger, provisioner postgresprovisioner.PostgresProvisionerInterface) driver.Driver {
-	return &PostgresDriver{logger: logger, postgresProvisioner: provisioner}
+	return &PostgresDriver{logger: logger.Session("postgres-driver"), postgresProvisioner: provisioner}
 }
 
 func (d *PostgresDriver) init(conf *json.RawMessage) error {
+	d.logger.Info("init-driver", lager.Data{"configValue": string(*conf)})
 
 	postgressConfig := config.PostgresDriverConfig{}
+
 	err := json.Unmarshal(*conf, &postgressConfig)
-	d.logger.Info("Postgress Driver initializing")
+
 	err = d.postgresProvisioner.Connect(postgressConfig)
 	if err != nil {
 		return err
 	}
+
 	d.conf = postgressConfig
+
 	return nil
 }
 
 func (d *PostgresDriver) Ping(request *json.RawMessage, response *bool) error {
+	d.logger.Info("ping-request", lager.Data{"request": string(*request)})
+
 	*response = false
+
 	err := d.init(request)
 	if err != nil {
 		return err
 	}
+
 	*response = true
+
 	return nil
 }
 
 func (d *PostgresDriver) GetDailsSchema(request string, response *string) error {
+	d.logger.Info("get-dails-schema-request", lager.Data{"request": request})
+
 	dailsSchema, err := driverdata.Asset("schemas/dials.json")
 	if err != nil {
 		return err
@@ -61,6 +72,8 @@ func (d *PostgresDriver) GetDailsSchema(request string, response *string) error 
 }
 
 func (d *PostgresDriver) GetConfigSchema(request string, response *string) error {
+	d.logger.Info("get-config-schema-request", lager.Data{"request": request})
+
 	configSchema, err := driverdata.Asset("schemas/config.json")
 	if err != nil {
 		return err
@@ -72,6 +85,8 @@ func (d *PostgresDriver) GetConfigSchema(request string, response *string) error
 }
 
 func (d *PostgresDriver) ProvisionInstance(request driver.ProvisionInstanceRequest, response *driver.Instance) error {
+	d.logger.Info("provision-instance-request", lager.Data{"instance-id": request.InstanceID, "config": string(*request.Config), "dials": string(*request.Dials)})
+
 	err := d.init(request.Config)
 	if err != nil {
 		return err
@@ -90,10 +105,13 @@ func (d *PostgresDriver) ProvisionInstance(request driver.ProvisionInstanceReque
 	}
 
 	response.Status = status.Created
+
 	return nil
 }
 
 func (d *PostgresDriver) GetInstance(request driver.GetInstanceRequest, response *driver.Instance) error {
+	d.logger.Info("get-instance-request", lager.Data{"instance-id": request.InstanceID, "config": string(*request.Config)})
+
 	err := d.init(request.Config)
 	if err != nil {
 		return err
@@ -101,14 +119,14 @@ func (d *PostgresDriver) GetInstance(request driver.GetInstanceRequest, response
 
 	dbName, err := d.getMD5Hash(request.InstanceID)
 	if err != nil {
-		d.logger.Fatal("get-instance-error", err)
+		d.logger.Fatal("get-instance-request-failed", err)
 		return err
 	}
 
 	response.Status = status.DoesNotExist
 	exist, err := d.postgresProvisioner.DatabaseExists(dbName)
 	if err != nil {
-		d.logger.Fatal("get-instance-error", err)
+		d.logger.Fatal("get-instance-request-failed", err)
 		return err
 	}
 	if exist {
@@ -119,6 +137,8 @@ func (d *PostgresDriver) GetInstance(request driver.GetInstanceRequest, response
 }
 
 func (d *PostgresDriver) GenerateCredentials(request driver.GenerateCredentialsRequest, response *interface{}) error {
+	d.logger.Info("generate-credentials-request", lager.Data{"instance-id": request.InstanceID, "credentials-id": request.CredentialsID, "config": string(*request.Config)})
+
 	err := d.init(request.Config)
 	if err != nil {
 		return err
@@ -126,13 +146,13 @@ func (d *PostgresDriver) GenerateCredentials(request driver.GenerateCredentialsR
 
 	dbName, err := d.getMD5Hash(request.InstanceID)
 	if err != nil {
-		d.logger.Fatal("generate-credentials", err)
+		d.logger.Fatal("generate-credentials-request-failed", err)
 		return err
 	}
 
 	username, err := d.getMD5Hash(request.InstanceID + request.CredentialsID)
 	if err != nil {
-		d.logger.Fatal("generate-credentials", err)
+		d.logger.Fatal("generate-credentials-request-failed", err)
 		return err
 	}
 
@@ -143,7 +163,7 @@ func (d *PostgresDriver) GenerateCredentials(request driver.GenerateCredentialsR
 
 	err = d.postgresProvisioner.CreateUser(dbName, username, password)
 	if err != nil {
-		d.logger.Fatal("generate-credentials", err)
+		d.logger.Fatal("generate-credentials-request-failed", err)
 		return err
 	}
 
@@ -155,11 +175,15 @@ func (d *PostgresDriver) GenerateCredentials(request driver.GenerateCredentialsR
 		Username:         username,
 		ConnectionString: generateConnectionString(d.conf.Host, d.conf.Port, dbName, username, password),
 	}
+
 	*response = data
+
 	return nil
 }
 
 func (d *PostgresDriver) GetCredentials(request driver.GetCredentialsRequest, response *driver.Credentials) error {
+	d.logger.Info("credentials-exists-request", lager.Data{"instance-id": request.InstanceID, "credentials-id": request.CredentialsID, "config": string(*request.Config)})
+
 	err := d.init(request.Config)
 	if err != nil {
 		return err
@@ -169,69 +193,72 @@ func (d *PostgresDriver) GetCredentials(request driver.GetCredentialsRequest, re
 
 	username, err := d.getMD5Hash(request.InstanceID + request.CredentialsID)
 	if err != nil {
-		d.logger.Fatal("get-credentials", err)
+		d.logger.Fatal("credentials-exists-request-failed", err)
 		return err
 	}
 
 	exist, err := d.postgresProvisioner.UserExists(username)
 	if err != nil {
-		d.logger.Fatal("get-credentials", err)
+		d.logger.Fatal("credentials-exists-request-failed", err)
 	}
 	if exist {
 		response.Status = status.Exists
 	}
+
 	return nil
 }
 
 func (d *PostgresDriver) RevokeCredentials(request driver.RevokeCredentialsRequest, response *driver.Credentials) error {
+	d.logger.Info("revoke-credentials-request", lager.Data{"credentials-id": request.CredentialsID, "instance-id": request.InstanceID})
+
 	err := d.init(request.Config)
 	if err != nil {
 		return err
 	}
 	dbName, err := d.getMD5Hash(request.InstanceID)
 	if err != nil {
-		d.logger.Fatal("revoke-credentials", err)
+		d.logger.Fatal("revoke-credentials-request-failed", err)
 		return err
 	}
 
 	username, err := d.getMD5Hash(request.InstanceID + request.CredentialsID)
 	if err != nil {
-		d.logger.Fatal("revoke-credentials", err)
+		d.logger.Fatal("revoke-credentials-request-failed", err)
 		return err
 	}
-
-	d.logger.Info("unbind-request", lager.Data{"credentialsID": request.CredentialsID, "InstanceID": request.InstanceID})
-	d.logger.Info("unbind-request-hashed", lager.Data{"Username": username, "DbName": dbName})
 
 	err = d.postgresProvisioner.DeleteUser(dbName, username)
 	if err != nil {
-		d.logger.Fatal("revoke-credentials", err)
+		d.logger.Fatal("revoke-credentials-request-failed", err)
 		return err
 	}
+
 	response.Status = status.Deleted
 
 	return nil
 }
 func (d *PostgresDriver) DeprovisionInstance(request driver.DeprovisionInstanceRequest, response *driver.Instance) error {
+	d.logger.Info("deprovision-request", lager.Data{"instance-id": request})
+
 	err := d.init(request.Config)
 	if err != nil {
 		return err
 	}
-	d.logger.Info("deprovision-request", lager.Data{"instance-id": request.InstanceID})
 
 	dbName, err := d.getMD5Hash(request.InstanceID)
 	if err != nil {
-		d.logger.Fatal("deprovision-error", err)
+		d.logger.Fatal("deprovision-request-failed", err)
 		return err
 	}
 
 	err = d.postgresProvisioner.DeleteDatabase(dbName)
 	if err != nil {
-		d.logger.Fatal("deprovision-error", err)
+		d.logger.Fatal("deprovision-request-failed", err)
 		return err
 	}
 
 	response.Status = status.Deleted
+
 	return nil
 }
 

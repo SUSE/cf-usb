@@ -47,7 +47,7 @@ func fileConfigProviderCommand(app Usb) func(c *cli.Context) {
 		}
 
 		configuraiton := config.NewFileConfig(configFilePath)
+
 		app.Run(configuraiton)
 	}
-
 }

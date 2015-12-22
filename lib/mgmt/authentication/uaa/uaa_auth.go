@@ -21,18 +21,24 @@ func NewUaaAuth(uaaPublicKey string, scope string, devMode bool, logger lager.Lo
 		token = auth.NewAccessToken(uaaPublicKey)
 	}
 
-	newAuth := UaaAuth{token, scope, logger}
+	log := logger.Session("authentication", lager.Data{"dev mode": devMode})
+
+	newAuth := UaaAuth{token, scope, log}
+
 	err := newAuth.accessToken.CheckPublicToken()
 	if err != nil {
 		return nil, err
 	}
+
+	log.Debug("initializing-uaa-auth-succeeded")
+
 	return &newAuth, nil
 }
 
 func (auth *UaaAuth) IsAuthenticated(authHeader string) error {
 	err := auth.accessToken.DecodeToken(authHeader, auth.scope)
 	if err != nil {
-		auth.logger.Error("is-authenticated", err)
+		auth.logger.Error("decode-token-failed", err)
 	}
 	return err
 }

@@ -35,15 +35,19 @@ type MssqlDriver struct {
 
 func NewMssqlDriver(logger lager.Logger, db mssqlprovisioner.MssqlProvisionerInterface) driver.Driver {
 	return &MssqlDriver{
-		logger: logger,
+		logger: logger.Session("mssql-driver"),
 		db:     db,
 	}
 }
 
 func (e *MssqlDriver) init(conf *json.RawMessage) error {
+	e.logger.Info("init-driver", lager.Data{"configValue": string(*conf)})
+
 	mssqlConfig := config.MssqlDriverConfig{}
 	err := json.Unmarshal(*conf, &mssqlConfig)
-	e.logger.Info("Mssql Driver initializing")
+	if err != nil {
+		return err
+	}
 
 	var mssqlConConfig = map[string]string{}
 	mssqlConConfig["server"] = mssqlConfig.Host
@@ -57,10 +61,13 @@ func (e *MssqlDriver) init(conf *json.RawMessage) error {
 	}
 
 	e.conf = mssqlConfig
+
 	return nil
 }
 
 func (e *MssqlDriver) Ping(request *json.RawMessage, response *bool) error {
+	e.logger.Info("ping-request", lager.Data{"request": string(*request)})
+
 	*response = false
 
 	err := e.init(request)
@@ -69,10 +76,13 @@ func (e *MssqlDriver) Ping(request *json.RawMessage, response *bool) error {
 	}
 
 	*response = true
+
 	return nil
 }
 
 func (e *MssqlDriver) GetDailsSchema(empty string, response *string) error {
+	e.logger.Info("get-dails-schema-request", lager.Data{"request": empty})
+
 	dailsSchema, err := driverdata.Asset("schemas/dials.json")
 	if err != nil {
 		return err
@@ -84,6 +94,8 @@ func (e *MssqlDriver) GetDailsSchema(empty string, response *string) error {
 }
 
 func (e *MssqlDriver) GetConfigSchema(request string, response *string) error {
+	e.logger.Info("get-config-schema-request", lager.Data{"request": request})
+
 	configSchema, err := driverdata.Asset("schemas/config.json")
 	if err != nil {
 		return err
@@ -95,6 +107,8 @@ func (e *MssqlDriver) GetConfigSchema(request string, response *string) error {
 }
 
 func (e *MssqlDriver) ProvisionInstance(request driver.ProvisionInstanceRequest, response *driver.Instance) error {
+	e.logger.Info("provision-instance-request", lager.Data{"instance-id": request.InstanceID, "config": string(*request.Config), "dials": string(*request.Dials)})
+
 	err := e.init(request.Config)
 	if err != nil {
 		return err
@@ -108,10 +122,13 @@ func (e *MssqlDriver) ProvisionInstance(request driver.ProvisionInstanceRequest,
 	}
 
 	response.Status = status.Created
+
 	return nil
 }
 
 func (e *MssqlDriver) GetInstance(request driver.GetInstanceRequest, response *driver.Instance) error {
+	e.logger.Info("get-instance-request", lager.Data{"instance-id": request.InstanceID, "config": string(*request.Config)})
+
 	response.Status = status.DoesNotExist
 	err := e.init(request.Config)
 	if err != nil {
@@ -133,6 +150,8 @@ func (e *MssqlDriver) GetInstance(request driver.GetInstanceRequest, response *d
 }
 
 func (e *MssqlDriver) GenerateCredentials(request driver.GenerateCredentialsRequest, response *interface{}) error {
+	e.logger.Info("generate-credentials-request", lager.Data{"instance-id": request.InstanceID, "credentials-id": request.CredentialsID, "config": string(*request.Config)})
+
 	err := e.init(request.Config)
 	if err != nil {
 		return err
@@ -152,6 +171,7 @@ func (e *MssqlDriver) GenerateCredentials(request driver.GenerateCredentialsRequ
 	if err != nil {
 		return err
 	}
+
 	data := MssqlBindingCredentials{
 		Host:     e.conf.Host,
 		Port:     e.conf.Port,
@@ -162,10 +182,13 @@ func (e *MssqlDriver) GenerateCredentials(request driver.GenerateCredentialsRequ
 	}
 
 	*response = data
+
 	return nil
 }
 
 func (e *MssqlDriver) GetCredentials(request driver.GetCredentialsRequest, response *driver.Credentials) error {
+	e.logger.Info("credentials-exists-request", lager.Data{"instance-id": request.InstanceID, "credentials-id": request.CredentialsID, "config": string(*request.Config)})
+
 	response.Status = status.DoesNotExist
 	err := e.init(request.Config)
 	if err != nil {
@@ -188,6 +211,8 @@ func (e *MssqlDriver) GetCredentials(request driver.GetCredentialsRequest, respo
 }
 
 func (e *MssqlDriver) RevokeCredentials(request driver.RevokeCredentialsRequest, response *driver.Credentials) error {
+	e.logger.Info("revoke-credentials-request", lager.Data{"credentials-id": request.CredentialsID, "instance-id": request.InstanceID})
+
 	err := e.init(request.Config)
 	if err != nil {
 		return err
@@ -202,10 +227,13 @@ func (e *MssqlDriver) RevokeCredentials(request driver.RevokeCredentialsRequest,
 	}
 
 	response.Status = status.Deleted
+
 	return nil
 }
 
 func (e *MssqlDriver) DeprovisionInstance(request driver.DeprovisionInstanceRequest, response *driver.Instance) error {
+	e.logger.Info("deprovision-request", lager.Data{"instance-id": request})
+
 	err := e.init(request.Config)
 	if err != nil {
 		return err

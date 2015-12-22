@@ -7,8 +7,10 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/hpcloud/cf-usb/driver/mysql/config"
-	"github.com/pivotal-golang/lager"
+	"github.com/pivotal-golang/lager/lagertest"
 )
+
+var logger *lagertest.TestLogger = lagertest.NewTestLogger("mysql-provisioner-test")
 
 var mysqlConConfig = struct {
 	User            string
@@ -24,10 +26,6 @@ func init() {
 	mysqlConConfig.Pass = os.Getenv("MYSQL_PASS")
 	mysqlConConfig.Host = os.Getenv("MYSQL_HOST")
 	mysqlConConfig.Port = os.Getenv("MYSQL_PORT")
-
-	var logger = lager.NewLogger("test-provider")
-
-	logger.RegisterSink(lager.NewWriterSink(os.Stderr, lager.DEBUG))
 
 	mysqlConConfig.TestProvisioner = New(logger)
 

@@ -21,23 +21,32 @@ type RedisDriver struct {
 }
 
 func NewRedisDriver(logger lager.Logger, provisioner redisprovisioner.RedisProvisionerInterface) driver.Driver {
-	return &RedisDriver{logger: logger, redisProvisioner: provisioner}
+	return &RedisDriver{logger: logger.Session("redis-driver"), redisProvisioner: provisioner}
 }
 
 func (d *RedisDriver) init(conf *json.RawMessage) error {
+	d.logger.Info("init-driver", lager.Data{"configValue": string(*conf)})
 
 	redisConfig := config.RedisDriverConfig{}
+
 	err := json.Unmarshal(*conf, &redisConfig)
-	d.logger.Info("Postgress Driver initializing")
+	if err != nil {
+		return err
+	}
+
 	err = d.redisProvisioner.Connect(redisConfig)
 	if err != nil {
 		return err
 	}
+
 	d.conf = redisConfig
+
 	return nil
 }
 
 func (d *RedisDriver) Ping(request *json.RawMessage, response *bool) error {
+	d.logger.Info("ping-request", lager.Data{"request": string(*request)})
+
 	err := d.init(request)
 	if err != nil {
 		return err
@@ -48,24 +57,33 @@ func (d *RedisDriver) Ping(request *json.RawMessage, response *bool) error {
 		*response = false
 		return err
 	}
+
 	*response = true
+
 	return nil
 }
 
 func (d *RedisDriver) ProvisionInstance(request driver.ProvisionInstanceRequest, response *driver.Instance) error {
+	d.logger.Info("provision-instance-request", lager.Data{"instance-id": request.InstanceID, "config": string(*request.Config), "dials": string(*request.Dials)})
+
 	err := d.init(request.Config)
 	if err != nil {
 		return err
 	}
+
 	err = d.redisProvisioner.CreateContainer(request.InstanceID)
 	if err != nil {
 		return err
 	}
+
 	response.Status = status.Created
+
 	return nil
 }
 
 func (d *RedisDriver) DeprovisionInstance(request driver.DeprovisionInstanceRequest, response *driver.Instance) error {
+	d.logger.Info("deprovision-request", lager.Data{"instance-id": request})
+
 	err := d.init(request.Config)
 	if err != nil {
 		return err
@@ -77,10 +95,13 @@ func (d *RedisDriver) DeprovisionInstance(request driver.DeprovisionInstanceRequ
 	}
 
 	response.Status = status.Deleted
+
 	return nil
 }
 
 func (d *RedisDriver) GenerateCredentials(request driver.GenerateCredentialsRequest, response *interface{}) error {
+	d.logger.Info("generate-credentials-request", lager.Data{"instance-id": request.InstanceID, "credentials-id": request.CredentialsID, "config": string(*request.Config)})
+
 	err := d.init(request.Config)
 	if err != nil {
 		return err
@@ -103,20 +124,29 @@ func (d *RedisDriver) GenerateCredentials(request driver.GenerateCredentialsRequ
 	}
 
 	*response = data
+
 	return nil
 }
 
 func (d *RedisDriver) RevokeCredentials(request driver.RevokeCredentialsRequest, response *driver.Credentials) error {
+	d.logger.Info("revoke-credentials-request", lager.Data{"credentials-id": request.CredentialsID, "instance-id": request.InstanceID})
+
 	response.Status = status.Deleted
+
 	return nil
 }
 
 func (d *RedisDriver) GetCredentials(request driver.GetCredentialsRequest, response *driver.Credentials) error {
+	d.logger.Info("credentials-exists-request", lager.Data{"instance-id": request.InstanceID, "credentials-id": request.CredentialsID, "config": string(*request.Config)})
+
 	response.Status = status.DoesNotExist
+
 	return nil
 }
 
 func (d *RedisDriver) GetDailsSchema(request string, response *string) error {
+	d.logger.Info("get-dails-schema-request", lager.Data{"request": request})
+
 	dailsSchema, err := driverdata.Asset("schemas/dials.json")
 	if err != nil {
 		return err
@@ -128,6 +158,8 @@ func (d *RedisDriver) GetDailsSchema(request string, response *string) error {
 }
 
 func (d *RedisDriver) GetConfigSchema(request string, response *string) error {
+	d.logger.Info("get-config-schema-request", lager.Data{"request": request})
+
 	configSchema, err := driverdata.Asset("schemas/config.json")
 	if err != nil {
 		return err
@@ -139,19 +171,23 @@ func (d *RedisDriver) GetConfigSchema(request string, response *string) error {
 }
 
 func (d *RedisDriver) GetInstance(request driver.GetInstanceRequest, response *driver.Instance) error {
+	d.logger.Info("get-instance-request", lager.Data{"instance-id": request.InstanceID, "config": string(*request.Config)})
+
 	err := d.init(request.Config)
 	if err != nil {
 		return err
 	}
+
 	response.Status = status.DoesNotExist
+
 	exists, err := d.redisProvisioner.ContainerExists(request.InstanceID)
 	if err != nil {
 		return err
 	}
-
 	if exists {
 		response.Status = status.Exists
 	}
+
 	return nil
 }
 

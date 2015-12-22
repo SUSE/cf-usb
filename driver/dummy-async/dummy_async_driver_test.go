@@ -10,10 +10,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var logger *lagertest.TestLogger = lagertest.NewTestLogger("postgres-provisioner")
+var logger *lagertest.TestLogger = lagertest.NewTestLogger("dummy-async-provisioner")
 var instanceID string = "00000000-0000-0000-0000-000000000001"
 var settings = []byte(`{"succeed_count": "3"}`)
 var config = (*json.RawMessage)(&settings)
+var dials = (json.RawMessage)([]byte(`{}`))
 
 func TestAsyncProvision(t *testing.T) {
 
@@ -26,6 +27,7 @@ func TestAsyncProvision(t *testing.T) {
 	request.InstanceID = instanceID
 
 	request.Config = config
+	request.Dials = &dials
 
 	err := asyncDriver.ProvisionInstance(request, &response)
 	assert.Nil(err)
