@@ -97,6 +97,8 @@ tools:
 	go get github.com/axw/gocov/...
 	go get github.com/AlekSi/gocov-xml
 	go get gopkg.in/matm/v1/gocov-html
+	#Tools for integration tests
+	go get github.com/nats-io/gnatsd
 
 clean: cleangeneratedfiles
 	@echo "$(OK_COLOR)==> Cleaning$(NO_COLOR)"

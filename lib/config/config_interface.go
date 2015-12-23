@@ -52,12 +52,19 @@ type Driver struct {
 	DriverInstances map[string]DriverInstance `json:"driver_instances,omitempty"`
 }
 
+type RoutesRegister struct {
+	NatsMembers      []string `json:"nats_members"`
+	BrokerAPIHost    string   `json:"broker_api_host,omitempty"`
+	ManagmentAPIHost string   `json:"management_api_host,omitempty"`
+}
+
 type Config struct {
-	APIVersion    string            `json:"api_version"`
-	LogLevel      string            `json:"logLevel"`
-	BrokerAPI     BrokerAPI         `json:"broker_api"`
-	ManagementAPI *ManagementAPI    `json:"management_api,omitempty"`
-	Drivers       map[string]Driver `json:"drivers"`
+	APIVersion     string            `json:"api_version"`
+	LogLevel       string            `json:"logLevel"`
+	BrokerAPI      BrokerAPI         `json:"broker_api"`
+	ManagementAPI  *ManagementAPI    `json:"management_api,omitempty"`
+	Drivers        map[string]Driver `json:"drivers"`
+	RoutesRegister *RoutesRegister   `json:"routes_register"`
 }
 
 type ConfigProvider interface {

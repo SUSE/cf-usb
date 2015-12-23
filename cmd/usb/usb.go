@@ -143,6 +143,10 @@ func (usb *UsbApp) Run(configProvider config.ConfigProvider) {
 		}()
 	}
 
+	if usb.config.RoutesRegister != nil {
+		go usb.StartRouteRegistration(usb.config, logger)
+	}
+
 	logger.Info("start-listening-brokerapi", lager.Data{"address": addr})
 	err = http.ListenAndServe(addr, brokerAPI)
 	if err != nil {
