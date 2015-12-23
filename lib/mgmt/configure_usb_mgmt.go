@@ -164,6 +164,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		driver := &genmodel.Driver{
 			DriverType:      d.DriverType,
 			DriverInstances: instances,
+			ID:              params.DriverID,
 		}
 
 		return &GetDriverOK{Payload: driver}

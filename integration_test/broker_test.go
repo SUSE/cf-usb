@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/hpcloud/cf-usb/lib/config"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -106,9 +105,26 @@ func init_consulProvisioner() (consul.ConsulProvisionerInterface, error) {
 	return provisioner, nil
 }
 
+func start_usbProcess(binPath, consulAddress string) (ifrit.Process, error) {
+	usbRunner := ginkgomon.New(ginkgomon.Config{
+		Name:              "cf-usb",
+		Command:           exec.Command(binPath, "consulConfigProvider", "-a", consulAddress),
+		StartCheck:        "usb.start-listening-brokerapi",
+		StartCheckTimeout: 5 * time.Second,
+		Cleanup:           func() {},
+	})
+
+	usbProcess := ginkgomon.Invoke(usbRunner)
+
+	// wait for the processes to start before returning
+	<-usbProcess.Ready()
+
+	return usbProcess, nil
+}
+
 func start_consulProcess() (ifrit.Process, error) {
 
-	defaultConsulPath := "/usr/local/bin/consul"
+	defaultConsulPath := "consul"
 
 	tmpConsul := path.Join(os.TempDir(), "consul")
 
@@ -220,25 +236,31 @@ func Test_BrokerWithConsulConfigProviderCatalog(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cmd := exec.Command(binpath, "consulConfigProvider", "-a", ConsulConfig.consulAddress)
-
-	err = cmd.Start()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	defer cmd.Process.Kill()
-
 	var list api.KVPairs
 
 	list = append(list, &api.KVPair{Key: "usb/loglevel", Value: []byte("debug")})
 	list = append(list, &api.KVPair{Key: "usb/broker_api", Value: []byte("{\"listen\":\":54054\",\"credentials\":{\"username\":\"demouser\",\"password\":\"demopassword\"}}")})
-	list = append(list, &api.KVPair{Key: "usb/management_api", Value: []byte("{\"listen\":\":54053\",\"uaa_secret\":\"myuaasecret\",\"uaa_client\":\"myuaaclient\",\"authentication\":{\"uaa\":{\"adminscope\":\"usb.management.admin\",\"public_key\":\"\"}},\"cloud_controller\":{\"api\":\"\",\"skip_tsl_validation\":true}}")})
+	list = append(list, &api.KVPair{Key: "usb/management_api", Value: []byte(fmt.Sprintf("{\"listen\":\":54053\",\"uaa_secret\":\"myuaasecret\",\"uaa_client\":\"myuaaclient\",\"authentication\":{\"uaa\":{\"adminscope\":\"usb.management.admin\",\"public_key\":\"[%1]s \"}},\"cloud_controller\":{\"api\":\"\",\"skip_tsl_validation\":true}}", uaaPublicKey))})
 
 	err = consulClient.PutKVs(&list, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	usbProcess, err := start_usbProcess(binpath, ConsulConfig.consulAddress)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer func() {
+		usbProcess.Signal(os.Kill)
+		<-usbProcess.Wait()
+	}()
+
+	t.Log("usb started")
+
+	//wait for process to start
+	time.Sleep(5 * time.Second)
 
 	provider := config.NewConsulConfig(consulClient)
 
@@ -249,8 +271,6 @@ func Test_BrokerWithConsulConfigProviderCatalog(t *testing.T) {
 
 	user := configInfo.BrokerAPI.Credentials.Username
 	pass := configInfo.BrokerAPI.Credentials.Password
-	//wait for process to start
-	time.Sleep(2 * time.Second)
 
 	resp, err := http.Get(fmt.Sprintf("http://%s:%s@%s/v2/catalog", user, pass, ConsulConfig.consulAddress))
 
@@ -365,20 +385,19 @@ func Test_BrokerWithConsulConfigProviderCreateDriverInstance(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cmd := exec.Command(binpath, "consulConfigProvider", "-a", ConsulConfig.consulAddress)
-
-	stde, err := cmd.StderrPipe()
-	stdo, err := cmd.StdoutPipe()
-	go io.Copy(os.Stdout, stde)
-	go io.Copy(os.Stdout, stdo)
-
-	err = cmd.Start()
+	usbProcess, err := start_usbProcess(binpath, ConsulConfig.consulAddress)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	defer cmd.Process.Kill()
-	//wait for usb to start
+	defer func() {
+		usbProcess.Signal(os.Kill)
+		<-usbProcess.Wait()
+	}()
+
+	t.Log("usb started")
+
+	//wait for process to start
 	time.Sleep(5 * time.Second)
 
 	for _, driver := range drivers {
