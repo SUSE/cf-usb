@@ -26,12 +26,6 @@ func NewConsulConfig(provisioner consul.ConsulProvisionerInterface) ConfigProvid
 func (c *consulConfig) LoadConfiguration() (*Config, error) {
 	var config Config
 
-	logLevel, err := c.provisioner.GetValue("usb/loglevel")
-	if err != nil {
-		return nil, err
-	}
-	config.LogLevel = string(logLevel)
-
 	brokerapiConfig, err := c.provisioner.GetValue("usb/broker_api")
 	if err != nil {
 		return nil, err

@@ -60,7 +60,6 @@ type RoutesRegister struct {
 
 type Config struct {
 	APIVersion     string            `json:"api_version"`
-	LogLevel       string            `json:"logLevel"`
 	BrokerAPI      BrokerAPI         `json:"broker_api"`
 	ManagementAPI  *ManagementAPI    `json:"management_api,omitempty"`
 	Drivers        map[string]Driver `json:"drivers"`

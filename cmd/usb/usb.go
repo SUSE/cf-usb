@@ -33,9 +33,9 @@ const (
 	FATAL = "fatal"
 )
 
-func getLogLevel(config *config.Config) lager.LogLevel {
+func getLogLevel(logLevel string) lager.LogLevel {
 	var minLogLevel lager.LogLevel
-	switch config.LogLevel {
+	switch logLevel {
 	case DEBUG:
 		minLogLevel = lager.DEBUG
 	case INFO:
@@ -76,7 +76,7 @@ func (usb *UsbApp) Run(configProvider config.ConfigProvider) {
 		os.Exit(1)
 	}
 
-	logger.RegisterSink(lager.NewWriterSink(os.Stdout, getLogLevel(usb.config)))
+	logger.RegisterSink(lager.NewWriterSink(os.Stdout, getLogLevel("debug")))
 
 	usb.logger = logger
 
