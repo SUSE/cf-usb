@@ -1,11 +1,11 @@
 package main
 
 import (
-	"os"
-	"strconv"
-
 	"github.com/codegangsta/cli"
 	"github.com/hpcloud/cf-usb/lib/config"
+	"os"
+	"strconv"
+	"strings"
 
 	"github.com/hpcloud/cf-usb/lib/config/redis"
 )
@@ -43,6 +43,8 @@ func (k *RedisConfigProvider) GetCLICommands(app Usb) []cli.Command {
 
 func redisConfigProviderCommand(app Usb) func(c *cli.Context) {
 	return func(c *cli.Context) {
+		logger := NewLogger(strings.ToLower(c.GlobalString("loglevel")))
+
 		redisAddress := c.String("address")
 
 		if redisAddress == "" {
@@ -63,7 +65,8 @@ func redisConfigProviderCommand(app Usb) func(c *cli.Context) {
 				logger.Fatal("redis config provider", err)
 			}
 			configuraiton := config.NewRedisConfig(provisioner)
-			app.Run(configuraiton)
+
+			app.Run(configuraiton, logger)
 
 		} else {
 			provisioner, err := redis.New(redisAddress, redisPass, 0)
@@ -71,7 +74,8 @@ func redisConfigProviderCommand(app Usb) func(c *cli.Context) {
 				logger.Fatal("redis config provider", err)
 			}
 			configuraiton := config.NewRedisConfig(provisioner)
-			app.Run(configuraiton)
+
+			app.Run(configuraiton, logger)
 		}
 
 	}
