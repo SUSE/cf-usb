@@ -206,6 +206,45 @@ func Test_IntCreate(t *testing.T) {
 	assert.IsType(&operations.CreateServicePlanCreated{}, response)
 }
 
+func Test_IntCreateDriverConflict(t *testing.T) {
+	assert := assert.New(t)
+
+	if IntegrationConfig.consulAddress == "" {
+		t.Skip("Skipping mgmt create test, environment variables not set: CONSUL_ADDRESS(host:port), CONSUL_DATACENTER, CONSUL_TOKEN / CONSUL_USER + CONSUL_PASSWORD, CONSUL_SCHEMA")
+	}
+
+	err := initManager()
+	if err != nil {
+		t.Error(err)
+	}
+
+	var driver, secondDriver genmodel.Driver
+	driver.Name = "testDriver"
+	driver.DriverType = "someType"
+
+	params := operations.CreateDriverParams{}
+	params.Driver = &driver
+
+	response := IntegrationConfig.MgmtAPI.CreateDriverHandler.Handle(params, true)
+	assert.IsType(&operations.CreateDriverCreated{}, response)
+
+	createdDriver := response.(*operations.CreateDriverCreated).Payload
+
+	secondDriver.Name = "someDriver"
+	secondDriver.DriverType = "someType"
+
+	params.Driver = &secondDriver
+
+	response = IntegrationConfig.MgmtAPI.CreateDriverHandler.Handle(params, true)
+	assert.IsType(&operations.CreateDriverConflict{}, response)
+
+	deleteDriverParams := &operations.DeleteDriverParams{}
+	deleteDriverParams.DriverID = createdDriver.ID
+
+	response = IntegrationConfig.MgmtAPI.DeleteDriverHandler.Handle(*deleteDriverParams, true)
+	assert.IsType(&operations.DeleteDriverNoContent{}, response)
+}
+
 func Test_IntUpdate(t *testing.T) {
 	assert := assert.New(t)
 
@@ -258,6 +297,11 @@ func Test_IntUpdate(t *testing.T) {
 	t.Log(plan)
 	t.Log("PLAN ID", plan.ID)
 
+	IntegrationConfig.CcServiceBroker.Mock.On("GetServiceBrokerGuidByName", mock.Anything).Return("aguid", nil)
+	IntegrationConfig.CcServiceBroker.Mock.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	IntegrationConfig.CcServiceBroker.Mock.On("Update", "aguid", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	IntegrationConfig.CcServiceBroker.Mock.On("EnableServiceAccess", mock.Anything).Return(nil)
+
 	response = IntegrationConfig.MgmtAPI.UpdateServicePlanHandler.Handle(*params, true)
 	assert.IsType(&operations.UpdateServicePlanOK{}, response)
 
@@ -289,11 +333,6 @@ func Test_IntUpdate(t *testing.T) {
 	serviceParams.Service = &instace
 	serviceParams.ServiceID = instace.ID
 
-	IntegrationConfig.CcServiceBroker.Mock.On("GetServiceBrokerGuidByName", mock.Anything).Return("aguid", nil)
-	IntegrationConfig.CcServiceBroker.Mock.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-	IntegrationConfig.CcServiceBroker.Mock.On("Update", "aguid", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-	IntegrationConfig.CcServiceBroker.Mock.On("EnableServiceAccess", mock.Anything).Return(nil)
-
 	response = IntegrationConfig.MgmtAPI.UpdateServiceHandler.Handle(*serviceParams, true)
 	assert.IsType(&operations.UpdateServiceOK{}, response)
 
@@ -311,6 +350,121 @@ func Test_IntUpdate(t *testing.T) {
 
 	response = IntegrationConfig.MgmtAPI.UpdateDialHandler.Handle(*dialUpdateParams, true)
 	assert.IsType(&operations.UpdateDialOK{}, response)
+}
+
+func Test_IntServicePlan(t *testing.T) {
+	assert := assert.New(t)
+
+	if IntegrationConfig.consulAddress == "" {
+		t.Skip("Skipping mgmt update test, environment variables not set: CONSUL_ADDRESS(host:port), CONSUL_DATACENTER, CONSUL_TOKEN / CONSUL_USER + CONSUL_PASSWORD, CONSUL_SCHEMA")
+	}
+
+	err := initManager()
+	if err != nil {
+		t.Error(err)
+	}
+
+	IntegrationConfig.CcServiceBroker.Mock.On("GetServiceBrokerGuidByName", mock.Anything).Return("aguid", nil)
+	IntegrationConfig.CcServiceBroker.Mock.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	IntegrationConfig.CcServiceBroker.Mock.On("Update", "aguid", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	IntegrationConfig.CcServiceBroker.Mock.On("EnableServiceAccess", mock.Anything).Return(nil)
+
+	response := IntegrationConfig.MgmtAPI.GetDriversHandler.Handle(true)
+
+	//get first driver
+	assert.IsType(&operations.GetDriversOK{}, response)
+	drivers := response.(*operations.GetDriversOK).Payload
+
+	firstDriver := drivers[0]
+
+	t.Log(firstDriver)
+
+	//get all dials
+	dialParams := &operations.GetAllDialsParams{}
+
+	for key, _ := range firstDriver.DriverInstances {
+		dialParams.DriverInstanceID = firstDriver.DriverInstances[key]
+		break
+	}
+
+	response = IntegrationConfig.MgmtAPI.GetAllDialsHandler.Handle(*dialParams, true)
+	assert.IsType(&operations.GetAllDialsOK{}, response)
+
+	dials := response.(*operations.GetAllDialsOK).Payload
+
+	//create dial
+	createDialParams := &operations.CreateDialParams{}
+	var instaceDial genmodel.Dial
+
+	instaceDial.DriverInstanceID = dialParams.DriverInstanceID
+
+	dialConfig := make(map[string]interface{})
+	dialConfig["max_db_size_mb"] = "200"
+	instaceDial.Configuration = &dialConfig
+	createDialParams.Dial = &instaceDial
+
+	response = IntegrationConfig.MgmtAPI.CreateDialHandler.Handle(*createDialParams, true)
+	assert.IsType(&operations.CreateDialCreated{}, response)
+
+	createdDial := response.(*operations.CreateDialCreated).Payload
+	t.Log("CREATED DIAL", createdDial)
+
+	//get all dials after create
+	response = IntegrationConfig.MgmtAPI.GetAllDialsHandler.Handle(*dialParams, true)
+	assert.IsType(&operations.GetAllDialsOK{}, response)
+
+	dialsAfter := response.(*operations.GetAllDialsOK).Payload
+	assert.Len(dialsAfter, len(dials)+1, "The size of slice is not as expected")
+
+	// create service plan
+	planDescription := "test plan description"
+	planName := "someName"
+	splanParams := &operations.CreateServicePlanParams{}
+	var plan genmodel.Plan
+
+	plan.DialID = createdDial.ID
+	plan.Description = planDescription
+	plan.Free = true
+	plan.Name = planName
+
+	splanParams.Plan = &plan
+
+	response = IntegrationConfig.MgmtAPI.CreateServicePlanHandler.Handle(*splanParams, true)
+	assert.IsType(&operations.CreateServicePlanCreated{}, response)
+
+	createdPlan := response.(*operations.CreateServicePlanCreated).Payload
+	t.Log("CREATED PLAN", createdPlan)
+
+	//get service plan
+	getPlanParams := &operations.GetServicePlanParams{}
+	getPlanParams.PlanID = createdPlan.ID
+
+	response = IntegrationConfig.MgmtAPI.GetServicePlanHandler.Handle(*getPlanParams, true)
+	assert.IsType(&operations.GetServicePlanOK{}, response)
+
+	existingPlan := response.(*operations.GetServicePlanOK).Payload
+	assert.Equal(planDescription, existingPlan.Description, "Service plan description is not "+planDescription)
+	assert.Equal(true, existingPlan.Free, "Service plan should be free")
+	assert.Equal(createdDial.ID, existingPlan.DialID, "Dial Id for service plan should be "+createdDial.ID)
+	assert.Equal(planName, existingPlan.Name, "Service plan name should be "+planName)
+	t.Log("EXISTING PLAN", existingPlan)
+
+	params := &operations.UpdateServicePlanParams{}
+
+	existingPlan.Description = "some updated plan description"
+	existingPlan.Name = "someUpdatedPlan"
+
+	params.PlanID = existingPlan.ID
+	params.Plan = existingPlan
+	t.Log("PLAN UPDATE", existingPlan)
+
+	response = IntegrationConfig.MgmtAPI.UpdateServicePlanHandler.Handle(*params, true)
+	assert.IsType(&operations.UpdateServicePlanOK{}, response)
+
+	deletePlanParams := &operations.DeleteServicePlanParams{}
+	deletePlanParams.PlanID = existingPlan.ID
+	response = IntegrationConfig.MgmtAPI.DeleteServicePlanHandler.Handle(*deletePlanParams, true)
+	assert.IsType(&operations.DeleteServicePlanNoContent{}, response)
 }
 
 //Cleanup

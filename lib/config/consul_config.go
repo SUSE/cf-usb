@@ -410,9 +410,13 @@ func (c *consulConfig) DriverTypeExists(driverType string) (bool, error) {
 
 	for _, driver := range drivers {
 		driver = strings.TrimSuffix(driver, "/")
-		driver = strings.TrimPrefix(driver, "usb/drivers/")
 
-		if driver == driverType {
+		value, err := c.provisioner.GetValue(driver)
+		if err != nil {
+			return false, err
+		}
+
+		if string(value) == driverType {
 			return true, nil
 		}
 	}
