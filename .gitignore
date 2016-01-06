@@ -1,3 +1,8 @@
 build/
 *.test
 coverage.xml
+cf-usb-release/dev_releases
+cf-usb-release/.dev_builds
+cf-usb-release/blobs
+cf-usb-release/.blobs
+cf-usb-release/config/dev.yml

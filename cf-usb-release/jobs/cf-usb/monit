@@ -1,0 +1,5 @@
+check process usb
+  with pidfile /var/vcap/sys/run/cf-usb/cf-usb.pid
+  start program "/var/vcap/jobs/cf-usb/bin/cf-usb.ctl start" with timeout 60 seconds
+  stop program "/var/vcap/jobs/cf-usb/bin/cf-usb.ctl stop" with timeout 60 seconds
+  group vcap
