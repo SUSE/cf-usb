@@ -40,7 +40,7 @@ function start()
 
     broker_api='{"external_url":"http://<%= p("cf-usb.broker.external_url") %>","listen":":<%= p("cf-usb.broker.port") %>","dev_mode":<%= p("cf-usb.broker.dev_mode") %>,"credentials":{"username":"<%= p("cf-usb.broker.username") %>","password":"<%= p("cf-usb.broker.password") %>"}}'
     loglevel='<%= p("cf-usb.loglevel") %>'
-    management_api='{"listen":":<%= p("cf-usb.management.port") %>","uaa_secret":"<%= p("cf-usb.management.uaa.secret") %>","uaa_client":"<%= p("cf-usb.management.uaa.client") %>","authentication":{"uaa":{"adminscope":"usb.management.admin","public_key":"<%= p("cf-usb.management.public_key").gsub("\n","").gsub("        ","") %>"}},"cloud_controller":{"api":"<%= p("cc.srv_api_uri") %>","skip_tsl_validation":<%= p("cf-usb.skip_tsl_validation") %>}}'
+    management_api='{"listen":":<%= p("cf-usb.management.port") %>","uaa_secret":"<%= p("cf-usb.management.uaa.secret") %>","uaa_client":"<%= p("cf-usb.management.uaa.client") %>","authentication":{"uaa":{"adminscope":"usb.management.admin","public_key":"<%= p("cf-usb.management.public_key").gsub("\n","\\n").gsub("        ","") %>"}},"cloud_controller":{"api":"<%= p("cc.srv_api_uri") %>","skip_tsl_validation":<%= p("cf-usb.skip_tsl_validation") %>}}'
 
     curl -X PUT -d "$broker_api" http://127.0.0.1:8500/v1/kv/usb/broker_api
     curl -X PUT -d "$management_api" http://127.0.0.1:8500/v1/kv/usb/management_api
