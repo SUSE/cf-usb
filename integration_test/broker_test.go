@@ -238,7 +238,6 @@ func Test_BrokerWithConsulConfigProviderCatalog(t *testing.T) {
 
 	var list api.KVPairs
 
-	list = append(list, &api.KVPair{Key: "usb/loglevel", Value: []byte("debug")})
 	list = append(list, &api.KVPair{Key: "usb/broker_api", Value: []byte("{\"listen\":\":54054\",\"credentials\":{\"username\":\"demouser\",\"password\":\"demopassword\"}}")})
 	list = append(list, &api.KVPair{Key: "usb/management_api", Value: []byte(fmt.Sprintf("{\"listen\":\":54053\",\"uaa_secret\":\"myuaasecret\",\"uaa_client\":\"myuaaclient\",\"authentication\":{\"uaa\":{\"adminscope\":\"usb.management.admin\",\"public_key\":\"[%1]s \"}},\"cloud_controller\":{\"api\":\"\",\"skip_tsl_validation\":true}}", uaaPublicKey))})
 
@@ -369,7 +368,6 @@ func Test_BrokerWithConsulConfigProviderCreateDriverInstance(t *testing.T) {
 
 	var list api.KVPairs
 
-	list = append(list, &api.KVPair{Key: "usb/loglevel", Value: []byte("debug")})
 	list = append(list, &api.KVPair{Key: "usb/broker_api", Value: []byte("{\"listen\":\":54054\",\"credentials\":{\"username\":\"demouser\",\"password\":\"demopassword\"}}")})
 	list = append(list, &api.KVPair{Key: "usb/management_api", Value: []byte(fmt.Sprintf("{\"listen\":\":54053\",\"uaa_secret\":\"myuaasecret\",\"uaa_client\":\"myuaaclient\",\"authentication\":{\"uaa\":{\"adminscope\":\"usb.management.admin\",\"public_key\":\"%[1]s\"}},\"cloud_controller\":{\"api\":\"%[2]s\",\"skip_tsl_validation\":true}}", uaaPublicKey, ccFakeServer.URL()))})
 

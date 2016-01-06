@@ -22,7 +22,6 @@ import (
 var fileProviderConfig = `
 {
     "api_version": "2.6",
-    "logLevel": "debug",
     "broker_api": {
 		"external_url": "http://127.0.0.1:54054",
         "listen": ":54054",		
