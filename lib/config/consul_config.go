@@ -349,6 +349,9 @@ func (c *consulConfig) LoadDriverInstance(instanceID string) (*DriverInstance, e
 		if err != nil {
 			return nil, err
 		}
+		if driverInstance.Dials == nil {
+			driverInstance.Dials = make(map[string]Dial)
+		}
 		driverInstance.Dials[dialKey] = *dialInfo
 	}
 

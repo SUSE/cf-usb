@@ -503,14 +503,20 @@ func executeTest(t *testing.T, driverName string, envVarsExist func() bool, driv
 		}
 		defer newDriverResp.Body.Close()
 
+		//driver type exists
+		if newDriverResp.StatusCode == 409 {
+			t.Skip(fmt.Sprintf("Skipping test as driver type %[1]s already exists", driverName))
+		}
+
 		driverContent, err := ioutil.ReadAll(newDriverResp.Body)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		type DriverResponse struct {
-			Id   string `json:"id"`
-			Name string `json:"name"`
+			Id         string `json:"id"`
+			Name       string `json:"name"`
+			DriverType string `json:"driver_type"`
 		}
 
 		var driver DriverResponse
@@ -566,9 +572,10 @@ func executeTest(t *testing.T, driverName string, envVarsExist func() bool, driv
 		t.Logf("driver instance: %s", string(driverInstContent))
 
 		type DriverInstanceResponse struct {
-			Id      string `json:"id"`
-			Name    string `json:"name"`
-			Service string `json:"service"`
+			Id      string   `json:"id"`
+			Name    string   `json:"name"`
+			Service string   `json:"service"`
+			Dials   []string `json:"dials,omitempty"`
 		}
 
 		var driverInstance DriverInstanceResponse
@@ -579,7 +586,7 @@ func executeTest(t *testing.T, driverName string, envVarsExist func() bool, driv
 		}
 		Expect(driverInstContent).To(ContainSubstring(driver.Name))
 
-		getPlanReq, err := http.NewRequest("GET", fmt.Sprintf("http://localhost:54053/plans?q=driverInstanceId:%[1]s", driverId), nil)
+		getPlanReq, err := http.NewRequest("GET", fmt.Sprintf("http://localhost:54053/plans?q=driverInstanceId:%[1]s", driverInstance.Id), nil)
 		getPlanReq.Header.Add("Content-Type", "application/json")
 		getPlanReq.Header.Add("Accept", "application/json")
 		getPlanReq.Header.Add("Authorization", token)
@@ -599,6 +606,26 @@ func executeTest(t *testing.T, driverName string, envVarsExist func() bool, driv
 		}
 		t.Logf("get plan response content: %s", string(getPlanContent))
 		Expect(getPlanContent).To(ContainSubstring("default"))
+
+		getDialReq, err := http.NewRequest("GET", fmt.Sprintf("http://localhost:54053/dials?q=driverInstanceId:%[1]s", driverInstance.Id), nil)
+		getDialReq.Header.Add("Content-Type", "application/json")
+		getDialReq.Header.Add("Accept", "application/json")
+		getDialReq.Header.Add("Authorization", token)
+
+		getDialResp, err := http.DefaultClient.Do(getDialReq)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer getDialResp.Body.Close()
+
+		Expect(getDialResp.StatusCode).To((Equal(200)))
+
+		getDialContent, err := ioutil.ReadAll(getDialResp.Body)
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Logf("get dial response content: %s", string(getDialContent))
+		Expect(getDialContent).To(ContainSubstring("plan"))
 
 		getServiceReq, err := http.NewRequest("GET", fmt.Sprintf("http://localhost:54053/services/%[1]s", driverInstance.Service), nil)
 		getServiceReq.Header.Add("Content-Type", "application/json")
