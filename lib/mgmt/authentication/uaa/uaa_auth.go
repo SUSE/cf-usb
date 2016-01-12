@@ -1,33 +1,35 @@
 package uaa
 
 import (
-	auth "github.com/cloudfoundry-incubator/routing-api/authentication"
 	"github.com/hpcloud/cf-usb/lib/mgmt/authentication"
+	accessToken "github.com/hpcloud/cf-usb/lib/mgmt/authentication/uaa/token"
 	"github.com/pivotal-golang/lager"
 )
 
 type UaaAuth struct {
-	accessToken auth.Token
+	accessToken accessToken.Token
 	scope       string
 	logger      lager.Logger
 }
 
-func NewUaaAuth(uaaPublicKey string, scope string, devMode bool, logger lager.Logger) (authentication.AuthenticationInterface, error) {
-	var token auth.Token
+func NewUaaAuth(uaaPublicKey string, symmetricVerificationKey string, scope string, devMode bool, logger lager.Logger) (authentication.AuthenticationInterface, error) {
+	var token accessToken.Token
 
 	if devMode {
-		token = auth.NullToken{}
+		token = accessToken.NullToken{}
 	} else {
-		token = auth.NewAccessToken(uaaPublicKey)
+		token = accessToken.NewAccessToken(uaaPublicKey, symmetricVerificationKey)
 	}
 
 	log := logger.Session("authentication", lager.Data{"dev mode": devMode})
 
 	newAuth := UaaAuth{token, scope, log}
 
-	err := newAuth.accessToken.CheckPublicToken()
-	if err != nil {
-		return nil, err
+	if uaaPublicKey != "" {
+		err := newAuth.accessToken.CheckPublicToken()
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	log.Debug("initializing-uaa-auth-succeeded")

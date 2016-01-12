@@ -84,6 +84,7 @@ func (usb *UsbApp) Run(configProvider config.ConfigProvider, logger lager.Logger
 
 			auth, err := uaa.NewUaaAuth(
 				uaaAuthConfig.PublicKey,
+				uaaAuthConfig.SymmetricVerificationKey,
 				uaaAuthConfig.Scope,
 				usb.config.ManagementAPI.DevMode,
 				logger)
