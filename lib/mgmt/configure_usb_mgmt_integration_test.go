@@ -202,7 +202,6 @@ func Test_IntCreate(t *testing.T) {
 	splanParams.Plan = &plan
 
 	response = IntegrationConfig.MgmtAPI.CreateServicePlanHandler.Handle(*splanParams, true)
-
 	assert.IsType(&operations.CreateServicePlanCreated{}, response)
 }
 
@@ -261,7 +260,7 @@ func Test_IntUpdate(t *testing.T) {
 
 	assert.IsType(&operations.GetDriversOK{}, response)
 	drivers := response.(*operations.GetDriversOK).Payload
-
+	t.Log("Drivers === ", drivers)
 	firstDriver := drivers[0]
 
 	t.Log(firstDriver)

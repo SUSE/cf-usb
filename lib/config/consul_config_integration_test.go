@@ -69,6 +69,7 @@ func Test_IntConsulSetDriver(t *testing.T) {
 
 	var driverInfo Driver
 	driverInfo.DriverType = "testType"
+	driverInfo.DriverName = "testName"
 	err = IntegrationConfig.Provider.SetDriver("testID", driverInfo)
 	assert.NoError(err)
 }
@@ -118,6 +119,24 @@ func Test_IntGetDriverInstance(t *testing.T) {
 
 	instance, err := IntegrationConfig.Provider.GetDriverInstance("testInstanceID")
 
+	assert.Equal("testInstance", instance.Name)
+	assert.NoError(err)
+}
+
+func Test_IntLoadDriverInstance(t *testing.T) {
+	initialized, err := initProvider()
+	if initialized == false {
+		t.Skip("Skipping Consul Set Driver test, environment variables not set: CONSUL_ADDRESS(host:port), CONSUL_DATACENTER, CONSUL_TOKEN / CONSUL_USER + CONSUL_PASSWORD, CONSUL_SCHEMA")
+		t.Log(err)
+	}
+
+	assert := assert.New(t)
+
+	instance, err := IntegrationConfig.Provider.LoadDriverInstance("testInstanceID")
+	t.Log("Load driver instance results:")
+	t.Log(instance.Configuration)
+	t.Log(instance.Dials)
+	t.Log(instance.Service)
 	assert.Equal("testInstance", instance.Name)
 	assert.NoError(err)
 }
@@ -243,4 +262,21 @@ func Test_IntDriverTypeExists(t *testing.T) {
 	}
 	assert.NoError(err)
 	assert.True(exist)
+}
+
+func Test_IntLoadConfiguration(t *testing.T) {
+	initialized, err := initProvider()
+	if initialized == false {
+		t.Skip("Skipping Consul Set Driver test, environment variables not set: CONSUL_ADDRESS(host:port), CONSUL_DATACENTER, CONSUL_TOKEN / CONSUL_USER + CONSUL_PASSWORD, CONSUL_SCHEMA")
+		t.Log(err)
+	}
+
+	assert := assert.New(t)
+
+	configuration, err := IntegrationConfig.Provider.LoadConfiguration()
+	if err != nil {
+		assert.Error(err, "Load configuration failed")
+	}
+	t.Log(configuration.Drivers)
+	assert.NoError(err)
 }

@@ -238,6 +238,7 @@ func Test_BrokerWithConsulConfigProviderCatalog(t *testing.T) {
 
 	var list api.KVPairs
 
+	list = append(list, &api.KVPair{Key: "usb/api_version", Value: []byte("2.0")})
 	list = append(list, &api.KVPair{Key: "usb/broker_api", Value: []byte("{\"listen\":\":54054\",\"credentials\":{\"username\":\"demouser\",\"password\":\"demopassword\"}}")})
 	list = append(list, &api.KVPair{Key: "usb/management_api", Value: []byte(fmt.Sprintf("{\"listen\":\":54053\",\"uaa_secret\":\"myuaasecret\",\"uaa_client\":\"myuaaclient\",\"authentication\":{\"uaa\":{\"adminscope\":\"usb.management.admin\",\"public_key\":\"[%1]s \"}},\"cloud_controller\":{\"api\":\"\",\"skip_tsl_validation\":true}}", uaaPublicKey))})
 
@@ -367,7 +368,7 @@ func Test_BrokerWithConsulConfigProviderCreateDriverInstance(t *testing.T) {
 	}
 
 	var list api.KVPairs
-
+	list = append(list, &api.KVPair{Key: "usb/api_version", Value: []byte("2.0")})
 	list = append(list, &api.KVPair{Key: "usb/broker_api", Value: []byte("{\"listen\":\":54054\",\"credentials\":{\"username\":\"demouser\",\"password\":\"demopassword\"}}")})
 	list = append(list, &api.KVPair{Key: "usb/management_api", Value: []byte(fmt.Sprintf("{\"listen\":\":54053\",\"uaa_secret\":\"myuaasecret\",\"uaa_client\":\"myuaaclient\",\"authentication\":{\"uaa\":{\"adminscope\":\"usb.management.admin\",\"public_key\":\"%[1]s\"}},\"cloud_controller\":{\"api\":\"%[2]s\",\"skip_tsl_validation\":true}}", uaaPublicKey, ccFakeServer.URL()))})
 
@@ -584,7 +585,7 @@ func executeTest(t *testing.T, driverName string, envVarsExist func() bool, driv
 		}
 		Expect(driverInstContent).To(ContainSubstring(driver.Name))
 
-		getPlanReq, err := http.NewRequest("GET", fmt.Sprintf("http://localhost:54053/plans?q=driverInstanceId:%[1]s", driverInstance.Id), nil)
+		getPlanReq, err := http.NewRequest("GET", fmt.Sprintf("http://localhost:54053/plans?driver_instance_id=%[1]s", driverInstance.Id), nil)
 		getPlanReq.Header.Add("Content-Type", "application/json")
 		getPlanReq.Header.Add("Accept", "application/json")
 		getPlanReq.Header.Add("Authorization", token)
@@ -605,7 +606,7 @@ func executeTest(t *testing.T, driverName string, envVarsExist func() bool, driv
 		t.Logf("get plan response content: %s", string(getPlanContent))
 		Expect(getPlanContent).To(ContainSubstring("default"))
 
-		getDialReq, err := http.NewRequest("GET", fmt.Sprintf("http://localhost:54053/dials?q=driverInstanceId:%[1]s", driverInstance.Id), nil)
+		getDialReq, err := http.NewRequest("GET", fmt.Sprintf("http://localhost:54053/dials?driver_instance_id=%[1]s", driverInstance.Id), nil)
 		getDialReq.Header.Add("Content-Type", "application/json")
 		getDialReq.Header.Add("Accept", "application/json")
 		getDialReq.Header.Add("Authorization", token)

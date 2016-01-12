@@ -17,6 +17,8 @@ func Test_Redis_LoadConfiguration(t *testing.T) {
 	assert := assert.New(t)
 	provisioner := new(redisMock.RedisProvisionerInterface)
 
+	provisioner.On("GetValue", "api_version").Return("2.0", nil)
+
 	provisioner.On("GetValue", "broker_api").Return("{\"listen\":\":54054\",\"credentials\":{\"username\":\"demouser\",\"password\":\"demopassword\"}}", nil)
 
 	provisioner.On("GetValue", "management_api").Return("{\"listen\":\":54053\",\"uaa_secret\":\"myuaasecret\",\"uaa_client\":\"myuaaclient\",\"authentication\":{\"uaa\":{\"adminscope\":\"usb.management.admin\",\"public_key\":\"\"}}}", nil)
@@ -32,6 +34,8 @@ func Test_Redis_LoadConfiguration(t *testing.T) {
 func Test_Redis_GetDriver(t *testing.T) {
 	assert := assert.New(t)
 	provisioner := new(redisMock.RedisProvisionerInterface)
+	provisioner.On("GetValue", "api_version").Return("2.0", nil)
+
 	provisioner.On("GetValue", "broker_api").Return("{\"listen\":\":54054\",\"credentials\":{\"username\":\"demouser\",\"password\":\"demopassword\"}}", nil)
 
 	provisioner.On("GetValue", "management_api").Return("{\"listen\":\":54053\",\"uaa_secret\":\"myuaasecret\",\"uaa_client\":\"myuaaclient\",\"authentication\":{\"uaa\":{\"adminscope\":\"usb.management.admin\",\"public_key\":\"\"}}}", nil)
@@ -49,6 +53,8 @@ func Test_Redis_GetDriver(t *testing.T) {
 func Test_Redis_GetDriverInstance(t *testing.T) {
 	assert := assert.New(t)
 	provisioner := new(redisMock.RedisProvisionerInterface)
+	provisioner.On("GetValue", "api_version").Return("2.0", nil)
+
 	provisioner.On("GetValue", "broker_api").Return("{\"listen\":\":54054\",\"credentials\":{\"username\":\"demouser\",\"password\":\"demopassword\"}}", nil)
 
 	provisioner.On("GetValue", "management_api").Return("{\"listen\":\":54053\",\"uaa_secret\":\"myuaasecret\",\"uaa_client\":\"myuaaclient\",\"authentication\":{\"uaa\":{\"adminscope\":\"usb.management.admin\",\"public_key\":\"\"}}}", nil)
@@ -64,6 +70,8 @@ func Test_Redis_GetDriverInstance(t *testing.T) {
 func Test_Redis_GetDial(t *testing.T) {
 	assert := assert.New(t)
 	provisioner := new(redisMock.RedisProvisionerInterface)
+	provisioner.On("GetValue", "api_version").Return("2.0", nil)
+
 	provisioner.On("GetValue", "broker_api").Return("{\"listen\":\":54054\",\"credentials\":{\"username\":\"demouser\",\"password\":\"demopassword\"}}", nil)
 
 	provisioner.On("GetValue", "management_api").Return("{\"listen\":\":54053\",\"uaa_secret\":\"myuaasecret\",\"uaa_client\":\"myuaaclient\",\"authentication\":{\"uaa\":{\"adminscope\":\"usb.management.admin\",\"public_key\":\"\"}}}", nil)
@@ -81,6 +89,8 @@ func Test_Redis_GetDial(t *testing.T) {
 func Test_Redis_GetService(t *testing.T) {
 	assert := assert.New(t)
 	provisioner := new(redisMock.RedisProvisionerInterface)
+	provisioner.On("GetValue", "api_version").Return("2.0", nil)
+
 	provisioner.On("GetValue", "broker_api").Return("{\"listen\":\":54054\",\"credentials\":{\"username\":\"demouser\",\"password\":\"demopassword\"}}", nil)
 
 	provisioner.On("GetValue", "management_api").Return("{\"listen\":\":54053\",\"uaa_secret\":\"myuaasecret\",\"uaa_client\":\"myuaaclient\",\"authentication\":{\"uaa\":{\"adminscope\":\"usb.management.admin\",\"public_key\":\"\"}}}", nil)
@@ -99,6 +109,7 @@ func Test_Redis_GetService(t *testing.T) {
 func Test_Redis_SetDriver(t *testing.T) {
 	assert := assert.New(t)
 	provisioner := new(redisMock.RedisProvisionerInterface)
+	provisioner.On("GetValue", "api_version").Return("2.0", nil)
 
 	provisioner.On("GetValue", "broker_api").Return("{\"listen\":\":54054\",\"credentials\":{\"username\":\"demouser\",\"password\":\"demopassword\"}}", nil)
 
@@ -144,6 +155,7 @@ func Test_Redis_SetDriverInstance(t *testing.T) {
 func Test_Redis_SetDial(t *testing.T) {
 	assert := assert.New(t)
 	provisioner := new(redisMock.RedisProvisionerInterface)
+	provisioner.On("GetValue", "api_version").Return("2.0", nil)
 
 	provisioner.On("GetValue", "broker_api").Return("{\"listen\":\":54054\",\"credentials\":{\"username\":\"demouser\",\"password\":\"demopassword\"}}", nil)
 
@@ -165,6 +177,7 @@ func Test_Redis_SetDial(t *testing.T) {
 func Test_Redis_SetService(t *testing.T) {
 	assert := assert.New(t)
 	provisioner := new(redisMock.RedisProvisionerInterface)
+	provisioner.On("GetValue", "api_version").Return("2.0", nil)
 
 	provisioner.On("GetValue", "broker_api").Return("{\"listen\":\":54054\",\"credentials\":{\"username\":\"demouser\",\"password\":\"demopassword\"}}", nil)
 
@@ -190,6 +203,7 @@ func Test_Redis_SetService(t *testing.T) {
 func Test_Redis_DeleteDriver(t *testing.T) {
 	assert := assert.New(t)
 	provisioner := new(redisMock.RedisProvisionerInterface)
+	provisioner.On("GetValue", "api_version").Return("2.0", nil)
 
 	provisioner.On("GetValue", "broker_api").Return("{\"listen\":\":54054\",\"credentials\":{\"username\":\"demouser\",\"password\":\"demopassword\"}}", nil)
 
@@ -209,6 +223,7 @@ func Test_Redis_DeleteDriver(t *testing.T) {
 func Test_Redis_DeleteDriverInstance(t *testing.T) {
 	assert := assert.New(t)
 	provisioner := new(redisMock.RedisProvisionerInterface)
+	provisioner.On("GetValue", "api_version").Return("2.0", nil)
 
 	provisioner.On("GetValue", "broker_api").Return("{\"listen\":\":54054\",\"credentials\":{\"username\":\"demouser\",\"password\":\"demopassword\"}}", nil)
 
@@ -228,6 +243,7 @@ func Test_Redis_DeleteDriverInstance(t *testing.T) {
 func Test_Redis_DeleteDial(t *testing.T) {
 	assert := assert.New(t)
 	provisioner := new(redisMock.RedisProvisionerInterface)
+	provisioner.On("GetValue", "api_version").Return("2.0", nil)
 
 	provisioner.On("GetValue", "broker_api").Return("{\"listen\":\":54054\",\"credentials\":{\"username\":\"demouser\",\"password\":\"demopassword\"}}", nil)
 
@@ -247,6 +263,7 @@ func Test_Redis_DeleteDial(t *testing.T) {
 func Test_Redis_DeleteService(t *testing.T) {
 	assert := assert.New(t)
 	provisioner := new(redisMock.RedisProvisionerInterface)
+	provisioner.On("GetValue", "api_version").Return("2.0", nil)
 
 	provisioner.On("GetValue", "broker_api").Return("{\"listen\":\":54054\",\"credentials\":{\"username\":\"demouser\",\"password\":\"demopassword\"}}", nil)
 
