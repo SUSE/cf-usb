@@ -41,3 +41,9 @@ properties:
   cf-usb.override:
     description: Override the drivers ?
     default: false
+  cf-usb.configprovider:
+    description: What configuration storage to use
+    default: consulConfigProvider
+  cf-usb.configconnectionstring:
+    description: The connection string for the configuration storage
+    default: "127.0.0.1:8500"
