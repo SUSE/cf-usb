@@ -1,11 +1,10 @@
 package main
 
 import (
-	"fmt"
-	"os"
-
 	"github.com/codegangsta/cli"
 	"github.com/hpcloud/cf-usb/lib/config"
+	"os"
+	"strings"
 )
 
 type FileConfigProvider struct {
@@ -33,6 +32,7 @@ func (k *FileConfigProvider) GetCLICommands(app Usb) []cli.Command {
 
 func fileConfigProviderCommand(app Usb) func(c *cli.Context) {
 	return func(c *cli.Context) {
+		logger := NewLogger(strings.ToLower(c.GlobalString("loglevel")))
 		configFilePath := c.String("path")
 
 		if configFilePath == "" {
@@ -42,12 +42,10 @@ func fileConfigProviderCommand(app Usb) func(c *cli.Context) {
 
 		_, err := os.Stat(configFilePath)
 		if os.IsNotExist(err) {
-			fmt.Println(fmt.Sprintf("Configuration file %s does not exist", configFilePath))
-			os.Exit(1)
+			logger.Fatal("configuration-file-not-found", err)
 		}
 
 		configuraiton := config.NewFileConfig(configFilePath)
-
-		app.Run(configuraiton)
+		app.Run(configuraiton, logger)
 	}
 }

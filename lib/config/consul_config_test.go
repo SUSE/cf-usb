@@ -257,7 +257,6 @@ func Test_ConsulLoadConfig(t *testing.T) {
 	t.Log(config.BrokerAPI)
 	t.Log(config.ManagementAPI)
 	t.Log(config.Drivers)
-	t.Log(config.LogLevel)
 
 	assert.NoError(err)
 }

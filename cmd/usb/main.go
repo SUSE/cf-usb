@@ -8,6 +8,7 @@ import (
 )
 
 func main() {
+
 	usb := NewUsbApp()
 
 	app := cli.NewApp()
@@ -17,6 +18,14 @@ func main() {
 		for _, cliCommand := range command.GetCLICommands(usb) {
 			app.Commands = append(app.Commands, cliCommand)
 		}
+	}
+
+	app.Flags = []cli.Flag{
+		cli.StringFlag{
+			Name:  "loglevel",
+			Value: "debug",
+			Usage: "Set log level (info,debug,error,fatal)",
+		},
 	}
 
 	err := app.Run(os.Args)

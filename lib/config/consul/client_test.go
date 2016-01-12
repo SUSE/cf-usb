@@ -86,8 +86,6 @@ func Test_AddKVList(t *testing.T) {
 
 	log.Println("Testing put key-value list")
 
-	list = append(list, &api.KVPair{Key: "usb/loglevel", Value: []byte("debug")})
-
 	list = append(list, &api.KVPair{Key: "usb/broker_api", Value: []byte("{\"listen\":\":54054\",\"credentials\":{\"username\":\"demouser\",\"password\":\"demopassword\"}}")})
 
 	list = append(list, &api.KVPair{Key: "usb/management_api", Value: []byte("{\"listen\":\":54053\",\"uaa_secret\":\"myuaasecret\",\"uaa_client\":\"myuaaclient\",\"authentication\":{\"uaa\":{\"adminscope\":\"usb.management.admin\",\"public_key\":\"\"}}}")})

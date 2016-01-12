@@ -21,34 +21,7 @@ import (
 
 type Usb interface {
 	GetCommands() []CLICommandProvider
-	Run(config.ConfigProvider)
-}
-
-var logger = lager.NewLogger("usb")
-
-const (
-	DEBUG = "debug"
-	INFO  = "info"
-	ERROR = "error"
-	FATAL = "fatal"
-)
-
-func getLogLevel(config *config.Config) lager.LogLevel {
-	var minLogLevel lager.LogLevel
-	switch config.LogLevel {
-	case DEBUG:
-		minLogLevel = lager.DEBUG
-	case INFO:
-		minLogLevel = lager.INFO
-	case ERROR:
-		minLogLevel = lager.ERROR
-	case FATAL:
-		minLogLevel = lager.FATAL
-	default:
-		minLogLevel = lager.DEBUG
-	}
-
-	return minLogLevel
+	Run(config.ConfigProvider, lager.Logger)
 }
 
 type UsbApp struct {
@@ -68,31 +41,28 @@ func (usb *UsbApp) GetCommands() []CLICommandProvider {
 	}
 }
 
-func (usb *UsbApp) Run(configProvider config.ConfigProvider) {
+func (usb *UsbApp) Run(configProvider config.ConfigProvider, logger lager.Logger) {
 	var err error
+	usb.logger = logger
 	usb.config, err = configProvider.LoadConfiguration()
 	if err != nil {
 		fmt.Println("Unable to load configuration", err.Error())
 		os.Exit(1)
 	}
 
-	logger.RegisterSink(lager.NewWriterSink(os.Stdout, getLogLevel(usb.config)))
+	usb.logger.Info("initializing-drivers")
 
-	usb.logger = logger
+	usbService := lib.NewUsbBroker(configProvider, usb.logger)
 
-	logger.Info("initializing-drivers")
+	usb.logger.Info("initializing-brokerapi")
 
-	usbService := lib.NewUsbBroker(configProvider, logger)
-
-	logger.Info("initializing-brokerapi")
-
-	brokerAPI := brokerapi.New(usbService, logger, usb.config.BrokerAPI.Credentials)
+	brokerAPI := brokerapi.New(usbService, usb.logger, usb.config.BrokerAPI.Credentials)
 
 	addr := usb.config.BrokerAPI.Listen
 
 	if usb.config.ManagementAPI != nil {
 		go func() {
-			logger := logger.Session("management-api")
+			logger := usb.logger.Session("management-api")
 
 			logger.Info("starting")
 
@@ -144,12 +114,12 @@ func (usb *UsbApp) Run(configProvider config.ConfigProvider) {
 	}
 
 	if usb.config.RoutesRegister != nil {
-		go usb.StartRouteRegistration(usb.config, logger)
+		go usb.StartRouteRegistration(usb.config, usb.logger)
 	}
 
-	logger.Info("start-listening-brokerapi", lager.Data{"address": addr})
+	usb.logger.Info("start-listening-brokerapi", lager.Data{"address": addr})
 	err = http.ListenAndServe(addr, brokerAPI)
 	if err != nil {
-		logger.Fatal("listening-brokerapi-failed", err)
+		usb.logger.Fatal("listening-brokerapi-failed", err)
 	}
 }

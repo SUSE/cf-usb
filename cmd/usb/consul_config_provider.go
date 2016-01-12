@@ -1,10 +1,10 @@
 package main
 
 import (
-	"os"
-
 	"github.com/codegangsta/cli"
 	"github.com/hpcloud/cf-usb/lib/config"
+	"os"
+	"strings"
 
 	"github.com/hashicorp/consul/api"
 	"github.com/hpcloud/cf-usb/lib/config/consul"
@@ -55,6 +55,8 @@ func (k *ConsulConfigProvider) GetCLICommands(app Usb) []cli.Command {
 
 func consulConfigProviderCommand(app Usb) func(c *cli.Context) {
 	return func(c *cli.Context) {
+		logger := NewLogger(strings.ToLower(c.GlobalString("loglevel")))
+
 		consulAddress := c.String("address")
 
 		if consulAddress == "" {
@@ -87,7 +89,8 @@ func consulConfigProviderCommand(app Usb) func(c *cli.Context) {
 		}
 
 		configuraiton := config.NewConsulConfig(provisioner)
-		app.Run(configuraiton)
+
+		app.Run(configuraiton, logger)
 	}
 
 }

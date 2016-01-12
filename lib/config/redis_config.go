@@ -44,13 +44,6 @@ func (c *redisConfig) LoadConfiguration() (*Config, error) {
 		return nil, err
 	}
 
-	value, err = c.provider.GetValue("log_level")
-
-	if err != nil {
-		return nil, err
-	}
-
-	configuration.LogLevel = value
 	exists, err := c.provider.KeyExists("drivers")
 	if err != nil {
 		return nil, err
