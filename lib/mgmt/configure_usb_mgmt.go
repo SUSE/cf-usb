@@ -120,11 +120,23 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.DeleteServicePlanHandler = DeleteServicePlanHandlerFunc(func(params DeleteServicePlanParams, principal interface{}) middleware.Responder {
-		log.Debug("delete-service-plan", lager.Data{"plan-id": params.PlanID})
+		log = log.Session("delete-service-plan", lager.Data{"plan-id": params.PlanID})
 
 		config, err := configProvider.LoadConfiguration()
 		if err != nil {
 			return &DeleteServicePlanInternalServerError{Payload: err.Error()}
+		}
+
+		guid, err := ccServiceBroker.GetServiceBrokerGuidByName(brokerName)
+		if err != nil {
+			log.Error("get-service-broker-failed", err)
+			return &UpdateServiceInternalServerError{Payload: err.Error()}
+		}
+
+		err = ccServiceBroker.Update(guid, brokerName, config.BrokerAPI.ExternalUrl, config.BrokerAPI.Credentials.Username, config.BrokerAPI.Credentials.Password)
+		if err != nil {
+			log.Error("update-service-broker-failed", err)
+			return &UpdateServiceInternalServerError{Payload: err.Error()}
 		}
 
 		for _, driver := range config.Drivers {
@@ -137,6 +149,12 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 						}
 						return &DeleteServicePlanNoContent{}
 					}
+				}
+
+				err = ccServiceBroker.EnableServiceAccess(instance.Service.Name)
+				if err != nil {
+					log.Error("enable-service-access-failed", err)
+					return &UpdateServiceInternalServerError{Payload: err.Error()}
 				}
 			}
 		}
@@ -290,7 +308,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 							ID:          dial.Plan.ID,
 							DialID:      dialID,
 							Description: dial.Plan.Description,
-							// TODO add free
+							Free:        dial.Plan.Free,
 						}
 
 						return &GetServicePlanOK{Payload: plan}
@@ -596,11 +614,23 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.UpdateServicePlanHandler = UpdateServicePlanHandlerFunc(func(params UpdateServicePlanParams, principal interface{}) middleware.Responder {
-		log.Debug("update-service-plan", lager.Data{"plan-id": params.PlanID})
+		log = log.Session("update-service-plan", lager.Data{"plan-id": params.PlanID})
 
 		config, err := configProvider.LoadConfiguration()
 		if err != nil {
 			return &UpdateServicePlanInternalServerError{Payload: err.Error()}
+		}
+
+		guid, err := ccServiceBroker.GetServiceBrokerGuidByName(brokerName)
+		if err != nil {
+			log.Error("get-service-broker-failed", err)
+			return &UpdateServiceInternalServerError{Payload: err.Error()}
+		}
+
+		err = ccServiceBroker.Update(guid, brokerName, config.BrokerAPI.ExternalUrl, config.BrokerAPI.Credentials.Username, config.BrokerAPI.Credentials.Password)
+		if err != nil {
+			log.Error("update-service-broker-failed", err)
+			return &UpdateServiceInternalServerError{Payload: err.Error()}
 		}
 
 		for _, driver := range config.Drivers {
@@ -614,6 +644,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 							plan.Description = params.Plan.Description
 							plan.ID = params.Plan.ID
 							plan.Name = params.Plan.Name
+							plan.Free = params.Plan.Free
 
 							meta.DisplayName = params.Plan.Name
 							plan.Metadata = &meta
@@ -625,9 +656,13 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 							}
 							return &UpdateServicePlanOK{Payload: params.Plan}
 						}
-					} else {
-						return &UpdateServicePlanNotFound{}
 					}
+				}
+
+				err = ccServiceBroker.EnableServiceAccess(instance.Service.Name)
+				if err != nil {
+					log.Error("enable-service-access-failed", err)
+					return &UpdateServiceInternalServerError{Payload: err.Error()}
 				}
 			}
 		}
@@ -732,7 +767,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 						ID:          dia.Plan.ID,
 						DialID:      diaID,
 						Description: dia.Plan.Description,
-						// TODO add free
+						Free:        dia.Plan.Free,
 					}
 
 					servicePlans = append(servicePlans, plan)
@@ -855,11 +890,23 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.CreateServicePlanHandler = CreateServicePlanHandlerFunc(func(params CreateServicePlanParams, principal interface{}) middleware.Responder {
-		log.Debug("create-service-plan", lager.Data{"dial-id": params.Plan.DialID})
+		log = log.Session("create-service-plan", lager.Data{"dial-id": params.Plan.DialID})
 
 		config, err := configProvider.LoadConfiguration()
 		if err != nil {
 			return &CreateServicePlanInternalServerError{Payload: err.Error()}
+		}
+
+		guid, err := ccServiceBroker.GetServiceBrokerGuidByName(brokerName)
+		if err != nil {
+			log.Error("get-service-broker-failed", err)
+			return &UpdateServiceInternalServerError{Payload: err.Error()}
+		}
+
+		err = ccServiceBroker.Update(guid, brokerName, config.BrokerAPI.ExternalUrl, config.BrokerAPI.Credentials.Username, config.BrokerAPI.Credentials.Password)
+		if err != nil {
+			log.Error("update-service-broker-failed", err)
+			return &UpdateServiceInternalServerError{Payload: err.Error()}
 		}
 
 		for _, driver := range config.Drivers {
@@ -877,6 +924,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 						plan.Description = params.Plan.Description
 						plan.ID = uuid.NewV4().String()
 						plan.Name = params.Plan.Name
+						plan.Free = params.Plan.Free
 
 						meta.DisplayName = params.Plan.Name
 
@@ -893,6 +941,12 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 						return &CreateServicePlanCreated{Payload: params.Plan}
 					}
+				}
+
+				err = ccServiceBroker.EnableServiceAccess(instance.Service.Name)
+				if err != nil {
+					log.Error("enable-service-access-failed", err)
+					return &UpdateServiceInternalServerError{Payload: err.Error()}
 				}
 			}
 		}

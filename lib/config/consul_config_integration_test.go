@@ -237,7 +237,7 @@ func Test_IntDriverTypeExists(t *testing.T) {
 
 	assert := assert.New(t)
 
-	exist, err := IntegrationConfig.Provider.DriverTypeExists("testID")
+	exist, err := IntegrationConfig.Provider.DriverTypeExists("testType")
 	if err != nil {
 		assert.Error(err, "Unable to check driver type existance")
 	}
