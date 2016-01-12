@@ -246,43 +246,33 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.GetDriverInstancesHandler = GetDriverInstancesHandlerFunc(func(params GetDriverInstancesParams, principal interface{}) middleware.Responder {
-		log.Debug("get-driver-instance", lager.Data{"driver-id": params.DriverID})
+		log = log.Session("get-driver-instances", lager.Data{"driver-id": params.DriverID})
 
 		var driverInstances = make([]*genmodel.DriverInstance, 0)
 
-		config, err := configProvider.LoadConfiguration()
+		driver, err := configProvider.GetDriver(params.DriverID)
 		if err != nil {
 			return &GetDriverInstanceInternalServerError{Payload: err.Error()}
 		}
 
-		for driverID, d := range config.Drivers {
-			if params.DriverID != "" && driverID != params.DriverID {
-				continue
+		for _, di := range driver.DriverInstances {
+			var dials = make([]string, 0)
+			for dialID, _ := range di.Dials {
+				dials = append(dials, dialID)
 			}
 
-			for _, di := range d.DriverInstances {
-				var dials = make([]string, 0)
-				for dialID, _ := range di.Dials {
-					dials = append(dials, dialID)
-				}
-
-				var conf map[string]interface{}
-				err := json.Unmarshal(*di.Configuration, &conf)
-				if err != nil {
-					return &GetDriverInstanceInternalServerError{Payload: err.Error()}
-				}
-
-				driverInstance := &genmodel.DriverInstance{
-					Configuration: conf,
-					Dials:         dials,
-					DriverID:      driverID,
-					Name:          di.Name,
-					Service:       di.Service.ID,
-				}
-
-				driverInstances = append(driverInstances, driverInstance)
+			driverInstance := &genmodel.DriverInstance{
+				Configuration: di.Configuration,
+				Dials:         dials,
+				DriverID:      params.DriverID,
+				Name:          di.Name,
+				Service:       di.Service.ID,
 			}
+
+			driverInstances = append(driverInstances, driverInstance)
 		}
+
+		log.Debug("", lager.Data{"driver-instances-found": len(driverInstances)})
 
 		return &GetDriverInstancesOK{Payload: driverInstances}
 	})
@@ -577,35 +567,21 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 		var dials = make([]*genmodel.Dial, 0)
 
-		config, err := configProvider.LoadConfiguration()
+		instanceInfo, err := configProvider.LoadDriverInstance(params.DriverInstanceID)
 		if err != nil {
 			return &GetDialSchemaInternalServerError{Payload: err.Error()}
 		}
 
-		for _, d := range config.Drivers {
-			for diID, di := range d.DriverInstances {
-				if params.DriverInstanceID != "" && diID != params.DriverInstanceID {
-					continue
-				}
+		for diaID, dia := range instanceInfo.Dials {
 
-				for diaID, dia := range di.Dials {
-
-					var conf map[string]interface{}
-					err := json.Unmarshal(*dia.Configuration, &conf)
-					if err != nil {
-						return &GetDialSchemaInternalServerError{Payload: err.Error()}
-					}
-
-					dial := &genmodel.Dial{
-						Configuration:    conf,
-						DriverInstanceID: diID,
-						ID:               diaID,
-						Plan:             dia.Plan.ID,
-					}
-
-					dials = append(dials, dial)
-				}
+			dial := &genmodel.Dial{
+				Configuration:    dia.Configuration,
+				DriverInstanceID: params.DriverInstanceID,
+				ID:               diaID,
+				Plan:             dia.Plan.ID,
 			}
+
+			dials = append(dials, dial)
 		}
 
 		log.Debug("", lager.Data{"dials-found": len(dials)})
@@ -750,29 +726,21 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 		var servicePlans = make([]*genmodel.Plan, 0)
 
-		config, err := configProvider.LoadConfiguration()
+		instanceInfo, err := configProvider.LoadDriverInstance(params.DriverInstanceID)
 		if err != nil {
 			return &GetServicePlansInternalServerError{Payload: err.Error()}
 		}
 
-		for _, d := range config.Drivers {
-			for diID, di := range d.DriverInstances {
-				if params.DriverInstanceID != "" && diID != params.DriverInstanceID {
-					continue
-				}
-
-				for diaID, dia := range di.Dials {
-					plan := &genmodel.Plan{
-						Name:        dia.Plan.Name,
-						ID:          dia.Plan.ID,
-						DialID:      diaID,
-						Description: dia.Plan.Description,
-						Free:        dia.Plan.Free,
-					}
-
-					servicePlans = append(servicePlans, plan)
-				}
+		for diaID, dia := range instanceInfo.Dials {
+			plan := &genmodel.Plan{
+				Name:        dia.Plan.Name,
+				ID:          dia.Plan.ID,
+				DialID:      diaID,
+				Description: dia.Plan.Description,
+				Free:        dia.Plan.Free,
 			}
+
+			servicePlans = append(servicePlans, plan)
 		}
 
 		log.Debug("", lager.Data{"service-plans-found": len(servicePlans)})
