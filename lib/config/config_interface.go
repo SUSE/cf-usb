@@ -50,6 +50,7 @@ type DriverInstance struct {
 type Driver struct {
 	DriverType      string                    `json:"driver_type"`
 	DriverInstances map[string]DriverInstance `json:"driver_instances,omitempty"`
+	DriverName      string                    `json:"driver_name"`
 }
 
 type RoutesRegister struct {

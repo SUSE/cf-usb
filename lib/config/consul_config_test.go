@@ -22,8 +22,11 @@ func Test_ConsulSetDriver(t *testing.T) {
 	provisioner := new(consulMock.ConsulProvisionerInterface)
 
 	k := []byte("testType")
+	n := []byte("testName")
 	var options *api.WriteOptions
-	provisioner.On("AddKV", "usb/drivers/testTypeID", k, options).Return(nil)
+	provisioner.On("AddKV", "usb/drivers/testTypeID/Type", k, options).Return(nil)
+
+	provisioner.On("AddKV", "usb/drivers/testTypeID/Name", n, options).Return(nil)
 
 	TestConfig.Provider = NewConsulConfig(provisioner)
 
@@ -31,6 +34,7 @@ func Test_ConsulSetDriver(t *testing.T) {
 
 	var driverInfo Driver
 	driverInfo.DriverType = "testType"
+	driverInfo.DriverName = "testName"
 
 	err := TestConfig.Provider.SetDriver("testTypeID", driverInfo)
 	assert.NoError(err)
@@ -40,7 +44,9 @@ func Test_GetDriver(t *testing.T) {
 	provisioner := new(consulMock.ConsulProvisionerInterface)
 
 	k := []byte("testType")
-	provisioner.On("GetValue", "usb/drivers/testID").Return(k, nil)
+	n := []byte("testName")
+	provisioner.On("GetValue", "usb/drivers/testID/Type").Return(k, nil)
+	provisioner.On("GetValue", "usb/drivers/testID/Name").Return(n, nil)
 
 	TestConfig.Provider = NewConsulConfig(provisioner)
 
@@ -48,6 +54,7 @@ func Test_GetDriver(t *testing.T) {
 
 	driver, err := TestConfig.Provider.GetDriver("testID")
 	assert.Equal("testType", string(driver.DriverType))
+	assert.Equal("testName", string(driver.DriverName))
 	assert.NoError(err)
 }
 
@@ -86,7 +93,7 @@ func Test_GetDriverInstance(t *testing.T) {
 	provisioner := new(consulMock.ConsulProvisionerInterface)
 
 	var qoptions *api.QueryOptions
-	provisioner.On("GetValue", mock.Anything).Return([]byte("testInstance"), nil)
+	provisioner.On("GetValue", mock.Anything).Return([]byte("MockedTestInstanceData"), nil)
 	provisioner.On("GetAllKeys", "usb/drivers/", "", qoptions).Return([]string{"/usb/drivers/testID/instances/testInstanceID/Name"}, nil)
 
 	TestConfig.Provider = NewConsulConfig(provisioner)
@@ -95,7 +102,7 @@ func Test_GetDriverInstance(t *testing.T) {
 
 	instance, err := TestConfig.Provider.GetDriverInstance("testInstanceID")
 
-	assert.Equal("testInstance", instance.Name)
+	assert.Equal("MockedTestInstanceData", instance.Name)
 	assert.NoError(err)
 }
 

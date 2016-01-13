@@ -21,6 +21,12 @@ func NewRedisConfig(provider redis.RedisProvisionerInterface) ConfigProvider {
 func (c *redisConfig) LoadConfiguration() (*Config, error) {
 	var configuration Config
 
+	apiVersion, err := c.provider.GetValue("api_version")
+	if err != nil {
+		return nil, err
+	}
+	configuration.APIVersion = apiVersion
+
 	value, err := c.provider.GetValue("broker_api")
 
 	if err != nil {

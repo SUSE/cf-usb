@@ -207,6 +207,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 			driver := &genmodel.Driver{
 				ID:              dId,
 				DriverType:      d.DriverType,
+				Name:            d.DriverName,
 				DriverInstances: instances,
 			}
 
@@ -232,6 +233,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		var driver config.Driver
 
 		driver.DriverType = params.Driver.DriverType
+		driver.DriverName = params.Driver.Name
 
 		driverID := uuid.NewV4().String()
 
@@ -392,7 +394,6 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 	api.CreateDriverInstanceHandler = CreateDriverInstanceHandlerFunc(func(params CreateDriverInstanceParams, principal interface{}) middleware.Responder {
 		log = log.Session("create-driver-instance", lager.Data{"driver-id": params.DriverInstance.DriverID, "driver-instance-name": params.DriverInstance.Name})
-
 		existingDriver, err := configProvider.GetDriver(params.DriverInstance.DriverID)
 		if err != nil {
 			return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
@@ -566,7 +567,9 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		log = log.Session("get-dials", lager.Data{"driver-instance-id": params.DriverInstanceID})
 
 		var dials = make([]*genmodel.Dial, 0)
-
+		if params.DriverInstanceID == "" {
+			return &GetDialSchemaInternalServerError{Payload: "Empty driver instance id in get all dials"}
+		}
 		instanceInfo, err := configProvider.LoadDriverInstance(params.DriverInstanceID)
 		if err != nil {
 			return &GetDialSchemaInternalServerError{Payload: err.Error()}
@@ -723,7 +726,9 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 	api.GetServicePlansHandler = GetServicePlansHandlerFunc(func(params GetServicePlansParams, principal interface{}) middleware.Responder {
 		log = log.Session("get-service-plans", lager.Data{"driver-instance-id": params.DriverInstanceID})
-
+		if params.DriverInstanceID == "" {
+			return &GetServicePlansInternalServerError{Payload: "Empty driver instance id in get service plans handler"}
+		}
 		var servicePlans = make([]*genmodel.Plan, 0)
 
 		instanceInfo, err := configProvider.LoadDriverInstance(params.DriverInstanceID)
@@ -859,7 +864,6 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 	api.CreateServicePlanHandler = CreateServicePlanHandlerFunc(func(params CreateServicePlanParams, principal interface{}) middleware.Responder {
 		log = log.Session("create-service-plan", lager.Data{"dial-id": params.Plan.DialID})
-
 		config, err := configProvider.LoadConfiguration()
 		if err != nil {
 			return &CreateServicePlanInternalServerError{Payload: err.Error()}

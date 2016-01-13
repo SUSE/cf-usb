@@ -60,8 +60,9 @@ func (e *ConsulProvisioner) GetValue(key string) ([]byte, error) {
 	if exists == false {
 		return nil, errors.New(fmt.Sprintf("Key %s not found", key))
 	}
-
-	pair, _, err := kv.Get(key, nil)
+	var options api.QueryOptions
+	options.AllowStale = false
+	pair, _, err := kv.Get(key, &options)
 
 	return pair.Value, err
 }
