@@ -492,13 +492,13 @@
         "/services": {
             "get": {
                 "description": "Gets the existing `service`\n",
-                "operationId": "getServices",
+                "operationId": "getServiceByInstanceId",
                 "parameters": [
                     {
                         "name": "driver_instance_id",
                         "in": "query",
                         "type": "string",
-                        "required": false,
+                        "required": true,
                         "description": "Driver instance ID"
                     }
                 ],
@@ -506,10 +506,7 @@
                     "200": {
                         "description": "Sucessfull response",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/service"
-                            }
+                            "$ref": "#/definitions/service"
                         }
                     },
                     "500": {

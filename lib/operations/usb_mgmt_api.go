@@ -82,12 +82,12 @@ type UsbMgmtAPI struct {
 	GetInfoHandler GetInfoHandler
 	// GetServiceHandler sets the operation handler for the get service operation
 	GetServiceHandler GetServiceHandler
+	// GetServiceByInstanceIDHandler sets the operation handler for the get service by instance id operation
+	GetServiceByInstanceIDHandler GetServiceByInstanceIDHandler
 	// GetServicePlanHandler sets the operation handler for the get service plan operation
 	GetServicePlanHandler GetServicePlanHandler
 	// GetServicePlansHandler sets the operation handler for the get service plans operation
 	GetServicePlansHandler GetServicePlansHandler
-	// GetServicesHandler sets the operation handler for the get services operation
-	GetServicesHandler GetServicesHandler
 	// PingDriverInstanceHandler sets the operation handler for the ping driver instance operation
 	PingDriverInstanceHandler PingDriverInstanceHandler
 	// UpdateCatalogHandler sets the operation handler for the update catalog operation
@@ -228,16 +228,16 @@ func (o *UsbMgmtAPI) Validate() error {
 		unregistered = append(unregistered, "GetServiceHandler")
 	}
 
+	if o.GetServiceByInstanceIDHandler == nil {
+		unregistered = append(unregistered, "GetServiceByInstanceIDHandler")
+	}
+
 	if o.GetServicePlanHandler == nil {
 		unregistered = append(unregistered, "GetServicePlanHandler")
 	}
 
 	if o.GetServicePlansHandler == nil {
 		unregistered = append(unregistered, "GetServicePlansHandler")
-	}
-
-	if o.GetServicesHandler == nil {
-		unregistered = append(unregistered, "GetServicesHandler")
 	}
 
 	if o.PingDriverInstanceHandler == nil {
@@ -385,11 +385,11 @@ func (o *UsbMgmtAPI) initHandlerCache() {
 
 	o.handlers["getService"] = NewGetService(o.context, o.GetServiceHandler)
 
+	o.handlers["getServiceByInstanceId"] = NewGetServiceByInstanceID(o.context, o.GetServiceByInstanceIDHandler)
+
 	o.handlers["getServicePlan"] = NewGetServicePlan(o.context, o.GetServicePlanHandler)
 
 	o.handlers["getServicePlans"] = NewGetServicePlans(o.context, o.GetServicePlansHandler)
-
-	o.handlers["getServices"] = NewGetServices(o.context, o.GetServicesHandler)
 
 	o.handlers["pingDriverInstance"] = NewPingDriverInstance(o.context, o.PingDriverInstanceHandler)
 

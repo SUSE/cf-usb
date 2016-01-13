@@ -363,14 +363,12 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		return middleware.NotImplemented("operation getDialSchema has not yet been implemented")
 	})
 
-	api.GetServicesHandler = GetServicesHandlerFunc(func(params GetServicesParams, principal interface{}) middleware.Responder {
+	api.GetServiceByInstanceIDHandler = GetServiceByInstanceIDHandlerFunc(func(params GetServiceByInstanceIDParams, principal interface{}) middleware.Responder {
 		log = log.Session("get-services", lager.Data{"driver-instance-id": params.DriverInstanceID})
-
-		var services = make([]*genmodel.Service, 0)
 
 		di, err := configProvider.GetDriverInstance(params.DriverInstanceID)
 		if err != nil {
-			return &GetServicesInternalServerError{Payload: err.Error()}
+			return &GetServiceByInstanceIDInternalServerError{Payload: err.Error()}
 		}
 
 		service := &genmodel.Service{
@@ -385,11 +383,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 			service.Metadata = structs.Map(*di.Service.Metadata)
 		}
 
-		services = append(services, service)
-
-		log.Debug("", lager.Data{"services-found": len(services)})
-
-		return &GetServicesOK{Payload: services}
+		return &GetServiceByInstanceIDOK{Payload: service}
 	})
 
 	api.CreateDriverInstanceHandler = CreateDriverInstanceHandlerFunc(func(params CreateDriverInstanceParams, principal interface{}) middleware.Responder {

@@ -631,7 +631,7 @@ func Test_GetService(t *testing.T) {
 	assert.IsType(&operations.GetServiceOK{}, response)
 }
 
-func Test_GetServices(t *testing.T) {
+func Test_GetServiceByInstanceId(t *testing.T) {
 	assert := assert.New(t)
 	provider := new(mocks.ConfigProvider)
 
@@ -650,11 +650,11 @@ func Test_GetServices(t *testing.T) {
 	instanceInfo.Service = brokerapi.Service{ID: "testServiceID", Name: "testService"}
 
 	provider.On("GetDriverInstance", mock.Anything).Return(&instanceInfo, nil)
-	params := &operations.GetServicesParams{}
+	params := &operations.GetServiceByInstanceIDParams{}
 	params.DriverInstanceID = "testInstanceID"
 
-	response := UnitTest.MgmtAPI.GetServicesHandler.Handle(*params, true)
-	assert.IsType(&operations.GetServicesOK{}, response)
+	response := UnitTest.MgmtAPI.GetServiceByInstanceIDHandler.Handle(*params, true)
+	assert.IsType(&operations.GetServiceByInstanceIDOK{}, response)
 }
 
 func Test_GetServicePlan(t *testing.T) {

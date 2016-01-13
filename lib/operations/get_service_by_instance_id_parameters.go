@@ -8,15 +8,17 @@ import (
 
 	"github.com/go-swagger/go-swagger/errors"
 	"github.com/go-swagger/go-swagger/httpkit/middleware"
+	"github.com/go-swagger/go-swagger/httpkit/validate"
 	"github.com/go-swagger/go-swagger/strfmt"
 )
 
-// GetServicesParams contains all the bound params for the get services operation
+// GetServiceByInstanceIDParams contains all the bound params for the get service by instance id operation
 // typically these are obtained from a http.Request
 //
-// swagger:parameters getServices
-type GetServicesParams struct {
+// swagger:parameters getServiceByInstanceId
+type GetServiceByInstanceIDParams struct {
 	/* Driver instance ID
+	Required: true
 	In: query
 	*/
 	DriverInstanceID string
@@ -24,7 +26,7 @@ type GetServicesParams struct {
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
 // for simple values it will use straight method calls
-func (o *GetServicesParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
+func (o *GetServiceByInstanceIDParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
 	qs := r.URL.Query()
 
@@ -38,7 +40,10 @@ func (o *GetServicesParams) BindRequest(r *http.Request, route *middleware.Match
 	return nil
 }
 
-func (o *GetServicesParams) bindDriverInstanceID(raw string, formats strfmt.Registry) error {
+func (o *GetServiceByInstanceIDParams) bindDriverInstanceID(raw string, formats strfmt.Registry) error {
+	if err := validate.RequiredString("driver_instance_id", "query", raw); err != nil {
+		return err
+	}
 
 	o.DriverInstanceID = raw
 
