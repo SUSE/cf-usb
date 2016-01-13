@@ -72,18 +72,19 @@ type ConfigProvider interface {
 	LoadConfiguration() (*Config, error)
 	LoadDriverInstance(driverInstanceID string) (*DriverInstance, error)
 	GetUaaAuthConfig() (*UaaAuth, error)
-	SetDriver(string, Driver) error
-	GetDriver(string) (*Driver, error)
-	DeleteDriver(string) error
-	SetDriverInstance(string, string, DriverInstance) error
-	GetDriverInstance(string) (*DriverInstance, error)
-	DeleteDriverInstance(string) error
-	SetService(string, brokerapi.Service) error
-	GetService(string) (*brokerapi.Service, error)
-	DeleteService(string) error
-	SetDial(string, string, Dial) error
-	GetDial(string, string) (*Dial, error)
-	DeleteDial(string, string) error
-	ServiceNameExists(string) (bool, error)
-	DriverTypeExists(string) (bool, error)
+	SetDriver(driverid string, driver Driver) error
+	GetDriver(driverid string) (*Driver, error)
+	DeleteDriver(driverid string) error
+	SetDriverInstance(driverid string, instanceid string, driverInstance DriverInstance) error
+	GetDriverInstance(instanceid string) (*DriverInstance, error)
+	DeleteDriverInstance(instanceid string) error
+	SetService(instanceid string, service brokerapi.Service) error
+	GetService(serviceid string) (service *brokerapi.Service, instanceid string, err error)
+	DeleteService(instanceid string) error
+	SetDial(instanceid string, dialid string, dial Dial) error
+	GetDial(dialid string) (*Dial, error)
+	DeleteDial(dialid string) error
+	ServiceNameExists(servicename string) (bool, error)
+	DriverTypeExists(driverType string) (bool, error)
+	GetPlan(plandid string) (plan *brokerapi.ServicePlan, dialid string, instanceid string, err error)
 }

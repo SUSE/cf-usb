@@ -90,21 +90,13 @@ func (c *consulConfig) LoadConfiguration() (*Config, error) {
 						return nil, err
 					}
 
-					serv, err := c.GetService(instanceKey)
-					if serv != nil {
-						driverInstanceInfo.Service = *serv
-					}
-					if err != nil {
-						return nil, err
-					}
-
 					dialkeys, err := c.provisioner.GetAllKeys("usb/drivers/"+driverID+"/instances/"+instanceKey+"/dials/", "/", nil)
 
 					for _, dialKey := range dialkeys {
 						dialKey = strings.TrimSuffix(dialKey, "/")
 						dialKey = strings.TrimPrefix(dialKey, "usb/drivers/"+driverID+"/instances/"+instanceKey+"/dials/")
 
-						dialInfo, err := c.GetDial(instanceKey, dialKey)
+						dialInfo, err := c.GetDial(dialKey)
 						if err != nil {
 							return nil, err
 						}
@@ -176,39 +168,41 @@ func (c *consulConfig) GetDriverInstance(instanceID string) (*DriverInstance, er
 
 	instance.Configuration = &configuration
 
+	serviceInfo, err := c.provisioner.GetValue(key + "/service")
+
+	err = json.Unmarshal(serviceInfo, &instance.Service)
+	if err != nil {
+		return nil, err
+	}
 	return &instance, nil
 }
 
-func (c *consulConfig) GetService(instanceID string) (*brokerapi.Service, error) {
-	var service brokerapi.Service
-	key, err := c.getKey(instanceID)
+func (c *consulConfig) GetService(serviceid string) (*brokerapi.Service, string, error) {
+	config, err := c.LoadConfiguration()
 	if err != nil {
-		return nil, err
-	}
-	if key == "" {
-		return nil, errors.New(fmt.Sprintf("Instance %s not found", instanceID))
+		return nil, "", err
 	}
 
-	val, err := c.provisioner.GetValue(key + "/service")
-	if err != nil {
-		return nil, err
+	for _, driver := range config.Drivers {
+		for instanceID, instance := range driver.DriverInstances {
+			if instance.Service.ID == serviceid {
+				return &instance.Service, instanceID, nil
+			}
+		}
 	}
-
-	err = json.Unmarshal(val, &service)
-
-	return &service, err
+	return nil, "", errors.New(fmt.Sprintf("Service id %s not found", serviceid))
 }
 
-func (c *consulConfig) GetDial(instanceID string, dialID string) (*Dial, error) {
+func (c *consulConfig) GetDial(dialID string) (*Dial, error) {
 	var dialInfo Dial
-	key, err := c.getKey(instanceID)
+	key, err := c.getDialKey(dialID)
 	if err != nil {
 		return nil, err
 	}
 	if key == "" {
-		return nil, errors.New(fmt.Sprintf("Instance %s not found", instanceID))
+		return nil, errors.New(fmt.Sprintf("Dial key %s not found", dialID))
 	}
-	data, err := c.provisioner.GetValue(key + "/dials/" + dialID)
+	data, err := c.provisioner.GetValue(key)
 	if err != nil {
 		return nil, err
 	}
@@ -324,6 +318,19 @@ func (c *consulConfig) getKey(instanceID string) (string, error) {
 	return "", nil
 }
 
+func (c *consulConfig) getDialKey(dialID string) (string, error) {
+	keys, err := c.provisioner.GetAllKeys("usb/drivers/", "", nil)
+	if err != nil {
+		return "", nil
+	}
+	for _, key := range keys {
+		if strings.Contains(key, dialID) {
+			return key, nil
+		}
+	}
+	return "", nil
+}
+
 func (c *consulConfig) DeleteDriver(driverID string) error {
 	return c.provisioner.DeleteKVs("usb/drivers/"+driverID, nil)
 }
@@ -344,12 +351,12 @@ func (c *consulConfig) DeleteService(instanceID string) error {
 	return c.provisioner.DeleteKV(key+"/service", nil)
 }
 
-func (c *consulConfig) DeleteDial(instanceID string, dialID string) error {
-	key, err := c.getKey(instanceID)
+func (c *consulConfig) DeleteDial(dialID string) error {
+	key, err := c.getDialKey(dialID)
 	if err != nil {
 		return err
 	}
-	return c.provisioner.DeleteKV(key+"/dials/"+dialID, nil)
+	return c.provisioner.DeleteKV(key, nil)
 }
 
 func (c *consulConfig) LoadDriverInstance(instanceID string) (*DriverInstance, error) {
@@ -357,12 +364,6 @@ func (c *consulConfig) LoadDriverInstance(instanceID string) (*DriverInstance, e
 	if err != nil {
 		return nil, err
 	}
-	service, err := c.GetService(instanceID)
-	if err != nil {
-		return nil, err
-	}
-
-	driverInstance.Service = *service
 
 	key, err := c.getKey(instanceID)
 
@@ -372,7 +373,7 @@ func (c *consulConfig) LoadDriverInstance(instanceID string) (*DriverInstance, e
 		dialKey = strings.TrimSuffix(dialKey, "/")
 		dialKey = strings.TrimPrefix(dialKey, key+"/dials/")
 
-		dialInfo, err := c.GetDial(instanceID, dialKey)
+		dialInfo, err := c.GetDial(dialKey)
 		if err != nil {
 			return nil, err
 		}
@@ -452,4 +453,21 @@ func (c *consulConfig) DriverTypeExists(driverType string) (bool, error) {
 	}
 
 	return false, nil
+}
+
+func (c *consulConfig) GetPlan(planid string) (*brokerapi.ServicePlan, string, string, error) {
+	config, err := c.LoadConfiguration()
+	if err != nil {
+		return nil, "", "", err
+	}
+	for _, driver := range config.Drivers {
+		for instanceID, instance := range driver.DriverInstances {
+			for dialID, dial := range instance.Dials {
+				if dial.Plan.ID == planid {
+					return &dial.Plan, dialID, instanceID, nil
+				}
+			}
+		}
+	}
+	return nil, "", "", errors.New(fmt.Sprintf("Plan id %s not found", planid))
 }

@@ -72,24 +72,24 @@ func (_m *ConfigProvider) GetUaaAuthConfig() (*config.UaaAuth, error) {
 
 	return r0, r1
 }
-func (_m *ConfigProvider) SetDriver(_a0 string, _a1 config.Driver) error {
-	ret := _m.Called(_a0, _a1)
+func (_m *ConfigProvider) SetDriver(driverid string, driver config.Driver) error {
+	ret := _m.Called(driverid, driver)
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(string, config.Driver) error); ok {
-		r0 = rf(_a0, _a1)
+		r0 = rf(driverid, driver)
 	} else {
 		r0 = ret.Error(0)
 	}
 
 	return r0
 }
-func (_m *ConfigProvider) GetDriver(_a0 string) (*config.Driver, error) {
-	ret := _m.Called(_a0)
+func (_m *ConfigProvider) GetDriver(driverid string) (*config.Driver, error) {
+	ret := _m.Called(driverid)
 
 	var r0 *config.Driver
 	if rf, ok := ret.Get(0).(func(string) *config.Driver); ok {
-		r0 = rf(_a0)
+		r0 = rf(driverid)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*config.Driver)
@@ -98,43 +98,43 @@ func (_m *ConfigProvider) GetDriver(_a0 string) (*config.Driver, error) {
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(_a0)
+		r1 = rf(driverid)
 	} else {
 		r1 = ret.Error(1)
 	}
 
 	return r0, r1
 }
-func (_m *ConfigProvider) DeleteDriver(_a0 string) error {
-	ret := _m.Called(_a0)
+func (_m *ConfigProvider) DeleteDriver(driverid string) error {
+	ret := _m.Called(driverid)
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(string) error); ok {
-		r0 = rf(_a0)
+		r0 = rf(driverid)
 	} else {
 		r0 = ret.Error(0)
 	}
 
 	return r0
 }
-func (_m *ConfigProvider) SetDriverInstance(_a0 string, _a1 string, _a2 config.DriverInstance) error {
-	ret := _m.Called(_a0, _a1, _a2)
+func (_m *ConfigProvider) SetDriverInstance(driverid string, instanceid string, driverInstance config.DriverInstance) error {
+	ret := _m.Called(driverid, instanceid, driverInstance)
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(string, string, config.DriverInstance) error); ok {
-		r0 = rf(_a0, _a1, _a2)
+		r0 = rf(driverid, instanceid, driverInstance)
 	} else {
 		r0 = ret.Error(0)
 	}
 
 	return r0
 }
-func (_m *ConfigProvider) GetDriverInstance(_a0 string) (*config.DriverInstance, error) {
-	ret := _m.Called(_a0)
+func (_m *ConfigProvider) GetDriverInstance(instanceid string) (*config.DriverInstance, error) {
+	ret := _m.Called(instanceid)
 
 	var r0 *config.DriverInstance
 	if rf, ok := ret.Get(0).(func(string) *config.DriverInstance); ok {
-		r0 = rf(_a0)
+		r0 = rf(instanceid)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*config.DriverInstance)
@@ -143,88 +143,95 @@ func (_m *ConfigProvider) GetDriverInstance(_a0 string) (*config.DriverInstance,
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(_a0)
+		r1 = rf(instanceid)
 	} else {
 		r1 = ret.Error(1)
 	}
 
 	return r0, r1
 }
-func (_m *ConfigProvider) DeleteDriverInstance(_a0 string) error {
-	ret := _m.Called(_a0)
+func (_m *ConfigProvider) DeleteDriverInstance(instanceid string) error {
+	ret := _m.Called(instanceid)
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(string) error); ok {
-		r0 = rf(_a0)
+		r0 = rf(instanceid)
 	} else {
 		r0 = ret.Error(0)
 	}
 
 	return r0
 }
-func (_m *ConfigProvider) SetService(_a0 string, _a1 brokerapi.Service) error {
-	ret := _m.Called(_a0, _a1)
+func (_m *ConfigProvider) SetService(instanceid string, service brokerapi.Service) error {
+	ret := _m.Called(instanceid, service)
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(string, brokerapi.Service) error); ok {
-		r0 = rf(_a0, _a1)
+		r0 = rf(instanceid, service)
 	} else {
 		r0 = ret.Error(0)
 	}
 
 	return r0
 }
-func (_m *ConfigProvider) GetService(_a0 string) (*brokerapi.Service, error) {
-	ret := _m.Called(_a0)
+func (_m *ConfigProvider) GetService(serviceid string) (*brokerapi.Service, string, error) {
+	ret := _m.Called(serviceid)
 
 	var r0 *brokerapi.Service
 	if rf, ok := ret.Get(0).(func(string) *brokerapi.Service); ok {
-		r0 = rf(_a0)
+		r0 = rf(serviceid)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*brokerapi.Service)
 		}
 	}
 
-	var r1 error
-	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(_a0)
+	var r1 string
+	if rf, ok := ret.Get(1).(func(string) string); ok {
+		r1 = rf(serviceid)
 	} else {
-		r1 = ret.Error(1)
+		r1 = ret.Get(1).(string)
 	}
 
-	return r0, r1
+	var r2 error
+	if rf, ok := ret.Get(2).(func(string) error); ok {
+		r2 = rf(serviceid)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }
-func (_m *ConfigProvider) DeleteService(_a0 string) error {
-	ret := _m.Called(_a0)
+func (_m *ConfigProvider) DeleteService(instanceid string) error {
+	ret := _m.Called(instanceid)
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(string) error); ok {
-		r0 = rf(_a0)
+		r0 = rf(instanceid)
 	} else {
 		r0 = ret.Error(0)
 	}
 
 	return r0
 }
-func (_m *ConfigProvider) SetDial(_a0 string, _a1 string, _a2 config.Dial) error {
-	ret := _m.Called(_a0, _a1, _a2)
+func (_m *ConfigProvider) SetDial(instanceid string, dialid string, dial config.Dial) error {
+	ret := _m.Called(instanceid, dialid, dial)
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(string, string, config.Dial) error); ok {
-		r0 = rf(_a0, _a1, _a2)
+		r0 = rf(instanceid, dialid, dial)
 	} else {
 		r0 = ret.Error(0)
 	}
 
 	return r0
 }
-func (_m *ConfigProvider) GetDial(_a0 string, _a1 string) (*config.Dial, error) {
-	ret := _m.Called(_a0, _a1)
+func (_m *ConfigProvider) GetDial(dialid string) (*config.Dial, error) {
+	ret := _m.Called(dialid)
 
 	var r0 *config.Dial
-	if rf, ok := ret.Get(0).(func(string, string) *config.Dial); ok {
-		r0 = rf(_a0, _a1)
+	if rf, ok := ret.Get(0).(func(string) *config.Dial); ok {
+		r0 = rf(dialid)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*config.Dial)
@@ -232,61 +239,96 @@ func (_m *ConfigProvider) GetDial(_a0 string, _a1 string) (*config.Dial, error) 
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(string, string) error); ok {
-		r1 = rf(_a0, _a1)
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(dialid)
 	} else {
 		r1 = ret.Error(1)
 	}
 
 	return r0, r1
 }
-func (_m *ConfigProvider) DeleteDial(_a0 string, _a1 string) error {
-	ret := _m.Called(_a0, _a1)
+func (_m *ConfigProvider) DeleteDial(dialid string) error {
+	ret := _m.Called(dialid)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(string, string) error); ok {
-		r0 = rf(_a0, _a1)
+	if rf, ok := ret.Get(0).(func(string) error); ok {
+		r0 = rf(dialid)
 	} else {
 		r0 = ret.Error(0)
 	}
 
 	return r0
 }
-func (_m *ConfigProvider) ServiceNameExists(_a0 string) (bool, error) {
-	ret := _m.Called(_a0)
+func (_m *ConfigProvider) ServiceNameExists(servicename string) (bool, error) {
+	ret := _m.Called(servicename)
 
 	var r0 bool
 	if rf, ok := ret.Get(0).(func(string) bool); ok {
-		r0 = rf(_a0)
+		r0 = rf(servicename)
 	} else {
 		r0 = ret.Get(0).(bool)
 	}
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(_a0)
+		r1 = rf(servicename)
 	} else {
 		r1 = ret.Error(1)
 	}
 
 	return r0, r1
 }
-func (_m *ConfigProvider) DriverTypeExists(_a0 string) (bool, error) {
-	ret := _m.Called(_a0)
+func (_m *ConfigProvider) DriverTypeExists(driverType string) (bool, error) {
+	ret := _m.Called(driverType)
 
 	var r0 bool
 	if rf, ok := ret.Get(0).(func(string) bool); ok {
-		r0 = rf(_a0)
+		r0 = rf(driverType)
 	} else {
 		r0 = ret.Get(0).(bool)
 	}
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(_a0)
+		r1 = rf(driverType)
 	} else {
 		r1 = ret.Error(1)
 	}
 
 	return r0, r1
+}
+func (_m *ConfigProvider) GetPlan(plandid string) (*brokerapi.ServicePlan, string, string, error) {
+	ret := _m.Called(plandid)
+
+	var r0 *brokerapi.ServicePlan
+	if rf, ok := ret.Get(0).(func(string) *brokerapi.ServicePlan); ok {
+		r0 = rf(plandid)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*brokerapi.ServicePlan)
+		}
+	}
+
+	var r1 string
+	if rf, ok := ret.Get(1).(func(string) string); ok {
+		r1 = rf(plandid)
+	} else {
+		r1 = ret.Get(1).(string)
+	}
+
+	var r2 string
+	if rf, ok := ret.Get(2).(func(string) string); ok {
+		r2 = rf(plandid)
+	} else {
+		r2 = ret.Get(2).(string)
+	}
+
+	var r3 error
+	if rf, ok := ret.Get(3).(func(string) error); ok {
+		r3 = rf(plandid)
+	} else {
+		r3 = ret.Error(3)
+	}
+
+	return r0, r1, r2, r3
 }

@@ -140,10 +140,10 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		}
 
 		for _, driver := range config.Drivers {
-			for instanceID, instance := range driver.DriverInstances {
+			for _, instance := range driver.DriverInstances {
 				for dialID, dial := range instance.Dials {
 					if dial.Plan.ID == params.PlanID {
-						err = configProvider.DeleteDial(instanceID, dialID)
+						err = configProvider.DeleteDial(dialID)
 						if err != nil {
 							return &DeleteServicePlanInternalServerError{Payload: err.Error()}
 						}
@@ -286,30 +286,22 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	api.GetServicePlanHandler = GetServicePlanHandlerFunc(func(params GetServicePlanParams, principal interface{}) middleware.Responder {
 		log.Debug("get-service-plan", lager.Data{"plan-id": params.PlanID})
 
-		config, err := configProvider.LoadConfiguration()
+		planInfo, dialID, _, err := configProvider.GetPlan(params.PlanID)
+
 		if err != nil {
 			return &GetServicePlanInternalServerError{Payload: err.Error()}
 		}
 
-		for _, d := range config.Drivers {
-			for _, di := range d.DriverInstances {
-				for dialID, dial := range di.Dials {
-					if dial.Plan.ID == params.PlanID {
-						plan := &genmodel.Plan{
-							Name:        dial.Plan.Name,
-							ID:          dial.Plan.ID,
-							DialID:      dialID,
-							Description: dial.Plan.Description,
-							Free:        dial.Plan.Free,
-						}
-
-						return &GetServicePlanOK{Payload: plan}
-					}
-				}
-			}
+		plan := &genmodel.Plan{
+			Name:        planInfo.Name,
+			ID:          planInfo.ID,
+			DialID:      dialID,
+			Description: planInfo.Description,
+			Free:        planInfo.Free,
 		}
 
-		return &GetServicePlanNotFound{}
+		return &GetServicePlanOK{Payload: plan}
+
 	})
 
 	api.CreateDialHandler = CreateDialHandlerFunc(func(params CreateDialParams, principal interface{}) middleware.Responder {
@@ -646,57 +638,36 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	api.GetServiceHandler = GetServiceHandlerFunc(func(params GetServiceParams, principal interface{}) middleware.Responder {
 		log.Debug("get-service", lager.Data{"service-id": params.ServiceID})
 
-		config, err := configProvider.LoadConfiguration()
+		serviceInfo, instanceID, err := configProvider.GetService(params.ServiceID)
+
 		if err != nil {
 			return &GetServiceInternalServerError{Payload: err.Error()}
 		}
 
-		for _, driver := range config.Drivers {
-			for instanceID, instance := range driver.DriverInstances {
-				if instance.Service.ID == params.ServiceID {
-					svc := &genmodel.Service{
-						Bindable:         instance.Service.Bindable,
-						DriverInstanceID: instanceID,
-						ID:               instance.Service.ID,
-						Name:             instance.Service.Name,
-						Description:      instance.Service.Description,
-						Tags:             instance.Service.Tags,
-					}
-
-					if instance.Service.Metadata != nil {
-						svc.Metadata = structs.Map(*instance.Service.Metadata)
-					}
-
-					return &GetServiceOK{Payload: svc}
-				}
-			}
+		svc := &genmodel.Service{
+			Bindable:         serviceInfo.Bindable,
+			DriverInstanceID: instanceID,
+			ID:               serviceInfo.ID,
+			Name:             serviceInfo.Name,
+			Description:      serviceInfo.Description,
+			Tags:             serviceInfo.Tags,
 		}
 
-		return &GetServiceNotFound{}
+		if serviceInfo.Metadata != nil {
+			svc.Metadata = structs.Map(*serviceInfo.Metadata)
+		}
+
+		return &GetServiceOK{Payload: svc}
 	})
 
 	api.DeleteDialHandler = DeleteDialHandlerFunc(func(params DeleteDialParams, principal interface{}) middleware.Responder {
 		log.Debug("delete-dial", lager.Data{"dial-id": params.DialID})
 
-		config, err := configProvider.LoadConfiguration()
+		err := configProvider.DeleteDial(params.DialID)
 		if err != nil {
 			return &DeleteDialInternalServerError{Payload: err.Error()}
 		}
-
-		for _, driver := range config.Drivers {
-			for instanceID, instance := range driver.DriverInstances {
-				for dialID, _ := range instance.Dials {
-					if dialID == params.DialID {
-						err = configProvider.DeleteDial(instanceID, dialID)
-						if err != nil {
-							return &DeleteDialInternalServerError{Payload: err.Error()}
-						}
-						return &DeleteDialNoContent{}
-					}
-				}
-			}
-		}
-		return &DeleteDialNotFound{}
+		return &DeleteDialNoContent{}
 	})
 
 	api.GetInfoHandler = GetInfoHandlerFunc(func(principal interface{}) middleware.Responder {
@@ -879,7 +850,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 			for instanceID, instance := range driver.DriverInstances {
 				for dialID, dial := range instance.Dials {
 					if dialID == params.Plan.DialID {
-						err = configProvider.DeleteDial(instanceID, dialID)
+						err = configProvider.DeleteDial(dialID)
 						if err != nil {
 							return &CreateServicePlanInternalServerError{Payload: err.Error()}
 						}

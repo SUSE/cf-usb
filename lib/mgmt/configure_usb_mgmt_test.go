@@ -587,25 +587,9 @@ func Test_GetService(t *testing.T) {
 		t.Error(err)
 	}
 
-	var testConfig config.Config
-
-	var driver config.Driver
-	var instace config.DriverInstance
-	var dial config.Dial
-
 	var plan brokerapi.ServicePlan
 	plan.ID = "testPlanID"
 	plan.Name = "testPlan"
-
-	dial.Plan = plan
-
-	driver.DriverType = "testDriver"
-	var conf json.RawMessage
-
-	conf = json.RawMessage([]byte("{\"test\":\"test\"}"))
-
-	instace.Configuration = &conf
-	dial.Configuration = &conf
 
 	var service brokerapi.Service
 
@@ -613,16 +597,7 @@ func Test_GetService(t *testing.T) {
 	service.Name = "testService"
 	service.Plans = append(service.Plans, plan)
 
-	instace.Service = service
-
-	instace.Dials = make(map[string]config.Dial)
-	instace.Dials["testDialID"] = dial
-	driver.DriverInstances = make(map[string]config.DriverInstance)
-	driver.DriverInstances["testInstanceID"] = instace
-	testConfig.Drivers = make(map[string]config.Driver)
-	testConfig.Drivers["testDriverID"] = driver
-
-	provider.On("LoadConfiguration").Return(&testConfig, nil)
+	provider.On("GetService", mock.Anything).Return(&service, "", nil)
 
 	params := &operations.GetServiceParams{}
 	params.ServiceID = "testServiceID"
@@ -665,11 +640,6 @@ func Test_GetServicePlan(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-
-	var testConfig config.Config
-
-	var driver config.Driver
-	var instace config.DriverInstance
 	var dial config.Dial
 
 	var plan brokerapi.ServicePlan
@@ -678,31 +648,7 @@ func Test_GetServicePlan(t *testing.T) {
 
 	dial.Plan = plan
 
-	driver.DriverType = "testDriver"
-	var conf json.RawMessage
-
-	conf = json.RawMessage([]byte("{\"test\":\"test\"}"))
-
-	instace.Configuration = &conf
-	dial.Configuration = &conf
-
-	var service brokerapi.Service
-
-	service.ID = "testServiceID"
-	service.Name = "testService"
-	service.Plans = append(service.Plans, plan)
-
-	instace.Service = service
-
-	instace.Dials = make(map[string]config.Dial)
-	instace.Dials["testDialID"] = dial
-	driver.DriverInstances = make(map[string]config.DriverInstance)
-	driver.DriverInstances["testInstanceID"] = instace
-	testConfig.Drivers = make(map[string]config.Driver)
-	testConfig.Drivers["testDriverID"] = driver
-
-	provider.On("LoadConfiguration").Return(&testConfig, nil)
-
+	provider.On("GetPlan", mock.Anything).Return(&plan, "testDialId", "testInstanceID", nil)
 	params := &operations.GetServicePlanParams{}
 	params.PlanID = "testPlanID"
 

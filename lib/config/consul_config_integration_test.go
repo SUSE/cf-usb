@@ -7,8 +7,8 @@ import (
 
 	"github.com/hpcloud/cf-usb/lib/config/consul"
 
-	"github.com/hashicorp/consul/api"
 	"github.com/frodenas/brokerapi"
+	"github.com/hashicorp/consul/api"
 	"os"
 )
 
@@ -181,8 +181,9 @@ func Test_IntGetService(t *testing.T) {
 
 	assert := assert.New(t)
 
-	service, err := IntegrationConfig.Provider.GetService("testInstanceID")
+	service, instanceID, err := IntegrationConfig.Provider.GetService("testServiceID")
 
+	assert.Equal(instanceID, "testInstanceID")
 	assert.Equal(service.Name, "testService")
 	assert.Equal(service.Plans[0].Name, "free")
 	assert.NoError(err)
@@ -225,7 +226,7 @@ func Test_IntGetDial(t *testing.T) {
 
 	assert := assert.New(t)
 
-	dialInfo, err := IntegrationConfig.Provider.GetDial("testInstanceID", "testdialID")
+	dialInfo, err := IntegrationConfig.Provider.GetDial("testdialID")
 	t.Log(dialInfo)
 	assert.NoError(err)
 }
