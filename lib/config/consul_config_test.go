@@ -10,7 +10,7 @@ import (
 	consulMock "github.com/hpcloud/cf-usb/lib/config/consul/mocks"
 	"github.com/stretchr/testify/mock"
 
-	"github.com/pivotal-cf/brokerapi"
+	"github.com/frodenas/brokerapi"
 )
 
 var TestConfig = struct {

@@ -8,7 +8,7 @@ import (
 	"github.com/hpcloud/cf-usb/lib/config/consul"
 
 	"github.com/hashicorp/consul/api"
-	"github.com/pivotal-cf/brokerapi"
+	"github.com/frodenas/brokerapi"
 	"os"
 )
 

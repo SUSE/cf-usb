@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/pivotal-cf/brokerapi"
+	"github.com/frodenas/brokerapi"
 )
 
 type fileConfig struct {

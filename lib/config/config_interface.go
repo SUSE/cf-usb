@@ -3,7 +3,7 @@ package config
 import (
 	"encoding/json"
 
-	"github.com/pivotal-cf/brokerapi"
+	"github.com/frodenas/brokerapi"
 )
 
 type BrokerAPI struct {

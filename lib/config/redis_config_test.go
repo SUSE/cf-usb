@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	redisMock "github.com/hpcloud/cf-usb/lib/config/redis/mocks"
-	"github.com/pivotal-cf/brokerapi"
+	"github.com/frodenas/brokerapi"
 	"github.com/stretchr/testify/mock"
 )
 

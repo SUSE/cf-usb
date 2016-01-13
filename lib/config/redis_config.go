@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/hpcloud/cf-usb/lib/config/redis"
-	"github.com/pivotal-cf/brokerapi"
+	"github.com/frodenas/brokerapi"
 )
 
 type redisConfig struct {

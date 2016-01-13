@@ -3,7 +3,7 @@ package mocks
 import "github.com/hpcloud/cf-usb/lib/config"
 import "github.com/stretchr/testify/mock"
 
-import "github.com/pivotal-cf/brokerapi"
+import "github.com/frodenas/brokerapi"
 
 type ConfigProvider struct {
 	mock.Mock
