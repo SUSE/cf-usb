@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/hpcloud/cf-usb/lib/config/consul"
-	"github.com/pivotal-cf/brokerapi"
+	"github.com/frodenas/brokerapi"
 	"strings"
 )
 

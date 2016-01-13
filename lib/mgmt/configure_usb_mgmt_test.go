@@ -8,6 +8,7 @@ import (
 	"runtime"
 	"testing"
 
+	"github.com/frodenas/brokerapi"
 	"github.com/go-swagger/go-swagger/spec"
 	"github.com/hpcloud/cf-usb/lib/config"
 	"github.com/hpcloud/cf-usb/lib/config/mocks"
@@ -16,7 +17,6 @@ import (
 	"github.com/hpcloud/cf-usb/lib/mgmt/authentication/uaa"
 	sbMocks "github.com/hpcloud/cf-usb/lib/mgmt/cc_integration/mocks"
 	"github.com/hpcloud/cf-usb/lib/operations"
-	"github.com/pivotal-cf/brokerapi"
 	"github.com/pivotal-golang/lager/lagertest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"

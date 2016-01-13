@@ -1,6 +1,6 @@
 {
 	"ImportPath": "github.com/hpcloud/cf-usb",
-	"GoVersion": "go1.4.1",
+	"GoVersion": "go1.4",
 	"Packages": [
 		"./..."
 	],
@@ -55,7 +55,7 @@
 			"Rev": "c701457aaa1ff6709d5e35fccb5c129448e0a37b"
 		},
 		{
-			"ImportPath": "github.com/frodenas/brokerapi/auth",
+			"ImportPath": "github.com/frodenas/brokerapi",
 			"Rev": "ac1ed76a08954bbd7b40a8794738539404a84313"
 		},
 		{
@@ -163,10 +163,6 @@
 		{
 			"ImportPath": "github.com/opennota/urlesc",
 			"Rev": "5fa9ff0392746aeae1c4b37fcc42c65afa7a9587"
-		},
-		{
-			"ImportPath": "github.com/pivotal-cf/brokerapi",
-			"Rev": "ac1ed76a08954bbd7b40a8794738539404a84313"
 		},
 		{
 			"ImportPath": "github.com/pivotal-golang/lager",
