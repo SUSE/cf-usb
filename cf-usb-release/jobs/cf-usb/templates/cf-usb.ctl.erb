@@ -19,11 +19,11 @@ function start()
 	[ -z "`mount|grep /var/vcap/nfs`" ] && \
 	{
 	    cnt=$(( $cnt + 1 ))
-	    echo "nfs share not yet mounted. Sleeping 3 seconds" >>/var/vcap/sys/log/cf-usb/cf-usb.log
+	    echo "`date`: nfs share not yet mounted. Sleeping 3 seconds" >>/var/vcap/sys/log/cf-usb/cf-usb.log
 	    sleep 3
 	} || \
 	{
-	    echo "nfs share is mounted"  >>/var/vcap/sys/log/cf-usb/cf-usb.log
+	    echo "`date`: nfs share is mounted"  >>/var/vcap/sys/log/cf-usb/cf-usb.log
 	    break
 	}
     done
@@ -38,25 +38,25 @@ function start()
         [ ! -e $USB_DRIVER_PATH/`basename $i` ] && cp $i/`basename $i` $USB_DRIVER_PATH/
     done
 
+    <% if p("cf-usb.configprovider") == "consulConfigProvider" %>
     broker_api='{"external_url":"http://<%= p("cf-usb.broker.external_url") %>","listen":":<%= p("cf-usb.broker.port") %>","dev_mode":<%= p("cf-usb.broker.dev_mode") %>,"credentials":{"username":"<%= p("cf-usb.broker.username") %>","password":"<%= p("cf-usb.broker.password") %>"}}'
-    loglevel='<%= p("cf-usb.loglevel") %>'
-    management_api='{"listen":":<%= p("cf-usb.management.port") %>","uaa_secret":"<%= p("cf-usb.management.uaa.secret") %>","uaa_client":"<%= p("cf-usb.management.uaa.client") %>","authentication":{"uaa":{"adminscope":"usb.management.admin","public_key":"<%= p("cf-usb.management.public_key").gsub("\n","").gsub("        ","") %>"}},"cloud_controller":{"api":"<%= p("cc.srv_api_uri") %>","skip_tsl_validation":<%= p("cf-usb.skip_tsl_validation") %>}}'
+    management_api='{"listen":":<%= p("cf-usb.management.port") %>","uaa_secret":"<%= p("cf-usb.management.uaa.secret") %>","uaa_client":"<%= p("cf-usb.management.uaa.client") %>","authentication":{"uaa":{"adminscope":"usb.management.admin","public_key":"<%= p("cf-usb.management.public_key").gsub("\n","\\n").gsub("        ","") %>"}},"cloud_controller":{"api":"<%= p("cc.srv_api_uri") %>","skip_tsl_validation":<%= p("cf-usb.skip_tsl_validation") %>}}'
 
-    curl -X PUT -d "$broker_api" http://127.0.0.1:8500/v1/kv/usb/broker_api
-    curl -X PUT -d "$management_api" http://127.0.0.1:8500/v1/kv/usb/management_api
-    curl -X PUT -d "$loglevel" http://127.0.0.1:8500/v1/kv/usb/loglevel
+    curl -X PUT -d "$broker_api" http://<%= p("cf-usb.configconnectionstring") %>/v1/kv/usb/broker_api
+    curl -X PUT -d "$management_api" http://<%= p("cf-usb.configconnectionstring") %>/v1/kv/usb/management_api
+    <% end %>
 
     <% if p("cf-usb.override") %>
     # override the drivers
-    for i in /var/vcap/packages/cf-usb/src/github.com/hpcloud/cf-usb/cmd/driver/*;
-    do
-	cp -f $i/`basename $i` $USB_DRIVER_PATH/
-    done
 
+    cp -f /var/vcap/packages/cf-usb/bin/drivers/* $USB_DRIVER_PATH/
+
+    <% if p("cf-usb.configprovider") == "consulConfigProvider" %>
     for driver in $USB_DRIVER_PATH/*;
     do
-	curl -X PUT -d "`basename $driver`" http://127.0.0.1:8500/v1/kv/usb/drivers/`random_uuid`
+	curl -X PUT -d "`basename $driver`" http://<%= p("cf-usb.configconnectionstring") %>/v1/kv/usb/drivers/`random_uuid`
     done
+    <% end %>
     <% end %>
 
     # create the pidfile directory if it doesn't exist
@@ -65,7 +65,7 @@ function start()
     # start cf-usb only if there's no other instance running
     pidof usb >/dev/null || \
     {
-	/var/vcap/packages/cf-usb/src/github.com/hpcloud/cf-usb/cmd/usb/usb consulConfigProvider -a 127.0.0.1:8500 1>>/var/vcap/sys/log/cf-usb/cf-usb.log 2>&1 &
+	/var/vcap/packages/cf-usb/bin/usb <%= p("cf-usb.configprovider") %> -a <%= p("cf-usb.configconnectionstring") %> 1>>/var/vcap/sys/log/cf-usb/cf-usb.log 2>&1 &
 	echo $! >$pidfile
     }
 }
