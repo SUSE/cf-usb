@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/hpcloud/cf-usb/lib/config/consul"
-	"github.com/frodenas/brokerapi"
 	"strings"
+
+	"github.com/frodenas/brokerapi"
+	"github.com/hpcloud/cf-usb/lib/config/consul"
 )
 
 type consulConfig struct {
@@ -50,6 +51,9 @@ func (c *consulConfig) LoadConfiguration() (*Config, error) {
 
 	var management ManagementAPI
 	err = json.Unmarshal(managementApiConfig, &management)
+	if err != nil {
+		return nil, err
+	}
 
 	config.ManagementAPI = &management
 
