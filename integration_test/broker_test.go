@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/hpcloud/cf-usb/lib/config"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -12,9 +11,12 @@ import (
 	"path"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/hpcloud/cf-usb/lib/config"
 
 	"github.com/dgrijalva/jwt-go"
 	_ "github.com/golang/protobuf/proto" //workaround for godep + gomega
@@ -23,6 +25,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/ghttp"
 	"github.com/pivotal-golang/lager/lagertest"
+	"github.com/pivotal-golang/localip"
 	uuid "github.com/satori/go.uuid"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/ginkgomon"
@@ -54,6 +57,7 @@ var drivers = []struct {
 	envVarsExistFunc            func() bool
 	setDriverInstanceValuesFunc func(driverName, driverId string) []byte
 }{
+	{"dummy-async", dummyEnvVarsExist, setDummyDriverInstanceValues},
 	{"postgres", postgresEnvVarsExist, setPostgresDriverInstanceValues},
 	{"mongo", mongoEnvVarsExist, setMongoDriverInstanceValues},
 	{"mysql", mysqlEnvVarsExist, setMysqlDriverInstanceValues},
@@ -108,7 +112,7 @@ func init_consulProvisioner() (consul.ConsulProvisionerInterface, error) {
 func start_usbProcess(binPath, consulAddress string) (ifrit.Process, error) {
 	usbRunner := ginkgomon.New(ginkgomon.Config{
 		Name:              "cf-usb",
-		Command:           exec.Command(binPath, "consulConfigProvider", "-a", consulAddress),
+		Command:           exec.Command(binPath, "--loglevel", "debug", "consulConfigProvider", "-a", consulAddress),
 		StartCheck:        "usb.start-listening-brokerapi",
 		StartCheckTimeout: 5 * time.Second,
 		Cleanup:           func() {},
@@ -236,11 +240,36 @@ func Test_BrokerWithConsulConfigProviderCatalog(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	var uaaFakeServer *ghttp.Server
+	uaaFakeServer = ghttp.NewServer()
+
+	var ccFakeServer *ghttp.Server
+	ccFakeServer = ghttp.NewServer()
+
+	ccFakeServer.AppendHandlers(
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("GET", "/v2/info"),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(200,
+				fmt.Sprintf(
+					`{"name": "vcap","authorization_endpoint": "%[1]s","token_endpoint":"%[1]s","api_version":"2.44.0"}`,
+					uaaFakeServer.URL()),
+			),
+		),
+	)
+
 	var list api.KVPairs
 
+	brokerApiPort, err := localip.LocalPort()
+	Expect(err).ToNot(HaveOccurred())
+	managementApiPort, err := localip.LocalPort()
+	Expect(err).ToNot(HaveOccurred())
+
 	list = append(list, &api.KVPair{Key: "usb/api_version", Value: []byte("2.0")})
-	list = append(list, &api.KVPair{Key: "usb/broker_api", Value: []byte("{\"listen\":\":54054\",\"credentials\":{\"username\":\"demouser\",\"password\":\"demopassword\"}}")})
-	list = append(list, &api.KVPair{Key: "usb/management_api", Value: []byte(fmt.Sprintf("{\"listen\":\":54053\",\"uaa_secret\":\"myuaasecret\",\"uaa_client\":\"myuaaclient\",\"authentication\":{\"uaa\":{\"adminscope\":\"usb.management.admin\",\"public_key\":\"[%1]s \"}},\"cloud_controller\":{\"api\":\"\",\"skip_tsl_validation\":true}}", uaaPublicKey))})
+	list = append(list, &api.KVPair{Key: "usb/broker_api", Value: []byte(fmt.Sprintf("{\"listen\":\":%v\",\"credentials\":{\"username\":\"demouser\",\"password\":\"demopassword\"}}", brokerApiPort))})
+	list = append(list, &api.KVPair{Key: "usb/management_api", Value: []byte(fmt.Sprintf("{\"listen\":\":%v\",\"uaa_secret\":\"myuaasecret\",\"uaa_client\":\"myuaaclient\",\"authentication\":{\"uaa\":{\"adminscope\":\"usb.management.admin\",\"public_key\":\"%v\"}},\"cloud_controller\":{\"api\":\"%s\",\"skip_tsl_validation\":true}}", managementApiPort, uaaPublicKey, ccFakeServer.URL()))})
 
 	err = consulClient.PutKVs(&list, nil)
 	if err != nil {
@@ -272,7 +301,7 @@ func Test_BrokerWithConsulConfigProviderCatalog(t *testing.T) {
 	user := configInfo.BrokerAPI.Credentials.Username
 	pass := configInfo.BrokerAPI.Credentials.Password
 
-	resp, err := http.Get(fmt.Sprintf("http://%s:%s@%s/v2/catalog", user, pass, ConsulConfig.consulAddress))
+	resp, err := http.Get(fmt.Sprintf("http://%s:%s@%s/v2/catalog", user, pass, "localhost:"+strconv.Itoa(int(brokerApiPort))))
 
 	if err != nil {
 		t.Fatal(err)
@@ -281,10 +310,10 @@ func Test_BrokerWithConsulConfigProviderCatalog(t *testing.T) {
 	defer resp.Body.Close()
 
 	content, err := ioutil.ReadAll(resp.Body)
-
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	t.Log("Test catalog:")
 	t.Log(string(content))
 }
@@ -696,6 +725,18 @@ func setMysqlDriverInstanceValues(driverName, driverId string) []byte {
 		os.Getenv("MYSQL_PORT"),
 		os.Getenv("MYSQL_USER"),
 		os.Getenv("MYSQL_PASS")))
+
+	return values
+}
+
+func dummyEnvVarsExist() bool {
+	return true
+}
+
+func setDummyDriverInstanceValues(driverName, driverId string) []byte {
+	values := []byte(fmt.Sprintf(`{"name":"%[1]s", "driver_id":"%[2]s", "configuration": {"succeed_count": "3"}}`,
+		driverName,
+		driverId))
 
 	return values
 }
