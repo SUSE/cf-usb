@@ -8,7 +8,7 @@ import (
 	"strconv"
 
 	"github.com/hpcloud/cf-usb/driver"
-	"github.com/hpcloud/cf-usb/driver/dummy/driverdata"
+	"github.com/hpcloud/cf-usb/driver/dummy-async/driverdata"
 	"github.com/hpcloud/cf-usb/driver/status"
 
 	"github.com/pivotal-golang/lager"
