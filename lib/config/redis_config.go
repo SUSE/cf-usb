@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/hpcloud/cf-usb/lib/config/redis"
+
 	"github.com/frodenas/brokerapi"
+	"github.com/hpcloud/cf-usb/lib/config/redis"
 )
 
 type redisConfig struct {
@@ -66,6 +67,24 @@ func (c *redisConfig) LoadConfiguration() (*Config, error) {
 			return nil, err
 		}
 	}
+
+	exists, err = c.provider.KeyExists("routes_register")
+	if err != nil {
+		return nil, err
+	}
+	if exists {
+		value, err = c.provider.GetValue("routes_register")
+
+		if err != nil {
+			return nil, err
+		}
+
+		err = json.Unmarshal([]byte(value), &configuration.RoutesRegister)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return &configuration, nil
 }
 
