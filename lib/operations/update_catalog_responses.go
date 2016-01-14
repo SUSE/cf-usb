@@ -16,6 +16,11 @@ swagger:response updateCatalogOK
 type UpdateCatalogOK struct {
 }
 
+// NewUpdateCatalogOK creates UpdateCatalogOK with default headers values
+func NewUpdateCatalogOK() *UpdateCatalogOK {
+	return &UpdateCatalogOK{}
+}
+
 // WriteResponse to the client
 func (o *UpdateCatalogOK) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
 
@@ -30,6 +35,17 @@ type UpdateCatalogInternalServerError struct {
 
 	// In: body
 	Payload string `json:"body,omitempty"`
+}
+
+// NewUpdateCatalogInternalServerError creates UpdateCatalogInternalServerError with default headers values
+func NewUpdateCatalogInternalServerError() *UpdateCatalogInternalServerError {
+	return &UpdateCatalogInternalServerError{}
+}
+
+// WithPayload adds the payload to the update catalog internal server error response
+func (o *UpdateCatalogInternalServerError) WithPayload(payload string) *UpdateCatalogInternalServerError {
+	o.Payload = payload
+	return o
 }
 
 // WriteResponse to the client

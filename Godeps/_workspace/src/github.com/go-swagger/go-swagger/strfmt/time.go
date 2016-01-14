@@ -61,7 +61,7 @@ var (
 // ParseDateTime parses a string that represents an ISO8601 time or a unix epoch
 func ParseDateTime(data string) (DateTime, error) {
 	if data == "" {
-		return DateTime{Time: time.Unix(0, 0).UTC()}, nil
+		return NewDateTime(), nil
 	}
 	var lastError error
 	for _, layout := range dateTimeFormats {
@@ -71,7 +71,7 @@ func ParseDateTime(data string) (DateTime, error) {
 			continue
 		}
 		lastError = nil
-		return DateTime{dd}, nil
+		return DateTime(dd), nil
 	}
 	return DateTime{}, lastError
 }
@@ -81,12 +81,15 @@ func ParseDateTime(data string) (DateTime, error) {
 // Most API's we encounter want either millisecond or second precision times. This just tries to make it worry-free.
 //
 // swagger:strfmt date-time
-type DateTime struct {
-	time.Time
+type DateTime time.Time
+
+// NewDateTime is a representation of zero value for DateTime type
+func NewDateTime() DateTime {
+	return DateTime(time.Unix(0, 0).UTC())
 }
 
 func (t DateTime) String() string {
-	return t.Format(RFC3339Millis)
+	return time.Time(t).Format(RFC3339Millis)
 }
 
 // MarshalText implements the text marshaller interface
@@ -96,9 +99,6 @@ func (t DateTime) MarshalText() ([]byte, error) {
 
 // UnmarshalText implements the text unmarshaller interface
 func (t *DateTime) UnmarshalText(text []byte) error {
-	if len(text) == 0 {
-		return nil
-	}
 	tt, err := ParseDateTime(string(text))
 	if err != nil {
 		return err
@@ -108,17 +108,17 @@ func (t *DateTime) UnmarshalText(text []byte) error {
 }
 
 // Scan scans a DateTime value from database driver type.
-func (d *DateTime) Scan(raw interface{}) error {
+func (t *DateTime) Scan(raw interface{}) error {
 	// TODO: case int64: and case float64: ?
 	switch v := raw.(type) {
 	case []byte:
-		return d.UnmarshalText(v)
+		return t.UnmarshalText(v)
 	case string:
-		return d.UnmarshalText([]byte(v))
+		return t.UnmarshalText([]byte(v))
 	case time.Time:
-		*d = DateTime{v}
+		*t = DateTime(v)
 	case nil:
-		*d = DateTime{}
+		*t = DateTime{}
 	default:
 		return fmt.Errorf("cannot sql.Scan() strfmt.DateTime from: %#v", v)
 	}
@@ -127,6 +127,6 @@ func (d *DateTime) Scan(raw interface{}) error {
 }
 
 // Value converts DateTime to a primitive value ready to written to a database.
-func (d DateTime) Value() (driver.Value, error) {
-	return driver.Value(d.Time), nil
+func (t DateTime) Value() (driver.Value, error) {
+	return driver.Value(t), nil
 }

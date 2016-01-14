@@ -21,6 +21,17 @@ type GetServicePlanOK struct {
 	Payload *genmodel.Plan `json:"body,omitempty"`
 }
 
+// NewGetServicePlanOK creates GetServicePlanOK with default headers values
+func NewGetServicePlanOK() *GetServicePlanOK {
+	return &GetServicePlanOK{}
+}
+
+// WithPayload adds the payload to the get service plan o k response
+func (o *GetServicePlanOK) WithPayload(payload *genmodel.Plan) *GetServicePlanOK {
+	o.Payload = payload
+	return o
+}
+
 // WriteResponse to the client
 func (o *GetServicePlanOK) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
 
@@ -39,6 +50,11 @@ swagger:response getServicePlanNotFound
 type GetServicePlanNotFound struct {
 }
 
+// NewGetServicePlanNotFound creates GetServicePlanNotFound with default headers values
+func NewGetServicePlanNotFound() *GetServicePlanNotFound {
+	return &GetServicePlanNotFound{}
+}
+
 // WriteResponse to the client
 func (o *GetServicePlanNotFound) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
 
@@ -53,6 +69,17 @@ type GetServicePlanInternalServerError struct {
 
 	// In: body
 	Payload string `json:"body,omitempty"`
+}
+
+// NewGetServicePlanInternalServerError creates GetServicePlanInternalServerError with default headers values
+func NewGetServicePlanInternalServerError() *GetServicePlanInternalServerError {
+	return &GetServicePlanInternalServerError{}
+}
+
+// WithPayload adds the payload to the get service plan internal server error response
+func (o *GetServicePlanInternalServerError) WithPayload(payload string) *GetServicePlanInternalServerError {
+	o.Payload = payload
+	return o
 }
 
 // WriteResponse to the client

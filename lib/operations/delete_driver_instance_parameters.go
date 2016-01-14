@@ -11,14 +11,21 @@ import (
 	"github.com/go-swagger/go-swagger/strfmt"
 )
 
+// NewDeleteDriverInstanceParams creates a new DeleteDriverInstanceParams object
+// with the default values initialized.
+func NewDeleteDriverInstanceParams() DeleteDriverInstanceParams {
+	var ()
+	return DeleteDriverInstanceParams{}
+}
+
 // DeleteDriverInstanceParams contains all the bound params for the delete driver instance operation
 // typically these are obtained from a http.Request
 //
 // swagger:parameters deleteDriverInstance
 type DeleteDriverInstanceParams struct {
-	/* Driver Instance ID
-	Required: true
-	In: path
+	/*Driver Instance ID
+	  Required: true
+	  In: path
 	*/
 	DriverInstanceID string
 }
@@ -28,7 +35,8 @@ type DeleteDriverInstanceParams struct {
 func (o *DeleteDriverInstanceParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
 
-	if err := o.bindDriverInstanceID(route.Params.Get("driver_instance_id"), route.Formats); err != nil {
+	rDriverInstanceID, rhkDriverInstanceID, _ := route.Params.GetOK("driver_instance_id")
+	if err := o.bindDriverInstanceID(rDriverInstanceID, rhkDriverInstanceID, route.Formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -38,7 +46,11 @@ func (o *DeleteDriverInstanceParams) BindRequest(r *http.Request, route *middlew
 	return nil
 }
 
-func (o *DeleteDriverInstanceParams) bindDriverInstanceID(raw string, formats strfmt.Registry) error {
+func (o *DeleteDriverInstanceParams) bindDriverInstanceID(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
 
 	o.DriverInstanceID = raw
 

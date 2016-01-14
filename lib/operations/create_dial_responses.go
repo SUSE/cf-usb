@@ -21,6 +21,17 @@ type CreateDialCreated struct {
 	Payload *genmodel.Dial `json:"body,omitempty"`
 }
 
+// NewCreateDialCreated creates CreateDialCreated with default headers values
+func NewCreateDialCreated() *CreateDialCreated {
+	return &CreateDialCreated{}
+}
+
+// WithPayload adds the payload to the create dial created response
+func (o *CreateDialCreated) WithPayload(payload *genmodel.Dial) *CreateDialCreated {
+	o.Payload = payload
+	return o
+}
+
 // WriteResponse to the client
 func (o *CreateDialCreated) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
 
@@ -40,6 +51,17 @@ type CreateDialInternalServerError struct {
 
 	// In: body
 	Payload string `json:"body,omitempty"`
+}
+
+// NewCreateDialInternalServerError creates CreateDialInternalServerError with default headers values
+func NewCreateDialInternalServerError() *CreateDialInternalServerError {
+	return &CreateDialInternalServerError{}
+}
+
+// WithPayload adds the payload to the create dial internal server error response
+func (o *CreateDialInternalServerError) WithPayload(payload string) *CreateDialInternalServerError {
+	o.Payload = payload
+	return o
 }
 
 // WriteResponse to the client

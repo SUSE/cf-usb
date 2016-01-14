@@ -238,7 +238,7 @@ code {
   
   <li><a href="#deleteServicePlan"><code><span class="http-method">delete</span> /plans/{plan_id}</code></a></li>
   
-  <li><a href="#getServices"><code><span class="http-method">get</span> /services</code></a></li>
+  <li><a href="#getServiceByInstanceId"><code><span class="http-method">get</span> /services</code></a></li>
   
   <li><a href="#getService"><code><span class="http-method">get</span> /services/{service_id}</code></a></li>
   
@@ -1924,7 +1924,7 @@ code {
     <pre class="get"><code class="huge"><span class="http-method">get</span> /plans/{plan_id}</code></pre></div>
     <div class="method-summary"> (<span class="nickname">getServicePlan</span>)</div>
     
-    <div class="method-notes">Gets the `plan` with the **planID** for the *serviceID*</div>
+    <div class="method-notes">Gets the `plan` with the **planID**</div>
 
     
     <h3 class="field-label">Path parameters</h3>
@@ -2153,11 +2153,11 @@ code {
   </div> <!-- method -->
   <hr/>
   
-  <div class="method"><a name="getServices"/>
+  <div class="method"><a name="getServiceByInstanceId"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
     <pre class="get"><code class="huge"><span class="http-method">get</span> /services</code></pre></div>
-    <div class="method-summary"> (<span class="nickname">getServices</span>)</div>
+    <div class="method-summary"> (<span class="nickname">getServiceByInstanceId</span>)</div>
     
     <div class="method-notes">Gets the existing `service`</div>
 
@@ -2180,7 +2180,7 @@ code {
     
     <h3 class="field-label">Query parameters</h3>
     <div class="field-items">
-      <div class="param">driverInstanceId (optional)</div>
+      <div class="param">driverInstanceId (required)</div>
 
       <div class="param-desc"><span class="param-type">Query Parameter</span> &mdash; Driver instance ID </div>
     </div>  <!-- field-items -->
@@ -2194,7 +2194,7 @@ code {
 
     
     <h3 class="field-label">Return type</h3>
-    <div class="return-type"><a href="#array">array[service]</a></div>
+    <div class="return-type"><a href="#">service</a></div>
     
 
     Todo: process Response Object and its headers, schema, examples

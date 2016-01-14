@@ -13,19 +13,26 @@ import (
 	"github.com/hpcloud/cf-usb/lib/genmodel"
 )
 
+// NewUpdateServicePlanParams creates a new UpdateServicePlanParams object
+// with the default values initialized.
+func NewUpdateServicePlanParams() UpdateServicePlanParams {
+	var ()
+	return UpdateServicePlanParams{}
+}
+
 // UpdateServicePlanParams contains all the bound params for the update service plan operation
 // typically these are obtained from a http.Request
 //
 // swagger:parameters updateServicePlan
 type UpdateServicePlanParams struct {
-	/* Update plan
-	Required: true
-	In: body
+	/*Update plan
+	  Required: true
+	  In: body
 	*/
 	Plan *genmodel.Plan
-	/* ID of the plan
-	Required: true
-	In: path
+	/*ID of the plan
+	  Required: true
+	  In: path
 	*/
 	PlanID string
 }
@@ -48,7 +55,8 @@ func (o *UpdateServicePlanParams) BindRequest(r *http.Request, route *middleware
 		}
 	}
 
-	if err := o.bindPlanID(route.Params.Get("plan_id"), route.Formats); err != nil {
+	rPlanID, rhkPlanID, _ := route.Params.GetOK("plan_id")
+	if err := o.bindPlanID(rPlanID, rhkPlanID, route.Formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -58,7 +66,11 @@ func (o *UpdateServicePlanParams) BindRequest(r *http.Request, route *middleware
 	return nil
 }
 
-func (o *UpdateServicePlanParams) bindPlanID(raw string, formats strfmt.Registry) error {
+func (o *UpdateServicePlanParams) bindPlanID(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
 
 	o.PlanID = raw
 

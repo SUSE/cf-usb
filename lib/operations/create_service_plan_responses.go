@@ -21,6 +21,17 @@ type CreateServicePlanCreated struct {
 	Payload *genmodel.Plan `json:"body,omitempty"`
 }
 
+// NewCreateServicePlanCreated creates CreateServicePlanCreated with default headers values
+func NewCreateServicePlanCreated() *CreateServicePlanCreated {
+	return &CreateServicePlanCreated{}
+}
+
+// WithPayload adds the payload to the create service plan created response
+func (o *CreateServicePlanCreated) WithPayload(payload *genmodel.Plan) *CreateServicePlanCreated {
+	o.Payload = payload
+	return o
+}
+
 // WriteResponse to the client
 func (o *CreateServicePlanCreated) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
 
@@ -40,6 +51,17 @@ type CreateServicePlanInternalServerError struct {
 
 	// In: body
 	Payload string `json:"body,omitempty"`
+}
+
+// NewCreateServicePlanInternalServerError creates CreateServicePlanInternalServerError with default headers values
+func NewCreateServicePlanInternalServerError() *CreateServicePlanInternalServerError {
+	return &CreateServicePlanInternalServerError{}
+}
+
+// WithPayload adds the payload to the create service plan internal server error response
+func (o *CreateServicePlanInternalServerError) WithPayload(payload string) *CreateServicePlanInternalServerError {
+	o.Payload = payload
+	return o
 }
 
 // WriteResponse to the client

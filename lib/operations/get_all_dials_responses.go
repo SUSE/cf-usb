@@ -21,6 +21,17 @@ type GetAllDialsOK struct {
 	Payload []*genmodel.Dial `json:"body,omitempty"`
 }
 
+// NewGetAllDialsOK creates GetAllDialsOK with default headers values
+func NewGetAllDialsOK() *GetAllDialsOK {
+	return &GetAllDialsOK{}
+}
+
+// WithPayload adds the payload to the get all dials o k response
+func (o *GetAllDialsOK) WithPayload(payload []*genmodel.Dial) *GetAllDialsOK {
+	o.Payload = payload
+	return o
+}
+
 // WriteResponse to the client
 func (o *GetAllDialsOK) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
 
@@ -39,6 +50,17 @@ type GetAllDialsInternalServerError struct {
 
 	// In: body
 	Payload string `json:"body,omitempty"`
+}
+
+// NewGetAllDialsInternalServerError creates GetAllDialsInternalServerError with default headers values
+func NewGetAllDialsInternalServerError() *GetAllDialsInternalServerError {
+	return &GetAllDialsInternalServerError{}
+}
+
+// WithPayload adds the payload to the get all dials internal server error response
+func (o *GetAllDialsInternalServerError) WithPayload(payload string) *GetAllDialsInternalServerError {
+	o.Payload = payload
+	return o
 }
 
 // WriteResponse to the client

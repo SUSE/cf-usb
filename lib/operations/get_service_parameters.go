@@ -11,14 +11,21 @@ import (
 	"github.com/go-swagger/go-swagger/strfmt"
 )
 
+// NewGetServiceParams creates a new GetServiceParams object
+// with the default values initialized.
+func NewGetServiceParams() GetServiceParams {
+	var ()
+	return GetServiceParams{}
+}
+
 // GetServiceParams contains all the bound params for the get service operation
 // typically these are obtained from a http.Request
 //
 // swagger:parameters getService
 type GetServiceParams struct {
-	/* ID of the service
-	Required: true
-	In: path
+	/*ID of the service
+	  Required: true
+	  In: path
 	*/
 	ServiceID string
 }
@@ -28,7 +35,8 @@ type GetServiceParams struct {
 func (o *GetServiceParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
 
-	if err := o.bindServiceID(route.Params.Get("service_id"), route.Formats); err != nil {
+	rServiceID, rhkServiceID, _ := route.Params.GetOK("service_id")
+	if err := o.bindServiceID(rServiceID, rhkServiceID, route.Formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -38,7 +46,11 @@ func (o *GetServiceParams) BindRequest(r *http.Request, route *middleware.Matche
 	return nil
 }
 
-func (o *GetServiceParams) bindServiceID(raw string, formats strfmt.Registry) error {
+func (o *GetServiceParams) bindServiceID(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
 
 	o.ServiceID = raw
 

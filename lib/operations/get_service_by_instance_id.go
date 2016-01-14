@@ -41,6 +41,7 @@ type GetServiceByInstanceID struct {
 
 func (o *GetServiceByInstanceID) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
+	o.Params = NewGetServiceByInstanceIDParams()
 
 	uprinc, err := o.Context.Authorize(r, route)
 	if err != nil {

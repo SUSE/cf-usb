@@ -21,6 +21,17 @@ type CreateDriverCreated struct {
 	Payload *genmodel.Driver `json:"body,omitempty"`
 }
 
+// NewCreateDriverCreated creates CreateDriverCreated with default headers values
+func NewCreateDriverCreated() *CreateDriverCreated {
+	return &CreateDriverCreated{}
+}
+
+// WithPayload adds the payload to the create driver created response
+func (o *CreateDriverCreated) WithPayload(payload *genmodel.Driver) *CreateDriverCreated {
+	o.Payload = payload
+	return o
+}
+
 // WriteResponse to the client
 func (o *CreateDriverCreated) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
 
@@ -39,6 +50,11 @@ swagger:response createDriverConflict
 type CreateDriverConflict struct {
 }
 
+// NewCreateDriverConflict creates CreateDriverConflict with default headers values
+func NewCreateDriverConflict() *CreateDriverConflict {
+	return &CreateDriverConflict{}
+}
+
 // WriteResponse to the client
 func (o *CreateDriverConflict) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
 
@@ -53,6 +69,17 @@ type CreateDriverInternalServerError struct {
 
 	// In: body
 	Payload string `json:"body,omitempty"`
+}
+
+// NewCreateDriverInternalServerError creates CreateDriverInternalServerError with default headers values
+func NewCreateDriverInternalServerError() *CreateDriverInternalServerError {
+	return &CreateDriverInternalServerError{}
+}
+
+// WithPayload adds the payload to the create driver internal server error response
+func (o *CreateDriverInternalServerError) WithPayload(payload string) *CreateDriverInternalServerError {
+	o.Payload = payload
+	return o
 }
 
 // WriteResponse to the client

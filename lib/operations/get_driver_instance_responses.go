@@ -21,6 +21,17 @@ type GetDriverInstanceOK struct {
 	Payload *genmodel.DriverInstance `json:"body,omitempty"`
 }
 
+// NewGetDriverInstanceOK creates GetDriverInstanceOK with default headers values
+func NewGetDriverInstanceOK() *GetDriverInstanceOK {
+	return &GetDriverInstanceOK{}
+}
+
+// WithPayload adds the payload to the get driver instance o k response
+func (o *GetDriverInstanceOK) WithPayload(payload *genmodel.DriverInstance) *GetDriverInstanceOK {
+	o.Payload = payload
+	return o
+}
+
 // WriteResponse to the client
 func (o *GetDriverInstanceOK) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
 
@@ -39,6 +50,11 @@ swagger:response getDriverInstanceNotFound
 type GetDriverInstanceNotFound struct {
 }
 
+// NewGetDriverInstanceNotFound creates GetDriverInstanceNotFound with default headers values
+func NewGetDriverInstanceNotFound() *GetDriverInstanceNotFound {
+	return &GetDriverInstanceNotFound{}
+}
+
 // WriteResponse to the client
 func (o *GetDriverInstanceNotFound) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
 
@@ -53,6 +69,17 @@ type GetDriverInstanceInternalServerError struct {
 
 	// In: body
 	Payload string `json:"body,omitempty"`
+}
+
+// NewGetDriverInstanceInternalServerError creates GetDriverInstanceInternalServerError with default headers values
+func NewGetDriverInstanceInternalServerError() *GetDriverInstanceInternalServerError {
+	return &GetDriverInstanceInternalServerError{}
+}
+
+// WithPayload adds the payload to the get driver instance internal server error response
+func (o *GetDriverInstanceInternalServerError) WithPayload(payload string) *GetDriverInstanceInternalServerError {
+	o.Payload = payload
+	return o
 }
 
 // WriteResponse to the client

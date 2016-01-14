@@ -7,28 +7,37 @@ import (
 	"net/http"
 
 	"github.com/go-swagger/go-swagger/errors"
+	"github.com/go-swagger/go-swagger/httpkit"
 	"github.com/go-swagger/go-swagger/httpkit/middleware"
 	"github.com/go-swagger/go-swagger/strfmt"
 )
+
+// NewGetDriverInstancesParams creates a new GetDriverInstancesParams object
+// with the default values initialized.
+func NewGetDriverInstancesParams() GetDriverInstancesParams {
+	var ()
+	return GetDriverInstancesParams{}
+}
 
 // GetDriverInstancesParams contains all the bound params for the get driver instances operation
 // typically these are obtained from a http.Request
 //
 // swagger:parameters getDriverInstances
 type GetDriverInstancesParams struct {
-	/* Driver ID
-	In: query
+	/*Driver ID
+	  In: query
 	*/
-	DriverID string
+	DriverID *string
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
 // for simple values it will use straight method calls
 func (o *GetDriverInstancesParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
-	qs := r.URL.Query()
+	qs := httpkit.Values(r.URL.Query())
 
-	if err := o.bindDriverID(qs.Get("driver_id"), route.Formats); err != nil {
+	qDriverID, qhkDriverID, _ := qs.GetOK("driver_id")
+	if err := o.bindDriverID(qDriverID, qhkDriverID, route.Formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -38,9 +47,16 @@ func (o *GetDriverInstancesParams) BindRequest(r *http.Request, route *middlewar
 	return nil
 }
 
-func (o *GetDriverInstancesParams) bindDriverID(raw string, formats strfmt.Registry) error {
+func (o *GetDriverInstancesParams) bindDriverID(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
+	if raw == "" { // empty values pass all other validations
+		return nil
+	}
 
-	o.DriverID = raw
+	o.DriverID = &raw
 
 	return nil
 }

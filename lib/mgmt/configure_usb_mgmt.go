@@ -64,7 +64,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		var driver config.Driver
 		driver.DriverType = params.Driver.DriverType
 
-		err = configProvider.SetDriver(params.Driver.ID, driver)
+		err = configProvider.SetDriver(*params.Driver.ID, driver)
 		if err != nil {
 			return &UpdateDriverInternalServerError{Payload: err.Error()}
 		}
@@ -182,7 +182,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		driver := &genmodel.Driver{
 			DriverType:      d.DriverType,
 			DriverInstances: instances,
-			ID:              params.DriverID,
+			ID:              &params.DriverID,
 		}
 
 		return &GetDriverOK{Payload: driver}
@@ -205,7 +205,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 			}
 
 			driver := &genmodel.Driver{
-				ID:              dId,
+				ID:              &dId,
 				DriverType:      d.DriverType,
 				Name:            d.DriverName,
 				DriverInstances: instances,
@@ -242,7 +242,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 			return &CreateDriverInternalServerError{Payload: err.Error()}
 		}
 
-		params.Driver.ID = driverID
+		params.Driver.ID = &driverID
 
 		return &CreateDriverCreated{Payload: params.Driver}
 	})
@@ -252,7 +252,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 		var driverInstances = make([]*genmodel.DriverInstance, 0)
 
-		driver, err := configProvider.GetDriver(params.DriverID)
+		driver, err := configProvider.GetDriver(*params.DriverID)
 		if err != nil {
 			return &GetDriverInstanceInternalServerError{Payload: err.Error()}
 		}
@@ -266,9 +266,9 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 			driverInstance := &genmodel.DriverInstance{
 				Configuration: di.Configuration,
 				Dials:         dials,
-				DriverID:      params.DriverID,
+				DriverID:      *params.DriverID,
 				Name:          di.Name,
-				Service:       di.Service.ID,
+				Service:       &di.Service.ID,
 			}
 
 			driverInstances = append(driverInstances, driverInstance)
@@ -289,15 +289,15 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		planInfo, dialID, _, err := configProvider.GetPlan(params.PlanID)
 
 		if err != nil {
-			return &GetServicePlanInternalServerError{Payload: err.Error()}
+			return &GetServicePlanNotFound{}
 		}
 
 		plan := &genmodel.Plan{
 			Name:        planInfo.Name,
-			ID:          planInfo.ID,
+			ID:          &planInfo.ID,
 			DialID:      dialID,
-			Description: planInfo.Description,
-			Free:        planInfo.Free,
+			Description: &planInfo.Description,
+			Free:        &planInfo.Free,
 		}
 
 		return &GetServicePlanOK{Payload: plan}
@@ -323,7 +323,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 			return &CreateDialInternalServerError{Payload: err.Error()}
 		}
 
-		params.Dial.ID = dialID
+		params.Dial.ID = &dialID
 
 		return &CreateDialCreated{Payload: params.Dial}
 	})
@@ -341,9 +341,9 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 		configuration := json.RawMessage(dialconfig)
 		dial.Configuration = &configuration
-		dial.Plan = brokerapi.ServicePlan{ID: params.Dial.Plan}
+		dial.Plan = brokerapi.ServicePlan{ID: *params.Dial.Plan}
 
-		err = configProvider.SetDial(params.Dial.DriverInstanceID, dialID, dial)
+		err = configProvider.SetDial(params.Dial.DriverInstanceID, *dialID, dial)
 		if err != nil {
 			return &UpdateDialInternalServerError{Payload: err.Error()}
 		}
@@ -364,9 +364,9 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		}
 
 		service := &genmodel.Service{
-			ID:               di.Service.ID,
+			ID:               &di.Service.ID,
 			DriverInstanceID: params.DriverInstanceID,
-			Bindable:         di.Service.Bindable,
+			Bindable:         &di.Service.Bindable,
 			Name:             di.Service.Name,
 			Tags:             di.Service.Tags,
 		}
@@ -442,7 +442,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		}
 
 		params.DriverInstance.Dials = append(params.DriverInstance.Dials, defaultDialID)
-		params.DriverInstance.ID = instanceID
+		params.DriverInstance.ID = &instanceID
 
 		var service brokerapi.Service
 
@@ -458,7 +458,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 			return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
 		}
 
-		params.DriverInstance.Service = service.ID
+		params.DriverInstance.Service = &service.ID
 
 		config, err := configProvider.LoadConfiguration()
 		if err != nil {
@@ -553,10 +553,10 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		log = log.Session("get-dials", lager.Data{"driver-instance-id": params.DriverInstanceID})
 
 		var dials = make([]*genmodel.Dial, 0)
-		if params.DriverInstanceID == "" {
+		if *params.DriverInstanceID == "" {
 			return &GetDialSchemaInternalServerError{Payload: "Empty driver instance id in get all dials"}
 		}
-		instanceInfo, err := configProvider.LoadDriverInstance(params.DriverInstanceID)
+		instanceInfo, err := configProvider.LoadDriverInstance(*params.DriverInstanceID)
 		if err != nil {
 			return &GetDialSchemaInternalServerError{Payload: err.Error()}
 		}
@@ -565,9 +565,9 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 			dial := &genmodel.Dial{
 				Configuration:    dia.Configuration,
-				DriverInstanceID: params.DriverInstanceID,
-				ID:               diaID,
-				Plan:             dia.Plan.ID,
+				DriverInstanceID: *params.DriverInstanceID,
+				ID:               &diaID,
+				Plan:             &dia.Plan.ID,
 			}
 
 			dials = append(dials, dial)
@@ -606,10 +606,10 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 							var plan brokerapi.ServicePlan
 							var meta brokerapi.ServicePlanMetadata
 
-							plan.Description = params.Plan.Description
-							plan.ID = params.Plan.ID
+							plan.Description = *params.Plan.Description
+							plan.ID = *params.Plan.ID
 							plan.Name = params.Plan.Name
-							plan.Free = params.Plan.Free
+							plan.Free = *params.Plan.Free
 
 							meta.DisplayName = params.Plan.Name
 							plan.Metadata = &meta
@@ -645,11 +645,11 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		}
 
 		svc := &genmodel.Service{
-			Bindable:         serviceInfo.Bindable,
+			Bindable:         &serviceInfo.Bindable,
 			DriverInstanceID: instanceID,
-			ID:               serviceInfo.ID,
+			ID:               &serviceInfo.ID,
 			Name:             serviceInfo.Name,
-			Description:      serviceInfo.Description,
+			Description:      &serviceInfo.Description,
 			Tags:             serviceInfo.Tags,
 		}
 
@@ -691,12 +691,12 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 	api.GetServicePlansHandler = GetServicePlansHandlerFunc(func(params GetServicePlansParams, principal interface{}) middleware.Responder {
 		log = log.Session("get-service-plans", lager.Data{"driver-instance-id": params.DriverInstanceID})
-		if params.DriverInstanceID == "" {
+		if *params.DriverInstanceID == "" {
 			return &GetServicePlansInternalServerError{Payload: "Empty driver instance id in get service plans handler"}
 		}
 		var servicePlans = make([]*genmodel.Plan, 0)
 
-		instanceInfo, err := configProvider.LoadDriverInstance(params.DriverInstanceID)
+		instanceInfo, err := configProvider.LoadDriverInstance(*params.DriverInstanceID)
 		if err != nil {
 			return &GetServicePlansInternalServerError{Payload: err.Error()}
 		}
@@ -704,10 +704,10 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		for diaID, dia := range instanceInfo.Dials {
 			plan := &genmodel.Plan{
 				Name:        dia.Plan.Name,
-				ID:          dia.Plan.ID,
+				ID:          &dia.Plan.ID,
 				DialID:      diaID,
-				Description: dia.Plan.Description,
-				Free:        dia.Plan.Free,
+				Description: &dia.Plan.Description,
+				Free:        &dia.Plan.Free,
 			}
 
 			servicePlans = append(servicePlans, plan)
@@ -740,8 +740,8 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 						dial := &genmodel.Dial{
 							Configuration:    conf,
 							DriverInstanceID: diID,
-							ID:               diaID,
-							Plan:             dia.Plan.ID,
+							ID:               &diaID,
+							Plan:             &dia.Plan.ID,
 						}
 
 						return &GetDialOK{Payload: dial}
@@ -763,9 +763,9 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 		var service brokerapi.Service
 
-		service.Bindable = params.Service.Bindable
-		service.Description = params.Service.Description
-		service.ID = params.Service.ID
+		service.Bindable = *params.Service.Bindable
+		service.Description = *params.Service.Description
+		service.ID = *params.Service.ID
 		service.Name = params.Service.Name
 		service.Tags = params.Service.Tags
 
@@ -819,9 +819,9 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		driverInstance := &genmodel.DriverInstance{
 			Configuration: conf,
 			Dials:         dials,
-			ID:            params.DriverInstanceID,
+			ID:            &params.DriverInstanceID,
 			Name:          instance.Name,
-			Service:       instance.Service.ID,
+			Service:       &instance.Service.ID,
 		}
 
 		return &GetDriverInstanceOK{Payload: driverInstance}
@@ -858,10 +858,10 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 						var plan brokerapi.ServicePlan
 						var meta brokerapi.ServicePlanMetadata
 
-						plan.Description = params.Plan.Description
+						plan.Description = *params.Plan.Description
 						plan.ID = uuid.NewV4().String()
 						plan.Name = params.Plan.Name
-						plan.Free = params.Plan.Free
+						plan.Free = *params.Plan.Free
 
 						meta.DisplayName = params.Plan.Name
 
@@ -874,7 +874,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 							return &CreateServicePlanInternalServerError{Payload: err.Error()}
 						}
 
-						params.Plan.ID = plan.ID
+						params.Plan.ID = &plan.ID
 
 						return &CreateServicePlanCreated{Payload: params.Plan}
 					}

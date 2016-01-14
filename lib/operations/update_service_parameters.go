@@ -13,19 +13,26 @@ import (
 	"github.com/hpcloud/cf-usb/lib/genmodel"
 )
 
+// NewUpdateServiceParams creates a new UpdateServiceParams object
+// with the default values initialized.
+func NewUpdateServiceParams() UpdateServiceParams {
+	var ()
+	return UpdateServiceParams{}
+}
+
 // UpdateServiceParams contains all the bound params for the update service operation
 // typically these are obtained from a http.Request
 //
 // swagger:parameters updateService
 type UpdateServiceParams struct {
-	/* Update service
-	Required: true
-	In: body
+	/*Update service
+	  Required: true
+	  In: body
 	*/
 	Service *genmodel.Service
-	/* ID of the service
-	Required: true
-	In: path
+	/*ID of the service
+	  Required: true
+	  In: path
 	*/
 	ServiceID string
 }
@@ -48,7 +55,8 @@ func (o *UpdateServiceParams) BindRequest(r *http.Request, route *middleware.Mat
 		}
 	}
 
-	if err := o.bindServiceID(route.Params.Get("service_id"), route.Formats); err != nil {
+	rServiceID, rhkServiceID, _ := route.Params.GetOK("service_id")
+	if err := o.bindServiceID(rServiceID, rhkServiceID, route.Formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -58,7 +66,11 @@ func (o *UpdateServiceParams) BindRequest(r *http.Request, route *middleware.Mat
 	return nil
 }
 
-func (o *UpdateServiceParams) bindServiceID(raw string, formats strfmt.Registry) error {
+func (o *UpdateServiceParams) bindServiceID(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
 
 	o.ServiceID = raw
 

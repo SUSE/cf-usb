@@ -21,6 +21,17 @@ type GetServiceByInstanceIDOK struct {
 	Payload *genmodel.Service `json:"body,omitempty"`
 }
 
+// NewGetServiceByInstanceIDOK creates GetServiceByInstanceIDOK with default headers values
+func NewGetServiceByInstanceIDOK() *GetServiceByInstanceIDOK {
+	return &GetServiceByInstanceIDOK{}
+}
+
+// WithPayload adds the payload to the get service by instance id o k response
+func (o *GetServiceByInstanceIDOK) WithPayload(payload *genmodel.Service) *GetServiceByInstanceIDOK {
+	o.Payload = payload
+	return o
+}
+
 // WriteResponse to the client
 func (o *GetServiceByInstanceIDOK) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
 
@@ -40,6 +51,17 @@ type GetServiceByInstanceIDInternalServerError struct {
 
 	// In: body
 	Payload string `json:"body,omitempty"`
+}
+
+// NewGetServiceByInstanceIDInternalServerError creates GetServiceByInstanceIDInternalServerError with default headers values
+func NewGetServiceByInstanceIDInternalServerError() *GetServiceByInstanceIDInternalServerError {
+	return &GetServiceByInstanceIDInternalServerError{}
+}
+
+// WithPayload adds the payload to the get service by instance id internal server error response
+func (o *GetServiceByInstanceIDInternalServerError) WithPayload(payload string) *GetServiceByInstanceIDInternalServerError {
+	o.Payload = payload
+	return o
 }
 
 // WriteResponse to the client

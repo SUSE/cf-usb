@@ -40,6 +40,7 @@ type DeleteDriverInstance struct {
 
 func (o *DeleteDriverInstance) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
+	o.Params = NewDeleteDriverInstanceParams()
 
 	uprinc, err := o.Context.Authorize(r, route)
 	if err != nil {

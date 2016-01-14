@@ -9,7 +9,7 @@ import (
 	"github.com/go-swagger/go-swagger/strfmt"
 )
 
-/*Info info
+/*info Info info
 
 swagger:model info
 */
@@ -39,7 +39,7 @@ func (m *Info) Validate(formats strfmt.Registry) error {
 
 func (m *Info) validateVersion(formats strfmt.Registry) error {
 
-	if err := validate.Required("version", "body", string(m.Version)); err != nil {
+	if err := validate.RequiredString("version", "body", string(m.Version)); err != nil {
 		return err
 	}
 

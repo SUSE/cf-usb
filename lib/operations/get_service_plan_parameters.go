@@ -11,14 +11,21 @@ import (
 	"github.com/go-swagger/go-swagger/strfmt"
 )
 
+// NewGetServicePlanParams creates a new GetServicePlanParams object
+// with the default values initialized.
+func NewGetServicePlanParams() GetServicePlanParams {
+	var ()
+	return GetServicePlanParams{}
+}
+
 // GetServicePlanParams contains all the bound params for the get service plan operation
 // typically these are obtained from a http.Request
 //
 // swagger:parameters getServicePlan
 type GetServicePlanParams struct {
-	/* ID of the plan
-	Required: true
-	In: path
+	/*ID of the plan
+	  Required: true
+	  In: path
 	*/
 	PlanID string
 }
@@ -28,7 +35,8 @@ type GetServicePlanParams struct {
 func (o *GetServicePlanParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
 
-	if err := o.bindPlanID(route.Params.Get("plan_id"), route.Formats); err != nil {
+	rPlanID, rhkPlanID, _ := route.Params.GetOK("plan_id")
+	if err := o.bindPlanID(rPlanID, rhkPlanID, route.Formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -38,7 +46,11 @@ func (o *GetServicePlanParams) BindRequest(r *http.Request, route *middleware.Ma
 	return nil
 }
 
-func (o *GetServicePlanParams) bindPlanID(raw string, formats strfmt.Registry) error {
+func (o *GetServicePlanParams) bindPlanID(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
 
 	o.PlanID = raw
 

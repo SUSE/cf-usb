@@ -12,14 +12,21 @@ import (
 	"github.com/hpcloud/cf-usb/lib/genmodel"
 )
 
+// NewCreateDriverParams creates a new CreateDriverParams object
+// with the default values initialized.
+func NewCreateDriverParams() CreateDriverParams {
+	var ()
+	return CreateDriverParams{}
+}
+
 // CreateDriverParams contains all the bound params for the create driver operation
 // typically these are obtained from a http.Request
 //
 // swagger:parameters createDriver
 type CreateDriverParams struct {
-	/* Driver to be created
-	Required: true
-	In: body
+	/*Driver to be created
+	  Required: true
+	  In: body
 	*/
 	Driver *genmodel.Driver
 }

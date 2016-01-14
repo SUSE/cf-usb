@@ -7,28 +7,37 @@ import (
 	"net/http"
 
 	"github.com/go-swagger/go-swagger/errors"
+	"github.com/go-swagger/go-swagger/httpkit"
 	"github.com/go-swagger/go-swagger/httpkit/middleware"
 	"github.com/go-swagger/go-swagger/strfmt"
 )
+
+// NewGetServicePlansParams creates a new GetServicePlansParams object
+// with the default values initialized.
+func NewGetServicePlansParams() GetServicePlansParams {
+	var ()
+	return GetServicePlansParams{}
+}
 
 // GetServicePlansParams contains all the bound params for the get service plans operation
 // typically these are obtained from a http.Request
 //
 // swagger:parameters getServicePlans
 type GetServicePlansParams struct {
-	/* Driver Instance ID
-	In: query
+	/*Driver Instance ID
+	  In: query
 	*/
-	DriverInstanceID string
+	DriverInstanceID *string
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
 // for simple values it will use straight method calls
 func (o *GetServicePlansParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
-	qs := r.URL.Query()
+	qs := httpkit.Values(r.URL.Query())
 
-	if err := o.bindDriverInstanceID(qs.Get("driver_instance_id"), route.Formats); err != nil {
+	qDriverInstanceID, qhkDriverInstanceID, _ := qs.GetOK("driver_instance_id")
+	if err := o.bindDriverInstanceID(qDriverInstanceID, qhkDriverInstanceID, route.Formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -38,9 +47,16 @@ func (o *GetServicePlansParams) BindRequest(r *http.Request, route *middleware.M
 	return nil
 }
 
-func (o *GetServicePlansParams) bindDriverInstanceID(raw string, formats strfmt.Registry) error {
+func (o *GetServicePlansParams) bindDriverInstanceID(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
+	if raw == "" { // empty values pass all other validations
+		return nil
+	}
 
-	o.DriverInstanceID = raw
+	o.DriverInstanceID = &raw
 
 	return nil
 }

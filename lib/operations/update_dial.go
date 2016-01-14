@@ -40,6 +40,7 @@ type UpdateDial struct {
 
 func (o *UpdateDial) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
+	o.Params = NewUpdateDialParams()
 
 	uprinc, err := o.Context.Authorize(r, route)
 	if err != nil {

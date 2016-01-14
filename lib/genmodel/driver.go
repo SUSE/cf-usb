@@ -4,12 +4,15 @@ package genmodel
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"strconv"
+
 	"github.com/go-swagger/go-swagger/errors"
 	"github.com/go-swagger/go-swagger/httpkit/validate"
 	"github.com/go-swagger/go-swagger/strfmt"
+	"github.com/go-swagger/go-swagger/swag"
 )
 
-/*Driver driver
+/*driver Driver driver
 
 swagger:model driver
 */
@@ -20,16 +23,22 @@ type Driver struct {
 	DriverInstances []string `json:"driver_instances,omitempty"`
 
 	/* DriverType driver type
-	 */
+
+	Required: true
+	Max Length: 50
+	Min Length: 3
+	*/
 	DriverType string `json:"driver_type,omitempty"`
 
 	/* ID id
 	 */
-	ID string `json:"id,omitempty"`
+	ID *string `json:"id,omitempty"`
 
 	/* Name name
 
 	Required: true
+	Max Length: 50
+	Min Length: 3
 	*/
 	Name string `json:"name,omitempty"`
 }
@@ -37,6 +46,16 @@ type Driver struct {
 // Validate validates this driver
 func (m *Driver) Validate(formats strfmt.Registry) error {
 	var res []error
+
+	if err := m.validateDriverInstances(formats); err != nil {
+		// prop
+		res = append(res, err)
+	}
+
+	if err := m.validateDriverType(formats); err != nil {
+		// prop
+		res = append(res, err)
+	}
 
 	if err := m.validateName(formats); err != nil {
 		// prop
@@ -49,9 +68,51 @@ func (m *Driver) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
+func (m *Driver) validateDriverInstances(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.DriverInstances) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.DriverInstances); i++ {
+
+		if err := validate.RequiredString("driver_instances"+"."+strconv.Itoa(i), "body", string(m.DriverInstances[i])); err != nil {
+			return err
+		}
+
+	}
+
+	return nil
+}
+
+func (m *Driver) validateDriverType(formats strfmt.Registry) error {
+
+	if err := validate.RequiredString("driver_type", "body", string(m.DriverType)); err != nil {
+		return err
+	}
+
+	if err := validate.MinLength("driver_type", "body", string(m.DriverType), 3); err != nil {
+		return err
+	}
+
+	if err := validate.MaxLength("driver_type", "body", string(m.DriverType), 50); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (m *Driver) validateName(formats strfmt.Registry) error {
 
-	if err := validate.Required("name", "body", string(m.Name)); err != nil {
+	if err := validate.RequiredString("name", "body", string(m.Name)); err != nil {
+		return err
+	}
+
+	if err := validate.MinLength("name", "body", string(m.Name), 3); err != nil {
+		return err
+	}
+
+	if err := validate.MaxLength("name", "body", string(m.Name), 50); err != nil {
 		return err
 	}
 

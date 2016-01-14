@@ -9,7 +9,7 @@ import (
 	"github.com/go-swagger/go-swagger/strfmt"
 )
 
-/*Dial dial
+/*dial Dial dial
 
 swagger:model dial
 */
@@ -22,16 +22,18 @@ type Dial struct {
 	/* DriverInstanceID driver instance id
 
 	Required: true
+	Max Length: 36
+	Min Length: 36
 	*/
 	DriverInstanceID string `json:"driver_instance_id,omitempty"`
 
 	/* ID id
 	 */
-	ID string `json:"id,omitempty"`
+	ID *string `json:"id,omitempty"`
 
 	/* Plan plan
 	 */
-	Plan string `json:"plan,omitempty"`
+	Plan *string `json:"plan,omitempty"`
 }
 
 // Validate validates this dial
@@ -51,7 +53,15 @@ func (m *Dial) Validate(formats strfmt.Registry) error {
 
 func (m *Dial) validateDriverInstanceID(formats strfmt.Registry) error {
 
-	if err := validate.Required("driver_instance_id", "body", string(m.DriverInstanceID)); err != nil {
+	if err := validate.RequiredString("driver_instance_id", "body", string(m.DriverInstanceID)); err != nil {
+		return err
+	}
+
+	if err := validate.MinLength("driver_instance_id", "body", string(m.DriverInstanceID), 36); err != nil {
+		return err
+	}
+
+	if err := validate.MaxLength("driver_instance_id", "body", string(m.DriverInstanceID), 36); err != nil {
 		return err
 	}
 

@@ -9,7 +9,7 @@ import (
 	"github.com/go-swagger/go-swagger/strfmt"
 )
 
-/*Plan plan
+/*plan Plan plan
 
 swagger:model plan
 */
@@ -17,25 +17,29 @@ type Plan struct {
 
 	/* Description description
 	 */
-	Description string `json:"description,omitempty"`
+	Description *string `json:"description,omitempty"`
 
 	/* DialID dial id
 
 	Required: true
+	Max Length: 36
+	Min Length: 36
 	*/
 	DialID string `json:"dial_id,omitempty"`
 
 	/* Free free
 	 */
-	Free bool `json:"free,omitempty"`
+	Free *bool `json:"free,omitempty"`
 
 	/* ID id
 	 */
-	ID string `json:"id,omitempty"`
+	ID *string `json:"id,omitempty"`
 
 	/* Name name
 
 	Required: true
+	Max Length: 50
+	Min Length: 3
 	*/
 	Name string `json:"name,omitempty"`
 }
@@ -62,7 +66,15 @@ func (m *Plan) Validate(formats strfmt.Registry) error {
 
 func (m *Plan) validateDialID(formats strfmt.Registry) error {
 
-	if err := validate.Required("dial_id", "body", string(m.DialID)); err != nil {
+	if err := validate.RequiredString("dial_id", "body", string(m.DialID)); err != nil {
+		return err
+	}
+
+	if err := validate.MinLength("dial_id", "body", string(m.DialID), 36); err != nil {
+		return err
+	}
+
+	if err := validate.MaxLength("dial_id", "body", string(m.DialID), 36); err != nil {
 		return err
 	}
 
@@ -71,7 +83,15 @@ func (m *Plan) validateDialID(formats strfmt.Registry) error {
 
 func (m *Plan) validateName(formats strfmt.Registry) error {
 
-	if err := validate.Required("name", "body", string(m.Name)); err != nil {
+	if err := validate.RequiredString("name", "body", string(m.Name)); err != nil {
+		return err
+	}
+
+	if err := validate.MinLength("name", "body", string(m.Name), 3); err != nil {
+		return err
+	}
+
+	if err := validate.MaxLength("name", "body", string(m.Name), 50); err != nil {
 		return err
 	}
 

@@ -16,6 +16,11 @@ swagger:response pingDriverInstanceOK
 type PingDriverInstanceOK struct {
 }
 
+// NewPingDriverInstanceOK creates PingDriverInstanceOK with default headers values
+func NewPingDriverInstanceOK() *PingDriverInstanceOK {
+	return &PingDriverInstanceOK{}
+}
+
 // WriteResponse to the client
 func (o *PingDriverInstanceOK) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
 
@@ -27,6 +32,11 @@ func (o *PingDriverInstanceOK) WriteResponse(rw http.ResponseWriter, producer ht
 swagger:response pingDriverInstanceNotFound
 */
 type PingDriverInstanceNotFound struct {
+}
+
+// NewPingDriverInstanceNotFound creates PingDriverInstanceNotFound with default headers values
+func NewPingDriverInstanceNotFound() *PingDriverInstanceNotFound {
+	return &PingDriverInstanceNotFound{}
 }
 
 // WriteResponse to the client
@@ -43,6 +53,17 @@ type PingDriverInstanceInternalServerError struct {
 
 	// In: body
 	Payload string `json:"body,omitempty"`
+}
+
+// NewPingDriverInstanceInternalServerError creates PingDriverInstanceInternalServerError with default headers values
+func NewPingDriverInstanceInternalServerError() *PingDriverInstanceInternalServerError {
+	return &PingDriverInstanceInternalServerError{}
+}
+
+// WithPayload adds the payload to the ping driver instance internal server error response
+func (o *PingDriverInstanceInternalServerError) WithPayload(payload string) *PingDriverInstanceInternalServerError {
+	o.Payload = payload
+	return o
 }
 
 // WriteResponse to the client

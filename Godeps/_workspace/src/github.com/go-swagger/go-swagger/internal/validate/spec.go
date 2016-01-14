@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	"github.com/go-swagger/go-swagger/errors"
+	"github.com/go-swagger/go-swagger/jsonpointer"
 	"github.com/go-swagger/go-swagger/spec"
 	"github.com/go-swagger/go-swagger/strfmt"
 )
@@ -82,12 +83,22 @@ func (s *SpecValidator) Validate(data interface{}) (errs *Result, warnings *Resu
 	errs.Merge(s.validateRequiredDefinitions())            // error -
 	errs.Merge(s.validateDefaultValueValidAgainstSchema()) // error -
 	errs.Merge(s.validateExamplesValidAgainstSchema())     // error -
+	errs.Merge(s.validateNonEmptyPathParamNames())
 
-	warnings.Merge(s.validateUniqueSecurityScopes())            // warning
-	warnings.Merge(s.validateUniqueScopesSecurityDefinitions()) // warning
-	warnings.Merge(s.validateReferenced())                      // warning
+	warnings.Merge(s.validateUniqueSecurityScopes()) // warning
+	warnings.Merge(s.validateReferenced())           // warning
 
 	return
+}
+
+func (s *SpecValidator) validateNonEmptyPathParamNames() *Result {
+	res := new(Result)
+	for k := range s.spec.Spec().Paths.Paths {
+		if strings.Contains(k, "{}") {
+			res.AddErrors(errors.New(422, "%q contains an empty path parameter", k))
+		}
+	}
+	return res
 }
 
 func (s *SpecValidator) validateDuplicateOperationIDs() *Result {
@@ -301,11 +312,7 @@ func (s *SpecValidator) validateUniqueSecurityScopes() *Result {
 	// Each authorization/security reference should contain only unique scopes.
 	// (Example: For an oauth2 authorization/security requirement, when listing the required scopes,
 	// each scope should only be listed once.)
-	return nil
-}
 
-func (s *SpecValidator) validateUniqueScopesSecurityDefinitions() *Result {
-	// Each authorization/security scope in an authorization/security definition should be unique.
 	return nil
 }
 
@@ -343,8 +350,92 @@ func (s *SpecValidator) validatePathParamPresence(path string, fromPath, fromOpe
 }
 
 func (s *SpecValidator) validateReferenced() *Result {
+	var res Result
+	res.Merge(s.validateReferencedParameters())
+	res.Merge(s.validateReferencedResponses())
+	res.Merge(s.validateReferencedDefinitions())
+	return &res
+}
+
+func (s *SpecValidator) validateReferencedParameters() *Result {
 	// Each referenceable definition must have references.
-	return nil
+	params := s.spec.Spec().Parameters
+	if len(params) == 0 {
+		return nil
+	}
+
+	expected := make(map[string]struct{})
+	for k := range params {
+		expected["#/parameters/"+jsonpointer.Escape(k)] = struct{}{}
+	}
+	for _, k := range s.spec.AllParameterReferences() {
+		if _, ok := expected[k]; ok {
+			delete(expected, k)
+		}
+	}
+
+	if len(expected) == 0 {
+		return nil
+	}
+	var result Result
+	for k := range expected {
+		result.AddErrors(errors.New(422, "parameter %q is not used anywhere", k))
+	}
+	return &result
+}
+
+func (s *SpecValidator) validateReferencedResponses() *Result {
+	// Each referenceable definition must have references.
+	responses := s.spec.Spec().Responses
+	if len(responses) == 0 {
+		return nil
+	}
+
+	expected := make(map[string]struct{})
+	for k := range responses {
+		expected["#/responses/"+jsonpointer.Escape(k)] = struct{}{}
+	}
+	for _, k := range s.spec.AllResponseReferences() {
+		if _, ok := expected[k]; ok {
+			delete(expected, k)
+		}
+	}
+
+	if len(expected) == 0 {
+		return nil
+	}
+	var result Result
+	for k := range expected {
+		result.AddErrors(errors.New(422, "response %q is not used anywhere", k))
+	}
+	return &result
+}
+
+func (s *SpecValidator) validateReferencedDefinitions() *Result {
+	// Each referenceable definition must have references.
+	defs := s.spec.Spec().Definitions
+	if len(defs) == 0 {
+		return nil
+	}
+
+	expected := make(map[string]struct{})
+	for k := range defs {
+		expected["#/definitions/"+jsonpointer.Escape(k)] = struct{}{}
+	}
+	for _, k := range s.spec.AllDefinitionReferences() {
+		if _, ok := expected[k]; ok {
+			delete(expected, k)
+		}
+	}
+
+	if len(expected) == 0 {
+		return nil
+	}
+	var result Result
+	for k := range expected {
+		result.AddErrors(errors.New(422, "definition %q is not used anywhere", k))
+	}
+	return &result
 }
 
 func (s *SpecValidator) validateRequiredDefinitions() *Result {
@@ -534,6 +625,7 @@ func (s *SpecValidator) validateDefaultValueValidAgainstSchema() *Result {
 	for method, pathItem := range s.spec.Operations() {
 		for path, op := range pathItem {
 			// parameters
+			var hasForm, hasBody bool
 		PARAMETERS:
 			for _, pr := range s.spec.ParamsFor(method, path) {
 				// expand ref is necessary
@@ -545,6 +637,18 @@ func (s *SpecValidator) validateDefaultValueValidAgainstSchema() *Result {
 						break PARAMETERS
 					}
 					param = obj.(spec.Parameter)
+				}
+				if param.In == "formData" {
+					if hasBody && !hasForm {
+						res.AddErrors(errors.New(422, "operation %q has both formData and body parameters", op.ID))
+					}
+					hasForm = true
+				}
+				if param.In == "body" {
+					if hasForm && !hasBody {
+						res.AddErrors(errors.New(422, "operation %q has both body and formData parameters", op.ID))
+					}
+					hasBody = true
 				}
 				// check simple paramters first
 				if param.Default != nil && param.Schema == nil {
@@ -639,7 +743,4 @@ func (s *SpecValidator) validateDefaultValueItemsAgainstSchema(path, in string, 
 		}
 	}
 	return res
-}
-
-func (s *SpecValidator) isSwaggerType(tpe, format string, value interface{}) {
 }

@@ -12,14 +12,21 @@ import (
 	"github.com/hpcloud/cf-usb/lib/genmodel"
 )
 
+// NewCreateServicePlanParams creates a new CreateServicePlanParams object
+// with the default values initialized.
+func NewCreateServicePlanParams() CreateServicePlanParams {
+	var ()
+	return CreateServicePlanParams{}
+}
+
 // CreateServicePlanParams contains all the bound params for the create service plan operation
 // typically these are obtained from a http.Request
 //
 // swagger:parameters createServicePlan
 type CreateServicePlanParams struct {
-	/* Add a plan for a **dialID**
-	Required: true
-	In: body
+	/*Add a plan for a **dialID**
+	  Required: true
+	  In: body
 	*/
 	Plan *genmodel.Plan
 }

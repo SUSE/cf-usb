@@ -18,12 +18,6 @@ package client
 
 import "fmt"
 
-type methodAndPath struct {
-	Method      string
-	PathPattern string
-	Schemes     []string
-}
-
 // NewAPIError creates a new API error
 func NewAPIError(opName string, payload []byte, code int) *APIError {
 	return &APIError{
@@ -35,6 +29,8 @@ func NewAPIError(opName string, payload []byte, code int) *APIError {
 
 // APIError wraps an error model and captures the status code
 type APIError struct {
+	Method        string
+	Path          string
 	OperationName string
 	Payload       []byte
 	Code          int

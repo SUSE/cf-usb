@@ -40,6 +40,7 @@ type GetServicePlans struct {
 
 func (o *GetServicePlans) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
+	o.Params = NewGetServicePlansParams()
 
 	uprinc, err := o.Context.Authorize(r, route)
 	if err != nil {

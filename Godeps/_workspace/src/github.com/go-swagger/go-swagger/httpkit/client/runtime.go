@@ -20,12 +20,11 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"os"
-	"path/filepath"
+	"path"
 	"strings"
 
 	"github.com/go-swagger/go-swagger/client"
 	"github.com/go-swagger/go-swagger/httpkit"
-	"github.com/go-swagger/go-swagger/spec"
 	"github.com/go-swagger/go-swagger/strfmt"
 )
 
@@ -38,18 +37,17 @@ type Runtime struct {
 	Producers             map[string]httpkit.Producer
 
 	Transport http.RoundTripper
-	Spec      *spec.Document
-	Host      string
-	BasePath  string
-	Formats   strfmt.Registry
-	Debug     bool
+	//Spec      *spec.Document
+	Host     string
+	BasePath string
+	Formats  strfmt.Registry
+	Debug    bool
 
-	client          *http.Client
-	methodsAndPaths map[string]methodAndPath
+	client *http.Client
 }
 
 // New creates a new default runtime for a swagger api client.
-func New(swaggerSpec *spec.Document) *Runtime {
+func New(host, basePath string, schemes []string) *Runtime {
 	var rt Runtime
 	rt.DefaultMediaType = httpkit.JSONMime
 
@@ -60,29 +58,16 @@ func New(swaggerSpec *spec.Document) *Runtime {
 	rt.Producers = map[string]httpkit.Producer{
 		httpkit.JSONMime: httpkit.JSONProducer(),
 	}
-	rt.Spec = swaggerSpec
 	rt.Transport = http.DefaultTransport
 	rt.client = http.DefaultClient
-	rt.client.Transport = rt.Transport
-	rt.Host = swaggerSpec.Host()
-	rt.BasePath = swaggerSpec.BasePath()
+	rt.Host = host
+	rt.BasePath = basePath
 	if !strings.HasPrefix(rt.BasePath, "/") {
 		rt.BasePath = "/" + rt.BasePath
 	}
 	rt.Debug = os.Getenv("DEBUG") == "1"
-	schemes := swaggerSpec.Spec().Schemes
 	if len(schemes) == 0 {
 		schemes = append(schemes, "http")
-	}
-	rt.methodsAndPaths = make(map[string]methodAndPath)
-	for mth, pathItem := range rt.Spec.Operations() {
-		for pth, op := range pathItem {
-			if len(op.Schemes) > 0 {
-				rt.methodsAndPaths[op.ID] = methodAndPath{mth, pth, op.Schemes}
-			} else {
-				rt.methodsAndPaths[op.ID] = methodAndPath{mth, pth, schemes}
-			}
-		}
 	}
 	return &rt
 }
@@ -90,12 +75,9 @@ func New(swaggerSpec *spec.Document) *Runtime {
 // Submit a request and when there is a body on success it will turn that into the result
 // all other things are turned into an api error for swagger which retains the status code
 func (r *Runtime) Submit(context *client.Operation) (interface{}, error) {
-	operationID, params, readResponse, auth := context.ID, context.Params, context.Reader, context.AuthInfo
-	mthPth, ok := r.methodsAndPaths[operationID]
-	if !ok {
-		return nil, fmt.Errorf("unknown operation: %q", operationID)
-	}
-	request, err := newRequest(mthPth.Method, mthPth.PathPattern, params)
+	params, readResponse, auth := context.Params, context.Reader, context.AuthInfo
+
+	request, err := newRequest(context.Method, context.PathPattern, params)
 	if err != nil {
 		return nil, err
 	}
@@ -124,12 +106,12 @@ func (r *Runtime) Submit(context *client.Operation) (interface{}, error) {
 	if req.URL.Scheme == "" {
 		req.URL.Scheme = "http"
 	}
-	schLen := len(mthPth.Schemes)
+	schLen := len(context.Schemes)
 	if schLen > 0 {
-		scheme := mthPth.Schemes[0]
+		scheme := context.Schemes[0]
 		// prefer https, but skip when not possible
 		if scheme != "https" && schLen > 1 {
-			for _, sch := range mthPth.Schemes {
+			for _, sch := range context.Schemes {
 				if sch == "https" {
 					scheme = sch
 					break
@@ -140,7 +122,7 @@ func (r *Runtime) Submit(context *client.Operation) (interface{}, error) {
 	}
 
 	req.URL.Host = r.Host
-	req.URL.Path = filepath.Join(r.BasePath, req.URL.Path)
+	req.URL.Path = path.Join(r.BasePath, req.URL.Path)
 	if err != nil {
 		return nil, err
 	}
