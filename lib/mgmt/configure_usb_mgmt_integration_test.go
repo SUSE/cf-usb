@@ -2,11 +2,12 @@ package mgmt
 
 import (
 	"fmt"
+	"path/filepath"
+	"runtime"
+
 	"github.com/hashicorp/consul/api"
 	"github.com/hpcloud/cf-usb/lib/config/consul"
 	"github.com/stretchr/testify/assert"
-	"path/filepath"
-	"runtime"
 
 	"os"
 	"testing"
@@ -92,7 +93,7 @@ func initManager() error {
 
 	IntegrationConfig.MgmtAPI = operations.NewUsbMgmtAPI(swaggerSpec)
 
-	auth, err := uaa.NewUaaAuth("", "", true, testLogger)
+	auth, err := uaa.NewUaaAuth("", "", "", true, testLogger)
 	if err != nil {
 		return err
 	}

@@ -26,8 +26,9 @@ type Uaa struct {
 }
 
 type UaaAuth struct {
-	Scope     string `json:"adminscope"`
-	PublicKey string `json:"public_key"`
+	Scope                    string `json:"adminscope"`
+	PublicKey                string `json:"public_key"`
+	SymmetricVerificationKey string `json:"symmetric_verification_key"`
 }
 
 type CloudController struct {
