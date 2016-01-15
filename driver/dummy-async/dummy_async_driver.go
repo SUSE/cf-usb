@@ -116,6 +116,7 @@ func (d dummyAsyncDriver) GetInstance(request driver.GetInstanceRequest, respons
 	serviceFilePath := filepath.Join(wd, request.InstanceID)
 	if _, err := os.Stat(serviceFilePath); os.IsNotExist(err) {
 		response.Status = status.DoesNotExist
+		return nil
 	}
 
 	content, err := ioutil.ReadFile(serviceFilePath)
