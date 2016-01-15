@@ -2,6 +2,7 @@ package mgmt
 
 import (
 	"encoding/json"
+
 	"github.com/fatih/structs"
 	"github.com/hpcloud/cf-usb/lib"
 
@@ -10,6 +11,11 @@ import (
 	"encoding/base64"
 	goerrors "errors"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
+	"runtime"
+
 	"github.com/frodenas/brokerapi"
 	"github.com/go-swagger/go-swagger/errors"
 	"github.com/go-swagger/go-swagger/httpkit"
@@ -21,10 +27,6 @@ import (
 	. "github.com/hpcloud/cf-usb/lib/operations"
 	"github.com/pivotal-golang/lager"
 	uuid "github.com/satori/go.uuid"
-	"io"
-	"os"
-	"path/filepath"
-	"runtime"
 )
 
 // This file is safe to edit. Once it exists it will not be overwritten
@@ -113,7 +115,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 			f.Close()
 			os.Remove(driverPath)
 
-			return &UploadDriverInternalServerError{Payload: fmt.Sprintf("Checksum mismatch. Expected: %s, got %s", params.Sha, sha)}
+			return &UploadDriverInternalServerError{Payload: fmt.Sprintf("Checksum mismatch. Actual file SHA1 checksum: %s. Expected file SHA1 checksum: %s", sha, params.Sha)}
 		}
 
 		return &UploadDriverOK{}
