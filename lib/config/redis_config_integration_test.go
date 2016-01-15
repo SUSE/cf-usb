@@ -5,8 +5,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"testing"
 
-	"github.com/hpcloud/cf-usb/lib/config/redis"
 	"github.com/frodenas/brokerapi"
+	"github.com/hpcloud/cf-usb/lib/config/redis"
 
 	"os"
 	"strconv"
@@ -99,7 +99,7 @@ func Test_RedisGetDial(t *testing.T) {
 	}
 	err := initRedisProvider()
 	assert.NoError(err)
-	dial, err := RedisIntegrationConfig.Provider.GetDial("A0000000-0000-0000-0000-000000000002", "B0000000-0000-0000-0000-000000000001")
+	dial, err := RedisIntegrationConfig.Provider.GetDial("B0000000-0000-0000-0000-000000000001")
 	t.Log(dial)
 	assert.NoError(err)
 }
@@ -111,7 +111,8 @@ func Test_RedisGetService(t *testing.T) {
 	}
 	err := initRedisProvider()
 	assert.NoError(err)
-	service, err := RedisIntegrationConfig.Provider.GetService("A0000000-0000-0000-0000-000000000002")
+	service, instanceID, err := RedisIntegrationConfig.Provider.GetService("83E94C97-C755-46A5-8653-461517EB442A")
+	t.Log(instanceID)
 	t.Log(service)
 	assert.NoError(err)
 }

@@ -101,26 +101,35 @@ func (c *fileConfig) GetDriverInstance(instanceID string) (*DriverInstance, erro
 	return nil, errors.New(fmt.Sprintf("Driver Instance ID: %s not found", instanceID))
 }
 
-func (c *fileConfig) GetService(instanceID string) (*brokerapi.Service, error) {
-	instance, err := c.GetDriverInstance(instanceID)
-	if err != nil {
-		return nil, errors.New(fmt.Sprintf("Driver Instance ID: %s not found", instanceID))
-	}
-
-	return &instance.Service, nil
-}
-
-func (c *fileConfig) GetDial(instanceID string, dialID string) (*Dial, error) {
-	instance, err := c.GetDriverInstance(instanceID)
-	if err != nil {
-		return nil, errors.New(fmt.Sprintf("Driver Instance ID: %s not found", instanceID))
-	}
-	for dialID, dial := range instance.Dials {
-		if dialID == dialID {
-			return &dial, nil
+func (c *fileConfig) GetService(serviceID string) (*brokerapi.Service, string, error) {
+	if !c.loaded {
+		_, err := c.LoadConfiguration()
+		if err != nil {
+			return nil, "", err
 		}
 	}
-	return nil, errors.New(fmt.Sprintf("Dial ID: %s not found for Driver Instance ID:%s", dialID, instanceID))
+	for _, d := range c.config.Drivers {
+		for diKey, i := range d.DriverInstances {
+			if i.Service.ID == serviceID {
+				return &i.Service, diKey, nil
+			}
+		}
+	}
+
+	return nil, "", errors.New(fmt.Sprintf("Service id %s not found", serviceID))
+}
+
+func (c *fileConfig) GetDial(dialID string) (*Dial, error) {
+	for _, d := range c.config.Drivers {
+		for _, instance := range d.DriverInstances {
+			for dialID, dial := range instance.Dials {
+				if dialID == dialID {
+					return &dial, nil
+				}
+			}
+		}
+	}
+	return nil, errors.New(fmt.Sprintf("Dial ID: %s not found", dialID))
 }
 
 func (c *fileConfig) SetDriver(driverID string, driverInfo Driver) error {
@@ -151,7 +160,7 @@ func (c *fileConfig) DeleteService(instanceID string) error {
 	return errors.New("DeleteService not available for file config provider")
 }
 
-func (c *fileConfig) DeleteDial(instanceID string, dialID string) error {
+func (c *fileConfig) DeleteDial(dialID string) error {
 	return errors.New("DeleteDial not available for file config provider")
 }
 
@@ -189,6 +198,25 @@ func (c *fileConfig) DriverTypeExists(driverType string) (bool, error) {
 	}
 
 	return false, nil
+}
+
+func (c *fileConfig) GetPlan(planid string) (*brokerapi.ServicePlan, string, string, error) {
+	if !c.loaded {
+		_, err := c.LoadConfiguration()
+		if err != nil {
+			return nil, "", "", err
+		}
+	}
+	for _, d := range c.config.Drivers {
+		for iID, i := range d.DriverInstances {
+			for dialID, di := range i.Dials {
+				if di.Plan.ID == planid {
+					return &di.Plan, dialID, iID, nil
+				}
+			}
+		}
+	}
+	return nil, "", "", errors.New(fmt.Sprintf("Plan id %s not found", planid))
 }
 
 func parseJson(jsonConf []byte) (*Config, error) {

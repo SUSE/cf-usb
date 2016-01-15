@@ -292,18 +292,20 @@ func (c *redisConfig) SetService(instanceID string, service brokerapi.Service) e
 	return nil
 }
 
-func (c *redisConfig) GetService(instanceID string) (*brokerapi.Service, error) {
+func (c *redisConfig) GetService(serviceID string) (*brokerapi.Service, string, error) {
 	config, err := c.LoadConfiguration()
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	for _, d := range config.Drivers {
-		if instance, ok := d.DriverInstances[instanceID]; ok {
-			return &instance.Service, nil
+		for instanceID, instance := range d.DriverInstances {
+			if instance.Service.ID == serviceID {
+				return &instance.Service, instanceID, nil
+			}
 		}
 	}
-	return nil, nil
+	return nil, "", errors.New(fmt.Sprintf("Service id %s not found", serviceID))
 }
 
 func (c *redisConfig) DeleteService(instanceID string) error {
@@ -367,14 +369,14 @@ func (c *redisConfig) SetDial(instanceID string, dialID string, dial Dial) error
 	return nil
 }
 
-func (c *redisConfig) GetDial(instanceID string, dialID string) (*Dial, error) {
+func (c *redisConfig) GetDial(dialID string) (*Dial, error) {
 	config, err := c.LoadConfiguration()
 	if err != nil {
 		return nil, err
 	}
 
 	for _, d := range config.Drivers {
-		if instance, ok := d.DriverInstances[instanceID]; ok {
+		for _, instance := range d.DriverInstances {
 			if dialInfo, ok := instance.Dials[dialID]; ok {
 				return &dialInfo, nil
 			}
@@ -384,14 +386,14 @@ func (c *redisConfig) GetDial(instanceID string, dialID string) (*Dial, error) {
 	return nil, nil
 }
 
-func (c *redisConfig) DeleteDial(instanceID string, dialID string) error {
+func (c *redisConfig) DeleteDial(dialID string) error {
 	config, err := c.LoadConfiguration()
 	if err != nil {
 		return err
 	}
 
 	for _, d := range config.Drivers {
-		if instance, ok := d.DriverInstances[instanceID]; ok {
+		for instanceID, instance := range d.DriverInstances {
 			if _, ok := instance.Dials[dialID]; ok {
 				delete(instance.Dials, dialID)
 				d.DriverInstances[instanceID] = instance
@@ -441,4 +443,21 @@ func (c *redisConfig) DriverTypeExists(driverType string) (bool, error) {
 	}
 
 	return false, nil
+}
+
+func (c *redisConfig) GetPlan(planid string) (*brokerapi.ServicePlan, string, string, error) {
+	config, err := c.LoadConfiguration()
+	if err != nil {
+		return nil, "", "", err
+	}
+	for _, d := range config.Drivers {
+		for iID, i := range d.DriverInstances {
+			for dialID, di := range i.Dials {
+				if di.Plan.ID == planid {
+					return &di.Plan, dialID, iID, nil
+				}
+			}
+		}
+	}
+	return nil, "", "", errors.New(fmt.Sprintf("Plan id %s not found", planid))
 }
