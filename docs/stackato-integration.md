@@ -26,7 +26,6 @@ sshfs -p 22 -o idmap=user -o reconnect -o ServerAliveInterval=15 stackato@54.154
 ```
 usb:
     min_per_cluster: 0
-    max_per_cluster: 1
     exclude_from_add_all: true
 ```
 #### 4. Add to /s/etc/kato/process_order.yml
@@ -37,7 +36,7 @@ usb:
 #### 5. Add supervisord config to: /s/etc/supervisord.conf.d/usb
 ```
 [program:usb]
-command=USB_DRIVER_PATH=/s/go/bin/drivers /s/go/bin/usb redisConfigProvider -a 127.0.0.1:7474
+command=USB_DRIVER_PATH=/s/go/bin/drivers /s/go/bin/usb redisConfigProvider -a {core_ip}:7474
 priority=5
 redirect_stderr=true
 stdout_logfile=/s/logs/usb.log
@@ -125,12 +124,12 @@ EOF
 redis-cli -p 7474 set routes_register "$routes_register"
 ```
 
-#### 10. Restart AOK
+#### 10. Restart all
 ```
 kato restart
 ```
-#### 11. Start USB
-You can start usb either with supervisord or manually running :
+#### 11. Restart supervisord
 ```
-USB_DRIVER_PATH=/s/go/bin/drivers /s/go/bin/usb redisConfigProvider -a 127.0.0.1:7474
+stop-supervisord
+start-supervisord
 ```
