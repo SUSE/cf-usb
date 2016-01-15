@@ -1,6 +1,6 @@
 In the following, we're going to suppose that the public ip is `54.154.46.52` and the domain is `helion-cf.io`
 
-#### 1. Add usb roule to AOK
+#### 1. Add usb role to AOK
 In the redis database, edit the `aok` key and add the following (json format) :
 ```
         "cc_usb_management": {
@@ -112,14 +112,11 @@ redis-cli -p 7474 set broker_api "$broker_api"
 Set "routes_register"
 ```
 export system_domain=`kato config get cloud_controller_ng system_domain`
-export nats=`kato config get cloud_controller_ng message_bus_servers | head -n1`
-export nats="${nats//-[[:space:]]/}"
+export nats_servers=`kato config get -j cloud_controller_ng message_bus_servers`
 
 read -d '' routes_register << EOF
 {
-    "nats_members": [
-        "$nats"
-    ],
+    "nats_members": $nats_servers,
     "broker_api_host": "broker.$system_domain",
     "management_api_host": "management.$system_domain"
 }
