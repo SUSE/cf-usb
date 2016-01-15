@@ -3,62 +3,38 @@ In the following, we're going to suppose that the public ip is `54.154.46.52` an
 #### 1. Add usb roule to AOK
 In the redis database, edit the `aok` key and add the following (json format) :
 ```
-  "cc_usb_management": {
-                "secret": "cc-usb-management-secret",
+        "cc_usb_management": {
+                "secret": "CHANGE-ME-SECRET",
                 "authorities": "cloud_controller.admin",
-                "authorized_grant_types": "client_credentials",
-                "scope": "usb.management.admin"
-            },
+                "authorized_grant_types": "client_credentials"
+        }
 ```
 
 ```
-kato config set aok oauth/clients/cc_usb_management/secret cc-usb-management-secret
-kato config set aok oauth/clients/cc_usb_management/authorities cloud_controller.admin,usb.management.admin
-kato config set aok oauth/clients/cc_usb_management/authorized_grant_types client_credentials
-kato config set aok oauth/clients/cc_usb_management/scope usb.management.admin
+kato config set aok oauth/clients/cc_usb_management/secret "CHANGE-ME-SECRET"
+kato config set aok oauth/clients/cc_usb_management/authorities "cloud_controller.admin"
+kato config set aok oauth/clients/cc_usb_management/authorized_grant_types "client_credentials"
 ```
-
-#### 2. Add *usb.management.admin* oauth-> users -> default_authorities
-```
-kato config push aok oauth/users/default_authorities usb.management.admin
-```
-#### 3. Get cloud_controller.api from *cloud_controller_ng/external_domain*
-(use this to validate the initial assumptions)
-```
-kato config get cloud_controller_ng external_domain
-```
-#### 4. Get public key
-You will use this at step #14.
-```
-kato config get cloud_controller_ng uaa/symmetric_secret
-```
-#### 5. Create share between USB drivers
+#### 2. Create share between USB drivers
 You can do this using nfs mount. Use the env var USB_DRIVER_PATH to specify the shared directory.
 Or, alternatively you can use sshfs (assuming you have the drivers on 54.154.46.53)
 ```
 mkdir -p /s/go/bin/drivers
 sshfs -p 22 -o idmap=user -o reconnect -o ServerAliveInterval=15 stackato@54.154.46.53:/s/go/bin/drivers /s/go/bin/drivers
 ```
-#### 6. Advertise broker.DOMAIN and usb.DOMAIN if a node is attached
-(replace DOMAIN with a proper domain)
-```
-gem install nats
-nats-pub 'router.register' '{"host":"127.0.0.1","port":54053,"uris":["usb.54.154.36.52.helion-cf.io"]}'
-nats-pub 'router.register' '{"host":"127.0.0.1","port":54054,"uris":["broker.54.154.36.52.helion-cf.io"]}'
-```
-#### 7. Add to /s/etc/kato/role_order.yml
+#### 3. Add to /s/etc/kato/role_order.yml
 ```
 usb:
     min_per_cluster: 0
     max_per_cluster: 1
     exclude_from_add_all: true
 ```
-#### 8. Add to /s/etc/kato/process_order.yml
+#### 4. Add to /s/etc/kato/process_order.yml
 ```
   -
     name: usb
 ```
-#### 9. Add supervisord config to: /s/etc/supervisord.conf.d/usb
+#### 5. Add supervisord config to: /s/etc/supervisord.conf.d/usb
 ```
 [program:usb]
 command=USB_DRIVER_PATH=/s/go/bin/drivers /s/go/bin/usb redisConfigProvider -a 127.0.0.1:7474
@@ -70,26 +46,93 @@ stdout_logfile_backups=3
 autostart=false
 exitcodes=0
 ```
-#### 10. usb executable should be copied to : /s/go/bin
+#### 6. usb executable should be copied to : /s/go/bin
 These  can be found on swift, tenant `hpcs-apaas-tenant1`, zone `us-east`, container `cf-usb-artifacts`. For now you can use the artifacts made by the `verify` job
-#### 11. usb drivers should be copied to : /s/go/bin/drivers
+#### 7. usb drivers should be copied to : /s/go/bin/drivers
 These  can be found on swift, tenant `hpcs-apaas-tenant1`, zone `us-east`, container `cf-usb-artifacts`. For now you can use the artifacts made by the `verify` job
-#### 12. Create /s/etc/kato/processes/usb.yml
+#### 8. Create /s/etc/kato/processes/usb.yml
 ```
 ---
 name: usb
 roles:
   - usb
 ```
-#### 13. Add "management_api" and "broker_api" keys to redis (port 7474)
-For now, we use "dev_mode=true" to skip token authentication as it is not yet fully implemented for stackato. Your public key will not be taken into consideration if "dev_mode=true".
+#### 9. Add "api_version", "management_api", "broker_api", and "routes_register" keys to redis (port 7474)
+Set "api_version"
 ```
-set management_api '{"dev_mode":true,"listen":":54053","uaa_secret":"cc-usb-management-secret","uaa_client":"cc_usb_management","authentication":{"uaa":{"adminscope":"usb.management.admin","public_key":"YOUR PUBLIC KEY GOES HERE"}},"cloud_controller":{"api":"https://api.54.154.46.52.helion-cf.io","skip_tsl_validation":true}}'
+redis-cli -p 7474 set api_version "2.0"
 ```
+
+Set  "management_api"
 ```
-set broker_api '{"external_url":"http://broker.54.154.46.52.helion-cf.io","listen":":54054","credentials":{"username":"username","password":"password"}}'
+export cf_usb_secret=`kato config get aok oauth/clients/cc_usb_management/secret`
+export aok_verification_key=`kato config get cloud_controller_ng uaa/symmetric_secret`
+export cc_external_domain=`kato config get cloud_controller_ng external_domain`
+
+read -d '' management_api << EOF
+{
+        "listen": ":54053",
+        "uaa_secret": "$cf_usb_secret",
+        "uaa_client": "cc_usb_management",
+        "authentication": {
+                "uaa": {
+                        "adminscope": "cloud_controller.admin",
+                        "symmetric_verification_key": "$aok_verification_key"
+                }
+        },
+        "cloud_controller": {
+                "api": "https://$cc_external_domain",
+                "skip_tsl_validation": true
+        }
+}
+EOF
+
+redis-cli -p 7474 set management_api "$management_api"
 ```
-#### 14. Start USB
+
+
+Set "broker_api" (n.b.)
+```
+export system_domain=`kato config get cloud_controller_ng system_domain`
+
+read -d '' broker_api << EOF
+{
+    "external_url": "http://broker.$system_domain",
+    "listen": ":54054",
+    "credentials": {
+        "username": "usb-broker-admin",
+        "password": "CHANGE-ME-PASSWORD"
+    }
+}
+EOF
+
+redis-cli -p 7474 set broker_api "$broker_api"
+```
+
+Set "routes_register"
+```
+export system_domain=`kato config get cloud_controller_ng system_domain`
+export nats=`kato config get cloud_controller_ng message_bus_servers | head -n1`
+export nats="${nats//-[[:space:]]/}"
+
+read -d '' routes_register << EOF
+{
+    "nats_members": [
+        "$nats"
+    ],
+    "broker_api_host": "broker.$system_domain",
+    "management_api_host": "management.$system_domain"
+}
+EOF
+
+redis-cli -p 7474 set routes_register "$routes_register"
+```
+
+#### 10. Restart AOK
+```
+kato restart
+```
+#### 11. Start USB
 You can start usb either with supervisord or manually running :
 ```
 USB_DRIVER_PATH=/s/go/bin/drivers /s/go/bin/usb redisConfigProvider -a 127.0.0.1:7474
