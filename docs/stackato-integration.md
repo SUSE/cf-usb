@@ -56,7 +56,7 @@ name: usb
 roles:
   - usb
 ```
-#### 9. Add "api_version", "management_api", "broker_api", and "routes_register" keys to redis (port 7474)
+#### 9. Add "api_version", "management_api", "broker_api", "drivers" and "routes_register" keys to redis (port 7474)
 Set "api_version"
 ```
 redis-cli -p 7474 set api_version "2.0"
@@ -122,6 +122,62 @@ read -d '' routes_register << EOF
 EOF
 
 redis-cli -p 7474 set routes_register "$routes_register"
+```
+
+For the drivers key, you need to compose a json string which contains references to all drivers. In the end it should look like this :
+```
+read -d '' drivers << EOF
+{
+  "df652dab-478e-3020-30b8-59054fc0bd6e": {
+    "driver_type": "dummy"
+  },
+  "67d8cc5d-5fdf-d199-c184-b01701875773": {
+    "driver_type": "mongo"
+  },
+  "5921f46b-95a9-bb6f-9365-040ca5afd69e": {
+    "driver_type": "mssql"
+  },
+  "7d991a4d-6b1f-de18-e22d-0c92860530a7": {
+    "driver_type": "mysql"
+  },
+  "14a067c9-06af-2c59-5c92-df7d02cf592c": {
+    "driver_type": "postgres"
+  },
+  "d4d74653-6a56-8190-2e17-06bd894319c7": {
+    "driver_type": "rabbitmq"
+  },
+  "63a67bde-152d-2195-3b0d-f62b1db1b2d3": {
+    "driver_type": "redis"
+  }
+}
+EOF
+redis-cli -p 7474 set drivers "$drivers"
+
+```
+
+You can use the following script to generate the json string :
+```
+#!/bin/bash 
+
+function random_uuid() 
+{ 
+   echo -n "`cat /dev/urandom | tr -dc 'a-f0-9' | fold -w 8 | head -n 1`-`cat /dev/urandom | tr -dc 'a-f0-9' | fold -w 4 | head -n 1`-`cat /dev/urandom | tr -dc 'a-f0-9' |
+fold -w 4 | head -n 1`-`cat /dev/urandom | tr -dc 'a-f0-9' | fold -w 4 | head -n 1`-`cat /dev/urandom | tr -dc 'a-f0-9' | fold -w 12 | head -n 1`" 
+} 
+
+
+function generate_json() 
+{ 
+echo -n "{" 
+
+for driver in /s/go/bin/drivers/*; 
+       do 
+       echo -n "\"`random_uuid`\": { \"driver_type\": \"`basename $driver`\" }," 
+       done 
+} 
+
+final=`generate_json|rev|cut -b 2-|rev` 
+echo "${final}}"
 ```
 
 #### 10. Restart all
