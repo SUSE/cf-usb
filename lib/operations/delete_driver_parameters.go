@@ -11,14 +11,21 @@ import (
 	"github.com/go-swagger/go-swagger/strfmt"
 )
 
+// NewDeleteDriverParams creates a new DeleteDriverParams object
+// with the default values initialized.
+func NewDeleteDriverParams() DeleteDriverParams {
+	var ()
+	return DeleteDriverParams{}
+}
+
 // DeleteDriverParams contains all the bound params for the delete driver operation
 // typically these are obtained from a http.Request
 //
 // swagger:parameters deleteDriver
 type DeleteDriverParams struct {
-	/* Driver ID
-	Required: true
-	In: path
+	/*Driver ID
+	  Required: true
+	  In: path
 	*/
 	DriverID string
 }
@@ -28,7 +35,8 @@ type DeleteDriverParams struct {
 func (o *DeleteDriverParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
 
-	if err := o.bindDriverID(route.Params.Get("driver_id"), route.Formats); err != nil {
+	rDriverID, rhkDriverID, _ := route.Params.GetOK("driver_id")
+	if err := o.bindDriverID(rDriverID, rhkDriverID, route.Formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -38,7 +46,11 @@ func (o *DeleteDriverParams) BindRequest(r *http.Request, route *middleware.Matc
 	return nil
 }
 
-func (o *DeleteDriverParams) bindDriverID(raw string, formats strfmt.Registry) error {
+func (o *DeleteDriverParams) bindDriverID(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
 
 	o.DriverID = raw
 

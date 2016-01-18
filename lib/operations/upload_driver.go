@@ -40,6 +40,7 @@ type UploadDriver struct {
 
 func (o *UploadDriver) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
+	o.Params = NewUploadDriverParams()
 
 	uprinc, err := o.Context.Authorize(r, route)
 	if err != nil {

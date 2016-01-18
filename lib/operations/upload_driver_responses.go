@@ -16,6 +16,11 @@ swagger:response uploadDriverOK
 type UploadDriverOK struct {
 }
 
+// NewUploadDriverOK creates UploadDriverOK with default headers values
+func NewUploadDriverOK() *UploadDriverOK {
+	return &UploadDriverOK{}
+}
+
 // WriteResponse to the client
 func (o *UploadDriverOK) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
 
@@ -27,6 +32,11 @@ func (o *UploadDriverOK) WriteResponse(rw http.ResponseWriter, producer httpkit.
 swagger:response uploadDriverNotFound
 */
 type UploadDriverNotFound struct {
+}
+
+// NewUploadDriverNotFound creates UploadDriverNotFound with default headers values
+func NewUploadDriverNotFound() *UploadDriverNotFound {
+	return &UploadDriverNotFound{}
 }
 
 // WriteResponse to the client
@@ -43,6 +53,17 @@ type UploadDriverInternalServerError struct {
 
 	// In: body
 	Payload string `json:"body,omitempty"`
+}
+
+// NewUploadDriverInternalServerError creates UploadDriverInternalServerError with default headers values
+func NewUploadDriverInternalServerError() *UploadDriverInternalServerError {
+	return &UploadDriverInternalServerError{}
+}
+
+// WithPayload adds the payload to the upload driver internal server error response
+func (o *UploadDriverInternalServerError) WithPayload(payload string) *UploadDriverInternalServerError {
+	o.Payload = payload
+	return o
 }
 
 // WriteResponse to the client

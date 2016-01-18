@@ -7,19 +7,27 @@ import (
 	"net/http"
 
 	"github.com/go-swagger/go-swagger/errors"
+	"github.com/go-swagger/go-swagger/httpkit"
 	"github.com/go-swagger/go-swagger/httpkit/middleware"
 	"github.com/go-swagger/go-swagger/httpkit/validate"
 	"github.com/go-swagger/go-swagger/strfmt"
 )
+
+// NewGetServiceByInstanceIDParams creates a new GetServiceByInstanceIDParams object
+// with the default values initialized.
+func NewGetServiceByInstanceIDParams() GetServiceByInstanceIDParams {
+	var ()
+	return GetServiceByInstanceIDParams{}
+}
 
 // GetServiceByInstanceIDParams contains all the bound params for the get service by instance id operation
 // typically these are obtained from a http.Request
 //
 // swagger:parameters getServiceByInstanceId
 type GetServiceByInstanceIDParams struct {
-	/* Driver instance ID
-	Required: true
-	In: query
+	/*Driver instance ID
+	  Required: true
+	  In: query
 	*/
 	DriverInstanceID string
 }
@@ -28,9 +36,10 @@ type GetServiceByInstanceIDParams struct {
 // for simple values it will use straight method calls
 func (o *GetServiceByInstanceIDParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
-	qs := r.URL.Query()
+	qs := httpkit.Values(r.URL.Query())
 
-	if err := o.bindDriverInstanceID(qs.Get("driver_instance_id"), route.Formats); err != nil {
+	qDriverInstanceID, qhkDriverInstanceID, _ := qs.GetOK("driver_instance_id")
+	if err := o.bindDriverInstanceID(qDriverInstanceID, qhkDriverInstanceID, route.Formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -40,7 +49,14 @@ func (o *GetServiceByInstanceIDParams) BindRequest(r *http.Request, route *middl
 	return nil
 }
 
-func (o *GetServiceByInstanceIDParams) bindDriverInstanceID(raw string, formats strfmt.Registry) error {
+func (o *GetServiceByInstanceIDParams) bindDriverInstanceID(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	if !hasKey {
+		return errors.Required("driver_instance_id", "query")
+	}
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
 	if err := validate.RequiredString("driver_instance_id", "query", raw); err != nil {
 		return err
 	}

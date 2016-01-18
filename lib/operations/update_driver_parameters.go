@@ -13,19 +13,26 @@ import (
 	"github.com/hpcloud/cf-usb/lib/genmodel"
 )
 
+// NewUpdateDriverParams creates a new UpdateDriverParams object
+// with the default values initialized.
+func NewUpdateDriverParams() UpdateDriverParams {
+	var ()
+	return UpdateDriverParams{}
+}
+
 // UpdateDriverParams contains all the bound params for the update driver operation
 // typically these are obtained from a http.Request
 //
 // swagger:parameters updateDriver
 type UpdateDriverParams struct {
-	/* Driver to be updated
-	Required: true
-	In: body
+	/*Driver to be updated
+	  Required: true
+	  In: body
 	*/
 	Driver *genmodel.Driver
-	/* Driver ID
-	Required: true
-	In: path
+	/*Driver ID
+	  Required: true
+	  In: path
 	*/
 	DriverID string
 }
@@ -48,7 +55,8 @@ func (o *UpdateDriverParams) BindRequest(r *http.Request, route *middleware.Matc
 		}
 	}
 
-	if err := o.bindDriverID(route.Params.Get("driver_id"), route.Formats); err != nil {
+	rDriverID, rhkDriverID, _ := route.Params.GetOK("driver_id")
+	if err := o.bindDriverID(rDriverID, rhkDriverID, route.Formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -58,7 +66,11 @@ func (o *UpdateDriverParams) BindRequest(r *http.Request, route *middleware.Matc
 	return nil
 }
 
-func (o *UpdateDriverParams) bindDriverID(raw string, formats strfmt.Registry) error {
+func (o *UpdateDriverParams) bindDriverID(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
 
 	o.DriverID = raw
 

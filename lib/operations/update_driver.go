@@ -40,6 +40,7 @@ type UpdateDriver struct {
 
 func (o *UpdateDriver) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
+	o.Params = NewUpdateDriverParams()
 
 	uprinc, err := o.Context.Authorize(r, route)
 	if err != nil {

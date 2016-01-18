@@ -40,6 +40,7 @@ type DeleteDial struct {
 
 func (o *DeleteDial) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
+	o.Params = NewDeleteDialParams()
 
 	uprinc, err := o.Context.Authorize(r, route)
 	if err != nil {

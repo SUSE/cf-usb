@@ -41,6 +41,7 @@ type CreateDriver struct {
 
 func (o *CreateDriver) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
+	o.Params = NewCreateDriverParams()
 
 	uprinc, err := o.Context.Authorize(r, route)
 	if err != nil {

@@ -303,14 +303,14 @@
         },
         "/driver_instances": {
             "get": {
-                "description": "Gets all driver configurations\n",
+                "description": "Gets driver instances for a driver\n",
                 "operationId": "getDriverInstances",
                 "parameters": [
                     {
                         "name": "driver_id",
                         "description": "Driver ID",
                         "in": "query",
-                        "required": false,
+                        "required": true,
                         "type": "string"
                     }
                 ],
@@ -652,7 +652,7 @@
         },
         "/plans/{plan_id}": {
             "get": {
-                "description": "Gets the `plan` with the **planID** for the *serviceID*",
+                "description": "Gets the `plan` with the **planID**",
                 "operationId": "getServicePlan",
                 "parameters": [
                     {
@@ -963,13 +963,17 @@
                     "type": "string"
                 },
                 "driver_instance_id": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 36,
+                    "maxLength": 36
                 },
                 "bindable": {
                     "type": "boolean"
                 },
                 "name": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 50
                 },
                 "description": {
                     "type": "string"
@@ -993,13 +997,17 @@
             ],
             "properties": {
                 "name": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 50
                 },
                 "id": {
                     "type": "string"
                 },
                 "dial_id": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 36,
+                    "maxLength": 36
                 },
                 "description": {
                     "type": "string"
@@ -1019,7 +1027,9 @@
                     "type": "string"
                 },
                 "driver_instance_id": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 36,
+                    "maxLength": 36
                 },
                 "configuration": {
                     "type": "object"
@@ -1040,7 +1050,9 @@
                     "type": "string"
                 },
                 "driver_id": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 36,
+                    "maxLength": 36
                 },
                 "name": {
                     "type": "string"
@@ -1062,17 +1074,22 @@
         "driver": {
             "type": "object",
             "required": [
-                "name"
+                "name",
+                "driver_type"
             ],
             "properties": {
                 "id": {
                     "type": "string"
                 },
                 "name": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 50
                 },
                 "driver_type": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 50
                 },
                 "driver_instances": {
                     "type": "array",
@@ -1083,10 +1100,10 @@
             }
         },
         "dial_schema": {
-            "type": "object"
+            "type": "string"
         },
         "driver_schema": {
-            "type": "object"
+            "type": "string"
         }
     }
 }

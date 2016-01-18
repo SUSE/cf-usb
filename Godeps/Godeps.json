@@ -65,35 +65,43 @@
 		},
 		{
 			"ImportPath": "github.com/go-swagger/go-swagger/errors",
-			"Rev": "cae76a7f0ec8f1c981b3f576f65b6cbef46712a2"
+			"Comment": "v0.2.0-92-g19c48f2",
+			"Rev": "19c48f26c76bc7c06d4dac8326953b4458bf20d5"
 		},
 		{
 			"ImportPath": "github.com/go-swagger/go-swagger/httpkit",
-			"Rev": "cae76a7f0ec8f1c981b3f576f65b6cbef46712a2"
+			"Comment": "v0.2.0-92-g19c48f2",
+			"Rev": "19c48f26c76bc7c06d4dac8326953b4458bf20d5"
 		},
 		{
 			"ImportPath": "github.com/go-swagger/go-swagger/internal/validate",
-			"Rev": "cae76a7f0ec8f1c981b3f576f65b6cbef46712a2"
+			"Comment": "v0.2.0-92-g19c48f2",
+			"Rev": "19c48f26c76bc7c06d4dac8326953b4458bf20d5"
 		},
 		{
 			"ImportPath": "github.com/go-swagger/go-swagger/jsonpointer",
-			"Rev": "cae76a7f0ec8f1c981b3f576f65b6cbef46712a2"
+			"Comment": "v0.2.0-92-g19c48f2",
+			"Rev": "19c48f26c76bc7c06d4dac8326953b4458bf20d5"
 		},
 		{
 			"ImportPath": "github.com/go-swagger/go-swagger/jsonreference",
-			"Rev": "cae76a7f0ec8f1c981b3f576f65b6cbef46712a2"
+			"Comment": "v0.2.0-92-g19c48f2",
+			"Rev": "19c48f26c76bc7c06d4dac8326953b4458bf20d5"
 		},
 		{
 			"ImportPath": "github.com/go-swagger/go-swagger/spec",
-			"Rev": "cae76a7f0ec8f1c981b3f576f65b6cbef46712a2"
+			"Comment": "v0.2.0-92-g19c48f2",
+			"Rev": "19c48f26c76bc7c06d4dac8326953b4458bf20d5"
 		},
 		{
 			"ImportPath": "github.com/go-swagger/go-swagger/strfmt",
-			"Rev": "cae76a7f0ec8f1c981b3f576f65b6cbef46712a2"
+			"Comment": "v0.2.0-92-g19c48f2",
+			"Rev": "19c48f26c76bc7c06d4dac8326953b4458bf20d5"
 		},
 		{
 			"ImportPath": "github.com/go-swagger/go-swagger/swag",
-			"Rev": "cae76a7f0ec8f1c981b3f576f65b6cbef46712a2"
+			"Comment": "v0.2.0-92-g19c48f2",
+			"Rev": "19c48f26c76bc7c06d4dac8326953b4458bf20d5"
 		},
 		{
 			"ImportPath": "github.com/golang/gddo/httputil",

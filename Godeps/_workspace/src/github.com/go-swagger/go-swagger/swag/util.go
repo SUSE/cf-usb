@@ -208,6 +208,19 @@ func ToHumanNameLower(name string) string {
 	return strings.Join(out, " ")
 }
 
+// ToHumanNameTitle represents a code name as a human series of words with the first letters titleized
+func ToHumanNameTitle(name string) string {
+	var out []string
+	for _, w := range split(name) {
+		if !commonInitialisms[w] {
+			out = append(out, upper(w[:1])+lower(w[1:]))
+		} else {
+			out = append(out, w)
+		}
+	}
+	return strings.Join(out, " ")
+}
+
 // ToJSONName camelcases a name which can be underscored or pascal cased
 func ToJSONName(name string) string {
 	var out []string
@@ -277,4 +290,11 @@ func IsZero(data interface{}) bool {
 		return true
 	}
 	return false
+}
+
+// CommandLineOptionsGroup represents a group of user-defined command line options
+type CommandLineOptionsGroup struct {
+	ShortDescription string
+	LongDescription string
+	Options interface{}
 }

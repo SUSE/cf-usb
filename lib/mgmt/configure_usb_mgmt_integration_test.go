@@ -145,7 +145,7 @@ func Test_IntCreate(t *testing.T) {
 	driverInstance := response.(*operations.CreateDriverCreated).Payload
 
 	instace.Name = "testInstanceName"
-	instace.DriverID = driverInstance.ID
+	instace.DriverID = *driverInstance.ID
 	instanceConfig := make(map[string]interface{})
 
 	instanceConfig["userid"] = "testUser"
@@ -154,7 +154,7 @@ func Test_IntCreate(t *testing.T) {
 	instanceConfig["port"] = "3306"
 
 	instanceParams.DriverInstance = &instace
-	instanceParams.DriverInstance.DriverID = driverInstance.ID
+	instanceParams.DriverInstance.DriverID = *driverInstance.ID
 	instanceParams.DriverInstance.Configuration = instanceConfig
 	response = IntegrationConfig.MgmtAPI.CreateDriverInstanceHandler.Handle(*instanceParams, true)
 	assert.IsType(&operations.CreateDriverInstanceCreated{}, response)
@@ -164,8 +164,9 @@ func Test_IntCreate(t *testing.T) {
 	dialParams := &operations.CreateDialParams{}
 	var instaceDial genmodel.Dial
 
-	instaceDial.DriverInstanceID = infoInstance.ID
-	instaceDial.Plan = "{\"Name\":\"testPlanName\"}"
+	instaceDial.DriverInstanceID = *infoInstance.ID
+	testplan := "{\"Name\":\"testPlanName\"}"
+	instaceDial.Plan = &testplan
 
 	dialConfig := make(map[string]interface{})
 	dialConfig["max_db_size_mb"] = "200"
@@ -194,10 +195,13 @@ func Test_IntCreate(t *testing.T) {
 	splanParams := &operations.CreateServicePlanParams{}
 	var plan genmodel.Plan
 
-	plan.DialID = infoDial.ID
-	plan.Description = "testDescription"
-	plan.Free = true
-	plan.ID = "testPlanID"
+	plan.DialID = *infoDial.ID
+	desc := "testDescription"
+	plan.Description = &desc
+	pf := true
+	plan.Free = &pf
+	testPlanID := "testPlanID"
+	plan.ID = &testPlanID
 	plan.Name = "testPlan"
 
 	splanParams.Plan = &plan
@@ -239,7 +243,7 @@ func Test_IntCreateDriverConflict(t *testing.T) {
 	assert.IsType(&operations.CreateDriverConflict{}, response)
 
 	deleteDriverParams := &operations.DeleteDriverParams{}
-	deleteDriverParams.DriverID = createdDriver.ID
+	deleteDriverParams.DriverID = *createdDriver.ID
 
 	response = IntegrationConfig.MgmtAPI.DeleteDriverHandler.Handle(*deleteDriverParams, true)
 	assert.IsType(&operations.DeleteDriverNoContent{}, response)
@@ -268,7 +272,7 @@ func Test_IntUpdate(t *testing.T) {
 	dialParams := &operations.GetAllDialsParams{}
 
 	for key, _ := range firstDriver.DriverInstances {
-		dialParams.DriverInstanceID = firstDriver.DriverInstances[key]
+		dialParams.DriverInstanceID = &firstDriver.DriverInstances[key]
 		break
 	}
 
@@ -285,13 +289,15 @@ func Test_IntUpdate(t *testing.T) {
 	params := &operations.UpdateServicePlanParams{}
 	var plan genmodel.Plan
 
-	plan.DialID = firstDial.ID
-	plan.Description = "testDescription Updated"
-	plan.Free = true
+	plan.DialID = *firstDial.ID
+	desc := "testDescription Updated"
+	plan.Description = &desc
+	pf := true
+	plan.Free = &pf
 	plan.ID = firstDial.Plan
 	plan.Name = "testPlanUpdated"
 
-	params.PlanID = firstDial.Plan
+	params.PlanID = *firstDial.Plan
 	params.Plan = &plan
 	t.Log("PLAN UPDATE")
 	t.Log(plan)
@@ -320,18 +326,21 @@ func Test_IntUpdate(t *testing.T) {
 	var instace genmodel.Service
 
 	instace.ID = existingInstace.Service
-	instace.Bindable = true
+	bindable := true
+	instace.Bindable = &bindable
 	for key, _ := range firstDriver.DriverInstances {
 		instace.DriverInstanceID = firstDriver.DriverInstances[key]
 		break
 	}
 	instace.Name = "testUpdatedService"
 	instace.Tags = []string{"test update", "test service"}
+	description := "desc"
+	instace.Description = &description
 	instace.Metadata = make(map[string]interface{})
 	instace.Metadata.(map[string]interface{})["guid"] = "testUpdateGuid"
 
 	serviceParams.Service = &instace
-	serviceParams.ServiceID = instace.ID
+	serviceParams.ServiceID = *instace.ID
 
 	response = IntegrationConfig.MgmtAPI.UpdateServiceHandler.Handle(*serviceParams, true)
 	assert.IsType(&operations.UpdateServiceOK{}, response)
@@ -339,14 +348,16 @@ func Test_IntUpdate(t *testing.T) {
 	dialUpdateParams := &operations.UpdateDialParams{}
 
 	var dial genmodel.Dial
-	dial.DriverInstanceID = existingInstace.ID
+	dial.DriverInstanceID = *existingInstace.ID
 	dial.ID = firstDial.ID
 
 	dial.Configuration = make(map[string]interface{})
 	dial.Configuration.(map[string]interface{})["max_dbsize_mb"] = "400"
 
+	dial.Plan = plan.ID
+	
 	dialUpdateParams.Dial = &dial
-	dialUpdateParams.DialID = dial.ID
+	dialUpdateParams.DialID = *dial.ID
 
 	response = IntegrationConfig.MgmtAPI.UpdateDialHandler.Handle(*dialUpdateParams, true)
 	assert.IsType(&operations.UpdateDialOK{}, response)
@@ -383,7 +394,7 @@ func Test_IntServicePlan(t *testing.T) {
 	dialParams := &operations.GetAllDialsParams{}
 
 	for key, _ := range firstDriver.DriverInstances {
-		dialParams.DriverInstanceID = firstDriver.DriverInstances[key]
+		dialParams.DriverInstanceID = &firstDriver.DriverInstances[key]
 		break
 	}
 
@@ -396,7 +407,7 @@ func Test_IntServicePlan(t *testing.T) {
 	createDialParams := &operations.CreateDialParams{}
 	var instaceDial genmodel.Dial
 
-	instaceDial.DriverInstanceID = dialParams.DriverInstanceID
+	instaceDial.DriverInstanceID = *dialParams.DriverInstanceID
 
 	dialConfig := make(map[string]interface{})
 	dialConfig["max_db_size_mb"] = "200"
@@ -422,9 +433,10 @@ func Test_IntServicePlan(t *testing.T) {
 	splanParams := &operations.CreateServicePlanParams{}
 	var plan genmodel.Plan
 
-	plan.DialID = createdDial.ID
-	plan.Description = planDescription
-	plan.Free = true
+	plan.DialID = *createdDial.ID
+	plan.Description = &planDescription
+	pf := true
+	plan.Free = &pf
 	plan.Name = planName
 
 	splanParams.Plan = &plan
@@ -437,24 +449,25 @@ func Test_IntServicePlan(t *testing.T) {
 
 	//get service plan
 	getPlanParams := &operations.GetServicePlanParams{}
-	getPlanParams.PlanID = createdPlan.ID
+	getPlanParams.PlanID = *createdPlan.ID
 
 	response = IntegrationConfig.MgmtAPI.GetServicePlanHandler.Handle(*getPlanParams, true)
 	assert.IsType(&operations.GetServicePlanOK{}, response)
 
 	existingPlan := response.(*operations.GetServicePlanOK).Payload
-	assert.Equal(planDescription, existingPlan.Description, "Service plan description is not "+planDescription)
-	assert.Equal(true, existingPlan.Free, "Service plan should be free")
-	assert.Equal(createdDial.ID, existingPlan.DialID, "Dial Id for service plan should be "+createdDial.ID)
+	assert.Equal(planDescription, *existingPlan.Description, "Service plan description is not "+planDescription)
+	assert.Equal(true, *existingPlan.Free, "Service plan should be free")
+	assert.Equal(*createdDial.ID, existingPlan.DialID, "Dial Id for service plan should be "+*createdDial.ID)
 	assert.Equal(planName, existingPlan.Name, "Service plan name should be "+planName)
 	t.Log("EXISTING PLAN", existingPlan)
 
 	params := &operations.UpdateServicePlanParams{}
 
-	existingPlan.Description = "some updated plan description"
+	desc := "some updated plan description"
+	existingPlan.Description = &desc
 	existingPlan.Name = "someUpdatedPlan"
 
-	params.PlanID = existingPlan.ID
+	params.PlanID = *existingPlan.ID
 	params.Plan = existingPlan
 	t.Log("PLAN UPDATE", existingPlan)
 
@@ -462,7 +475,7 @@ func Test_IntServicePlan(t *testing.T) {
 	assert.IsType(&operations.UpdateServicePlanOK{}, response)
 
 	deletePlanParams := &operations.DeleteServicePlanParams{}
-	deletePlanParams.PlanID = existingPlan.ID
+	deletePlanParams.PlanID = *existingPlan.ID
 	response = IntegrationConfig.MgmtAPI.DeleteServicePlanHandler.Handle(*deletePlanParams, true)
 	assert.IsType(&operations.DeleteServicePlanNoContent{}, response)
 }
@@ -489,7 +502,7 @@ func Test_IntDelete(t *testing.T) {
 
 	dialParams := &operations.GetAllDialsParams{}
 	for key, _ := range firstDriver.DriverInstances {
-		dialParams.DriverInstanceID = firstDriver.DriverInstances[key]
+		dialParams.DriverInstanceID = &firstDriver.DriverInstances[key]
 		break
 	}
 	response = IntegrationConfig.MgmtAPI.GetAllDialsHandler.Handle(*dialParams, true)
@@ -499,7 +512,7 @@ func Test_IntDelete(t *testing.T) {
 	firstDial := dials[0]
 
 	dialDeleteParams := &operations.DeleteDialParams{}
-	dialDeleteParams.DialID = firstDial.ID
+	dialDeleteParams.DialID = *firstDial.ID
 
 	instanceParams := &operations.GetDriverInstanceParams{}
 	for key, _ := range firstDriver.DriverInstances {
@@ -515,12 +528,12 @@ func Test_IntDelete(t *testing.T) {
 	assert.IsType(&operations.DeleteDialNoContent{}, response)
 
 	deleteInstanceParams := &operations.DeleteDriverInstanceParams{}
-	deleteInstanceParams.DriverInstanceID = existingInstace.ID
+	deleteInstanceParams.DriverInstanceID = *existingInstace.ID
 	response = IntegrationConfig.MgmtAPI.DeleteDriverInstanceHandler.Handle(*deleteInstanceParams, true)
 	assert.IsType(&operations.DeleteDriverInstanceNoContent{}, response)
 
 	deleteDriverParams := &operations.DeleteDriverParams{}
-	deleteDriverParams.DriverID = firstDriver.ID
+	deleteDriverParams.DriverID = *firstDriver.ID
 	response = IntegrationConfig.MgmtAPI.DeleteDriverHandler.Handle(*deleteDriverParams, true)
 	assert.IsType(&operations.DeleteDriverNoContent{}, response)
 }

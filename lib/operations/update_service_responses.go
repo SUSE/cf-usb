@@ -21,6 +21,17 @@ type UpdateServiceOK struct {
 	Payload *genmodel.Service `json:"body,omitempty"`
 }
 
+// NewUpdateServiceOK creates UpdateServiceOK with default headers values
+func NewUpdateServiceOK() *UpdateServiceOK {
+	return &UpdateServiceOK{}
+}
+
+// WithPayload adds the payload to the update service o k response
+func (o *UpdateServiceOK) WithPayload(payload *genmodel.Service) *UpdateServiceOK {
+	o.Payload = payload
+	return o
+}
+
 // WriteResponse to the client
 func (o *UpdateServiceOK) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
 
@@ -39,6 +50,11 @@ swagger:response updateServiceNotFound
 type UpdateServiceNotFound struct {
 }
 
+// NewUpdateServiceNotFound creates UpdateServiceNotFound with default headers values
+func NewUpdateServiceNotFound() *UpdateServiceNotFound {
+	return &UpdateServiceNotFound{}
+}
+
 // WriteResponse to the client
 func (o *UpdateServiceNotFound) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
 
@@ -53,6 +69,17 @@ type UpdateServiceInternalServerError struct {
 
 	// In: body
 	Payload string `json:"body,omitempty"`
+}
+
+// NewUpdateServiceInternalServerError creates UpdateServiceInternalServerError with default headers values
+func NewUpdateServiceInternalServerError() *UpdateServiceInternalServerError {
+	return &UpdateServiceInternalServerError{}
+}
+
+// WithPayload adds the payload to the update service internal server error response
+func (o *UpdateServiceInternalServerError) WithPayload(payload string) *UpdateServiceInternalServerError {
+	o.Payload = payload
+	return o
 }
 
 // WriteResponse to the client

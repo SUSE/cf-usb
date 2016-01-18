@@ -11,14 +11,21 @@ import (
 	"github.com/go-swagger/go-swagger/strfmt"
 )
 
+// NewGetDriverInstanceParams creates a new GetDriverInstanceParams object
+// with the default values initialized.
+func NewGetDriverInstanceParams() GetDriverInstanceParams {
+	var ()
+	return GetDriverInstanceParams{}
+}
+
 // GetDriverInstanceParams contains all the bound params for the get driver instance operation
 // typically these are obtained from a http.Request
 //
 // swagger:parameters getDriverInstance
 type GetDriverInstanceParams struct {
-	/* Driver Instance ID
-	Required: true
-	In: path
+	/*Driver Instance ID
+	  Required: true
+	  In: path
 	*/
 	DriverInstanceID string
 }
@@ -28,7 +35,8 @@ type GetDriverInstanceParams struct {
 func (o *GetDriverInstanceParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
 
-	if err := o.bindDriverInstanceID(route.Params.Get("driver_instance_id"), route.Formats); err != nil {
+	rDriverInstanceID, rhkDriverInstanceID, _ := route.Params.GetOK("driver_instance_id")
+	if err := o.bindDriverInstanceID(rDriverInstanceID, rhkDriverInstanceID, route.Formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -38,7 +46,11 @@ func (o *GetDriverInstanceParams) BindRequest(r *http.Request, route *middleware
 	return nil
 }
 
-func (o *GetDriverInstanceParams) bindDriverInstanceID(raw string, formats strfmt.Registry) error {
+func (o *GetDriverInstanceParams) bindDriverInstanceID(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
 
 	o.DriverInstanceID = raw
 

@@ -21,6 +21,17 @@ type GetDialSchemaOK struct {
 	Payload genmodel.DialSchema `json:"body,omitempty"`
 }
 
+// NewGetDialSchemaOK creates GetDialSchemaOK with default headers values
+func NewGetDialSchemaOK() *GetDialSchemaOK {
+	return &GetDialSchemaOK{}
+}
+
+// WithPayload adds the payload to the get dial schema o k response
+func (o *GetDialSchemaOK) WithPayload(payload genmodel.DialSchema) *GetDialSchemaOK {
+	o.Payload = payload
+	return o
+}
+
 // WriteResponse to the client
 func (o *GetDialSchemaOK) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
 
@@ -38,6 +49,11 @@ swagger:response getDialSchemaNotFound
 type GetDialSchemaNotFound struct {
 }
 
+// NewGetDialSchemaNotFound creates GetDialSchemaNotFound with default headers values
+func NewGetDialSchemaNotFound() *GetDialSchemaNotFound {
+	return &GetDialSchemaNotFound{}
+}
+
 // WriteResponse to the client
 func (o *GetDialSchemaNotFound) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
 
@@ -52,6 +68,17 @@ type GetDialSchemaInternalServerError struct {
 
 	// In: body
 	Payload string `json:"body,omitempty"`
+}
+
+// NewGetDialSchemaInternalServerError creates GetDialSchemaInternalServerError with default headers values
+func NewGetDialSchemaInternalServerError() *GetDialSchemaInternalServerError {
+	return &GetDialSchemaInternalServerError{}
+}
+
+// WithPayload adds the payload to the get dial schema internal server error response
+func (o *GetDialSchemaInternalServerError) WithPayload(payload string) *GetDialSchemaInternalServerError {
+	o.Payload = payload
+	return o
 }
 
 // WriteResponse to the client

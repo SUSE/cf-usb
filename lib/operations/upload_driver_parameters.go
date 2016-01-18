@@ -13,24 +13,31 @@ import (
 	"github.com/go-swagger/go-swagger/strfmt"
 )
 
+// NewUploadDriverParams creates a new UploadDriverParams object
+// with the default values initialized.
+func NewUploadDriverParams() UploadDriverParams {
+	var ()
+	return UploadDriverParams{}
+}
+
 // UploadDriverParams contains all the bound params for the upload driver operation
 // typically these are obtained from a http.Request
 //
 // swagger:parameters uploadDriver
 type UploadDriverParams struct {
-	/* Driver ID
-	Required: true
-	In: path
+	/*Driver ID
+	  Required: true
+	  In: path
 	*/
 	DriverID string
-	/* Driver executable
-	Required: true
-	In: formData
+	/*Driver executable
+	  Required: true
+	  In: formData
 	*/
 	File httpkit.File
-	/* file sha1 base64 encoded
-	Required: true
-	In: formData
+	/*file sha1 base64 encoded
+	  Required: true
+	  In: formData
 	*/
 	Sha string
 }
@@ -39,19 +46,25 @@ type UploadDriverParams struct {
 // for simple values it will use straight method calls
 func (o *UploadDriverParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
+	if err := r.ParseMultipartForm(32 << 20); err != nil {
+		return err
+	}
+	fds := httpkit.Values(r.Form)
 
-	if err := o.bindDriverID(route.Params.Get("driver_id"), route.Formats); err != nil {
+	rDriverID, rhkDriverID, _ := route.Params.GetOK("driver_id")
+	if err := o.bindDriverID(rDriverID, rhkDriverID, route.Formats); err != nil {
 		res = append(res, err)
 	}
 
 	file, fileHeader, err := r.FormFile("file")
 	if err != nil {
-		res = append(res, errors.New(400, "reading file \"file\" failed: %v", err))
+		res = append(res, errors.New(400, "reading file %q failed: %v", "file", err))
 	} else {
 		o.File = httpkit.File{Data: file, Header: fileHeader}
 	}
 
-	if err := o.bindSha(r.FormValue("sha"), route.Formats); err != nil {
+	fdSha, fdhkSha, _ := fds.GetOK("sha")
+	if err := o.bindSha(fdSha, fdhkSha, route.Formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -61,14 +74,25 @@ func (o *UploadDriverParams) BindRequest(r *http.Request, route *middleware.Matc
 	return nil
 }
 
-func (o *UploadDriverParams) bindDriverID(raw string, formats strfmt.Registry) error {
+func (o *UploadDriverParams) bindDriverID(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
 
 	o.DriverID = raw
 
 	return nil
 }
 
-func (o *UploadDriverParams) bindSha(raw string, formats strfmt.Registry) error {
+func (o *UploadDriverParams) bindSha(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	if !hasKey {
+		return errors.Required("sha", "formData")
+	}
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
 	if err := validate.RequiredString("sha", "formData", raw); err != nil {
 		return err
 	}

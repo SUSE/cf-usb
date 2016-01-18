@@ -13,19 +13,26 @@ import (
 	"github.com/hpcloud/cf-usb/lib/genmodel"
 )
 
+// NewUpdateDialParams creates a new UpdateDialParams object
+// with the default values initialized.
+func NewUpdateDialParams() UpdateDialParams {
+	var ()
+	return UpdateDialParams{}
+}
+
 // UpdateDialParams contains all the bound params for the update dial operation
 // typically these are obtained from a http.Request
 //
 // swagger:parameters updateDial
 type UpdateDialParams struct {
-	/* Updated dial
-	Required: true
-	In: body
+	/*Updated dial
+	  Required: true
+	  In: body
 	*/
 	Dial *genmodel.Dial
-	/* ID of the dial
-	Required: true
-	In: path
+	/*ID of the dial
+	  Required: true
+	  In: path
 	*/
 	DialID string
 }
@@ -48,7 +55,8 @@ func (o *UpdateDialParams) BindRequest(r *http.Request, route *middleware.Matche
 		}
 	}
 
-	if err := o.bindDialID(route.Params.Get("dial_id"), route.Formats); err != nil {
+	rDialID, rhkDialID, _ := route.Params.GetOK("dial_id")
+	if err := o.bindDialID(rDialID, rhkDialID, route.Formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -58,7 +66,11 @@ func (o *UpdateDialParams) BindRequest(r *http.Request, route *middleware.Matche
 	return nil
 }
 
-func (o *UpdateDialParams) bindDialID(raw string, formats strfmt.Registry) error {
+func (o *UpdateDialParams) bindDialID(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
 
 	o.DialID = raw
 

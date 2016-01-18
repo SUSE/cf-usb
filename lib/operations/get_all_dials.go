@@ -40,6 +40,7 @@ type GetAllDials struct {
 
 func (o *GetAllDials) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
+	o.Params = NewGetAllDialsParams()
 
 	uprinc, err := o.Context.Authorize(r, route)
 	if err != nil {

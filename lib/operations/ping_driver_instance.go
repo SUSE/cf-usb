@@ -41,6 +41,7 @@ type PingDriverInstance struct {
 
 func (o *PingDriverInstance) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
+	o.Params = NewPingDriverInstanceParams()
 
 	uprinc, err := o.Context.Authorize(r, route)
 	if err != nil {

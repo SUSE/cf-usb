@@ -40,6 +40,7 @@ type GetDriver struct {
 
 func (o *GetDriver) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
+	o.Params = NewGetDriverParams()
 
 	uprinc, err := o.Context.Authorize(r, route)
 	if err != nil {

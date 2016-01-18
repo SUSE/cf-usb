@@ -41,6 +41,7 @@ type GetDriverInstance struct {
 
 func (o *GetDriverInstance) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
+	o.Params = NewGetDriverInstanceParams()
 
 	uprinc, err := o.Context.Authorize(r, route)
 	if err != nil {

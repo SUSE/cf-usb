@@ -40,6 +40,7 @@ type CreateDial struct {
 
 func (o *CreateDial) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
+	o.Params = NewCreateDialParams()
 
 	uprinc, err := o.Context.Authorize(r, route)
 	if err != nil {

@@ -93,8 +93,10 @@ func Test_CreateDriver(t *testing.T) {
 
 	params := &operations.CreateDriverParams{}
 
+	driverId := "testDriverID"
+
 	params.Driver = &genmodel.Driver{}
-	params.Driver.ID = "testDriverID"
+	params.Driver.ID = &driverId
 	params.Driver.Name = "testDriver"
 	params.Driver.DriverType = "testType"
 	provider.On("DriverTypeExists", mock.Anything).Return(false, nil)
@@ -116,7 +118,8 @@ func Test_CreateDriverInstance(t *testing.T) {
 	params := &operations.CreateDriverInstanceParams{}
 	params.DriverInstance = &genmodel.DriverInstance{}
 	params.DriverInstance.DriverID = "testDriverID"
-	params.DriverInstance.ID = "testInstanceID"
+	testInstanceID := "testInstanceID"
+	params.DriverInstance.ID = &testInstanceID
 	params.DriverInstance.Name = "testInstance"
 	params.DriverInstance.Configuration = map[string]interface{}{"property_one": "one", "property_two": "two"}
 
@@ -169,8 +172,10 @@ func Test_CreateDial(t *testing.T) {
 	params := &operations.CreateDialParams{}
 	params.Dial = &genmodel.Dial{}
 	params.Dial.DriverInstanceID = "testInstanceID"
-	params.Dial.ID = "dialID"
-	params.Dial.Plan = "planID"
+	dialID := "dialID"
+	params.Dial.ID = &dialID
+	planID := "planID"
+	params.Dial.Plan = &planID
 
 	provider.On("SetDial", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	response := UnitTest.MgmtAPI.CreateDialHandler.Handle(*params, true)
@@ -188,10 +193,14 @@ func Test_CreateServicePlan(t *testing.T) {
 
 	params := &operations.CreateServicePlanParams{}
 	params.Plan = &genmodel.Plan{}
-	params.Plan.Description = "test desc"
+	testDesc := "test desc"
+	params.Plan.Description = &testDesc
 	params.Plan.DialID = "testDialID"
-	params.Plan.ID = "testPlanID"
+	testPlanID := "testPlanID"
+	params.Plan.ID = &testPlanID
 	params.Plan.Name = "testPlan"
+	pf := true
+	params.Plan.Free = &pf
 
 	var testConfig config.Config
 
@@ -229,7 +238,8 @@ func Test_UpdateDriver(t *testing.T) {
 
 	params := &operations.UpdateDriverParams{}
 	params.Driver = &genmodel.Driver{}
-	params.Driver.ID = "testDriverID"
+	testDriverID := "testDriverID"
+	params.Driver.ID = &testDriverID
 	params.Driver.Name = "testDriver"
 	params.Driver.DriverType = "testType"
 	provider.On("SetDriver", mock.Anything, mock.Anything).Return(nil)
@@ -258,7 +268,8 @@ func Test_UpdateDriverInstance(t *testing.T) {
 	params := &operations.UpdateDriverInstanceParams{}
 	params.DriverConfig = &genmodel.DriverInstance{}
 	params.DriverConfig.DriverID = "testDriverID"
-	params.DriverConfig.ID = "testInstanceID"
+	testInstanceID := "testInstanceID"
+	params.DriverConfig.ID = &testInstanceID
 	params.DriverConfig.Name = "testInstance"
 	params.DriverInstanceID = "testDriverID"
 
@@ -280,8 +291,10 @@ func Test_UpdateDial(t *testing.T) {
 	params.Dial = &genmodel.Dial{}
 	params.DialID = "dialID"
 	params.Dial.DriverInstanceID = "testInstanceID"
-	params.Dial.ID = "updateddialID"
-	params.Dial.Plan = "planID"
+	updateddialID := "updateddialID"
+	params.Dial.ID = &updateddialID
+	planID := "planID"
+	params.Dial.Plan = &planID
 
 	provider.On("SetDial", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	response := UnitTest.MgmtAPI.UpdateDialHandler.Handle(*params, true)
@@ -303,11 +316,15 @@ func Test_UpdateService(t *testing.T) {
 	params := &operations.UpdateServiceParams{}
 	params.Service = &genmodel.Service{}
 	params.ServiceID = "testServiceID"
-	params.Service.Bindable = true
+	bindable := true
+	params.Service.Bindable = &bindable
 	params.Service.DriverInstanceID = "testInstanceID"
-	params.Service.ID = "updatedtestServiceID"
+	updatedtestServiceID := "updatedtestServiceID"
+	params.Service.ID = &updatedtestServiceID
 	params.Service.Name = "updatedTestService"
 	params.Service.Tags = []string{"test", "test Service"}
+	desc := "description"
+	params.Service.Description = &desc
 	provider.On("SetService", mock.Anything, mock.Anything).Return(nil)
 	provider.On("ServiceNameExists", mock.Anything).Return(false, nil)
 	response := UnitTest.MgmtAPI.UpdateServiceHandler.Handle(*params, true)
@@ -326,10 +343,14 @@ func Test_UpdateServicePlan(t *testing.T) {
 	params := &operations.UpdateServicePlanParams{}
 	params.Plan = &genmodel.Plan{}
 	params.PlanID = "testPlanID"
-	params.Plan.Description = "test desc"
+	testDesc := "test desc"
+	params.Plan.Description = &testDesc
 	params.Plan.DialID = "testDialID"
-	params.Plan.ID = "testPlanID"
+	testPlanID := "testPlanID"
+	params.Plan.ID = &testPlanID
 	params.Plan.Name = "testPlan"
+	pf := true
+	params.Plan.Free = &pf
 
 	var testConfig config.Config
 
@@ -488,7 +509,8 @@ func Test_GetDriverInstances(t *testing.T) {
 	provider.On("GetDriver", mock.Anything).Return(&driverInfo, nil)
 
 	params := &operations.GetDriverInstancesParams{}
-	params.DriverID = "testDriverID"
+	testDriverID := "testDriverID"
+	params.DriverID = &testDriverID
 
 	response := UnitTest.MgmtAPI.GetDriverInstancesHandler.Handle(*params, true)
 	assert.IsType(&operations.GetDriverInstancesOK{}, response)
@@ -572,7 +594,8 @@ func Test_GetAllDials(t *testing.T) {
 	provider.On("LoadDriverInstance", mock.Anything).Return(&instanceInfo, nil)
 
 	params := &operations.GetAllDialsParams{}
-	params.DriverInstanceID = "testInstanceID"
+	testInstanceID := "testInstanceID"
+	params.DriverInstanceID = &testInstanceID
 
 	response := UnitTest.MgmtAPI.GetAllDialsHandler.Handle(*params, true)
 	assert.IsType(&operations.GetAllDialsOK{}, response)
@@ -693,7 +716,8 @@ func Test_GetServicePlans(t *testing.T) {
 	provider.On("LoadDriverInstance", mock.Anything).Return(&instanceInfo, nil)
 
 	params := &operations.GetServicePlansParams{}
-	params.DriverInstanceID = "testInstanceID"
+	testInstanceID := "testInstanceID"
+	params.DriverInstanceID = &testInstanceID
 
 	response := UnitTest.MgmtAPI.GetServicePlansHandler.Handle(*params, true)
 	assert.IsType(&operations.GetServicePlansOK{}, response)

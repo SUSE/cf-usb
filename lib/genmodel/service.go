@@ -4,12 +4,15 @@ package genmodel
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"strconv"
+
 	"github.com/go-swagger/go-swagger/errors"
 	"github.com/go-swagger/go-swagger/httpkit/validate"
 	"github.com/go-swagger/go-swagger/strfmt"
+	"github.com/go-swagger/go-swagger/swag"
 )
 
-/*Service service
+/*service Service service
 
 swagger:model service
 */
@@ -17,21 +20,23 @@ type Service struct {
 
 	/* Bindable bindable
 	 */
-	Bindable bool `json:"bindable,omitempty"`
+	Bindable *bool `json:"bindable,omitempty"`
 
 	/* Description description
 	 */
-	Description string `json:"description,omitempty"`
+	Description *string `json:"description,omitempty"`
 
 	/* DriverInstanceID driver instance id
 
 	Required: true
+	Max Length: 36
+	Min Length: 36
 	*/
 	DriverInstanceID string `json:"driver_instance_id,omitempty"`
 
 	/* ID id
 	 */
-	ID string `json:"id,omitempty"`
+	ID *string `json:"id,omitempty"`
 
 	/* Metadata metadata
 	 */
@@ -40,6 +45,8 @@ type Service struct {
 	/* Name name
 
 	Required: true
+	Max Length: 50
+	Min Length: 3
 	*/
 	Name string `json:"name,omitempty"`
 
@@ -62,6 +69,11 @@ func (m *Service) Validate(formats strfmt.Registry) error {
 		res = append(res, err)
 	}
 
+	if err := m.validateTags(formats); err != nil {
+		// prop
+		res = append(res, err)
+	}
+
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
@@ -70,7 +82,15 @@ func (m *Service) Validate(formats strfmt.Registry) error {
 
 func (m *Service) validateDriverInstanceID(formats strfmt.Registry) error {
 
-	if err := validate.Required("driver_instance_id", "body", string(m.DriverInstanceID)); err != nil {
+	if err := validate.RequiredString("driver_instance_id", "body", string(m.DriverInstanceID)); err != nil {
+		return err
+	}
+
+	if err := validate.MinLength("driver_instance_id", "body", string(m.DriverInstanceID), 36); err != nil {
+		return err
+	}
+
+	if err := validate.MaxLength("driver_instance_id", "body", string(m.DriverInstanceID), 36); err != nil {
 		return err
 	}
 
@@ -79,8 +99,33 @@ func (m *Service) validateDriverInstanceID(formats strfmt.Registry) error {
 
 func (m *Service) validateName(formats strfmt.Registry) error {
 
-	if err := validate.Required("name", "body", string(m.Name)); err != nil {
+	if err := validate.RequiredString("name", "body", string(m.Name)); err != nil {
 		return err
+	}
+
+	if err := validate.MinLength("name", "body", string(m.Name), 3); err != nil {
+		return err
+	}
+
+	if err := validate.MaxLength("name", "body", string(m.Name), 50); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *Service) validateTags(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.Tags) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.Tags); i++ {
+
+		if err := validate.RequiredString("tags"+"."+strconv.Itoa(i), "body", string(m.Tags[i])); err != nil {
+			return err
+		}
+
 	}
 
 	return nil

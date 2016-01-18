@@ -16,6 +16,11 @@ swagger:response deleteDialNoContent
 type DeleteDialNoContent struct {
 }
 
+// NewDeleteDialNoContent creates DeleteDialNoContent with default headers values
+func NewDeleteDialNoContent() *DeleteDialNoContent {
+	return &DeleteDialNoContent{}
+}
+
 // WriteResponse to the client
 func (o *DeleteDialNoContent) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
 
@@ -27,6 +32,11 @@ func (o *DeleteDialNoContent) WriteResponse(rw http.ResponseWriter, producer htt
 swagger:response deleteDialNotFound
 */
 type DeleteDialNotFound struct {
+}
+
+// NewDeleteDialNotFound creates DeleteDialNotFound with default headers values
+func NewDeleteDialNotFound() *DeleteDialNotFound {
+	return &DeleteDialNotFound{}
 }
 
 // WriteResponse to the client
@@ -43,6 +53,17 @@ type DeleteDialInternalServerError struct {
 
 	// In: body
 	Payload string `json:"body,omitempty"`
+}
+
+// NewDeleteDialInternalServerError creates DeleteDialInternalServerError with default headers values
+func NewDeleteDialInternalServerError() *DeleteDialInternalServerError {
+	return &DeleteDialInternalServerError{}
+}
+
+// WithPayload adds the payload to the delete dial internal server error response
+func (o *DeleteDialInternalServerError) WithPayload(payload string) *DeleteDialInternalServerError {
+	o.Payload = payload
+	return o
 }
 
 // WriteResponse to the client

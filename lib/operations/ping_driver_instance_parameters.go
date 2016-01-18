@@ -11,14 +11,21 @@ import (
 	"github.com/go-swagger/go-swagger/strfmt"
 )
 
+// NewPingDriverInstanceParams creates a new PingDriverInstanceParams object
+// with the default values initialized.
+func NewPingDriverInstanceParams() PingDriverInstanceParams {
+	var ()
+	return PingDriverInstanceParams{}
+}
+
 // PingDriverInstanceParams contains all the bound params for the ping driver instance operation
 // typically these are obtained from a http.Request
 //
 // swagger:parameters pingDriverInstance
 type PingDriverInstanceParams struct {
-	/* Driver Instance ID
-	Required: true
-	In: path
+	/*Driver Instance ID
+	  Required: true
+	  In: path
 	*/
 	DriverInstanceID string
 }
@@ -28,7 +35,8 @@ type PingDriverInstanceParams struct {
 func (o *PingDriverInstanceParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
 
-	if err := o.bindDriverInstanceID(route.Params.Get("driver_instance_id"), route.Formats); err != nil {
+	rDriverInstanceID, rhkDriverInstanceID, _ := route.Params.GetOK("driver_instance_id")
+	if err := o.bindDriverInstanceID(rDriverInstanceID, rhkDriverInstanceID, route.Formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -38,7 +46,11 @@ func (o *PingDriverInstanceParams) BindRequest(r *http.Request, route *middlewar
 	return nil
 }
 
-func (o *PingDriverInstanceParams) bindDriverInstanceID(raw string, formats strfmt.Registry) error {
+func (o *PingDriverInstanceParams) bindDriverInstanceID(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
 
 	o.DriverInstanceID = raw
 

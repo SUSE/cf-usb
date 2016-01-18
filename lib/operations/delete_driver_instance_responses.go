@@ -16,6 +16,11 @@ swagger:response deleteDriverInstanceNoContent
 type DeleteDriverInstanceNoContent struct {
 }
 
+// NewDeleteDriverInstanceNoContent creates DeleteDriverInstanceNoContent with default headers values
+func NewDeleteDriverInstanceNoContent() *DeleteDriverInstanceNoContent {
+	return &DeleteDriverInstanceNoContent{}
+}
+
 // WriteResponse to the client
 func (o *DeleteDriverInstanceNoContent) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
 
@@ -27,6 +32,11 @@ func (o *DeleteDriverInstanceNoContent) WriteResponse(rw http.ResponseWriter, pr
 swagger:response deleteDriverInstanceNotFound
 */
 type DeleteDriverInstanceNotFound struct {
+}
+
+// NewDeleteDriverInstanceNotFound creates DeleteDriverInstanceNotFound with default headers values
+func NewDeleteDriverInstanceNotFound() *DeleteDriverInstanceNotFound {
+	return &DeleteDriverInstanceNotFound{}
 }
 
 // WriteResponse to the client
@@ -43,6 +53,17 @@ type DeleteDriverInstanceInternalServerError struct {
 
 	// In: body
 	Payload string `json:"body,omitempty"`
+}
+
+// NewDeleteDriverInstanceInternalServerError creates DeleteDriverInstanceInternalServerError with default headers values
+func NewDeleteDriverInstanceInternalServerError() *DeleteDriverInstanceInternalServerError {
+	return &DeleteDriverInstanceInternalServerError{}
+}
+
+// WithPayload adds the payload to the delete driver instance internal server error response
+func (o *DeleteDriverInstanceInternalServerError) WithPayload(payload string) *DeleteDriverInstanceInternalServerError {
+	o.Payload = payload
+	return o
 }
 
 // WriteResponse to the client

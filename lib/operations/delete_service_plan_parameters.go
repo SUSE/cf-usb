@@ -11,14 +11,21 @@ import (
 	"github.com/go-swagger/go-swagger/strfmt"
 )
 
+// NewDeleteServicePlanParams creates a new DeleteServicePlanParams object
+// with the default values initialized.
+func NewDeleteServicePlanParams() DeleteServicePlanParams {
+	var ()
+	return DeleteServicePlanParams{}
+}
+
 // DeleteServicePlanParams contains all the bound params for the delete service plan operation
 // typically these are obtained from a http.Request
 //
 // swagger:parameters deleteServicePlan
 type DeleteServicePlanParams struct {
-	/* ID of the plan
-	Required: true
-	In: path
+	/*ID of the plan
+	  Required: true
+	  In: path
 	*/
 	PlanID string
 }
@@ -28,7 +35,8 @@ type DeleteServicePlanParams struct {
 func (o *DeleteServicePlanParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
 
-	if err := o.bindPlanID(route.Params.Get("plan_id"), route.Formats); err != nil {
+	rPlanID, rhkPlanID, _ := route.Params.GetOK("plan_id")
+	if err := o.bindPlanID(rPlanID, rhkPlanID, route.Formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -38,7 +46,11 @@ func (o *DeleteServicePlanParams) BindRequest(r *http.Request, route *middleware
 	return nil
 }
 
-func (o *DeleteServicePlanParams) bindPlanID(raw string, formats strfmt.Registry) error {
+func (o *DeleteServicePlanParams) bindPlanID(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
 
 	o.PlanID = raw
 

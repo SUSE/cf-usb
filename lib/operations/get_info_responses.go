@@ -21,6 +21,17 @@ type GetInfoOK struct {
 	Payload *genmodel.Info `json:"body,omitempty"`
 }
 
+// NewGetInfoOK creates GetInfoOK with default headers values
+func NewGetInfoOK() *GetInfoOK {
+	return &GetInfoOK{}
+}
+
+// WithPayload adds the payload to the get info o k response
+func (o *GetInfoOK) WithPayload(payload *genmodel.Info) *GetInfoOK {
+	o.Payload = payload
+	return o
+}
+
 // WriteResponse to the client
 func (o *GetInfoOK) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
 
@@ -40,6 +51,17 @@ type GetInfoInternalServerError struct {
 
 	// In: body
 	Payload string `json:"body,omitempty"`
+}
+
+// NewGetInfoInternalServerError creates GetInfoInternalServerError with default headers values
+func NewGetInfoInternalServerError() *GetInfoInternalServerError {
+	return &GetInfoInternalServerError{}
+}
+
+// WithPayload adds the payload to the get info internal server error response
+func (o *GetInfoInternalServerError) WithPayload(payload string) *GetInfoInternalServerError {
+	o.Payload = payload
+	return o
 }
 
 // WriteResponse to the client

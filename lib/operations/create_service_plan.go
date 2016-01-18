@@ -40,6 +40,7 @@ type CreateServicePlan struct {
 
 func (o *CreateServicePlan) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
+	o.Params = NewCreateServicePlanParams()
 
 	uprinc, err := o.Context.Authorize(r, route)
 	if err != nil {

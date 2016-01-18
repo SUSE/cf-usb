@@ -29,7 +29,7 @@ func NewGetServicePlan(ctx *middleware.Context, handler GetServicePlanHandler) *
 
 /*GetServicePlan swagger:route GET /plans/{plan_id} getServicePlan
 
-Gets the `plan` with the **planID** for the *serviceID*
+Gets the `plan` with the **planID**
 
 */
 type GetServicePlan struct {
@@ -40,6 +40,7 @@ type GetServicePlan struct {
 
 func (o *GetServicePlan) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
+	o.Params = NewGetServicePlanParams()
 
 	uprinc, err := o.Context.Authorize(r, route)
 	if err != nil {

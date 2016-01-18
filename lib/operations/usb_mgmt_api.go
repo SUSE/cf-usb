@@ -13,16 +13,18 @@ import (
 	"github.com/go-swagger/go-swagger/httpkit/security"
 	"github.com/go-swagger/go-swagger/spec"
 	"github.com/go-swagger/go-swagger/strfmt"
+	"github.com/go-swagger/go-swagger/swag"
 )
 
 // NewUsbMgmtAPI creates a new UsbMgmt instance
 func NewUsbMgmtAPI(spec *spec.Document) *UsbMgmtAPI {
 	o := &UsbMgmtAPI{
 		spec:            spec,
-		handlers:        make(map[string]http.Handler),
+		handlers:        make(map[string]map[string]http.Handler),
 		formats:         strfmt.Default,
 		defaultConsumes: "application/json",
 		defaultProduces: "application/json",
+		ServerShutdown:  func() {},
 	}
 
 	return o
@@ -32,7 +34,7 @@ func NewUsbMgmtAPI(spec *spec.Document) *UsbMgmtAPI {
 type UsbMgmtAPI struct {
 	spec            *spec.Document
 	context         *middleware.Context
-	handlers        map[string]http.Handler
+	handlers        map[string]map[string]http.Handler
 	formats         strfmt.Registry
 	defaultConsumes string
 	defaultProduces string
@@ -108,6 +110,13 @@ type UsbMgmtAPI struct {
 	// ServeError is called when an error is received, there is a default handler
 	// but you can set your own with this
 	ServeError func(http.ResponseWriter, *http.Request, error)
+
+	// ServerShutdown is called when the HTTP(S) server is shut down and done
+	// handling all active connections and does not accept connections any more
+	ServerShutdown func()
+
+	// Custom command line argument groups with their descriptions
+	CommandLineOptionsGroups []swag.CommandLineOptionsGroup
 }
 
 // SetDefaultProduces sets the default produces media type
@@ -333,12 +342,16 @@ func (o *UsbMgmtAPI) ProducersFor(mediaTypes []string) map[string]httpkit.Produc
 
 }
 
-// HandlerFor gets a http.Handler for the provided operation id
-func (o *UsbMgmtAPI) HandlerFor(operationID string) (http.Handler, bool) {
+// HandlerFor gets a http.Handler for the provided operation method and path
+func (o *UsbMgmtAPI) HandlerFor(method, path string) (http.Handler, bool) {
 	if o.handlers == nil {
 		return nil, false
 	}
-	h, ok := o.handlers[operationID]
+	um := strings.ToUpper(method)
+	if _, ok := o.handlers[um]; !ok {
+		return nil, false
+	}
+	h, ok := o.handlers[um][path]
 	return h, ok
 }
 
@@ -347,74 +360,163 @@ func (o *UsbMgmtAPI) initHandlerCache() {
 		o.context = middleware.NewRoutableContext(o.spec, o, nil)
 	}
 
-	o.handlers = make(map[string]http.Handler)
+	if o.handlers == nil {
+		o.handlers = make(map[string]map[string]http.Handler)
+	}
 
-	o.handlers["createDial"] = NewCreateDial(o.context, o.CreateDialHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers[strings.ToUpper("POST")] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/dials"] = NewCreateDial(o.context, o.CreateDialHandler)
 
-	o.handlers["createDriver"] = NewCreateDriver(o.context, o.CreateDriverHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers[strings.ToUpper("POST")] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/drivers"] = NewCreateDriver(o.context, o.CreateDriverHandler)
 
-	o.handlers["createDriverInstance"] = NewCreateDriverInstance(o.context, o.CreateDriverInstanceHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers[strings.ToUpper("POST")] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/driver_instances"] = NewCreateDriverInstance(o.context, o.CreateDriverInstanceHandler)
 
-	o.handlers["createServicePlan"] = NewCreateServicePlan(o.context, o.CreateServicePlanHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers[strings.ToUpper("POST")] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/plans"] = NewCreateServicePlan(o.context, o.CreateServicePlanHandler)
 
-	o.handlers["deleteDial"] = NewDeleteDial(o.context, o.DeleteDialHandler)
+	if o.handlers["DELETE"] == nil {
+		o.handlers[strings.ToUpper("DELETE")] = make(map[string]http.Handler)
+	}
+	o.handlers["DELETE"]["/dials/{dial_id}"] = NewDeleteDial(o.context, o.DeleteDialHandler)
 
-	o.handlers["deleteDriver"] = NewDeleteDriver(o.context, o.DeleteDriverHandler)
+	if o.handlers["DELETE"] == nil {
+		o.handlers[strings.ToUpper("DELETE")] = make(map[string]http.Handler)
+	}
+	o.handlers["DELETE"]["/drivers/{driver_id}"] = NewDeleteDriver(o.context, o.DeleteDriverHandler)
 
-	o.handlers["deleteDriverInstance"] = NewDeleteDriverInstance(o.context, o.DeleteDriverInstanceHandler)
+	if o.handlers["DELETE"] == nil {
+		o.handlers[strings.ToUpper("DELETE")] = make(map[string]http.Handler)
+	}
+	o.handlers["DELETE"]["/driver_instances/{driver_instance_id}"] = NewDeleteDriverInstance(o.context, o.DeleteDriverInstanceHandler)
 
-	o.handlers["deleteServicePlan"] = NewDeleteServicePlan(o.context, o.DeleteServicePlanHandler)
+	if o.handlers["DELETE"] == nil {
+		o.handlers[strings.ToUpper("DELETE")] = make(map[string]http.Handler)
+	}
+	o.handlers["DELETE"]["/plans/{plan_id}"] = NewDeleteServicePlan(o.context, o.DeleteServicePlanHandler)
 
-	o.handlers["getAllDials"] = NewGetAllDials(o.context, o.GetAllDialsHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers[strings.ToUpper("GET")] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/dials"] = NewGetAllDials(o.context, o.GetAllDialsHandler)
 
-	o.handlers["getDial"] = NewGetDial(o.context, o.GetDialHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers[strings.ToUpper("GET")] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/dials/{dial_id}"] = NewGetDial(o.context, o.GetDialHandler)
 
-	o.handlers["getDialSchema"] = NewGetDialSchema(o.context, o.GetDialSchemaHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers[strings.ToUpper("GET")] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/dials/{dial_id}/schema"] = NewGetDialSchema(o.context, o.GetDialSchemaHandler)
 
-	o.handlers["getDriver"] = NewGetDriver(o.context, o.GetDriverHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers[strings.ToUpper("GET")] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/drivers/{driver_id}"] = NewGetDriver(o.context, o.GetDriverHandler)
 
-	o.handlers["getDriverInstance"] = NewGetDriverInstance(o.context, o.GetDriverInstanceHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers[strings.ToUpper("GET")] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/driver_instances/{driver_instance_id}"] = NewGetDriverInstance(o.context, o.GetDriverInstanceHandler)
 
-	o.handlers["getDriverInstances"] = NewGetDriverInstances(o.context, o.GetDriverInstancesHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers[strings.ToUpper("GET")] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/driver_instances"] = NewGetDriverInstances(o.context, o.GetDriverInstancesHandler)
 
-	o.handlers["getDriverSchema"] = NewGetDriverSchema(o.context, o.GetDriverSchemaHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers[strings.ToUpper("GET")] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/drivers/{driver_id}/schema"] = NewGetDriverSchema(o.context, o.GetDriverSchemaHandler)
 
-	o.handlers["getDrivers"] = NewGetDrivers(o.context, o.GetDriversHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers[strings.ToUpper("GET")] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/drivers"] = NewGetDrivers(o.context, o.GetDriversHandler)
 
-	o.handlers["getInfo"] = NewGetInfo(o.context, o.GetInfoHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers[strings.ToUpper("GET")] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/info"] = NewGetInfo(o.context, o.GetInfoHandler)
 
-	o.handlers["getService"] = NewGetService(o.context, o.GetServiceHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers[strings.ToUpper("GET")] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/services/{service_id}"] = NewGetService(o.context, o.GetServiceHandler)
 
-	o.handlers["getServiceByInstanceId"] = NewGetServiceByInstanceID(o.context, o.GetServiceByInstanceIDHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers[strings.ToUpper("GET")] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/services"] = NewGetServiceByInstanceID(o.context, o.GetServiceByInstanceIDHandler)
 
-	o.handlers["getServicePlan"] = NewGetServicePlan(o.context, o.GetServicePlanHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers[strings.ToUpper("GET")] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/plans/{plan_id}"] = NewGetServicePlan(o.context, o.GetServicePlanHandler)
 
-	o.handlers["getServicePlans"] = NewGetServicePlans(o.context, o.GetServicePlansHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers[strings.ToUpper("GET")] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/plans"] = NewGetServicePlans(o.context, o.GetServicePlansHandler)
 
-	o.handlers["pingDriverInstance"] = NewPingDriverInstance(o.context, o.PingDriverInstanceHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers[strings.ToUpper("GET")] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/driver_instances/{driver_instance_id}/ping"] = NewPingDriverInstance(o.context, o.PingDriverInstanceHandler)
 
-	o.handlers["updateCatalog"] = NewUpdateCatalog(o.context, o.UpdateCatalogHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers[strings.ToUpper("POST")] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/update_catalog"] = NewUpdateCatalog(o.context, o.UpdateCatalogHandler)
 
-	o.handlers["updateDial"] = NewUpdateDial(o.context, o.UpdateDialHandler)
+	if o.handlers["PUT"] == nil {
+		o.handlers[strings.ToUpper("PUT")] = make(map[string]http.Handler)
+	}
+	o.handlers["PUT"]["/dials/{dial_id}"] = NewUpdateDial(o.context, o.UpdateDialHandler)
 
-	o.handlers["updateDriver"] = NewUpdateDriver(o.context, o.UpdateDriverHandler)
+	if o.handlers["PUT"] == nil {
+		o.handlers[strings.ToUpper("PUT")] = make(map[string]http.Handler)
+	}
+	o.handlers["PUT"]["/drivers/{driver_id}"] = NewUpdateDriver(o.context, o.UpdateDriverHandler)
 
-	o.handlers["updateDriverInstance"] = NewUpdateDriverInstance(o.context, o.UpdateDriverInstanceHandler)
+	if o.handlers["PUT"] == nil {
+		o.handlers[strings.ToUpper("PUT")] = make(map[string]http.Handler)
+	}
+	o.handlers["PUT"]["/driver_instances/{driver_instance_id}"] = NewUpdateDriverInstance(o.context, o.UpdateDriverInstanceHandler)
 
-	o.handlers["updateService"] = NewUpdateService(o.context, o.UpdateServiceHandler)
+	if o.handlers["PUT"] == nil {
+		o.handlers[strings.ToUpper("PUT")] = make(map[string]http.Handler)
+	}
+	o.handlers["PUT"]["/services/{service_id}"] = NewUpdateService(o.context, o.UpdateServiceHandler)
 
-	o.handlers["updateServicePlan"] = NewUpdateServicePlan(o.context, o.UpdateServicePlanHandler)
+	if o.handlers["PUT"] == nil {
+		o.handlers[strings.ToUpper("PUT")] = make(map[string]http.Handler)
+	}
+	o.handlers["PUT"]["/plans/{plan_id}"] = NewUpdateServicePlan(o.context, o.UpdateServicePlanHandler)
 
-	o.handlers["uploadDriver"] = NewUploadDriver(o.context, o.UploadDriverHandler)
+	if o.handlers["PUT"] == nil {
+		o.handlers[strings.ToUpper("PUT")] = make(map[string]http.Handler)
+	}
+	o.handlers["PUT"]["/drivers/{driver_id}/bits"] = NewUploadDriver(o.context, o.UploadDriverHandler)
 
 }
 
 // Serve creates a http handler to serve the API over HTTP
-// can be used directly in http.ListenAndServe(":8000", api.Serve())
-func (o *UsbMgmtAPI) Serve() http.Handler {
+// can be used directly in http.ListenAndServe(":8000", api.Serve(nil))
+func (o *UsbMgmtAPI) Serve(builder middleware.Builder) http.Handler {
 	if len(o.handlers) == 0 {
 		o.initHandlerCache()
 	}
 
-	return o.context.APIHandler()
+	return o.context.APIHandler(builder)
 }

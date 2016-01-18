@@ -16,6 +16,11 @@ swagger:response deleteServicePlanNoContent
 type DeleteServicePlanNoContent struct {
 }
 
+// NewDeleteServicePlanNoContent creates DeleteServicePlanNoContent with default headers values
+func NewDeleteServicePlanNoContent() *DeleteServicePlanNoContent {
+	return &DeleteServicePlanNoContent{}
+}
+
 // WriteResponse to the client
 func (o *DeleteServicePlanNoContent) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
 
@@ -27,6 +32,11 @@ func (o *DeleteServicePlanNoContent) WriteResponse(rw http.ResponseWriter, produ
 swagger:response deleteServicePlanNotFound
 */
 type DeleteServicePlanNotFound struct {
+}
+
+// NewDeleteServicePlanNotFound creates DeleteServicePlanNotFound with default headers values
+func NewDeleteServicePlanNotFound() *DeleteServicePlanNotFound {
+	return &DeleteServicePlanNotFound{}
 }
 
 // WriteResponse to the client
@@ -43,6 +53,17 @@ type DeleteServicePlanInternalServerError struct {
 
 	// In: body
 	Payload string `json:"body,omitempty"`
+}
+
+// NewDeleteServicePlanInternalServerError creates DeleteServicePlanInternalServerError with default headers values
+func NewDeleteServicePlanInternalServerError() *DeleteServicePlanInternalServerError {
+	return &DeleteServicePlanInternalServerError{}
+}
+
+// WithPayload adds the payload to the delete service plan internal server error response
+func (o *DeleteServicePlanInternalServerError) WithPayload(payload string) *DeleteServicePlanInternalServerError {
+	o.Payload = payload
+	return o
 }
 
 // WriteResponse to the client

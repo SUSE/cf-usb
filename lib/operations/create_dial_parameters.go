@@ -12,14 +12,21 @@ import (
 	"github.com/hpcloud/cf-usb/lib/genmodel"
 )
 
+// NewCreateDialParams creates a new CreateDialParams object
+// with the default values initialized.
+func NewCreateDialParams() CreateDialParams {
+	var ()
+	return CreateDialParams{}
+}
+
 // CreateDialParams contains all the bound params for the create dial operation
 // typically these are obtained from a http.Request
 //
 // swagger:parameters createDial
 type CreateDialParams struct {
-	/* New dial
-	Required: true
-	In: body
+	/*New dial
+	  Required: true
+	  In: body
 	*/
 	Dial *genmodel.Dial
 }

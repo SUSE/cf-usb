@@ -40,19 +40,35 @@ type RouteParams []RouteParam
 
 // Get gets the value for the route param for the specified key
 func (r RouteParams) Get(name string) string {
-	for _, p := range r {
-		if p.Name == name {
-			return p.Value
-		}
+	vv, _, _ := r.GetOK(name)
+	if len(vv) > 0 {
+		return vv[len(vv)-1]
 	}
 	return ""
+}
+
+// GetOK gets the value but also returns booleans to indicate if a key or value
+// is present. This aids in validation and satisfies an interface in use there
+//
+// The returned values are: data, has key, has value
+func (r RouteParams) GetOK(name string) ([]string, bool, bool) {
+	for _, p := range r {
+		if p.Name == name {
+			return []string{p.Value}, true, p.Value != ""
+		}
+	}
+	return nil, false, false
 }
 
 func newRouter(ctx *Context, next http.Handler) http.Handler {
 	if ctx.router == nil {
 		ctx.router = DefaultRouter(ctx.spec, ctx.api)
 	}
-	isRoot := ctx.spec.BasePath() == "" || ctx.spec.BasePath() == "/"
+	basePath := ctx.spec.BasePath()
+	isRoot := basePath == "" || basePath == "/"
+	for strings.HasSuffix(basePath, "/") {
+		basePath = basePath[:len(basePath)-1]
+	}
 
 	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		defer context.Clear(r)
@@ -63,7 +79,7 @@ func newRouter(ctx *Context, next http.Handler) http.Handler {
 				return
 			}
 		} else {
-			if p := strings.TrimPrefix(r.URL.Path, ctx.spec.BasePath()); len(p) < len(r.URL.Path) {
+			if p := strings.TrimPrefix(r.URL.Path, basePath); len(p) < len(r.URL.Path) {
 				r.URL.Path = p
 				if _, ok := ctx.RouteInfo(r); ok {
 					next.ServeHTTP(rw, r)
@@ -84,7 +100,7 @@ func newRouter(ctx *Context, next http.Handler) http.Handler {
 // RoutableAPI represents an interface for things that can serve
 // as a provider of implementations for the swagger router
 type RoutableAPI interface {
-	HandlerFor(string) (http.Handler, bool)
+	HandlerFor(string, string) (http.Handler, bool)
 	ServeErrorFor(string) func(http.ResponseWriter, *http.Request, error)
 	ConsumersFor([]string) map[string]httpkit.Consumer
 	ProducersFor([]string) map[string]httpkit.Producer
@@ -190,7 +206,7 @@ var pathConverter = regexp.MustCompile(`{(\w+)}`)
 func (d *defaultRouteBuilder) AddRoute(method, path string, operation *spec.Operation) {
 	mn := strings.ToUpper(method)
 
-	if handler, ok := d.api.HandlerFor(operation.ID); ok {
+	if handler, ok := d.api.HandlerFor(method, path); ok {
 		consumes := d.spec.ConsumesFor(operation)
 		produces := d.spec.ProducesFor(operation)
 		parameters := d.spec.ParamsFor(method, path)

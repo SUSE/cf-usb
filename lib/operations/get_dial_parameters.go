@@ -11,14 +11,21 @@ import (
 	"github.com/go-swagger/go-swagger/strfmt"
 )
 
+// NewGetDialParams creates a new GetDialParams object
+// with the default values initialized.
+func NewGetDialParams() GetDialParams {
+	var ()
+	return GetDialParams{}
+}
+
 // GetDialParams contains all the bound params for the get dial operation
 // typically these are obtained from a http.Request
 //
 // swagger:parameters getDial
 type GetDialParams struct {
-	/* ID of the dial
-	Required: true
-	In: path
+	/*ID of the dial
+	  Required: true
+	  In: path
 	*/
 	DialID string
 }
@@ -28,7 +35,8 @@ type GetDialParams struct {
 func (o *GetDialParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
 
-	if err := o.bindDialID(route.Params.Get("dial_id"), route.Formats); err != nil {
+	rDialID, rhkDialID, _ := route.Params.GetOK("dial_id")
+	if err := o.bindDialID(rDialID, rhkDialID, route.Formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -38,7 +46,11 @@ func (o *GetDialParams) BindRequest(r *http.Request, route *middleware.MatchedRo
 	return nil
 }
 
-func (o *GetDialParams) bindDialID(raw string, formats strfmt.Registry) error {
+func (o *GetDialParams) bindDialID(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
 
 	o.DialID = raw
 

@@ -40,6 +40,7 @@ type GetService struct {
 
 func (o *GetService) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
+	o.Params = NewGetServiceParams()
 
 	uprinc, err := o.Context.Authorize(r, route)
 	if err != nil {

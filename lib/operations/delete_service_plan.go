@@ -40,6 +40,7 @@ type DeleteServicePlan struct {
 
 func (o *DeleteServicePlan) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
+	o.Params = NewDeleteServicePlanParams()
 
 	uprinc, err := o.Context.Authorize(r, route)
 	if err != nil {

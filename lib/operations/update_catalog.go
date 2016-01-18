@@ -40,7 +40,6 @@ type UpdateCatalog struct {
 
 func (o *UpdateCatalog) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
-
 	uprinc, err := o.Context.Authorize(r, route)
 	if err != nil {
 		o.Context.Respond(rw, r, route.Produces, route, err)
