@@ -1,5 +1,5 @@
 {  
-	"type": "object"
+	"type": "object",
 		"properties": {
 			"docker_endpoint": {
 				"type": "string"
