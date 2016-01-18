@@ -206,7 +206,7 @@ func Validate(driverInstance config.DriverInstance, driverType string, logger la
 
 	log.Debug("ping-driver", lager.Data{"configuration": string(*driverInstance.Configuration)})
 
-	pong, err := ping(driverInstance.Configuration, driverType)
+	pong, err := Ping(driverInstance.Configuration, driverType)
 	if err != nil {
 		return err
 	}
@@ -219,7 +219,43 @@ func Validate(driverInstance config.DriverInstance, driverType string, logger la
 	return nil
 }
 
-func ping(configuration *json.RawMessage, driverType string) (bool, error) {
+func GetConfigSchema(driverType string, logger lager.Logger) (string, error) {
+	log := logger.Session("get-driver-config-schema", lager.Data{"type": driverType})
+
+	client, err := createProviderClient(getDriverPath(driverType))
+	if err != nil {
+		return "", err
+	}
+	defer client.Close()
+
+	log.Debug("get-config-schema", lager.Data{"type": driverType})
+
+	schema, err := getConfigSchema(client, driverType)
+	if err != nil {
+		return "", err
+	}
+	return schema, nil
+}
+
+func GetDailsSchema(driverType string, logger lager.Logger) (string, error) {
+	log := logger.Session("get-driver-dails-schema", lager.Data{"type": driverType})
+
+	client, err := createProviderClient(getDriverPath(driverType))
+	if err != nil {
+		return "", err
+	}
+	defer client.Close()
+
+	log.Debug("get-dails-schema", lager.Data{"type": driverType})
+
+	schema, err := getDailsSchema(client, driverType)
+	if err != nil {
+		return "", err
+	}
+	return schema, nil
+}
+
+func Ping(configuration *json.RawMessage, driverType string) (bool, error) {
 	result := false
 	driverPath := getDriverPath(driverType)
 	err := createClientAndCall(fmt.Sprintf("%s.Ping", driverType), driverPath, configuration, &result)
