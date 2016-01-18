@@ -9,6 +9,7 @@ import (
 	"github.com/go-swagger/go-swagger/errors"
 	"github.com/go-swagger/go-swagger/httpkit"
 	"github.com/go-swagger/go-swagger/httpkit/middleware"
+	"github.com/go-swagger/go-swagger/httpkit/validate"
 	"github.com/go-swagger/go-swagger/strfmt"
 )
 
@@ -25,9 +26,10 @@ func NewGetDriverInstancesParams() GetDriverInstancesParams {
 // swagger:parameters getDriverInstances
 type GetDriverInstancesParams struct {
 	/*Driver ID
+	  Required: true
 	  In: query
 	*/
-	DriverID *string
+	DriverID string
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
@@ -48,15 +50,18 @@ func (o *GetDriverInstancesParams) BindRequest(r *http.Request, route *middlewar
 }
 
 func (o *GetDriverInstancesParams) bindDriverID(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	if !hasKey {
+		return errors.Required("driver_id", "query")
+	}
 	var raw string
 	if len(rawData) > 0 {
 		raw = rawData[len(rawData)-1]
 	}
-	if raw == "" { // empty values pass all other validations
-		return nil
+	if err := validate.RequiredString("driver_id", "query", raw); err != nil {
+		return err
 	}
 
-	o.DriverID = &raw
+	o.DriverID = raw
 
 	return nil
 }

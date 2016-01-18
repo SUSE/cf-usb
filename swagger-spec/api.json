@@ -269,7 +269,7 @@
                 }
             }
         },
-        "/drivers/{driver_id}/schema": {
+        "/drivers/{driver_id}/config_schema": {
             "get": {
                 "description": "Get driver config schema",
                 "operationId": "getDriverSchema",
@@ -287,6 +287,38 @@
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/driver_schema"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "500": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/drivers/{driver_id}/dial_schema": {
+            "get": {
+                "description": "Get dial schema",
+                "operationId": "getDialSchema",
+                "parameters": [
+                    {
+                        "name": "driver_id",
+                        "in": "path",
+                        "description": "Driver ID",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dial_schema"
                         }
                     },
                     "404": {
@@ -894,38 +926,6 @@
                 "responses": {
                     "204": {
                         "description": "Sucessfull response"
-                    },
-                    "404": {
-                        "description": "Not Found"
-                    },
-                    "500": {
-                        "description": "Unexpected error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/dials/{dial_id}/schema": {
-            "get": {
-                "description": "Get dial schema",
-                "operationId": "getDialSchema",
-                "parameters": [
-                    {
-                        "name": "dial_id",
-                        "in": "path",
-                        "description": "ID of the dial",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Sucessfull response",
-                        "schema": {
-                            "$ref": "#/definitions/dial_schema"
-                        }
                     },
                     "404": {
                         "description": "Not Found"

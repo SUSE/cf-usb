@@ -252,7 +252,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 		var driverInstances = make([]*genmodel.DriverInstance, 0)
 
-		driver, err := configProvider.GetDriver(*params.DriverID)
+		driver, err := configProvider.GetDriver(params.DriverID)
 		if err != nil {
 			return &GetDriverInstanceInternalServerError{Payload: err.Error()}
 		}
@@ -266,7 +266,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 			driverInstance := &genmodel.DriverInstance{
 				Configuration: di.Configuration,
 				Dials:         dials,
-				DriverID:      *params.DriverID,
+				DriverID:      params.DriverID,
 				Name:          di.Name,
 				Service:       &di.Service.ID,
 			}

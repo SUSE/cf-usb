@@ -27,7 +27,7 @@ func NewGetDialSchema(ctx *middleware.Context, handler GetDialSchemaHandler) *Ge
 	return &GetDialSchema{Context: ctx, Handler: handler}
 }
 
-/*GetDialSchema swagger:route GET /dials/{dial_id}/schema getDialSchema
+/*GetDialSchema swagger:route GET /drivers/{driver_id}/dial_schema getDialSchema
 
 Get dial schema
 

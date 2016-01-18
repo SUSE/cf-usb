@@ -29,7 +29,7 @@ func NewGetDriverInstances(ctx *middleware.Context, handler GetDriverInstancesHa
 
 /*GetDriverInstances swagger:route GET /driver_instances getDriverInstances
 
-Gets all driver configurations
+Gets driver instances for a driver
 
 
 */

@@ -11,7 +11,7 @@ import (
 	"github.com/hpcloud/cf-usb/lib/genmodel"
 )
 
-/*GetDialSchemaOK Sucessfull response
+/*GetDialSchemaOK OK
 
 swagger:response getDialSchemaOK
 */
