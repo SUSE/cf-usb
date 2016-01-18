@@ -59,6 +59,7 @@ func TestCreateUser(t *testing.T) {
 	assert.NoError(err)
 	assert.NotNil(credentials["password"])
 	assert.NotNil(credentials["port"])
+	assert.NotNil(credentials["mgmt_port"])
 	assert.NotNil(credentials["host"])
 	assert.NotNil(credentials["user"])
 	assert.NotNil(credentials["vhost"])

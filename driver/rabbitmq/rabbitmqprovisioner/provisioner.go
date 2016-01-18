@@ -197,6 +197,9 @@ func (provisioner *RabbitmqProvisioner) getAdminCredentials(containerName string
 	m["password"] = env.Get("RABBITMQ_DEFAULT_PASS")
 	for k, v := range container.NetworkSettings.Ports {
 		if k == "15672/tcp" {
+			m["mgmt_port"] = v[0].HostPort
+		}
+		if k == "5672/tcp" {
 			m["port"] = v[0].HostPort
 		}
 	}
@@ -228,7 +231,7 @@ func (provisioner *RabbitmqProvisioner) DeleteUser(containerName, credentialId s
 		return err
 	}
 
-	rmqc, err := rabbithole.NewClient(fmt.Sprintf("http://%s:%s", host, admin["port"]), admin["user"], admin["password"])
+	rmqc, err := rabbithole.NewClient(fmt.Sprintf("http://%s:%s", host, admin["mgmt_port"]), admin["user"], admin["password"])
 	if err != nil {
 		return err
 	}
@@ -254,7 +257,7 @@ func (provisioner *RabbitmqProvisioner) UserExists(containerName, credentialId s
 		return false, err
 	}
 
-	rmqc, err := rabbithole.NewClient(fmt.Sprintf("http://%s:%s", host, admin["port"]), admin["user"], admin["password"])
+	rmqc, err := rabbithole.NewClient(fmt.Sprintf("http://%s:%s", host, admin["mgmt_port"]), admin["user"], admin["password"])
 	if err != nil {
 		return false, err
 	}
@@ -296,7 +299,7 @@ func (provisioner *RabbitmqProvisioner) CreateUser(containerName, credentialId s
 		return nil, err
 	}
 
-	rmqc, err := rabbithole.NewClient(fmt.Sprintf("http://%s:%s", host, admin["port"]), admin["user"], admin["password"])
+	rmqc, err := rabbithole.NewClient(fmt.Sprintf("http://%s:%s", host, admin["mgmt_port"]), admin["user"], admin["password"])
 	if err != nil {
 		return nil, err
 	}
@@ -322,6 +325,7 @@ func (provisioner *RabbitmqProvisioner) CreateUser(containerName, credentialId s
 	m["host"] = host
 	m["user"] = newUser
 	m["password"] = userPass
+	m["mgmt_port"] = admin["mgmt_port"]
 	m["port"] = admin["port"]
 	x, err := rmqc.GetVhost("/")
 	if err != nil {
