@@ -928,6 +928,26 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.UpdateCatalogHandler = UpdateCatalogHandlerFunc(func(principal interface{}) middleware.Responder {
-		return middleware.NotImplemented("operation updateCatalog has not yet been implemented")
+
+		config, err := configProvider.LoadConfiguration()
+		if err != nil {
+			return &UpdateCatalogInternalServerError{Payload: err.Error()}
+		}
+
+		guid, err := ccServiceBroker.GetServiceBrokerGuidByName(brokerName)
+		if err != nil {
+			log.Error("get-service-broker-failed", err)
+			return &UpdateCatalogInternalServerError{Payload: err.Error()}
+		}
+
+		if guid == "" {
+			return &UpdateCatalogInternalServerError{Payload: fmt.Sprintf("Broker %s guid not found", brokerName)}
+		} else {
+			err = ccServiceBroker.Update(guid, brokerName, config.BrokerAPI.ExternalUrl, config.BrokerAPI.Credentials.Username, config.BrokerAPI.Credentials.Password)
+			if err != nil {
+				return &UpdateCatalogInternalServerError{Payload: err.Error()}
+			}
+		}
+		return &UpdateCatalogOK{}
 	})
 }
