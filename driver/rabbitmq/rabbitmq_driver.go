@@ -173,6 +173,7 @@ func (d *RabbitmqDriver) GetCredentials(request driver.GetCredentialsRequest, re
 	exist, err := d.rabbitmqProvisioner.UserExists(request.InstanceID, request.CredentialsID)
 	if err != nil {
 		d.logger.Error("credentials-exists-request-failed", err)
+                return err
 	}
 	if exist {
 		response.Status = status.Exists

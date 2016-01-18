@@ -195,7 +195,6 @@ func (provisioner *RabbitmqProvisioner) getAdminCredentials(containerName string
 	copy(env, container.Config.Env)
 	m["user"] = env.Get("RABBITMQ_DEFAULT_USER")
 	m["password"] = env.Get("RABBITMQ_DEFAULT_PASS")
-	fmt.Println(container.NetworkSettings.Ports)
 	for k, v := range container.NetworkSettings.Ports {
 		if k == "15672/tcp" {
 			m["port"] = v[0].HostPort

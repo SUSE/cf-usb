@@ -69,7 +69,7 @@ func (fi bindataFileInfo) Sys() interface{} {
 	return nil
 }
 
-var _schemasConfigJson = []byte("\x1f\x8b\x08\x00\x00\x09\x6e\x88\x00\xff\x94\x8f\x5d\x0a\xc2\x30\x10\x84\x9f\x93\x53\x2c\xfb\xec\x09\x7a\x15\x91\xa2\xed\x50\x56\x31\x1b\x37\xab\x20\xa5\x77\x37\x2d\xf8\x8b\x08\xe6\xf1\x9b\x7c\xb3\xcc\x48\x14\x03\xfb\x35\x83\x1b\x62\xdd\xed\xd1\x39\xc7\x10\x38\x9b\x66\x98\x0b\x4a\x0d\xc6\x4a\x02\xf7\xda\x1d\x60\x2d\x52\x9f\x55\x92\xdf\xf9\x53\x2f\x6e\x92\x86\x59\x0f\xd3\xea\x55\x91\xe3\x76\xc0\xbf\xff\xdb\x0b\xac\x88\xa6\xdf\x5e\x5c\x5c\x22\x62\xc3\xe9\x2c\x86\x9e\x9b\x75\x1d\x45\xcb\xfb\x5e\x58\x6f\x7d\x44\xef\xe8\xb1\x70\x6e\xd9\xc4\xe9\x16\x00\x00\xff\xff\xdd\x40\xc8\x6f\x25\x01\x00\x00")
+var _schemasConfigJson = []byte("\x1f\x8b\x08\x00\x00\x09\x6e\x88\x00\xff\x94\x8f\x5d\x0a\xc2\x30\x10\x84\x9f\x93\x53\x2c\xfb\xdc\x13\xf4\x2a\x22\x45\x9b\xa1\xac\x62\x12\x37\xab\x20\xa5\x77\x37\x2d\xf8\x8b\x08\xcd\xe3\x37\xf9\x66\x99\x91\xc8\x3b\xb6\x5b\x06\xb7\xc4\x69\x7f\x40\x6f\xdc\x78\xe7\x38\x6b\xca\x50\x13\x94\x9a\x8c\x95\x38\x0e\xa9\x3f\x42\x3b\xc4\x90\x93\x44\x7b\xf0\x97\x5f\x4c\x25\x0e\x3c\xc3\xa9\x79\x57\xe4\xb4\x1b\xb0\xf6\x7f\x77\x85\x16\x49\xf1\xbf\xe7\x17\x97\x88\x58\x71\xbe\x88\x22\x70\xbb\xa9\xab\x68\x79\xbf\x0b\xeb\xad\xaf\xe8\x13\x3d\x17\xce\x2d\x5b\x3f\xdd\x03\x00\x00\xff\xff\xa6\x10\xf9\x7e\x26\x01\x00\x00")
 
 func schemasConfigJsonBytes() ([]byte, error) {
 	return bindataRead(
@@ -84,7 +84,7 @@ func schemasConfigJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "schemas/config.json", size: 293, mode: os.FileMode(436), modTime: time.Unix(1449744154, 0)}
+	info := bindataFileInfo{name: "schemas/config.json", size: 294, mode: os.FileMode(420), modTime: time.Unix(1452874284, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -104,7 +104,7 @@ func schemasDialsJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "schemas/dials.json", size: 2, mode: os.FileMode(436), modTime: time.Unix(1449584122, 0)}
+	info := bindataFileInfo{name: "schemas/dials.json", size: 2, mode: os.FileMode(420), modTime: time.Unix(1452874072, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -162,7 +162,7 @@ func AssetNames() []string {
 // _bindata is a table, holding each asset generator, mapped to its name.
 var _bindata = map[string]func() (*asset, error){
 	"schemas/config.json": schemasConfigJson,
-	"schemas/dials.json":  schemasDialsJson,
+	"schemas/dials.json": schemasDialsJson,
 }
 
 // AssetDir returns the file names below a certain
@@ -204,11 +204,10 @@ type bintree struct {
 	Func     func() (*asset, error)
 	Children map[string]*bintree
 }
-
 var _bintree = &bintree{nil, map[string]*bintree{
 	"schemas": &bintree{nil, map[string]*bintree{
 		"config.json": &bintree{schemasConfigJson, map[string]*bintree{}},
-		"dials.json":  &bintree{schemasDialsJson, map[string]*bintree{}},
+		"dials.json": &bintree{schemasDialsJson, map[string]*bintree{}},
 	}},
 }}
 
@@ -258,3 +257,4 @@ func _filePath(dir, name string) string {
 	cannonicalName := strings.Replace(name, "\\", "/", -1)
 	return filepath.Join(append([]string{dir}, strings.Split(cannonicalName, "/")...)...)
 }
+
