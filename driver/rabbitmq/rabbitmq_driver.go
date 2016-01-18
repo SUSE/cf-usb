@@ -152,7 +152,7 @@ func (d *RabbitmqDriver) GenerateCredentials(request driver.GenerateCredentialsR
 		Username:     credentials["user"],
 		Password:     credentials["password"],
 		Uri:          fmt.Sprintf("amqp://%s:%s@%s:%s/%s", credentials["user"], credentials["password"], credentials["host"], credentials["port"], credentials["vhost"]),
-		DashboardUrl: fmt.Sprintf("http://%s:%s", credentials["host"], credentials["port"]),
+		DashboardUrl: fmt.Sprintf("http://%s:%s", credentials["host"], credentials["mgmt_port"]),
 	}
 
 	*response = data
