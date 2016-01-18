@@ -27,7 +27,7 @@ func NewGetDriverSchema(ctx *middleware.Context, handler GetDriverSchemaHandler)
 	return &GetDriverSchema{Context: ctx, Handler: handler}
 }
 
-/*GetDriverSchema swagger:route GET /drivers/{driver_id}/schema getDriverSchema
+/*GetDriverSchema swagger:route GET /drivers/{driver_id}/config_schema getDriverSchema
 
 Get driver config schema
 

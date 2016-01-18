@@ -509,8 +509,7 @@ func Test_GetDriverInstances(t *testing.T) {
 	provider.On("GetDriver", mock.Anything).Return(&driverInfo, nil)
 
 	params := &operations.GetDriverInstancesParams{}
-	testDriverID := "testDriverID"
-	params.DriverID = &testDriverID
+	params.DriverID = "testDriverID"
 
 	response := UnitTest.MgmtAPI.GetDriverInstancesHandler.Handle(*params, true)
 	assert.IsType(&operations.GetDriverInstancesOK{}, response)

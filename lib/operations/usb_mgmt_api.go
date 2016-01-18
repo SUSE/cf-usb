@@ -417,7 +417,7 @@ func (o *UsbMgmtAPI) initHandlerCache() {
 	if o.handlers["GET"] == nil {
 		o.handlers[strings.ToUpper("GET")] = make(map[string]http.Handler)
 	}
-	o.handlers["GET"]["/dials/{dial_id}/schema"] = NewGetDialSchema(o.context, o.GetDialSchemaHandler)
+	o.handlers["GET"]["/drivers/{driver_id}/dial_schema"] = NewGetDialSchema(o.context, o.GetDialSchemaHandler)
 
 	if o.handlers["GET"] == nil {
 		o.handlers[strings.ToUpper("GET")] = make(map[string]http.Handler)
@@ -437,7 +437,7 @@ func (o *UsbMgmtAPI) initHandlerCache() {
 	if o.handlers["GET"] == nil {
 		o.handlers[strings.ToUpper("GET")] = make(map[string]http.Handler)
 	}
-	o.handlers["GET"]["/drivers/{driver_id}/schema"] = NewGetDriverSchema(o.context, o.GetDriverSchemaHandler)
+	o.handlers["GET"]["/drivers/{driver_id}/config_schema"] = NewGetDriverSchema(o.context, o.GetDriverSchemaHandler)
 
 	if o.handlers["GET"] == nil {
 		o.handlers[strings.ToUpper("GET")] = make(map[string]http.Handler)

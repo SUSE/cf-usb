@@ -198,8 +198,6 @@ code {
   
   <li><a href="#deleteDial"><code><span class="http-method">delete</span> /dials/{dial_id}</code></a></li>
   
-  <li><a href="#getDialSchema"><code><span class="http-method">get</span> /dials/{dial_id}/schema</code></a></li>
-  
   <li><a href="#getDriverInstances"><code><span class="http-method">get</span> /driver_instances</code></a></li>
   
   <li><a href="#createDriverInstance"><code><span class="http-method">post</span> /driver_instances</code></a></li>
@@ -224,7 +222,9 @@ code {
   
   <li><a href="#uploadDriver"><code><span class="http-method">put</span> /drivers/{driver_id}/bits</code></a></li>
   
-  <li><a href="#getDriverSchema"><code><span class="http-method">get</span> /drivers/{driver_id}/schema</code></a></li>
+  <li><a href="#getDriverSchema"><code><span class="http-method">get</span> /drivers/{driver_id}/config_schema</code></a></li>
+  
+  <li><a href="#getDialSchema"><code><span class="http-method">get</span> /drivers/{driver_id}/dial_schema</code></a></li>
   
   <li><a href="#getInfo"><code><span class="http-method">get</span> /info</code></a></li>
   
@@ -636,90 +636,13 @@ code {
   </div> <!-- method -->
   <hr/>
   
-  <div class="method"><a name="getDialSchema"/>
-    <div class="method-path">
-    <a class="up" href="#__Methods">Up</a>
-    <pre class="get"><code class="huge"><span class="http-method">get</span> /dials/{dial_id}/schema</code></pre></div>
-    <div class="method-summary"> (<span class="nickname">getDialSchema</span>)</div>
-    
-    <div class="method-notes">Get dial schema</div>
-
-    
-    <h3 class="field-label">Path parameters</h3>
-    <div class="field-items">
-      <div class="param">dialId (required)</div>
-
-      <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash; ID of the dial </div>
-    </div>  <!-- field-items -->
-    
-
-    
-    <h3 class="field-label">Consumes</h3>
-    This API call consumes the following media types via the <span class="heaader">Content-Type</span> request header:
-    <ul>
-    
-      <li><code>application/json</code></li>
-    
-    </ul>
-    
-
-    
-
-    
-
-    
-
-    
-
-    <!-- Remove Return type... unclear where this comes from;
-         for our swagger.json files, it is always empty and there is no boolean guard or hasReturnType
-         do we end up with a heading but not content
-
-    
-    <h3 class="field-label">Return type</h3>
-    <div class="return-type"><a href="#">dial_schema</a></div>
-    
-
-    Todo: process Response Object and its headers, schema, examples
-    -->
-
-    
-
-    
-    <h3 class="field-label">Produces</h3>
-    This API call produces the following media types according to the <span class="header">Accept</span> request header;
-    the media type will be conveyed by the <span class="heaader">Content-Type</span> response header.
-    <ul>
-    
-      <li><code>application/json</code></li>
-    
-    </ul>
-    
-
-    <h3 class="field-label">Responses</h3>
-    
-    <h4 class="field-label">200</h4>
-    Sucessfull response
-    
-    
-    <h4 class="field-label">404</h4>
-    Not Found
-    
-    
-    <h4 class="field-label">500</h4>
-    Unexpected error
-    
-    
-  </div> <!-- method -->
-  <hr/>
-  
   <div class="method"><a name="getDriverInstances"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
     <pre class="get"><code class="huge"><span class="http-method">get</span> /driver_instances</code></pre></div>
     <div class="method-summary"> (<span class="nickname">getDriverInstances</span>)</div>
     
-    <div class="method-notes">Gets all driver configurations</div>
+    <div class="method-notes">Gets driver instances for a driver</div>
 
     
 
@@ -740,7 +663,7 @@ code {
     
     <h3 class="field-label">Query parameters</h3>
     <div class="field-items">
-      <div class="param">driverId (optional)</div>
+      <div class="param">driverId (required)</div>
 
       <div class="param-desc"><span class="param-type">Query Parameter</span> &mdash; Driver ID </div>
     </div>  <!-- field-items -->
@@ -1632,7 +1555,7 @@ code {
   <div class="method"><a name="getDriverSchema"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
-    <pre class="get"><code class="huge"><span class="http-method">get</span> /drivers/{driver_id}/schema</code></pre></div>
+    <pre class="get"><code class="huge"><span class="http-method">get</span> /drivers/{driver_id}/config_schema</code></pre></div>
     <div class="method-summary"> (<span class="nickname">getDriverSchema</span>)</div>
     
     <div class="method-notes">Get driver config schema</div>
@@ -1671,6 +1594,83 @@ code {
     
     <h3 class="field-label">Return type</h3>
     <div class="return-type"><a href="#">driver_schema</a></div>
+    
+
+    Todo: process Response Object and its headers, schema, examples
+    -->
+
+    
+
+    
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="heaader">Content-Type</span> response header.
+    <ul>
+    
+      <li><code>application/json</code></li>
+    
+    </ul>
+    
+
+    <h3 class="field-label">Responses</h3>
+    
+    <h4 class="field-label">200</h4>
+    OK
+    
+    
+    <h4 class="field-label">404</h4>
+    Not Found
+    
+    
+    <h4 class="field-label">500</h4>
+    Unexpected error
+    
+    
+  </div> <!-- method -->
+  <hr/>
+  
+  <div class="method"><a name="getDialSchema"/>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="get"><code class="huge"><span class="http-method">get</span> /drivers/{driver_id}/dial_schema</code></pre></div>
+    <div class="method-summary"> (<span class="nickname">getDialSchema</span>)</div>
+    
+    <div class="method-notes">Get dial schema</div>
+
+    
+    <h3 class="field-label">Path parameters</h3>
+    <div class="field-items">
+      <div class="param">driverId (required)</div>
+
+      <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash; Driver ID </div>
+    </div>  <!-- field-items -->
+    
+
+    
+    <h3 class="field-label">Consumes</h3>
+    This API call consumes the following media types via the <span class="heaader">Content-Type</span> request header:
+    <ul>
+    
+      <li><code>application/json</code></li>
+    
+    </ul>
+    
+
+    
+
+    
+
+    
+
+    
+
+    <!-- Remove Return type... unclear where this comes from;
+         for our swagger.json files, it is always empty and there is no boolean guard or hasReturnType
+         do we end up with a heading but not content
+
+    
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type"><a href="#">dial_schema</a></div>
     
 
     Todo: process Response Object and its headers, schema, examples
