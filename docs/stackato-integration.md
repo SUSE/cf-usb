@@ -36,7 +36,8 @@ usb:
 #### 5. Add supervisord config to: /s/etc/supervisord.conf.d/usb
 ```
 [program:usb]
-command=USB_DRIVER_PATH=/s/go/bin/drivers /s/go/bin/usb redisConfigProvider -a {core_ip}:7474
+environment=USB_DRIVER_PATH=/s/go/bin/drivers
+command=/s/go/bin/usb redisConfigProvider -a ${core_ip}:7474
 priority=5
 redirect_stderr=true
 stdout_logfile=/s/logs/usb.log
