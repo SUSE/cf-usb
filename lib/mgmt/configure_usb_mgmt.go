@@ -139,6 +139,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 			return &UpdateServiceInternalServerError{Payload: err.Error()}
 		}
 
+		//TODO improve this
 		for _, driver := range config.Drivers {
 			for _, instance := range driver.DriverInstances {
 				for dialID, dial := range instance.Dials {
@@ -163,11 +164,15 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.GetDriverSchemaHandler = GetDriverSchemaHandlerFunc(func(params GetDriverSchemaParams, principal interface{}) middleware.Responder {
+		path, err := configProvider.GetDriversPath()
+		if err != nil {
+			return &GetDriverSchemaInternalServerError{Payload: err.Error()}
+		}
 		driver, err := configProvider.GetDriver(params.DriverID)
 		if err != nil {
 			return &GetDriverSchemaInternalServerError{Payload: err.Error()}
 		}
-		schema, err := lib.GetConfigSchema(driver.DriverType, logger)
+		schema, err := lib.GetConfigSchema(path, driver.DriverType, logger)
 		if err != nil {
 			return &GetDriverSchemaInternalServerError{Payload: err.Error()}
 		}
@@ -289,14 +294,16 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.PingDriverInstanceHandler = PingDriverInstanceHandlerFunc(func(params PingDriverInstanceParams, principal interface{}) middleware.Responder {
+
 		configuration, err := configProvider.LoadConfiguration()
 		if err != nil {
 			return &PingDriverInstanceInternalServerError{Payload: err.Error()}
 		}
+
 		for _, driver := range configuration.Drivers {
 			for instanceID, instance := range driver.DriverInstances {
 				if instanceID == params.DriverInstanceID {
-					result, err := lib.Ping(instance.Configuration, driver.DriverType)
+					result, err := lib.Ping(instance.Configuration, configuration.DriversPath, driver.DriverType)
 					if err != nil {
 						return &PingDriverInstanceInternalServerError{Payload: err.Error()}
 					}
@@ -380,11 +387,15 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.GetDialSchemaHandler = GetDialSchemaHandlerFunc(func(params GetDialSchemaParams, principal interface{}) middleware.Responder {
+		path, err := configProvider.GetDriversPath()
+		if err != nil {
+			return &GetDialSchemaInternalServerError{Payload: err.Error()}
+		}
 		driver, err := configProvider.GetDriver(params.DriverID)
 		if err != nil {
 			return &GetDialSchemaInternalServerError{Payload: err.Error()}
 		}
-		schema, err := lib.GetDailsSchema(driver.DriverType, logger)
+		schema, err := lib.GetDailsSchema(path, driver.DriverType, logger)
 		if err != nil {
 			return &GetDialSchemaInternalServerError{Payload: err.Error()}
 		}
@@ -416,6 +427,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 	api.CreateDriverInstanceHandler = CreateDriverInstanceHandlerFunc(func(params CreateDriverInstanceParams, principal interface{}) middleware.Responder {
 		log = log.Session("create-driver-instance", lager.Data{"driver-id": params.DriverInstance.DriverID, "driver-instance-name": params.DriverInstance.Name})
+
 		existingDriver, err := configProvider.GetDriver(params.DriverInstance.DriverID)
 		if err != nil {
 			return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
@@ -439,7 +451,12 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 			return &CreateDriverInstanceInternalServerError{Payload: goerrors.New("Driver type should be specified").Error()}
 		}
 
-		err = lib.Validate(instance, existingDriver.DriverType, logger)
+		driversPath, err := configProvider.GetDriversPath()
+		if err != nil {
+			return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
+		}
+
+		err = lib.Validate(instance, driversPath, existingDriver.DriverType, logger)
 		if err != nil {
 			log.Error("validation-failed", err)
 			return &CreateDriverInstanceInternalServerError{Payload: err.Error()}

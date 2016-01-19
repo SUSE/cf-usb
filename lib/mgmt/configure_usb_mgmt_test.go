@@ -145,6 +145,7 @@ func Test_CreateDriverInstance(t *testing.T) {
 	provider.On("SetDial", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	provider.On("GetDriver", "testDriverID").Return(&driver, nil)
 	provider.On("SetService", mock.Anything, mock.Anything).Return(nil)
+	provider.On("GetDriversPath").Return(os.Getenv("USB_DRIVER_PATH"), nil)
 
 	var testConfig config.Config
 	testConfig.Drivers = make(map[string]config.Driver)
@@ -157,6 +158,7 @@ func Test_CreateDriverInstance(t *testing.T) {
 	sbMocked.Mock.On("EnableServiceAccess", mock.Anything).Return(nil)
 
 	response := UnitTest.MgmtAPI.CreateDriverInstanceHandler.Handle(*params, true)
+
 	assert.IsType(&operations.CreateDriverInstanceCreated{}, response)
 }
 

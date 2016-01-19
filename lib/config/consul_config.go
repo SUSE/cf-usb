@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/frodenas/brokerapi"
@@ -32,6 +33,11 @@ func (c *consulConfig) LoadConfiguration() (*Config, error) {
 		return nil, err
 	}
 	config.APIVersion = string(apiVersion)
+
+	config.DriversPath, err = c.GetDriversPath()
+	if err != nil {
+		return nil, err
+	}
 
 	brokerapiConfig, err := c.provisioner.GetValue("usb/broker_api")
 	if err != nil {
@@ -121,6 +127,27 @@ func (c *consulConfig) LoadConfiguration() (*Config, error) {
 	c.config = &config
 
 	return &config, nil
+}
+
+func (c *consulConfig) GetDriversPath() (string, error) {
+	pathValue, _ := c.provisioner.GetValue("usb/drivers_path")
+
+	//TODO fix get value error
+
+	path := string(pathValue)
+
+	if path != "" {
+		return path, nil
+	}
+
+	if os.Getenv("USB_DRIVER_PATH") != "" {
+		path = os.Getenv("USB_DRIVER_PATH")
+	} else {
+		path = "drivers"
+	}
+
+	return path, nil
+
 }
 
 func (c *consulConfig) GetDriver(driverID string) (*Driver, error) {
