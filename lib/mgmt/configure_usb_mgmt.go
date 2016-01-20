@@ -56,7 +56,8 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	}
 
 	api.UpdateDriverHandler = UpdateDriverHandlerFunc(func(params UpdateDriverParams, principal interface{}) middleware.Responder {
-		log.Debug("update-driver", lager.Data{"driver-id": params.DriverID})
+		log := log.Session("update-driver")
+		log.Info("request", lager.Data{"driver-id": params.DriverID})
 
 		_, err := configProvider.GetDriver(params.DriverID)
 		if err != nil {
@@ -75,7 +76,8 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.UploadDriverHandler = UploadDriverHandlerFunc(func(params UploadDriverParams, principal interface{}) middleware.Responder {
-		log.Debug("upload-driver-bits", lager.Data{"driver-id": params.DriverID})
+		log := log.Session("upload-driver-bits")
+		log.Info("request", lager.Data{"driver-id": params.DriverID})
 
 		driver, err := configProvider.GetDriver(params.DriverID)
 		if err != nil {
@@ -122,7 +124,8 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.DeleteServicePlanHandler = DeleteServicePlanHandlerFunc(func(params DeleteServicePlanParams, principal interface{}) middleware.Responder {
-		log = log.Session("delete-service-plan", lager.Data{"plan-id": params.PlanID})
+		log := log.Session("delete-service-plan")
+		log.Info("request", lager.Data{"plan-id": params.PlanID})
 
 		config, err := configProvider.LoadConfiguration()
 		if err != nil {
@@ -166,6 +169,9 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.GetDriverSchemaHandler = GetDriverSchemaHandlerFunc(func(params GetDriverSchemaParams, principal interface{}) middleware.Responder {
+		log := log.Session("get-driver-schema")
+		log.Info("request", lager.Data{"driver-id": params.DriverID})
+
 		path, err := configProvider.GetDriversPath()
 		if err != nil {
 			return &GetDriverSchemaInternalServerError{Payload: err.Error()}
@@ -183,7 +189,8 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.GetDriverHandler = GetDriverHandlerFunc(func(params GetDriverParams, principal interface{}) middleware.Responder {
-		log.Debug("get-driver", lager.Data{"driver-id": params.DriverID})
+		log := log.Session("get-driver")
+		log.Info("request", lager.Data{"driver-id": params.DriverID})
 
 		d, err := configProvider.GetDriver(params.DriverID)
 		if err != nil {
@@ -205,7 +212,8 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.GetDriversHandler = GetDriversHandlerFunc(func(principal interface{}) middleware.Responder {
-		log = log.Session("get-drivers")
+		log := log.Session("get-drivers")
+		log.Info("request")
 
 		var drivers = make([]*genmodel.Driver, 0)
 
@@ -236,7 +244,8 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.CreateDriverHandler = CreateDriverHandlerFunc(func(params CreateDriverParams, principal interface{}) middleware.Responder {
-		log.Debug("create-driver", lager.Data{"driver-name": params.Driver.Name, "driver-type": params.Driver.DriverType})
+		log := log.Session("create-driver")
+		log.Info("request", lager.Data{"driver-name": params.Driver.Name, "driver-type": params.Driver.DriverType})
 
 		exist, err := configProvider.DriverTypeExists(params.Driver.DriverType)
 		if err != nil {
@@ -264,7 +273,8 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.GetDriverInstancesHandler = GetDriverInstancesHandlerFunc(func(params GetDriverInstancesParams, principal interface{}) middleware.Responder {
-		log = log.Session("get-driver-instances", lager.Data{"driver-id": params.DriverID})
+		log := log.Session("get-driver-instances")
+		log.Info("request", lager.Data{"driver-id": params.DriverID})
 
 		var driverInstances = make([]*genmodel.DriverInstance, 0)
 
@@ -296,6 +306,8 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.PingDriverInstanceHandler = PingDriverInstanceHandlerFunc(func(params PingDriverInstanceParams, principal interface{}) middleware.Responder {
+		log := log.Session("ping-driver-instance")
+		log.Info("request", lager.Data{"driver-instance-id": params.DriverInstanceID})
 
 		configuration, err := configProvider.LoadConfiguration()
 		if err != nil {
@@ -321,7 +333,8 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.GetServicePlanHandler = GetServicePlanHandlerFunc(func(params GetServicePlanParams, principal interface{}) middleware.Responder {
-		log.Debug("get-service-plan", lager.Data{"plan-id": params.PlanID})
+		log := log.Session("get-service-plan")
+		log.Info("request", lager.Data{"plan-id": params.PlanID})
 
 		planInfo, dialID, _, err := configProvider.GetPlan(params.PlanID)
 
@@ -342,7 +355,8 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.CreateDialHandler = CreateDialHandlerFunc(func(params CreateDialParams, principal interface{}) middleware.Responder {
-		log.Debug("create-dial", lager.Data{"driver-instance-id": params.Dial.DriverInstanceID})
+		log := log.Session("create-dial")
+		log.Info("request", lager.Data{"driver-instance-id": params.Dial.DriverInstanceID})
 
 		var dial config.Dial
 
@@ -366,7 +380,8 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.UpdateDialHandler = UpdateDialHandlerFunc(func(params UpdateDialParams, principal interface{}) middleware.Responder {
-		log.Debug("update-dial", lager.Data{"driver-instance-id": params.Dial.DriverInstanceID})
+		log := log.Session("update-dial")
+		log.Info("request", lager.Data{"driver-instance-id": params.Dial.DriverInstanceID})
 
 		var dial config.Dial
 
@@ -389,6 +404,9 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.GetDialSchemaHandler = GetDialSchemaHandlerFunc(func(params GetDialSchemaParams, principal interface{}) middleware.Responder {
+		log := log.Session("get-dial-schema")
+		log.Info("request", lager.Data{"driver-id": params.DriverID})
+
 		path, err := configProvider.GetDriversPath()
 		if err != nil {
 			return &GetDialSchemaInternalServerError{Payload: err.Error()}
@@ -405,7 +423,8 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.GetServiceByInstanceIDHandler = GetServiceByInstanceIDHandlerFunc(func(params GetServiceByInstanceIDParams, principal interface{}) middleware.Responder {
-		log = log.Session("get-services", lager.Data{"driver-instance-id": params.DriverInstanceID})
+		log := log.Session("get-services")
+		log.Info("request", lager.Data{"driver-instance-id": params.DriverInstanceID})
 
 		di, err := configProvider.GetDriverInstance(params.DriverInstanceID)
 		if err != nil {
@@ -428,7 +447,8 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.CreateDriverInstanceHandler = CreateDriverInstanceHandlerFunc(func(params CreateDriverInstanceParams, principal interface{}) middleware.Responder {
-		log = log.Session("create-driver-instance", lager.Data{"driver-id": params.DriverInstance.DriverID, "driver-instance-name": params.DriverInstance.Name})
+		log := log.Session("create-driver-instance")
+		log.Info("request", lager.Data{"driver-id": params.DriverInstance.DriverID, "driver-instance-name": params.DriverInstance.Name})
 
 		existingDriver, err := configProvider.GetDriver(params.DriverInstance.DriverID)
 		if err != nil {
@@ -547,7 +567,8 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.UpdateDriverInstanceHandler = UpdateDriverInstanceHandlerFunc(func(params UpdateDriverInstanceParams, principal interface{}) middleware.Responder {
-		log.Debug("update-driver-instance", lager.Data{"driver-instance-id": params.DriverInstanceID})
+		log := log.Session("update-driver-instance")
+		log.Info("request", lager.Data{"driver-instance-id": params.DriverInstanceID})
 
 		instanceInfo, err := configProvider.GetDriverInstance(params.DriverInstanceID)
 		if err != nil {
@@ -573,7 +594,8 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.DeleteDriverHandler = DeleteDriverHandlerFunc(func(params DeleteDriverParams, principal interface{}) middleware.Responder {
-		log.Debug("delete-driver", lager.Data{"driver-id": params.DriverID})
+		log := log.Session("delete-driver")
+		log.Info("request", lager.Data{"driver-id": params.DriverID})
 
 		_, err := configProvider.GetDriver(params.DriverID)
 		if err != nil {
@@ -589,7 +611,8 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.DeleteDriverInstanceHandler = DeleteDriverInstanceHandlerFunc(func(params DeleteDriverInstanceParams, principal interface{}) middleware.Responder {
-		log.Debug("delete-driver-instance", lager.Data{"driver-instance-id": params.DriverInstanceID})
+		log := log.Session("delete-driver-instance")
+		log.Info("request", lager.Data{"driver-instance-id": params.DriverInstanceID})
 
 		_, err := configProvider.GetDriverInstance(params.DriverInstanceID)
 		if err != nil {
@@ -605,7 +628,8 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.GetAllDialsHandler = GetAllDialsHandlerFunc(func(params GetAllDialsParams, principal interface{}) middleware.Responder {
-		log = log.Session("get-dials", lager.Data{"driver-instance-id": params.DriverInstanceID})
+		log := log.Session("get-dials")
+		log.Info("request", lager.Data{"driver-instance-id": params.DriverInstanceID})
 
 		var dials = make([]*genmodel.Dial, 0)
 		if *params.DriverInstanceID == "" {
@@ -634,7 +658,8 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.UpdateServicePlanHandler = UpdateServicePlanHandlerFunc(func(params UpdateServicePlanParams, principal interface{}) middleware.Responder {
-		log = log.Session("update-service-plan", lager.Data{"plan-id": params.PlanID})
+		log := log.Session("update-service-plan")
+		log.Info("request", lager.Data{"plan-id": params.PlanID})
 
 		config, err := configProvider.LoadConfiguration()
 		if err != nil {
@@ -691,7 +716,8 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.GetServiceHandler = GetServiceHandlerFunc(func(params GetServiceParams, principal interface{}) middleware.Responder {
-		log.Debug("get-service", lager.Data{"service-id": params.ServiceID})
+		log := log.Session("get-service")
+		log.Info("request", lager.Data{"service-id": params.ServiceID})
 
 		serviceInfo, instanceID, err := configProvider.GetService(params.ServiceID)
 
@@ -716,7 +742,8 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.DeleteDialHandler = DeleteDialHandlerFunc(func(params DeleteDialParams, principal interface{}) middleware.Responder {
-		log.Debug("delete-dial", lager.Data{"dial-id": params.DialID})
+		log := log.Session("delete-dial")
+		log.Info("request", lager.Data{"dial-id": params.DialID})
 
 		err := configProvider.DeleteDial(params.DialID)
 		if err != nil {
@@ -726,7 +753,8 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.GetInfoHandler = GetInfoHandlerFunc(func(principal interface{}) middleware.Responder {
-		log.Debug("get-info")
+		log := log.Session("get-info")
+		log.Info("request")
 
 		config, err := configProvider.LoadConfiguration()
 		if err != nil {
@@ -745,7 +773,9 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.GetServicePlansHandler = GetServicePlansHandlerFunc(func(params GetServicePlansParams, principal interface{}) middleware.Responder {
-		log = log.Session("get-service-plans", lager.Data{"driver-instance-id": params.DriverInstanceID})
+		log := log.Session("get-service-plans")
+		log.Info("request", lager.Data{"driver-instance-id": params.DriverInstanceID})
+
 		if *params.DriverInstanceID == "" {
 			return &GetServicePlansInternalServerError{Payload: "Empty driver instance id in get service plans handler"}
 		}
@@ -774,7 +804,8 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.GetDialHandler = GetDialHandlerFunc(func(params GetDialParams, principal interface{}) middleware.Responder {
-		log.Debug("get-dial", lager.Data{"dial-id": params.DialID})
+		log := log.Session("get-dial")
+		log.Info("request", lager.Data{"dial-id": params.DialID})
 
 		config, err := configProvider.LoadConfiguration()
 		if err != nil {
@@ -809,7 +840,8 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.UpdateServiceHandler = UpdateServiceHandlerFunc(func(params UpdateServiceParams, principal interface{}) middleware.Responder {
-		log = log.Session("update-service", lager.Data{"service-id": params.ServiceID})
+		log := log.Session("update-service")
+		log.Info("request", lager.Data{"service-id": params.ServiceID})
 
 		config, err := configProvider.LoadConfiguration()
 		if err != nil {
@@ -851,7 +883,8 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.GetDriverInstanceHandler = GetDriverInstanceHandlerFunc(func(params GetDriverInstanceParams, principal interface{}) middleware.Responder {
-		log.Debug("get-driver-instance", lager.Data{"driver-instance-id": params.DriverInstanceID})
+		log := log.Session("get-driver-instance")
+		log.Info("request", lager.Data{"driver-instance-id": params.DriverInstanceID})
 
 		instance, err := configProvider.GetDriverInstance(params.DriverInstanceID)
 		if err != nil {
@@ -883,7 +916,9 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.CreateServicePlanHandler = CreateServicePlanHandlerFunc(func(params CreateServicePlanParams, principal interface{}) middleware.Responder {
-		log = log.Session("create-service-plan", lager.Data{"dial-id": params.Plan.DialID})
+		log := log.Session("create-service-plan")
+		log.Info("request", lager.Data{"dial-id": params.Plan.DialID})
+
 		config, err := configProvider.LoadConfiguration()
 		if err != nil {
 			return &CreateServicePlanInternalServerError{Payload: err.Error()}
@@ -947,6 +982,8 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.UpdateCatalogHandler = UpdateCatalogHandlerFunc(func(principal interface{}) middleware.Responder {
+		log := log.Session("update-catalog")
+		log.Info("request")
 
 		config, err := configProvider.LoadConfiguration()
 		if err != nil {
