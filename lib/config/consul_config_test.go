@@ -159,6 +159,8 @@ func Test_GetService(t *testing.T) {
 	provisioner := new(consulMock.ConsulProvisionerInterface)
 	provisioner.On("GetValue", "usb/api_version").Return([]byte("1.2"), nil)
 
+	provisioner.On("GetValue", "usb/drivers_path").Return([]byte(""), nil)
+
 	provisioner.On("GetValue", "usb/broker_api").Return([]byte("{\"listen\":\":54054\",\"credentials\":{\"username\":\"demouser\",\"password\":\"demopassword\"}}"), nil)
 
 	provisioner.On("GetValue", "usb/management_api").Return([]byte("{\"listen\":\":54053\",\"uaa_secret\":\"myuaasecret\",\"uaa_client\":\"myuaaclient\",\"authentication\":{\"uaa\":{\"adminscope\":\"usb.management.admin\",\"public_key\":\"\"}}}"), nil)
@@ -274,6 +276,8 @@ func Test_ConsulLoadConfig(t *testing.T) {
 	var qoptions *api.QueryOptions
 
 	provisioner.On("GetValue", "usb/api_version").Return([]byte("2.1"), nil)
+
+	provisioner.On("GetValue", "usb/drivers_path").Return([]byte(""), nil)
 
 	provisioner.On("GetValue", "usb/broker_api").Return([]byte("{\"listen\":\":54054\",\"credentials\":{\"username\":\"demouser\",\"password\":\"demopassword\"}}"), nil)
 

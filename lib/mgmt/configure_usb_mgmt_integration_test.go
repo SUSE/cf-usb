@@ -355,7 +355,7 @@ func Test_IntUpdate(t *testing.T) {
 	dial.Configuration.(map[string]interface{})["max_dbsize_mb"] = "400"
 
 	dial.Plan = plan.ID
-	
+
 	dialUpdateParams.Dial = &dial
 	dialUpdateParams.DialID = *dial.ID
 
@@ -478,6 +478,99 @@ func Test_IntServicePlan(t *testing.T) {
 	deletePlanParams.PlanID = *existingPlan.ID
 	response = IntegrationConfig.MgmtAPI.DeleteServicePlanHandler.Handle(*deletePlanParams, true)
 	assert.IsType(&operations.DeleteServicePlanNoContent{}, response)
+}
+
+func Test_IntGetDriverSchema(t *testing.T) {
+	assert := assert.New(t)
+
+	if IntegrationConfig.consulAddress == "" {
+		t.Skip("Skipping mgmt delete test, environment variables not set: CONSUL_ADDRESS(host:port), CONSUL_DATACENTER, CONSUL_TOKEN / CONSUL_USER + CONSUL_PASSWORD, CONSUL_SCHEMA")
+	}
+
+	err := initManager()
+	if err != nil {
+		t.Error(err)
+	}
+
+	response := IntegrationConfig.MgmtAPI.GetDriversHandler.Handle(true)
+
+	assert.IsType(&operations.GetDriversOK{}, response)
+	drivers := response.(*operations.GetDriversOK).Payload
+	t.Log("Drivers === ", drivers)
+	firstDriver := drivers[0]
+
+	params := operations.GetDriverSchemaParams{}
+	params.DriverID = *firstDriver.ID
+	responseSchema := IntegrationConfig.MgmtAPI.GetDriverSchemaHandler.Handle(params, true)
+
+	assert.IsType(&operations.GetDriverSchemaOK{}, responseSchema)
+	schema := responseSchema.(*operations.GetDriverSchemaOK).Payload
+	t.Log(schema)
+}
+
+func Test_IntGetDialSchema(t *testing.T) {
+	assert := assert.New(t)
+
+	if IntegrationConfig.consulAddress == "" {
+		t.Skip("Skipping mgmt delete test, environment variables not set: CONSUL_ADDRESS(host:port), CONSUL_DATACENTER, CONSUL_TOKEN / CONSUL_USER + CONSUL_PASSWORD, CONSUL_SCHEMA")
+	}
+
+	err := initManager()
+	if err != nil {
+		t.Error(err)
+	}
+
+	response := IntegrationConfig.MgmtAPI.GetDriversHandler.Handle(true)
+
+	assert.IsType(&operations.GetDriversOK{}, response)
+	drivers := response.(*operations.GetDriversOK).Payload
+	t.Log("Drivers === ", drivers)
+	firstDriver := drivers[0]
+
+	params := operations.GetDialSchemaParams{}
+	params.DriverID = *firstDriver.ID
+	responseSchema := IntegrationConfig.MgmtAPI.GetDialSchemaHandler.Handle(params, true)
+
+	assert.IsType(&operations.GetDialSchemaOK{}, responseSchema)
+	schema := responseSchema.(*operations.GetDialSchemaOK).Payload
+	t.Log(schema)
+}
+
+func Test_IntPing(t *testing.T) {
+	assert := assert.New(t)
+
+	if IntegrationConfig.consulAddress == "" {
+		t.Skip("Skipping mgmt delete test, environment variables not set: CONSUL_ADDRESS(host:port), CONSUL_DATACENTER, CONSUL_TOKEN / CONSUL_USER + CONSUL_PASSWORD, CONSUL_SCHEMA")
+	}
+
+	err := initManager()
+	if err != nil {
+		t.Error(err)
+	}
+
+	response := IntegrationConfig.MgmtAPI.GetDriversHandler.Handle(true)
+
+	assert.IsType(&operations.GetDriversOK{}, response)
+	drivers := response.(*operations.GetDriversOK).Payload
+	t.Log("Drivers === ", drivers)
+	firstDriver := drivers[0]
+
+	instanceParams := &operations.GetDriverInstanceParams{}
+
+	for key, _ := range firstDriver.DriverInstances {
+		instanceParams.DriverInstanceID = firstDriver.DriverInstances[key]
+		break
+	}
+	response = IntegrationConfig.MgmtAPI.GetDriverInstanceHandler.Handle(*instanceParams, true)
+
+	assert.IsType(&operations.GetDriverInstanceOK{}, response)
+	existingInstace := response.(*operations.GetDriverInstanceOK).Payload
+
+	params := operations.PingDriverInstanceParams{}
+	params.DriverInstanceID = *existingInstace.ID
+	responseSchema := IntegrationConfig.MgmtAPI.PingDriverInstanceHandler.Handle(params, true)
+
+	assert.IsType(&operations.PingDriverInstanceOK{}, responseSchema)
 }
 
 //Cleanup

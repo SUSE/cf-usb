@@ -180,7 +180,7 @@ func Test_BrokerWithFileConfigProviderProvision(t *testing.T) {
 	content, err := ioutil.ReadAll(resp.Body)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(isValidJson(content)).To(BeTrue())
-
+	t.Log(string(content))
 	Expect(resp.StatusCode).To(Equal(http.StatusCreated))
 	Expect(usb.Runner.Buffer()).Should(gbytes.Say("usb.usb-broker.provision"))
 }

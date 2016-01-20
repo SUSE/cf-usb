@@ -141,6 +141,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 			return &UpdateServiceInternalServerError{Payload: err.Error()}
 		}
 
+		//TODO improve this
 		for _, driver := range config.Drivers {
 			for _, instance := range driver.DriverInstances {
 				for dialID, dial := range instance.Dials {
@@ -165,7 +166,20 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.GetDriverSchemaHandler = GetDriverSchemaHandlerFunc(func(params GetDriverSchemaParams, principal interface{}) middleware.Responder {
-		return middleware.NotImplemented("operation getDriverSchema has not yet been implemented")
+		path, err := configProvider.GetDriversPath()
+		if err != nil {
+			return &GetDriverSchemaInternalServerError{Payload: err.Error()}
+		}
+		driver, err := configProvider.GetDriver(params.DriverID)
+		if err != nil {
+			return &GetDriverSchemaInternalServerError{Payload: err.Error()}
+		}
+		schema, err := lib.GetConfigSchema(path, driver.DriverType, logger)
+		if err != nil {
+			return &GetDriverSchemaInternalServerError{Payload: err.Error()}
+		}
+
+		return &GetDriverSchemaOK{Payload: genmodel.DriverSchema(schema)}
 	})
 
 	api.GetDriverHandler = GetDriverHandlerFunc(func(params GetDriverParams, principal interface{}) middleware.Responder {
@@ -282,7 +296,28 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.PingDriverInstanceHandler = PingDriverInstanceHandlerFunc(func(params PingDriverInstanceParams, principal interface{}) middleware.Responder {
-		return middleware.NotImplemented("operation pingDriverInstance has not yet been implemented")
+
+		configuration, err := configProvider.LoadConfiguration()
+		if err != nil {
+			return &PingDriverInstanceInternalServerError{Payload: err.Error()}
+		}
+
+		for _, driver := range configuration.Drivers {
+			for instanceID, instance := range driver.DriverInstances {
+				if instanceID == params.DriverInstanceID {
+					result, err := lib.Ping(instance.Configuration, configuration.DriversPath, driver.DriverType)
+					if err != nil {
+						return &PingDriverInstanceInternalServerError{Payload: err.Error()}
+					}
+					if result == true {
+						return &PingDriverInstanceOK{}
+					} else {
+						return &PingDriverInstanceNotFound{}
+					}
+				}
+			}
+		}
+		return &PingDriverInstanceNotFound{}
 	})
 
 	api.GetServicePlanHandler = GetServicePlanHandlerFunc(func(params GetServicePlanParams, principal interface{}) middleware.Responder {
@@ -291,7 +326,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		planInfo, dialID, _, err := configProvider.GetPlan(params.PlanID)
 
 		if err != nil {
-			return &GetServicePlanNotFound{}
+			return &GetServicePlanInternalServerError{Payload: err.Error()}
 		}
 
 		plan := &genmodel.Plan{
@@ -354,7 +389,19 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.GetDialSchemaHandler = GetDialSchemaHandlerFunc(func(params GetDialSchemaParams, principal interface{}) middleware.Responder {
-		return middleware.NotImplemented("operation getDialSchema has not yet been implemented")
+		path, err := configProvider.GetDriversPath()
+		if err != nil {
+			return &GetDialSchemaInternalServerError{Payload: err.Error()}
+		}
+		driver, err := configProvider.GetDriver(params.DriverID)
+		if err != nil {
+			return &GetDialSchemaInternalServerError{Payload: err.Error()}
+		}
+		schema, err := lib.GetDailsSchema(path, driver.DriverType, logger)
+		if err != nil {
+			return &GetDialSchemaInternalServerError{Payload: err.Error()}
+		}
+		return &GetDialSchemaOK{Payload: genmodel.DialSchema(schema)}
 	})
 
 	api.GetServiceByInstanceIDHandler = GetServiceByInstanceIDHandlerFunc(func(params GetServiceByInstanceIDParams, principal interface{}) middleware.Responder {
@@ -382,6 +429,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 	api.CreateDriverInstanceHandler = CreateDriverInstanceHandlerFunc(func(params CreateDriverInstanceParams, principal interface{}) middleware.Responder {
 		log = log.Session("create-driver-instance", lager.Data{"driver-id": params.DriverInstance.DriverID, "driver-instance-name": params.DriverInstance.Name})
+
 		existingDriver, err := configProvider.GetDriver(params.DriverInstance.DriverID)
 		if err != nil {
 			return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
@@ -405,7 +453,12 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 			return &CreateDriverInstanceInternalServerError{Payload: goerrors.New("Driver type should be specified").Error()}
 		}
 
-		err = lib.Validate(instance, existingDriver.DriverType, logger)
+		driversPath, err := configProvider.GetDriversPath()
+		if err != nil {
+			return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
+		}
+
+		err = lib.Validate(instance, driversPath, existingDriver.DriverType, logger)
 		if err != nil {
 			log.Error("validation-failed", err)
 			return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
@@ -556,11 +609,11 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 		var dials = make([]*genmodel.Dial, 0)
 		if *params.DriverInstanceID == "" {
-			return &GetDialSchemaInternalServerError{Payload: "Empty driver instance id in get all dials"}
+			return &GetAllDialsInternalServerError{Payload: "Empty driver instance id in get all dials"}
 		}
 		instanceInfo, err := configProvider.LoadDriverInstance(*params.DriverInstanceID)
 		if err != nil {
-			return &GetDialSchemaInternalServerError{Payload: err.Error()}
+			return &GetAllDialsInternalServerError{Payload: err.Error()}
 		}
 
 		for diaID, dia := range instanceInfo.Dials {
@@ -894,6 +947,26 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	})
 
 	api.UpdateCatalogHandler = UpdateCatalogHandlerFunc(func(principal interface{}) middleware.Responder {
-		return middleware.NotImplemented("operation updateCatalog has not yet been implemented")
+
+		config, err := configProvider.LoadConfiguration()
+		if err != nil {
+			return &UpdateCatalogInternalServerError{Payload: err.Error()}
+		}
+
+		guid, err := ccServiceBroker.GetServiceBrokerGuidByName(brokerName)
+		if err != nil {
+			log.Error("get-service-broker-failed", err)
+			return &UpdateCatalogInternalServerError{Payload: err.Error()}
+		}
+
+		if guid == "" {
+			return &UpdateCatalogInternalServerError{Payload: fmt.Sprintf("Broker %s guid not found", brokerName)}
+		} else {
+			err = ccServiceBroker.Update(guid, brokerName, config.BrokerAPI.ExternalUrl, config.BrokerAPI.Credentials.Username, config.BrokerAPI.Credentials.Password)
+			if err != nil {
+				return &UpdateCatalogInternalServerError{Payload: err.Error()}
+			}
+		}
+		return &UpdateCatalogOK{}
 	})
 }

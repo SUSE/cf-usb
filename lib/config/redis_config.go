@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 
 	"github.com/frodenas/brokerapi"
 	"github.com/hpcloud/cf-usb/lib/config/redis"
@@ -36,6 +37,11 @@ func (c *redisConfig) LoadConfiguration() (*Config, error) {
 
 	err = json.Unmarshal([]byte(value), &configuration.BrokerAPI)
 
+	if err != nil {
+		return nil, err
+	}
+
+	configuration.DriversPath, err = c.GetDriversPath()
 	if err != nil {
 		return nil, err
 	}
@@ -86,6 +92,29 @@ func (c *redisConfig) LoadConfiguration() (*Config, error) {
 	}
 
 	return &configuration, nil
+}
+
+func (c *redisConfig) GetDriversPath() (string, error) {
+	var path string
+	driverPathExist, err := c.provider.KeyExists("drivers_path")
+	if err != nil {
+		return "", err
+	}
+
+	if driverPathExist {
+		path, err = c.provider.GetValue("drivers_path")
+		if err != nil {
+			return "", err
+		}
+
+	} else {
+		if os.Getenv("USB_DRIVER_PATH") != "" {
+			path = os.Getenv("USB_DRIVER_PATH")
+		} else {
+			path = "drivers"
+		}
+	}
+	return path, nil
 }
 
 func (c *redisConfig) LoadDriverInstance(driverInstanceID string) (*DriverInstance, error) {

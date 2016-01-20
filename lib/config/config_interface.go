@@ -62,6 +62,7 @@ type RoutesRegister struct {
 
 type Config struct {
 	APIVersion     string            `json:"api_version"`
+	DriversPath    string            `json:"drivers_path"`
 	BrokerAPI      BrokerAPI         `json:"broker_api"`
 	ManagementAPI  *ManagementAPI    `json:"management_api,omitempty"`
 	Drivers        map[string]Driver `json:"drivers"`
@@ -87,4 +88,5 @@ type ConfigProvider interface {
 	ServiceNameExists(servicename string) (bool, error)
 	DriverTypeExists(driverType string) (bool, error)
 	GetPlan(plandid string) (plan *brokerapi.ServicePlan, dialid string, instanceid string, err error)
+	GetDriversPath() (string, error)
 }
