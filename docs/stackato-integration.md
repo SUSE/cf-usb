@@ -36,7 +36,7 @@ usb:
 #### 5. Add supervisord config to: /s/etc/supervisord.conf.d/usb
 ```
 [program:usb]
-command=USB_DRIVER_PATH=/s/go/bin/drivers /s/go/bin/usb redisConfigProvider -a {core_ip}:7474
+command=USB_DRIVER_PATH=/s/go/bin/usb redisConfigProvider -a {core_ip}:7474
 priority=5
 redirect_stderr=true
 stdout_logfile=/s/logs/usb.log
@@ -184,8 +184,8 @@ echo "${final}}"
 ```
 kato restart
 ```
-#### 11. Restart supervisord
+#### 11. Reload supervisord
 ```
-stop-supervisord
-start-supervisord
+supervisorctl reread
+supervisorctl update
 ```

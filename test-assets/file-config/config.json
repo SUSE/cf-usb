@@ -9,6 +9,11 @@
 			"password": "password"
 		}
 	},
+	"routes_register": {
+		"nats_members": ["nats1", "nats2"],
+		"broker_api_host": "broker",
+		"management_api_host": "management"
+	},
 	"management_api": {
 		"listen": ":54053",
 		"dev_mode": false,
@@ -106,7 +111,7 @@
 		"00000000-0000-0000-0000-000000000002": {
 			"driver_type": "mssql",
 			"driver_instances": {
-				"A0000000-0000-0000-0000-000000000003": {
+				"A0000000-0000-0000-0000-000000000004": {
 					"driver_id": "00000000-0000-0000-0000-000000000002",
 					"name": "local-mssql",
 
