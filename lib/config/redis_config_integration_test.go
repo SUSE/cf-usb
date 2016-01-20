@@ -2,15 +2,16 @@ package config
 
 import (
 	"encoding/json"
-	"github.com/stretchr/testify/assert"
 	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/frodenas/brokerapi"
 	"github.com/hpcloud/cf-usb/lib/config/redis"
 
 	"os"
 	"strconv"
-	"time"
 )
 
 var RedisIntegrationConfig = struct {
@@ -35,19 +36,12 @@ func init() {
 func initRedisProvider() error {
 	provisioner, err := redis.New(RedisIntegrationConfig.address, RedisIntegrationConfig.password, RedisIntegrationConfig.db)
 
-	err = provisioner.SetKV("broker_api", "{\"listen\":\":54054\",\"credentials\":{\"username\":\"demouser\",\"password\":\"demopassword\"}}", 5*time.Minute)
-	if err != nil {
-		return err
-	}
-	err = provisioner.SetKV("management_api", "{\"listen\":\":54053\",\"uaa_secret\":\"myuaasecret\",\"uaa_client\":\"myuaaclient\",\"authentication\":{\"uaa\":{\"adminscope\":\"usb.management.admin\",\"public_key\":\"\"}}}", 5*time.Minute)
+	configSring, err := getRedisConfigString()
 	if err != nil {
 		return err
 	}
 
-	err = provisioner.SetKV("drivers", "{\"00000000-0000-0000-0000-000000000001\":{\"driver_type\":\"dummy\",\"driver_instances\":{\"A0000000-0000-0000-0000-000000000002\":{\"name\":\"dummy1\",\"id\":\"A0000000-0000-0000-0000-000000000002\",\"configuration\":{\"property_one\":\"one\",\"property_two\":\"two\"},\"dials\":{\"B0000000-0000-0000-0000-000000000001\":{\"configuration\":{\"max_dbsize_mb\":2},\"plan\":{\"name\":\"free\",\"id\":\"53425178-F731-49E7-9E53-5CF4BE9D807A\",\"description\":\"This is the first plan\",\"free\":true}},\"B0000000-0000-0000-0000-000000000002\":{\"configuration\":{\"max_dbsize_mb\":100},\"plan\":{\"name\":\"secondary\",\"id\":\"888B59E0-C2A1-4AB6-9335-2E90114A8F07\",\"description\":\"This is the secondary plan\",\"free\":false}}},\"service\":{\"id\":\"83E94C97-C755-46A5-8653-461517EB442A\",\"bindable\":true,\"name\":\"echo\",\"description\":\"echo Service\",\"tags\":[\"echo\"],\"metadata\":{\"providerDisplayName\":\"Echo Service Ltd.\"}}},\"A0000000-0000-0000-0000-000000000003\":{\"name\":\"dummy2\",\"configuration\":{\"property_one\":\"onenew\",\"property_two\":\"twonew\"},\"dials\":{\"B0000000-0000-0000-0000-000000000001\":{\"plan\":{\"name\":\"plandummy2\",\"id\":\"888B59E0-C2A1-4AB6-9335-2E90114A8F01\",\"description\":\"This is the secondary plan\",\"free\":false}}},\"service\":{\"id\":\"83E94C97-C755-46A5-8653-461517EB442B\",\"bindable\":true,\"name\":\"echo\",\"description\":\"echo Service\",\"tags\":[\"echo\"],\"metadata\":{\"providerDisplayName\":\"Echo Service Ltd.\"}}}}},\"00000000-0000-0000-0000-000000000002\":{\"driver_type\":\"mssql\",\"driver_instances\":{\"A0000000-0000-0000-0000-000000000003\":{\"driver_id\":\"00000000-0000-0000-0000-000000000002\",\"name\":\"local-mssql\",\"configuration\":{\"brokerGoSqlDriver\":\"mssql\",\"brokerMssqlConnection\":{\"server\":\"127.0.0.1\",\"port\":\"38017\",\"database\":\"master\",\"user id\":\"sa\",\"password\":\"password1234!\"},\"servedMssqlBindingHostname\":\"192.168.1.10\",\"servedMssqlBindingPort\":38017},\"dials\":{\"C0000000-0000-0000-0000-000000000001\":{\"plan\":{\"name\":\"planmssql\",\"id\":\"888B59E0-C2A2-4AB6-9335-2E90114A8F01\",\"description\":\"This is the secondary plan\",\"free\":false}}},\"service\":{\"id\":\"83E94C97-C755-46A5-8653-461517EB442C\",\"bindable\":true,\"name\":\"mssql\",\"description\":\"MSSQL Service\",\"tags\":[\"mssql\",\"mssql\"],\"metadata\":{\"providerDisplayName\":\"MSSQL Service Ltd.\"}}}}}}", 5*time.Minute)
-	if err != nil {
-		return err
-	}
+	err = provisioner.SetKV("usb", configSring, 5*time.Minute)
 
 	RedisIntegrationConfig.Provider = NewRedisConfig(provisioner)
 
@@ -62,10 +56,12 @@ func Test_RedisLoadConfiguration(t *testing.T) {
 	err := initRedisProvider()
 	assert.NoError(err)
 	config, err := RedisIntegrationConfig.Provider.LoadConfiguration()
-	if config != nil {
-		t.Log(*config)
-	}
 	assert.NoError(err)
+
+	assert.Equal("management", config.RoutesRegister.ManagmentAPIHost)
+	assert.Equal("broker", config.RoutesRegister.BrokerAPIHost)
+
+	assert.Equal(2, len(config.RoutesRegister.NatsMembers))
 }
 
 func Test_RedisGetDriver(t *testing.T) {
@@ -76,7 +72,11 @@ func Test_RedisGetDriver(t *testing.T) {
 	err := initRedisProvider()
 	assert.NoError(err)
 	driver, err := RedisIntegrationConfig.Provider.GetDriver("00000000-0000-0000-0000-000000000001")
-	t.Log(driver)
+	if err != nil {
+		t.Error(err)
+	}
+	assert.Equal("dummy", driver.DriverType)
+
 	assert.NoError(err)
 }
 
@@ -87,9 +87,10 @@ func Test_RedisGetDriverInstance(t *testing.T) {
 	}
 	err := initRedisProvider()
 	assert.NoError(err)
-	instance, err := RedisIntegrationConfig.Provider.GetDriverInstance("A0000000-0000-0000-0000-000000000002")
-	t.Log(instance)
+	instance, err := RedisIntegrationConfig.Provider.GetDriverInstance("A0000000-0000-0000-0000-000000000004")
 	assert.NoError(err)
+
+	assert.Equal("local-mssql", instance.Name)
 }
 
 func Test_RedisGetDial(t *testing.T) {
@@ -99,9 +100,11 @@ func Test_RedisGetDial(t *testing.T) {
 	}
 	err := initRedisProvider()
 	assert.NoError(err)
-	dial, err := RedisIntegrationConfig.Provider.GetDial("B0000000-0000-0000-0000-000000000001")
-	t.Log(dial)
+	dial, err := RedisIntegrationConfig.Provider.GetDial("C0000000-0000-0000-0000-000000000001")
 	assert.NoError(err)
+
+	assert.Equal("planmssql", dial.Plan.Name)
+	assert.Equal("888B59E0-C2A2-4AB6-9335-2E90114A8F01", dial.Plan.ID)
 }
 
 func Test_RedisGetService(t *testing.T) {
@@ -112,9 +115,12 @@ func Test_RedisGetService(t *testing.T) {
 	err := initRedisProvider()
 	assert.NoError(err)
 	service, instanceID, err := RedisIntegrationConfig.Provider.GetService("83E94C97-C755-46A5-8653-461517EB442A")
-	t.Log(instanceID)
-	t.Log(service)
 	assert.NoError(err)
+
+	assert.Equal("echo", service.Name)
+	assert.Equal(true, service.Bindable)
+	assert.Equal("echo Service", service.Description)
+	assert.Equal("A0000000-0000-0000-0000-000000000002", instanceID)
 }
 
 func Test_RedisSetDriver(t *testing.T) {

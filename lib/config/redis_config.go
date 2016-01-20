@@ -10,6 +10,8 @@ import (
 	"github.com/hpcloud/cf-usb/lib/config/redis"
 )
 
+const usbKey = "usb"
+
 type redisConfig struct {
 	provider redis.RedisProvisionerInterface
 }
@@ -21,74 +23,17 @@ func NewRedisConfig(provider redis.RedisProvisionerInterface) ConfigProvider {
 }
 
 func (c *redisConfig) LoadConfiguration() (*Config, error) {
+
 	var configuration Config
 
-	apiVersion, err := c.provider.GetValue("api_version")
-	if err != nil {
-		return nil, err
-	}
-	configuration.APIVersion = apiVersion
-
-	value, err := c.provider.GetValue("broker_api")
-
+	configurationValue, err := c.provider.GetValue(usbKey)
 	if err != nil {
 		return nil, err
 	}
 
-	err = json.Unmarshal([]byte(value), &configuration.BrokerAPI)
-
+	err = json.Unmarshal([]byte(configurationValue), &configuration)
 	if err != nil {
 		return nil, err
-	}
-
-	configuration.DriversPath, err = c.GetDriversPath()
-	if err != nil {
-		return nil, err
-	}
-
-	value, err = c.provider.GetValue("management_api")
-	if err != nil {
-		return nil, err
-	}
-
-	err = json.Unmarshal([]byte(value), &configuration.ManagementAPI)
-
-	if err != nil {
-		return nil, err
-	}
-
-	exists, err := c.provider.KeyExists("drivers")
-	if err != nil {
-		return nil, err
-	}
-	if exists {
-		value, err = c.provider.GetValue("drivers")
-
-		if err != nil {
-			return nil, err
-		}
-
-		err = json.Unmarshal([]byte(value), &configuration.Drivers)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	exists, err = c.provider.KeyExists("routes_register")
-	if err != nil {
-		return nil, err
-	}
-	if exists {
-		value, err = c.provider.GetValue("routes_register")
-
-		if err != nil {
-			return nil, err
-		}
-
-		err = json.Unmarshal([]byte(value), &configuration.RoutesRegister)
-		if err != nil {
-			return nil, err
-		}
 	}
 
 	return &configuration, nil
@@ -161,12 +106,12 @@ func (c *redisConfig) SetDriver(driverID string, driver Driver) error {
 		config.Drivers[driverID] = driver
 	}
 
-	data, err := json.Marshal(config.Drivers)
+	data, err := json.Marshal(config)
 	if err != nil {
 		return err
 	}
 
-	err = c.provider.SetKV("drivers", string(data), 0)
+	err = c.provider.SetKV(usbKey, string(data), 0)
 	if err != nil {
 		return err
 	}
@@ -200,12 +145,12 @@ func (c *redisConfig) DeleteDriver(driverID string) error {
 			break
 		}
 	}
-	data, err := json.Marshal(config.Drivers)
+	data, err := json.Marshal(config)
 	if err != nil {
 		return err
 	}
 
-	err = c.provider.SetKV("drivers", string(data), 0)
+	err = c.provider.SetKV(usbKey, string(data), 0)
 	if err != nil {
 		return err
 	}
@@ -231,12 +176,12 @@ func (c *redisConfig) SetDriverInstance(driverID string, instanceID string, inst
 				driverInfo.DriverInstances[instanceID] = *instanceInfo
 				configuration.Drivers[driverID] = driverInfo
 			}
-			data, err := json.Marshal(configuration.Drivers)
+			data, err := json.Marshal(configuration)
 			if err != nil {
 				return err
 			}
 
-			err = c.provider.SetKV("drivers", string(data), 0)
+			err = c.provider.SetKV(usbKey, string(data), 0)
 			if err != nil {
 				return err
 			}
@@ -252,7 +197,7 @@ func (c *redisConfig) SetDriverInstance(driverID string, instanceID string, inst
 func (c *redisConfig) GetDriverInstance(instanceID string) (*DriverInstance, error) {
 	config, err := c.LoadConfiguration()
 	if err != nil {
-		return &DriverInstance{}, err
+		return nil, err
 	}
 
 	for _, d := range config.Drivers {
@@ -262,7 +207,7 @@ func (c *redisConfig) GetDriverInstance(instanceID string) (*DriverInstance, err
 			}
 		}
 	}
-	return &DriverInstance{}, nil
+	return nil, nil
 }
 
 func (c *redisConfig) DeleteDriverInstance(instanceID string) error {
@@ -277,12 +222,12 @@ func (c *redisConfig) DeleteDriverInstance(instanceID string) error {
 		break
 	}
 
-	data, err := json.Marshal(config.Drivers)
+	data, err := json.Marshal(config)
 	if err != nil {
 		return err
 	}
 
-	err = c.provider.SetKV("drivers", string(data), 0)
+	err = c.provider.SetKV(usbKey, string(data), 0)
 	if err != nil {
 		return err
 	}
@@ -307,12 +252,12 @@ func (c *redisConfig) SetService(instanceID string, service brokerapi.Service) e
 			}
 
 		}
-		data, err := json.Marshal(configuration.Drivers)
+		data, err := json.Marshal(configuration)
 		if err != nil {
 			return err
 		}
 
-		err = c.provider.SetKV("drivers", string(data), 0)
+		err = c.provider.SetKV(usbKey, string(data), 0)
 		if err != nil {
 			return err
 		}
@@ -350,12 +295,12 @@ func (c *redisConfig) DeleteService(instanceID string) error {
 			break
 		}
 	}
-	data, err := json.Marshal(config.Drivers)
+	data, err := json.Marshal(config)
 	if err != nil {
 		return err
 	}
 
-	err = c.provider.SetKV("drivers", string(data), 0)
+	err = c.provider.SetKV(usbKey, string(data), 0)
 	if err != nil {
 		return err
 	}
@@ -384,13 +329,13 @@ func (c *redisConfig) SetDial(instanceID string, dialID string, dial Dial) error
 			}
 		}
 
-		data, err := json.Marshal(configuration.Drivers)
+		data, err := json.Marshal(configuration)
 
 		if err != nil {
 			return err
 		}
 
-		err = c.provider.SetKV("drivers", string(data), 0)
+		err = c.provider.SetKV(usbKey, string(data), 0)
 		if err != nil {
 			return err
 		}
@@ -430,12 +375,12 @@ func (c *redisConfig) DeleteDial(dialID string) error {
 			}
 		}
 	}
-	data, err := json.Marshal(config.Drivers)
+	data, err := json.Marshal(config)
 	if err != nil {
 		return err
 	}
 
-	err = c.provider.SetKV("drivers", string(data), 0)
+	err = c.provider.SetKV(usbKey, string(data), 0)
 	if err != nil {
 		return err
 	}
