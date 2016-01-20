@@ -41,16 +41,14 @@ func (c *redisConfig) LoadConfiguration() (*Config, error) {
 
 func (c *redisConfig) GetDriversPath() (string, error) {
 	var path string
-	driverPathExist, err := c.provider.KeyExists("drivers_path")
+	config, err := c.LoadConfiguration()
+
 	if err != nil {
 		return "", err
 	}
 
-	if driverPathExist {
-		path, err = c.provider.GetValue("drivers_path")
-		if err != nil {
-			return "", err
-		}
+	if config.DriversPath != "" {
+		return config.DriversPath, err
 
 	} else {
 		if os.Getenv("USB_DRIVER_PATH") != "" {
