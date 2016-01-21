@@ -36,28 +36,25 @@ func (c *redisConfig) LoadConfiguration() (*Config, error) {
 		return nil, err
 	}
 
+	if configuration.DriversPath == "" {
+		if os.Getenv("USB_DRIVER_PATH") != "" {
+			configuration.DriversPath = os.Getenv("USB_DRIVER_PATH")
+		} else {
+			configuration.DriversPath = "drivers"
+		}
+	}
+
 	return &configuration, nil
 }
 
 func (c *redisConfig) GetDriversPath() (string, error) {
-	var path string
 	config, err := c.LoadConfiguration()
 
 	if err != nil {
 		return "", err
 	}
 
-	if config.DriversPath != "" {
-		return config.DriversPath, err
-
-	} else {
-		if os.Getenv("USB_DRIVER_PATH") != "" {
-			path = os.Getenv("USB_DRIVER_PATH")
-		} else {
-			path = "drivers"
-		}
-	}
-	return path, nil
+	return config.DriversPath, nil
 }
 
 func (c *redisConfig) LoadDriverInstance(driverInstanceID string) (*DriverInstance, error) {
