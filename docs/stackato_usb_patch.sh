@@ -134,4 +134,4 @@ download_bits
 configure_role
 configure_redis
 supervisorctl reread
-supervisorctl reload
+supervisorctl update
