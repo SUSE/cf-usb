@@ -167,6 +167,42 @@ func (c *consulConfig) GetDriver(driverID string) (*Driver, error) {
 	if driverName != nil {
 		result.DriverName = string(driverName)
 	}
+
+	instanceKeys, err := c.provisioner.GetAllKeys("usb/drivers/"+driverID+"/instances/", "/", nil)
+
+	for _, instanceKey := range instanceKeys {
+		if strings.HasSuffix(instanceKey, "/") {
+			instanceKey = strings.TrimSuffix(instanceKey, "/")
+			instanceKey = strings.TrimPrefix(instanceKey, "usb/drivers/"+driverID+"/instances/")
+
+			driverInstanceInfo, err := c.GetDriverInstance(instanceKey)
+
+			if err != nil {
+				return nil, err
+			}
+
+			dialkeys, err := c.provisioner.GetAllKeys("usb/drivers/"+driverID+"/instances/"+instanceKey+"/dials/", "/", nil)
+
+			for _, dialKey := range dialkeys {
+				dialKey = strings.TrimSuffix(dialKey, "/")
+				dialKey = strings.TrimPrefix(dialKey, "usb/drivers/"+driverID+"/instances/"+instanceKey+"/dials/")
+
+				dialInfo, err := c.GetDial(dialKey)
+				if err != nil {
+					return nil, err
+				}
+				if driverInstanceInfo.Dials == nil {
+					driverInstanceInfo.Dials = make(map[string]Dial)
+				}
+				driverInstanceInfo.Dials[dialKey] = *dialInfo
+			}
+			if result.DriverInstances == nil {
+				result.DriverInstances = make(map[string]DriverInstance)
+			}
+			result.DriverInstances[instanceKey] = *driverInstanceInfo
+		}
+	}
+
 	return &result, nil
 }
 
