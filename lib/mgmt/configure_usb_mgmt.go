@@ -228,8 +228,11 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 				instances = append(instances, instanceID)
 			}
 
+			var driverID string
+			driverID = dId
+
 			driver := &genmodel.Driver{
-				ID:              &dId,
+				ID:              &driverID,
 				DriverType:      d.DriverType,
 				Name:            d.DriverName,
 				DriverInstances: instances,
