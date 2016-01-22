@@ -18,9 +18,9 @@ properties:
   cf-usb.broker.port:
     description: The broker's port
     default: 54054
-  cf-usb.broker.dev_mode:
+  cf-usb.management.dev_mode:
     description: Enable develop mode
-    default: true
+    default: false
   cf-usb.management.port:
     description: The management port
     default: 54053
