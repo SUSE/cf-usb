@@ -33,31 +33,44 @@ function start()
     # copy the drivers to $USB_DRIVER_PATH
     [ ! -d $USB_DRIVER_PATH ] && mkdir -p $USB_DRIVER_PATH
 
-    for i in /var/vcap/packages/cf-usb/src/github.com/hpcloud/cf-usb/cmd/driver/*;
+    cp /var/vcap/packages/cf-usb/bin/drivers/* $USB_DRIVER_PATH
+
+    # TODO: This is hacky and should be replaced with a better mechanism
+    <% if p("cf-usb.configprovider") == "consulConfigProvider" %>
+    driver_index=0
+    for driver in $USB_DRIVER_PATH/*;
     do
-        [ ! -e $USB_DRIVER_PATH/`basename $i` ] && cp $i/`basename $i` $USB_DRIVER_PATH/
+      driver_index=$(( $driver_index + 1 ))
+
+	    curl -X PUT -d "`basename $driver`" http://<%= p("cf-usb.configconnectionstring") %>/v1/kv/usb/drivers/00000000-0000-0000-0000-`printf "%012d" $driver_index`/Name
+
+      curl -X PUT -d "`basename $driver`" http://<%= p("cf-usb.configconnectionstring") %>/v1/kv/usb/drivers/00000000-0000-0000-0000-`printf "%012d" $driver_index`/Type
     done
+    <% end %>
 
     <% if p("cf-usb.configprovider") == "consulConfigProvider" %>
-    broker_api='{"external_url":"http://<%= p("cf-usb.broker.external_url") %>","listen":":<%= p("cf-usb.broker.port") %>","dev_mode":<%= p("cf-usb.broker.dev_mode") %>,"credentials":{"username":"<%= p("cf-usb.broker.username") %>","password":"<%= p("cf-usb.broker.password") %>"}}'
-    management_api='{"listen":":<%= p("cf-usb.management.port") %>","uaa_secret":"<%= p("cf-usb.management.uaa.secret") %>","uaa_client":"<%= p("cf-usb.management.uaa.client") %>","authentication":{"uaa":{"adminscope":"usb.management.admin","public_key":"<%= p("cf-usb.management.public_key").gsub("\n","\\n").gsub("        ","") %>"}},"cloud_controller":{"api":"<%= p("cc.srv_api_uri") %>","skip_tsl_validation":<%= p("cf-usb.skip_tsl_validation") %>}}'
+    broker_api='{"external_url":"http://<%= p("cf-usb.broker.external_url") %>","listen":":<%= p("cf-usb.broker.port") %>","credentials":{"username":"<%= p("cf-usb.broker.username") %>","password":"<%= p("cf-usb.broker.password") %>"}}'
+
+    management_api='{"listen":":<%= p("cf-usb.management.port") %>","dev_mode":<%= p("cf-usb.management.dev_mode") %>,"uaa_secret":"<%= p("cf-usb.management.uaa.secret") %>","uaa_client":"<%= p("cf-usb.management.uaa.client") %>","authentication":{"uaa":{"adminscope":"usb.management.admin","public_key":"<%= p("cf-usb.management.public_key").gsub("\n","\\n").gsub("        ","") %>"}},"cloud_controller":{"api":"<%= p("cc.srv_api_uri") %>","skip_tsl_validation":<%= p("cf-usb.skip_tsl_validation") %>}}'
 
     curl -X PUT -d "$broker_api" http://<%= p("cf-usb.configconnectionstring") %>/v1/kv/usb/broker_api
     curl -X PUT -d "$management_api" http://<%= p("cf-usb.configconnectionstring") %>/v1/kv/usb/management_api
+    # TODO: the 2.6 constant here is a hack
+    curl -X PUT -d "2.6" http://<%= p("cf-usb.configconnectionstring") %>/v1/kv/usb/api_version
     <% end %>
 
-    <% if p("cf-usb.override") %>
-    # override the drivers
-
-    cp -f /var/vcap/packages/cf-usb/bin/drivers/* $USB_DRIVER_PATH/
-
-    <% if p("cf-usb.configprovider") == "consulConfigProvider" %>
-    for driver in $USB_DRIVER_PATH/*;
-    do
-	curl -X PUT -d "`basename $driver`" http://<%= p("cf-usb.configconnectionstring") %>/v1/kv/usb/drivers/`random_uuid`
-    done
-    <% end %>
-    <% end %>
+    # TODO: This will leave old drivers behind in consul
+    # <% if p("cf-usb.override") %>
+    # # override the drivers
+    # cp -f /var/vcap/packages/cf-usb/bin/drivers/* $USB_DRIVER_PATH/
+    #
+    # <% if p("cf-usb.configprovider") == "consulConfigProvider" %>
+    # for driver in $USB_DRIVER_PATH/*;
+    # do
+	  #   curl -X PUT -d "`basename $driver`" http://<%= p("cf-usb.configconnectionstring") %>/v1/kv/usb/drivers/`random_uuid`
+    # done
+    # <% end %>
+    # <% end %>
 
     # create the pidfile directory if it doesn't exist
     [ ! -d `dirname $pidfile` ] && mkdir -p `dirname $pidfile`
