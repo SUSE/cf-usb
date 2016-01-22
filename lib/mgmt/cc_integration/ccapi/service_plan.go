@@ -51,10 +51,6 @@ type ServiceResource struct {
 	Values BrokerMetadata `json:"metadata"`
 }
 
-type ServiceMetadata struct {
-	Guid string `json:"guid"`
-}
-
 func NewServicePlan(client httpclient.HttpClient, token uaaapi.GetTokenInterface, ccApi string, logger lager.Logger) ServicePlanInterface {
 	return &ServicePlan{
 		client:         client,

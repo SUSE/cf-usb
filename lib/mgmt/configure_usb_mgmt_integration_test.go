@@ -17,7 +17,8 @@ import (
 	"github.com/hpcloud/cf-usb/lib/data"
 	"github.com/hpcloud/cf-usb/lib/genmodel"
 	"github.com/hpcloud/cf-usb/lib/mgmt/authentication/uaa"
-	sbMocks "github.com/hpcloud/cf-usb/lib/mgmt/cc_integration/mocks"
+	"github.com/hpcloud/cf-usb/lib/mgmt/cc_integration/ccapi"
+	sbMocks "github.com/hpcloud/cf-usb/lib/mgmt/cc_integration/ccapi/mocks"
 	"github.com/hpcloud/cf-usb/lib/operations"
 	"github.com/pivotal-golang/lager/lagertest"
 	"github.com/stretchr/testify/mock"
@@ -303,10 +304,12 @@ func Test_IntUpdate(t *testing.T) {
 	t.Log(plan)
 	t.Log("PLAN ID", plan.ID)
 
+	var services ccapi.Services
 	IntegrationConfig.CcServiceBroker.Mock.On("GetServiceBrokerGuidByName", mock.Anything).Return("aguid", nil)
 	IntegrationConfig.CcServiceBroker.Mock.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	IntegrationConfig.CcServiceBroker.Mock.On("Update", "aguid", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	IntegrationConfig.CcServiceBroker.Mock.On("EnableServiceAccess", mock.Anything).Return(nil)
+	IntegrationConfig.CcServiceBroker.Mock.On("GetServices").Return(&services, nil)
 
 	response = IntegrationConfig.MgmtAPI.UpdateServicePlanHandler.Handle(*params, true)
 	assert.IsType(&operations.UpdateServicePlanOK{}, response)
@@ -374,11 +377,12 @@ func Test_IntServicePlan(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-
+	var services ccapi.Services
 	IntegrationConfig.CcServiceBroker.Mock.On("GetServiceBrokerGuidByName", mock.Anything).Return("aguid", nil)
 	IntegrationConfig.CcServiceBroker.Mock.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	IntegrationConfig.CcServiceBroker.Mock.On("Update", "aguid", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	IntegrationConfig.CcServiceBroker.Mock.On("EnableServiceAccess", mock.Anything).Return(nil)
+	IntegrationConfig.CcServiceBroker.Mock.On("GetServices").Return(&services, nil)
 
 	response := IntegrationConfig.MgmtAPI.GetDriversHandler.Handle(true)
 

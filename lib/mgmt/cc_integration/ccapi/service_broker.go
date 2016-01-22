@@ -15,6 +15,7 @@ type ServiceBrokerInterface interface {
 	Update(serviceBrokerGuid, name, url, username, password string) error
 	EnableServiceAccess(serviceId string) error
 	GetServiceBrokerGuidByName(name string) (string, error)
+	GetServices() (*Services, error)
 }
 
 type ServiceBroker struct {
@@ -41,6 +42,28 @@ type BrokerResource struct {
 
 type BrokerMetadata struct {
 	Guid string `json:"guid"`
+}
+
+type Services struct {
+	Resources []ServiceInfo `json:"resources"`
+}
+
+type ServiceInfo struct {
+	Metadata ServiceMetadata `json:"metadata"`
+	Entity   Service         `json:"entity"`
+}
+
+type ServiceMetadata struct {
+	Guid       string `json:"guid"`
+	Url        string `json:"url,omitempty"`
+	Created_at string `json:"created_at,omitempty"`
+	Updated_at string `json:"updated_at,omitempty"`
+}
+
+type Service struct {
+	Name        string `json:"label"`
+	Description string `json:"description"`
+	Unique_Id   string `json:"unique_id,omitempty"`
 }
 
 func NewServiceBroker(client httpclient.HttpClient, token uaaapi.GetTokenInterface, ccApi string, logger lager.Logger) ServiceBrokerInterface {
@@ -185,4 +208,41 @@ func (sb *ServiceBroker) GetServiceBrokerGuidByName(name string) (string, error)
 	log.Debug("found", lager.Data{"service-broker-guid": guid})
 
 	return guid, nil
+}
+
+func (sb *ServiceBroker) GetServices() (*Services, error) {
+	log := sb.logger.Session("get-services")
+	log.Debug("starting")
+
+	token, err := sb.tokenGenerator.GetToken()
+	if err != nil {
+		return nil, err
+	}
+
+	path := "/v2/services"
+
+	headers := make(map[string]string)
+	headers["Authorization"] = token
+	headers["Content-Type"] = "application/x-www-form-urlencoded; charset=UTF-8"
+	headers["Accept"] = "application/json; charset=utf-8"
+
+	log.Debug("preparing-request", lager.Data{"path": path, "headers": headers})
+	findRequest := httpclient.Request{Verb: "GET", Endpoint: sb.ccApi, ApiUrl: path, Headers: headers, StatusCode: 200}
+
+	log.Info("starting-cc-request", lager.Data{"path": path})
+
+	response, err := sb.client.Request(findRequest)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Debug("cc-reponse", lager.Data{"response": string(response)})
+	log.Info("finished-cc-request")
+
+	resources := &Services{}
+	err = json.Unmarshal(response, resources)
+	if err != nil {
+		return nil, err
+	}
+	return resources, nil
 }

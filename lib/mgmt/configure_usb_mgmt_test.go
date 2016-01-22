@@ -15,7 +15,8 @@ import (
 	"github.com/hpcloud/cf-usb/lib/data"
 	"github.com/hpcloud/cf-usb/lib/genmodel"
 	"github.com/hpcloud/cf-usb/lib/mgmt/authentication/uaa"
-	sbMocks "github.com/hpcloud/cf-usb/lib/mgmt/cc_integration/mocks"
+	"github.com/hpcloud/cf-usb/lib/mgmt/cc_integration/ccapi"
+	sbMocks "github.com/hpcloud/cf-usb/lib/mgmt/cc_integration/ccapi/mocks"
 	"github.com/hpcloud/cf-usb/lib/operations"
 	"github.com/pivotal-golang/lager/lagertest"
 	"github.com/stretchr/testify/assert"
@@ -312,8 +313,13 @@ func Test_UpdateService(t *testing.T) {
 		t.Error(err)
 	}
 
+	var services ccapi.Services
+	sbMocked.Mock.On("GetServices").Return(&services, nil)
+
 	var testConfig config.Config
+	var service brokerapi.Service
 	provider.On("LoadConfiguration").Return(&testConfig, nil)
+	provider.On("GetService", "testServiceID").Return(&service, "testInstanceID", nil)
 
 	params := &operations.UpdateServiceParams{}
 	params.Service = &genmodel.Service{}
