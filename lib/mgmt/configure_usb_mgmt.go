@@ -135,13 +135,13 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		guid, err := ccServiceBroker.GetServiceBrokerGuidByName(brokerName)
 		if err != nil {
 			log.Error("get-service-broker-failed", err)
-			return &UpdateServiceInternalServerError{Payload: err.Error()}
+			return &DeleteServicePlanInternalServerError{Payload: err.Error()}
 		}
 
 		err = ccServiceBroker.Update(guid, brokerName, config.BrokerAPI.ExternalUrl, config.BrokerAPI.Credentials.Username, config.BrokerAPI.Credentials.Password)
 		if err != nil {
 			log.Error("update-service-broker-failed", err)
-			return &UpdateServiceInternalServerError{Payload: err.Error()}
+			return &DeleteServicePlanInternalServerError{Payload: err.Error()}
 		}
 
 		//TODO improve this
@@ -160,7 +160,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 				err = ccServiceBroker.EnableServiceAccess(instance.Service.Name)
 				if err != nil {
 					log.Error("enable-service-access-failed", err)
-					return &UpdateServiceInternalServerError{Payload: err.Error()}
+					return &DeleteServicePlanInternalServerError{Payload: err.Error()}
 				}
 			}
 		}
@@ -178,7 +178,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		}
 		driver, err := configProvider.GetDriver(params.DriverID)
 		if err != nil {
-			return &GetDriverSchemaInternalServerError{Payload: err.Error()}
+			return &GetDriverSchemaNotFound{}
 		}
 		schema, err := lib.GetConfigSchema(path, driver.DriverType, logger)
 		if err != nil {
@@ -344,9 +344,8 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		log.Info("request", lager.Data{"plan-id": params.PlanID})
 
 		planInfo, dialID, _, err := configProvider.GetPlan(params.PlanID)
-
 		if err != nil {
-			return &GetServicePlanInternalServerError{Payload: err.Error()}
+			return &GetServicePlanNotFound{}
 		}
 
 		plan := &genmodel.Plan{
@@ -393,6 +392,12 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		var dial config.Dial
 
 		dialID := params.Dial.ID
+
+		_, err := configProvider.GetDial(*dialID)
+		if err != nil {
+			return &UpdateDialNotFound{}
+		}
+
 		dialconfig, err := json.Marshal(params.Dial.Configuration)
 		if err != nil {
 			return &UpdateDialInternalServerError{Payload: err.Error()}
@@ -420,7 +425,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		}
 		driver, err := configProvider.GetDriver(params.DriverID)
 		if err != nil {
-			return &GetDialSchemaInternalServerError{Payload: err.Error()}
+			return &GetDialSchemaNotFound{}
 		}
 		schema, err := lib.GetDailsSchema(path, driver.DriverType, logger)
 		if err != nil {
@@ -674,6 +679,11 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 			return &UpdateServicePlanInternalServerError{Payload: err.Error()}
 		}
 
+		_, _, _, err = configProvider.GetPlan(params.PlanID)
+		if err != nil {
+			return &UpdateServicePlanNotFound{}
+		}
+
 		guid, err := ccServiceBroker.GetServiceBrokerGuidByName(brokerName)
 		if err != nil {
 			log.Error("get-service-broker-failed", err)
@@ -728,9 +738,8 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		log.Info("request", lager.Data{"service-id": params.ServiceID})
 
 		serviceInfo, instanceID, err := configProvider.GetService(params.ServiceID)
-
 		if err != nil {
-			return &GetServiceInternalServerError{Payload: err.Error()}
+			return &GetServiceNotFound{}
 		}
 
 		svc := &genmodel.Service{
@@ -753,7 +762,12 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		log := log.Session("delete-dial")
 		log.Info("request", lager.Data{"dial-id": params.DialID})
 
-		err := configProvider.DeleteDial(params.DialID)
+		_, err := configProvider.GetDial(params.DialID)
+		if err != nil {
+			return &DeleteDialNotFound{}
+		}
+
+		err = configProvider.DeleteDial(params.DialID)
 		if err != nil {
 			return &DeleteDialInternalServerError{Payload: err.Error()}
 		}
@@ -862,7 +876,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 		service, instanceid, err := configProvider.GetService(params.ServiceID)
 		if err != nil {
-			return &UpdateServiceInternalServerError{Payload: err.Error()}
+			return &UpdateServiceNotFound{}
 		}
 		if service == nil {
 			return &UpdateServiceInternalServerError{Payload: fmt.Sprintf("Service-id %s not found", params.ServiceID)}
