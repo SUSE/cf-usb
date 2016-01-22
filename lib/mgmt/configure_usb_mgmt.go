@@ -843,20 +843,51 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		log := log.Session("update-service")
 		log.Info("request", lager.Data{"service-id": params.ServiceID})
 
+		if params.Service == nil {
+			return &UpdateServiceInternalServerError{Payload: "Service information cannot be nil"}
+		}
+
 		config, err := configProvider.LoadConfiguration()
 		if err != nil {
 			return &UpdateServiceInternalServerError{Payload: err.Error()}
 		}
 
-		var service brokerapi.Service
+		service, instanceid, err := configProvider.GetService(params.ServiceID)
+		if err != nil {
+			return &UpdateServiceInternalServerError{Payload: err.Error()}
+		}
+		if service == nil {
+			return &UpdateServiceInternalServerError{Payload: fmt.Sprintf("Service-id %s not found", params.ServiceID)}
+		}
 
-		service.Bindable = *params.Service.Bindable
-		service.Description = *params.Service.Description
-		service.ID = *params.Service.ID
-		service.Name = params.Service.Name
-		service.Tags = params.Service.Tags
+		if params.Service.Bindable != nil {
+			service.Bindable = *params.Service.Bindable
+		}
+		if params.Service.Description != nil {
+			service.Description = *params.Service.Description
+		}
+		if params.Service.ID != nil {
+			service.ID = *params.Service.ID
+		}
+		if params.Service.Name != "" {
+			service.Name = params.Service.Name
+		}
+		if len(params.Service.Tags) > 0 {
+			service.Tags = params.Service.Tags
+		}
 
-		err = configProvider.SetService(params.Service.DriverInstanceID, service)
+		services, err := ccServiceBroker.GetServices()
+		if err != nil {
+			return &UpdateServiceInternalServerError{Payload: err.Error()}
+		}
+
+		if validateServiceParameters(services, params) == false {
+			err := goerrors.New("Service update name parameter validation failed - duplicate naming eror")
+			log.Error("update-service-name-validation", err, lager.Data{"Name validation failed for name": params.Service.Name})
+			return &UpdateServiceInternalServerError{Payload: err.Error()}
+		}
+
+		err = configProvider.SetService(instanceid, *service)
 		if err != nil {
 			return &UpdateServiceInternalServerError{Payload: err.Error()}
 		}
@@ -1006,4 +1037,13 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		}
 		return &UpdateCatalogOK{}
 	})
+}
+
+func validateServiceParameters(services *ccapi.Services, params UpdateServiceParams) bool {
+	for _, service := range services.Resources {
+		if service.Entity.Name == params.Service.Name {
+			return false
+		}
+	}
+	return true
 }
