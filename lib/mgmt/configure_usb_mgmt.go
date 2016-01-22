@@ -286,16 +286,20 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 			return &GetDriverInstanceInternalServerError{Payload: err.Error()}
 		}
 
-		for _, di := range driver.DriverInstances {
+		for diID, di := range driver.DriverInstances {
 			var dials = make([]string, 0)
 			for dialID, _ := range di.Dials {
 				dials = append(dials, dialID)
 			}
 
+			var driverInstanceID string
+			driverInstanceID = diID
+
 			driverInstance := &genmodel.DriverInstance{
 				Configuration: di.Configuration,
 				Dials:         dials,
 				DriverID:      params.DriverID,
+				ID:            &driverInstanceID,
 				Name:          di.Name,
 				Service:       &di.Service.ID,
 			}
