@@ -506,6 +506,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		plan.ID = uuid.NewV4().String()
 		plan.Description = "default plan"
 		plan.Name = "default"
+		plan.Free = true
 
 		var meta brokerapi.ServicePlanMetadata
 
@@ -529,7 +530,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		var service brokerapi.Service
 
 		service.ID = uuid.NewV4().String()
-		service.Name = fmt.Sprintf("%s-%s", params.DriverInstance.Name, GetRandomString(5))
+		service.Name = params.DriverInstance.Name
 		service.Description = "Default service"
 		service.Tags = []string{params.DriverInstance.Name}
 		service.Bindable = true
