@@ -85,19 +85,18 @@ func TestEnableServiceAccess(t *testing.T) {
 	assert.NoError(err)
 }
 
-func TestGetServices(t *testing.T) {
+func TestCheckServiceNameExists(t *testing.T) {
 	assert := assert.New(t)
 
 	tokenGenerator := new(mocks.GetTokenInterface)
 	tokenGenerator.On("GetToken").Return("bearer atoken", nil)
 
 	client := new(mocks.HttpClient)
-	client.Mock.On("Request", mock.Anything).Return([]byte(`{"resources":[{"metadata":{"guid":"31f3227e-1599-44ad-bb68-1938bd4824ad","url":"/v2/services/31f3227e-1599-44ad-bb68-1938bd4824ad","created_at":"2016-01-13T17:29:41Z","updated_at":null},"entity":{"label":"label-34","provider":null,"url":null,"description":"desc-72","long_description":null,"version":null,"info_url":null,"active":true,"bindable":true,"unique_id":"a7d5938b-969b-46cf-9403-48a99fb59985","extra":null,"tags":[],"requires":[],"documentation_url":null,"service_broker_guid":"3c96db1d-962f-4301-9a2a-9fbe36b7ec50","plan_updateable":false,"service_plans_url":"/v2/services/31f3227e-1599-44ad-bb68-1938bd4824ad/service_plans"}}]}`), nil)
+	client.Mock.On("Request", mock.Anything).Return([]byte(`{"resources":[{"metadata":{"guid":"688f14a3-a5fc-4fa3-bc82-07338c180f64","url":"/v2/services/688f14a3-a5fc-4fa3-bc82-07338c180f64","created_at":"2016-01-19T19:41:27Z","updated_at":null},"entity":{"label":"label-66","provider":null,"url":null,"description":"desc-214","long_description":null,"version":null,"info_url":null,"active":true,"bindable":true,"unique_id":"641552b1-b35b-402f-81f0-6c27a3677427","extra":null,"tags":[],"requires":[],"documentation_url":null,"service_broker_guid":"aa8c13b3-f362-4d42-b25a-1be9a519e425","plan_updateable":false,"service_plans_url":"/v2/services/688f14a3-a5fc-4fa3-bc82-07338c180f64/service_plans"}}]}`), nil)
 
 	sb := NewServiceBroker(client, tokenGenerator, "http://api.1.2.3.4.io", loggerSB)
 	assert.NotNil(sb)
 
-	serv, err := sb.GetServices()
-	t.Log(serv)
-	assert.NoError(err)
+	exists := sb.CheckServiceNameExists("label-66")
+	assert.True(exists)
 }
