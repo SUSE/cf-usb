@@ -298,6 +298,8 @@ func Test_UpdateDial(t *testing.T) {
 	planID := "planID"
 	params.Dial.Plan = &planID
 
+	var dial config.Dial
+    provider.On("GetDial", updateddialID).Return(&dial, nil)
 	provider.On("SetDial", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	response := UnitTest.MgmtAPI.UpdateDialHandler.Handle(*params, true)
 	assert.IsType(&operations.UpdateDialOK{}, response)
@@ -378,6 +380,7 @@ func Test_UpdateServicePlan(t *testing.T) {
 	testConfig.Drivers = make(map[string]config.Driver)
 	testConfig.Drivers["testDriverID"] = driver
 
+	provider.On("GetPlan", params.PlanID).Return(&plan, mock.Anything, mock.Anything, nil)
 	provider.On("LoadConfiguration").Return(&testConfig, nil)
 	provider.On("SetDial", "testInstanceID", mock.Anything, mock.Anything).Return(nil)
 	response := UnitTest.MgmtAPI.UpdateServicePlanHandler.Handle(*params, true)
