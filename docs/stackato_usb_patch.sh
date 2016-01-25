@@ -135,3 +135,4 @@ configure_role
 configure_redis
 supervisorctl reread
 supervisorctl update
+kato restart
