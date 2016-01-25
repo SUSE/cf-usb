@@ -455,6 +455,24 @@ func setupCcHttpFakeResponses(uaaFakeServer, ccFakeServer *ghttp.Server) {
 		),
 	)
 
+	uaaFakeServer.AppendHandlers(
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("POST", "/oauth/token"),
+			ghttp.RespondWith(200, `{"access_token":"replace-me", "expires_in": 3404281220}`),
+		),
+	)
+
+	ccFakeServer.AppendHandlers(
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("GET", "/v2/services"),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(200,
+				`{"resources":[{"metadata":{"guid":""}}]}`),
+		),
+	)
+
 	ccFakeServer.AppendHandlers(
 		ghttp.CombineHandlers(
 			ghttp.VerifyRequest("GET", "/v2/service_brokers"),

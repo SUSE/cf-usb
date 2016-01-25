@@ -134,6 +134,7 @@ func Test_IntCreate(t *testing.T) {
 
 	assert.IsType(&operations.CreateDriverCreated{}, response)
 
+	IntegrationConfig.CcServiceBroker.Mock.On("CheckServiceNameExists", mock.Anything).Return(false)
 	IntegrationConfig.CcServiceBroker.Mock.On("GetServiceBrokerGuidByName", mock.Anything).Return("aguid", nil)
 	IntegrationConfig.CcServiceBroker.Mock.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	IntegrationConfig.CcServiceBroker.Mock.On("Update", "aguid", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
