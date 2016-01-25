@@ -1,6 +1,5 @@
 package mocks
 
-import "github.com/hpcloud/cf-usb/lib/mgmt/cc_integration/ccapi"
 import "github.com/stretchr/testify/mock"
 
 type ServiceBrokerInterface struct {
@@ -62,24 +61,15 @@ func (_m *ServiceBrokerInterface) GetServiceBrokerGuidByName(name string) (strin
 
 	return r0, r1
 }
-func (_m *ServiceBrokerInterface) GetServices() (*ccapi.Services, error) {
-	ret := _m.Called()
+func (_m *ServiceBrokerInterface) CheckServiceNameExists(name string) bool {
+	ret := _m.Called(name)
 
-	var r0 *ccapi.Services
-	if rf, ok := ret.Get(0).(func() *ccapi.Services); ok {
-		r0 = rf()
+	var r0 bool
+	if rf, ok := ret.Get(0).(func(string) bool); ok {
+		r0 = rf(name)
 	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*ccapi.Services)
-		}
+		r0 = ret.Get(0).(bool)
 	}
 
-	var r1 error
-	if rf, ok := ret.Get(1).(func() error); ok {
-		r1 = rf()
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
+	return r0
 }

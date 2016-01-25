@@ -884,12 +884,9 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 			service.Tags = params.Service.Tags
 		}
 
-		services, err := ccServiceBroker.GetServices()
-		if err != nil {
-			return &UpdateServiceInternalServerError{Payload: err.Error()}
-		}
+		exists := ccServiceBroker.CheckServiceNameExists(params.Service.Name)
 
-		if validateServiceParameters(services, params) == false {
+		if exists == true {
 			err := goerrors.New("Service update name parameter validation failed - duplicate naming eror")
 			log.Error("update-service-name-validation", err, lager.Data{"Name validation failed for name": params.Service.Name})
 			return &UpdateServiceInternalServerError{Payload: err.Error()}
@@ -1045,13 +1042,4 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		}
 		return &UpdateCatalogOK{}
 	})
-}
-
-func validateServiceParameters(services *ccapi.Services, params UpdateServiceParams) bool {
-	for _, service := range services.Resources {
-		if service.Entity.Name == params.Service.Name {
-			return false
-		}
-	}
-	return true
 }
