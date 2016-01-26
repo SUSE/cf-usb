@@ -35,10 +35,13 @@ func init() {
 		Pass: mysqlConConfig.Pass,
 		User: mysqlConConfig.User,
 	}
-
-	err = mysqlConConfig.TestProvisioner.Connect(mysql)
-	if err != nil {
-		log.Fatal(err)
+	if !envVarsOk() {
+		log.Println("Skipping test as not all env variables are set:'MYSQL_USER','MYSQL_PASS','MYSQL_HOST', 'MYSQL_PORT'")
+	} else {
+		err = mysqlConConfig.TestProvisioner.Connect(mysql)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 }
 

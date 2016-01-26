@@ -149,10 +149,10 @@ func Test_IntCreate(t *testing.T) {
 	instace.DriverID = *driverInstance.ID
 	instanceConfig := make(map[string]interface{})
 
-	instanceConfig["userid"] = "testUser"
-	instanceConfig["password"] = "testPass"
-	instanceConfig["server"] = "127.0.0.1"
-	instanceConfig["port"] = "3306"
+	instanceConfig["userid"] = os.Getenv("MYSQL_USER")
+	instanceConfig["password"] = os.Getenv("MYSQL_PASS")
+	instanceConfig["server"] = os.Getenv("MYSQL_HOST")
+	instanceConfig["port"] = os.Getenv("MYSQL_PORT")
 
 	instanceParams.DriverInstance = &instace
 	instanceParams.DriverInstance.DriverID = *driverInstance.ID

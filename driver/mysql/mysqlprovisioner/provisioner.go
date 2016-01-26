@@ -24,7 +24,10 @@ func (e *MysqlProvisioner) Connect(conf config.MysqlDriverConfig) error {
 	e.Conf = conf
 
 	e.Connection, err = e.openSqlConnection()
-
+	if err != nil {
+		return err
+	}
+	err = e.Connection.Ping()
 	return err
 }
 
