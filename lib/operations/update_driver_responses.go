@@ -61,6 +61,24 @@ func (o *UpdateDriverNotFound) WriteResponse(rw http.ResponseWriter, producer ht
 	rw.WriteHeader(404)
 }
 
+/*UpdateDriverConflict A driver with the same type already exists
+
+swagger:response updateDriverConflict
+*/
+type UpdateDriverConflict struct {
+}
+
+// NewUpdateDriverConflict creates UpdateDriverConflict with default headers values
+func NewUpdateDriverConflict() *UpdateDriverConflict {
+	return &UpdateDriverConflict{}
+}
+
+// WriteResponse to the client
+func (o *UpdateDriverConflict) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+
+	rw.WriteHeader(409)
+}
+
 /*UpdateDriverInternalServerError Unexpected error
 
 swagger:response updateDriverInternalServerError

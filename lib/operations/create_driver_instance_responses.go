@@ -43,6 +43,24 @@ func (o *CreateDriverInstanceCreated) WriteResponse(rw http.ResponseWriter, prod
 	}
 }
 
+/*CreateDriverInstanceConflict Conflict
+
+swagger:response createDriverInstanceConflict
+*/
+type CreateDriverInstanceConflict struct {
+}
+
+// NewCreateDriverInstanceConflict creates CreateDriverInstanceConflict with default headers values
+func NewCreateDriverInstanceConflict() *CreateDriverInstanceConflict {
+	return &CreateDriverInstanceConflict{}
+}
+
+// WriteResponse to the client
+func (o *CreateDriverInstanceConflict) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+
+	rw.WriteHeader(409)
+}
+
 /*CreateDriverInstanceInternalServerError Unexpected error
 
 swagger:response createDriverInstanceInternalServerError

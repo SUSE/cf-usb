@@ -64,6 +64,14 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 			return &UpdateDriverNotFound{}
 		}
 
+		exist, err := configProvider.DriverTypeExists(params.Driver.DriverType)
+		if err != nil {
+			return &UpdateDriverInstanceInternalServerError{Payload: err.Error()}
+		}
+		if exist {
+			return &UpdateDriverConflict{}
+		}
+
 		var driver config.Driver
 		driver.DriverType = params.Driver.DriverType
 
@@ -483,14 +491,9 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		if driverInstanceNameExist {
 			err := goerrors.New("A driver instance with the same name already exists")
 			log.Error("check-driver-instance-name-exist", err)
-			return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
+			return &CreateDriverInstanceConflict{}
 		}
 		instance.Name = params.DriverInstance.Name
-
-		// maybe DriverType should be required
-		if existingDriver.DriverType == "" {
-			return &CreateDriverInstanceInternalServerError{Payload: goerrors.New("Driver type should be specified").Error()}
-		}
 
 		driversPath, err := configProvider.GetDriversPath()
 		if err != nil {
@@ -608,7 +611,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		if driverInstanceNameExist {
 			err := goerrors.New("A driver instance with the same name already exists")
 			log.Error("check-driver-instance-name-exist", err)
-			return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
+			return &UpdateDriverInstanceConflict{}
 		}
 		instance.Name = params.DriverConfig.Name
 
@@ -917,7 +920,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		if exists == true {
 			err := goerrors.New("Service update name parameter validation failed - duplicate naming eror")
 			log.Error("update-service-name-validation", err, lager.Data{"Name validation failed for name": params.Service.Name})
-			return &UpdateServiceInternalServerError{Payload: err.Error()}
+			return &UpdateServiceConflict{}
 		}
 
 		err = configProvider.SetService(instanceid, *service)

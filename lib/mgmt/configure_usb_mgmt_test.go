@@ -246,6 +246,7 @@ func Test_UpdateDriver(t *testing.T) {
 	params.Driver.Name = "testDriver"
 	params.Driver.DriverType = "testType"
 
+	provider.On("DriverTypeExists", mock.Anything).Return(false, nil)
 	sbMocked.Mock.On("CheckServiceNameExists", mock.Anything).Return(false)
 
 	provider.On("SetDriver", mock.Anything, mock.Anything).Return(nil)
