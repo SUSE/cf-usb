@@ -131,6 +131,20 @@ code {
   font-style: italic;
 }
 
+.param-enum-header {
+width: 700px;
+padding: 0 0 0 60px;
+color: #777;
+font-weight: bold;
+}
+
+.param-enum {
+width: 700px;
+padding: 0 0 0 80px;
+color: #777;
+font-style: italic;
+}
+
 .field-label {
   padding: 0;
   margin: 0;
@@ -290,17 +304,15 @@ code {
 
     
 
-    <!-- Remove Return type... unclear where this comes from;
-         for our swagger.json files, it is always empty and there is no boolean guard or hasReturnType
-         do we end up with a heading but not content
-
     
     <h3 class="field-label">Return type</h3>
-    <div class="return-type"><a href="#array">array[dial]</a></div>
+    <div class="return-type">
+      array[<a href="#dial">dial</a>]
+      
+    </div>
     
 
-    Todo: process Response Object and its headers, schema, examples
-    -->
+    <!--Todo: process Response Object and its headers, schema, examples -->
 
     
 
@@ -363,17 +375,15 @@ code {
 
     
 
-    <!-- Remove Return type... unclear where this comes from;
-         for our swagger.json files, it is always empty and there is no boolean guard or hasReturnType
-         do we end up with a heading but not content
-
     
     <h3 class="field-label">Return type</h3>
-    <div class="return-type"><a href="#">dial</a></div>
+    <div class="return-type">
+      <a href="#dial">dial</a>
+      
+    </div>
     
 
-    Todo: process Response Object and its headers, schema, examples
-    -->
+    <!--Todo: process Response Object and its headers, schema, examples -->
 
     
 
@@ -436,17 +446,15 @@ code {
 
     
 
-    <!-- Remove Return type... unclear where this comes from;
-         for our swagger.json files, it is always empty and there is no boolean guard or hasReturnType
-         do we end up with a heading but not content
-
     
     <h3 class="field-label">Return type</h3>
-    <div class="return-type"><a href="#">dial</a></div>
+    <div class="return-type">
+      <a href="#dial">dial</a>
+      
+    </div>
     
 
-    Todo: process Response Object and its headers, schema, examples
-    -->
+    <!--Todo: process Response Object and its headers, schema, examples -->
 
     
 
@@ -520,17 +528,15 @@ code {
 
     
 
-    <!-- Remove Return type... unclear where this comes from;
-         for our swagger.json files, it is always empty and there is no boolean guard or hasReturnType
-         do we end up with a heading but not content
-
     
     <h3 class="field-label">Return type</h3>
-    <div class="return-type"><a href="#">dial</a></div>
+    <div class="return-type">
+      <a href="#dial">dial</a>
+      
+    </div>
     
 
-    Todo: process Response Object and its headers, schema, examples
-    -->
+    <!--Todo: process Response Object and its headers, schema, examples -->
 
     
 
@@ -597,14 +603,9 @@ code {
 
     
 
-    <!-- Remove Return type... unclear where this comes from;
-         for our swagger.json files, it is always empty and there is no boolean guard or hasReturnType
-         do we end up with a heading but not content
-
     
 
-    Todo: process Response Object and its headers, schema, examples
-    -->
+    <!--Todo: process Response Object and its headers, schema, examples -->
 
     
 
@@ -671,17 +672,15 @@ code {
 
     
 
-    <!-- Remove Return type... unclear where this comes from;
-         for our swagger.json files, it is always empty and there is no boolean guard or hasReturnType
-         do we end up with a heading but not content
-
     
     <h3 class="field-label">Return type</h3>
-    <div class="return-type"><a href="#array">array[driver_instance]</a></div>
+    <div class="return-type">
+      array[<a href="#driver_instance">driver_instance</a>]
+      
+    </div>
     
 
-    Todo: process Response Object and its headers, schema, examples
-    -->
+    <!--Todo: process Response Object and its headers, schema, examples -->
 
     
 
@@ -744,17 +743,15 @@ code {
 
     
 
-    <!-- Remove Return type... unclear where this comes from;
-         for our swagger.json files, it is always empty and there is no boolean guard or hasReturnType
-         do we end up with a heading but not content
-
     
     <h3 class="field-label">Return type</h3>
-    <div class="return-type"><a href="#">driver_instance</a></div>
+    <div class="return-type">
+      <a href="#driver_instance">driver_instance</a>
+      
+    </div>
     
 
-    Todo: process Response Object and its headers, schema, examples
-    -->
+    <!--Todo: process Response Object and its headers, schema, examples -->
 
     
 
@@ -773,6 +770,10 @@ code {
     
     <h4 class="field-label">201</h4>
     Instance created
+    
+    
+    <h4 class="field-label">409</h4>
+    Conflict
     
     
     <h4 class="field-label">500</h4>
@@ -817,17 +818,15 @@ code {
 
     
 
-    <!-- Remove Return type... unclear where this comes from;
-         for our swagger.json files, it is always empty and there is no boolean guard or hasReturnType
-         do we end up with a heading but not content
-
     
     <h3 class="field-label">Return type</h3>
-    <div class="return-type"><a href="#">driver_instance</a></div>
+    <div class="return-type">
+      <a href="#driver_instance">driver_instance</a>
+      
+    </div>
     
 
-    Todo: process Response Object and its headers, schema, examples
-    -->
+    <!--Todo: process Response Object and its headers, schema, examples -->
 
     
 
@@ -901,17 +900,15 @@ code {
 
     
 
-    <!-- Remove Return type... unclear where this comes from;
-         for our swagger.json files, it is always empty and there is no boolean guard or hasReturnType
-         do we end up with a heading but not content
-
     
     <h3 class="field-label">Return type</h3>
-    <div class="return-type"><a href="#">driver_instance</a></div>
+    <div class="return-type">
+      <a href="#driver_instance">driver_instance</a>
+      
+    </div>
     
 
-    Todo: process Response Object and its headers, schema, examples
-    -->
+    <!--Todo: process Response Object and its headers, schema, examples -->
 
     
 
@@ -934,6 +931,10 @@ code {
     
     <h4 class="field-label">404</h4>
     Not Found
+    
+    
+    <h4 class="field-label">409</h4>
+    Conflict
     
     
     <h4 class="field-label">500</h4>
@@ -978,14 +979,9 @@ code {
 
     
 
-    <!-- Remove Return type... unclear where this comes from;
-         for our swagger.json files, it is always empty and there is no boolean guard or hasReturnType
-         do we end up with a heading but not content
-
     
 
-    Todo: process Response Object and its headers, schema, examples
-    -->
+    <!--Todo: process Response Object and its headers, schema, examples -->
 
     
 
@@ -1052,14 +1048,9 @@ code {
 
     
 
-    <!-- Remove Return type... unclear where this comes from;
-         for our swagger.json files, it is always empty and there is no boolean guard or hasReturnType
-         do we end up with a heading but not content
-
     
 
-    Todo: process Response Object and its headers, schema, examples
-    -->
+    <!--Todo: process Response Object and its headers, schema, examples -->
 
     
 
@@ -1119,17 +1110,15 @@ code {
 
     
 
-    <!-- Remove Return type... unclear where this comes from;
-         for our swagger.json files, it is always empty and there is no boolean guard or hasReturnType
-         do we end up with a heading but not content
-
     
     <h3 class="field-label">Return type</h3>
-    <div class="return-type"><a href="#array">array[driver]</a></div>
+    <div class="return-type">
+      array[<a href="#driver">driver</a>]
+      
+    </div>
     
 
-    Todo: process Response Object and its headers, schema, examples
-    -->
+    <!--Todo: process Response Object and its headers, schema, examples -->
 
     
 
@@ -1192,17 +1181,15 @@ code {
 
     
 
-    <!-- Remove Return type... unclear where this comes from;
-         for our swagger.json files, it is always empty and there is no boolean guard or hasReturnType
-         do we end up with a heading but not content
-
     
     <h3 class="field-label">Return type</h3>
-    <div class="return-type"><a href="#">driver</a></div>
+    <div class="return-type">
+      <a href="#driver">driver</a>
+      
+    </div>
     
 
-    Todo: process Response Object and its headers, schema, examples
-    -->
+    <!--Todo: process Response Object and its headers, schema, examples -->
 
     
 
@@ -1269,17 +1256,15 @@ code {
 
     
 
-    <!-- Remove Return type... unclear where this comes from;
-         for our swagger.json files, it is always empty and there is no boolean guard or hasReturnType
-         do we end up with a heading but not content
-
     
     <h3 class="field-label">Return type</h3>
-    <div class="return-type"><a href="#">driver</a></div>
+    <div class="return-type">
+      <a href="#driver">driver</a>
+      
+    </div>
     
 
-    Todo: process Response Object and its headers, schema, examples
-    -->
+    <!--Todo: process Response Object and its headers, schema, examples -->
 
     
 
@@ -1353,17 +1338,15 @@ code {
 
     
 
-    <!-- Remove Return type... unclear where this comes from;
-         for our swagger.json files, it is always empty and there is no boolean guard or hasReturnType
-         do we end up with a heading but not content
-
     
     <h3 class="field-label">Return type</h3>
-    <div class="return-type"><a href="#">driver</a></div>
+    <div class="return-type">
+      <a href="#driver">driver</a>
+      
+    </div>
     
 
-    Todo: process Response Object and its headers, schema, examples
-    -->
+    <!--Todo: process Response Object and its headers, schema, examples -->
 
     
 
@@ -1386,6 +1369,10 @@ code {
     
     <h4 class="field-label">404</h4>
     Not Found
+    
+    
+    <h4 class="field-label">409</h4>
+    A driver with the same type already exists
     
     
     <h4 class="field-label">500</h4>
@@ -1430,14 +1417,9 @@ code {
 
     
 
-    <!-- Remove Return type... unclear where this comes from;
-         for our swagger.json files, it is always empty and there is no boolean guard or hasReturnType
-         do we end up with a heading but not content
-
     
 
-    Todo: process Response Object and its headers, schema, examples
-    -->
+    <!--Todo: process Response Object and its headers, schema, examples -->
 
     
 
@@ -1513,14 +1495,9 @@ code {
     </div>  <!-- field-items -->
     
 
-    <!-- Remove Return type... unclear where this comes from;
-         for our swagger.json files, it is always empty and there is no boolean guard or hasReturnType
-         do we end up with a heading but not content
-
     
 
-    Todo: process Response Object and its headers, schema, examples
-    -->
+    <!--Todo: process Response Object and its headers, schema, examples -->
 
     
 
@@ -1587,17 +1564,15 @@ code {
 
     
 
-    <!-- Remove Return type... unclear where this comes from;
-         for our swagger.json files, it is always empty and there is no boolean guard or hasReturnType
-         do we end up with a heading but not content
-
     
     <h3 class="field-label">Return type</h3>
-    <div class="return-type"><a href="#">driver_schema</a></div>
+    <div class="return-type">
+      <a href="#driver_schema">driver_schema</a>
+      
+    </div>
     
 
-    Todo: process Response Object and its headers, schema, examples
-    -->
+    <!--Todo: process Response Object and its headers, schema, examples -->
 
     
 
@@ -1664,17 +1639,15 @@ code {
 
     
 
-    <!-- Remove Return type... unclear where this comes from;
-         for our swagger.json files, it is always empty and there is no boolean guard or hasReturnType
-         do we end up with a heading but not content
-
     
     <h3 class="field-label">Return type</h3>
-    <div class="return-type"><a href="#">dial_schema</a></div>
+    <div class="return-type">
+      <a href="#dial_schema">dial_schema</a>
+      
+    </div>
     
 
-    Todo: process Response Object and its headers, schema, examples
-    -->
+    <!--Todo: process Response Object and its headers, schema, examples -->
 
     
 
@@ -1734,17 +1707,15 @@ code {
 
     
 
-    <!-- Remove Return type... unclear where this comes from;
-         for our swagger.json files, it is always empty and there is no boolean guard or hasReturnType
-         do we end up with a heading but not content
-
     
     <h3 class="field-label">Return type</h3>
-    <div class="return-type"><a href="#">info</a></div>
+    <div class="return-type">
+      <a href="#info">info</a>
+      
+    </div>
     
 
-    Todo: process Response Object and its headers, schema, examples
-    -->
+    <!--Todo: process Response Object and its headers, schema, examples -->
 
     
 
@@ -1807,17 +1778,15 @@ code {
 
     
 
-    <!-- Remove Return type... unclear where this comes from;
-         for our swagger.json files, it is always empty and there is no boolean guard or hasReturnType
-         do we end up with a heading but not content
-
     
     <h3 class="field-label">Return type</h3>
-    <div class="return-type"><a href="#array">array[plan]</a></div>
+    <div class="return-type">
+      array[<a href="#plan">plan</a>]
+      
+    </div>
     
 
-    Todo: process Response Object and its headers, schema, examples
-    -->
+    <!--Todo: process Response Object and its headers, schema, examples -->
 
     
 
@@ -1880,17 +1849,15 @@ code {
 
     
 
-    <!-- Remove Return type... unclear where this comes from;
-         for our swagger.json files, it is always empty and there is no boolean guard or hasReturnType
-         do we end up with a heading but not content
-
     
     <h3 class="field-label">Return type</h3>
-    <div class="return-type"><a href="#">plan</a></div>
+    <div class="return-type">
+      <a href="#plan">plan</a>
+      
+    </div>
     
 
-    Todo: process Response Object and its headers, schema, examples
-    -->
+    <!--Todo: process Response Object and its headers, schema, examples -->
 
     
 
@@ -1953,17 +1920,15 @@ code {
 
     
 
-    <!-- Remove Return type... unclear where this comes from;
-         for our swagger.json files, it is always empty and there is no boolean guard or hasReturnType
-         do we end up with a heading but not content
-
     
     <h3 class="field-label">Return type</h3>
-    <div class="return-type"><a href="#">plan</a></div>
+    <div class="return-type">
+      <a href="#plan">plan</a>
+      
+    </div>
     
 
-    Todo: process Response Object and its headers, schema, examples
-    -->
+    <!--Todo: process Response Object and its headers, schema, examples -->
 
     
 
@@ -2037,17 +2002,15 @@ code {
 
     
 
-    <!-- Remove Return type... unclear where this comes from;
-         for our swagger.json files, it is always empty and there is no boolean guard or hasReturnType
-         do we end up with a heading but not content
-
     
     <h3 class="field-label">Return type</h3>
-    <div class="return-type"><a href="#">plan</a></div>
+    <div class="return-type">
+      <a href="#plan">plan</a>
+      
+    </div>
     
 
-    Todo: process Response Object and its headers, schema, examples
-    -->
+    <!--Todo: process Response Object and its headers, schema, examples -->
 
     
 
@@ -2114,14 +2077,9 @@ code {
 
     
 
-    <!-- Remove Return type... unclear where this comes from;
-         for our swagger.json files, it is always empty and there is no boolean guard or hasReturnType
-         do we end up with a heading but not content
-
     
 
-    Todo: process Response Object and its headers, schema, examples
-    -->
+    <!--Todo: process Response Object and its headers, schema, examples -->
 
     
 
@@ -2188,17 +2146,15 @@ code {
 
     
 
-    <!-- Remove Return type... unclear where this comes from;
-         for our swagger.json files, it is always empty and there is no boolean guard or hasReturnType
-         do we end up with a heading but not content
-
     
     <h3 class="field-label">Return type</h3>
-    <div class="return-type"><a href="#">service</a></div>
+    <div class="return-type">
+      <a href="#service">service</a>
+      
+    </div>
     
 
-    Todo: process Response Object and its headers, schema, examples
-    -->
+    <!--Todo: process Response Object and its headers, schema, examples -->
 
     
 
@@ -2261,17 +2217,15 @@ code {
 
     
 
-    <!-- Remove Return type... unclear where this comes from;
-         for our swagger.json files, it is always empty and there is no boolean guard or hasReturnType
-         do we end up with a heading but not content
-
     
     <h3 class="field-label">Return type</h3>
-    <div class="return-type"><a href="#">service</a></div>
+    <div class="return-type">
+      <a href="#service">service</a>
+      
+    </div>
     
 
-    Todo: process Response Object and its headers, schema, examples
-    -->
+    <!--Todo: process Response Object and its headers, schema, examples -->
 
     
 
@@ -2345,17 +2299,15 @@ code {
 
     
 
-    <!-- Remove Return type... unclear where this comes from;
-         for our swagger.json files, it is always empty and there is no boolean guard or hasReturnType
-         do we end up with a heading but not content
-
     
     <h3 class="field-label">Return type</h3>
-    <div class="return-type"><a href="#">service</a></div>
+    <div class="return-type">
+      <a href="#service">service</a>
+      
+    </div>
     
 
-    Todo: process Response Object and its headers, schema, examples
-    -->
+    <!--Todo: process Response Object and its headers, schema, examples -->
 
     
 
@@ -2378,6 +2330,10 @@ code {
     
     <h4 class="field-label">404</h4>
     Not Found
+    
+    
+    <h4 class="field-label">409</h4>
+    Conflict
     
     
     <h4 class="field-label">500</h4>
@@ -2415,14 +2371,9 @@ code {
 
     
 
-    <!-- Remove Return type... unclear where this comes from;
-         for our swagger.json files, it is always empty and there is no boolean guard or hasReturnType
-         do we end up with a heading but not content
-
     
 
-    Todo: process Response Object and its headers, schema, examples
-    -->
+    <!--Todo: process Response Object and its headers, schema, examples -->
 
     
 
@@ -2485,6 +2436,14 @@ code {
     <li><a href="#Driver"><code>Driver</code></a></li>
   
   
+  
+    <li><a href="#Dial_schema"><code>Dial_schema</code></a></li>
+  
+  
+  
+    <li><a href="#Driver_schema"><code>Driver_schema</code></a></li>
+  
+  
   </ol>
 
   
@@ -2493,6 +2452,7 @@ code {
     <h3 class="field-label"><a name="Info">Info</a> <a class="up" href="#__Models">Up</a></h3>
     <div class="field-items">
       <div class="param">version </div><div class="param-desc"><span class="param-type">String</span> </div>
+      
       
     </div>  <!-- field-items -->
   </div>
@@ -2503,12 +2463,19 @@ code {
     <h3 class="field-label"><a name="Service">Service</a> <a class="up" href="#__Models">Up</a></h3>
     <div class="field-items">
       <div class="param">id </div><div class="param-desc"><span class="param-type">String</span> </div>
+      
       <div class="param">driver_instance_id </div><div class="param-desc"><span class="param-type">String</span> </div>
+      
       <div class="param">bindable </div><div class="param-desc"><span class="param-type">Boolean</span> </div>
+      
       <div class="param">name </div><div class="param-desc"><span class="param-type">String</span> </div>
+      
       <div class="param">description </div><div class="param-desc"><span class="param-type">String</span> </div>
+      
       <div class="param">tags </div><div class="param-desc"><span class="param-type">array[String]</span> </div>
+      
       <div class="param">metadata </div><div class="param-desc"><span class="param-type">Object</span> </div>
+      
       
     </div>  <!-- field-items -->
   </div>
@@ -2519,10 +2486,15 @@ code {
     <h3 class="field-label"><a name="Plan">Plan</a> <a class="up" href="#__Models">Up</a></h3>
     <div class="field-items">
       <div class="param">name </div><div class="param-desc"><span class="param-type">String</span> </div>
+      
       <div class="param">id </div><div class="param-desc"><span class="param-type">String</span> </div>
+      
       <div class="param">dial_id </div><div class="param-desc"><span class="param-type">String</span> </div>
+      
       <div class="param">description </div><div class="param-desc"><span class="param-type">String</span> </div>
+      
       <div class="param">free </div><div class="param-desc"><span class="param-type">Boolean</span> </div>
+      
       
     </div>  <!-- field-items -->
   </div>
@@ -2533,9 +2505,13 @@ code {
     <h3 class="field-label"><a name="Dial">Dial</a> <a class="up" href="#__Models">Up</a></h3>
     <div class="field-items">
       <div class="param">id </div><div class="param-desc"><span class="param-type">String</span> </div>
+      
       <div class="param">driver_instance_id </div><div class="param-desc"><span class="param-type">String</span> </div>
+      
       <div class="param">configuration </div><div class="param-desc"><span class="param-type">Object</span> </div>
+      
       <div class="param">plan </div><div class="param-desc"><span class="param-type">String</span> </div>
+      
       
     </div>  <!-- field-items -->
   </div>
@@ -2546,11 +2522,17 @@ code {
     <h3 class="field-label"><a name="Driver_instance">Driver_instance</a> <a class="up" href="#__Models">Up</a></h3>
     <div class="field-items">
       <div class="param">id </div><div class="param-desc"><span class="param-type">String</span> </div>
+      
       <div class="param">driver_id </div><div class="param-desc"><span class="param-type">String</span> </div>
+      
       <div class="param">name </div><div class="param-desc"><span class="param-type">String</span> </div>
+      
       <div class="param">configuration </div><div class="param-desc"><span class="param-type">Object</span> </div>
+      
       <div class="param">dials </div><div class="param-desc"><span class="param-type">array[String]</span> </div>
+      
       <div class="param">service </div><div class="param-desc"><span class="param-type">String</span> </div>
+      
       
     </div>  <!-- field-items -->
   </div>
@@ -2561,9 +2543,31 @@ code {
     <h3 class="field-label"><a name="Driver">Driver</a> <a class="up" href="#__Models">Up</a></h3>
     <div class="field-items">
       <div class="param">id </div><div class="param-desc"><span class="param-type">String</span> </div>
+      
       <div class="param">name </div><div class="param-desc"><span class="param-type">String</span> </div>
+      
       <div class="param">driver_type </div><div class="param-desc"><span class="param-type">String</span> </div>
+      
       <div class="param">driver_instances </div><div class="param-desc"><span class="param-type">array[String]</span> </div>
+      
+      
+    </div>  <!-- field-items -->
+  </div>
+  
+  
+  
+  <div class="model">
+    <h3 class="field-label"><a name="Dial_schema">Dial_schema</a> <a class="up" href="#__Models">Up</a></h3>
+    <div class="field-items">
+      
+    </div>  <!-- field-items -->
+  </div>
+  
+  
+  
+  <div class="model">
+    <h3 class="field-label"><a name="Driver_schema">Driver_schema</a> <a class="up" href="#__Models">Up</a></h3>
+    <div class="field-items">
       
     </div>  <!-- field-items -->
   </div>

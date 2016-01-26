@@ -61,6 +61,24 @@ func (o *UpdateServiceNotFound) WriteResponse(rw http.ResponseWriter, producer h
 	rw.WriteHeader(404)
 }
 
+/*UpdateServiceConflict Conflict
+
+swagger:response updateServiceConflict
+*/
+type UpdateServiceConflict struct {
+}
+
+// NewUpdateServiceConflict creates UpdateServiceConflict with default headers values
+func NewUpdateServiceConflict() *UpdateServiceConflict {
+	return &UpdateServiceConflict{}
+}
+
+// WriteResponse to the client
+func (o *UpdateServiceConflict) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+
+	rw.WriteHeader(409)
+}
+
 /*UpdateServiceInternalServerError Unexpected error
 
 swagger:response updateServiceInternalServerError

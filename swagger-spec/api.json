@@ -187,6 +187,9 @@
                     "404": {
                         "description": "Not Found"
                     },
+                    "409": {
+                        "description": "A driver with the same type already exists"
+                    },
                     "500": {
                         "description": "Unexpected error",
                         "schema": {
@@ -385,6 +388,9 @@
                             "$ref": "#/definitions/driver_instance"
                         }
                     },
+                    "409": {
+                        "description": "Conflict"
+                    },
                     "500": {
                         "description": "Unexpected error",
                         "schema": {
@@ -455,6 +461,9 @@
                     },
                     "404": {
                         "description": "Not Found"
+                    },
+                    "409": {
+                        "description": "Conflict"
                     },
                     "500": {
                         "description": "Unexpected error",
@@ -611,6 +620,9 @@
                     },
                     "404": {
                         "description": "Not Found"
+                    },
+                    "409": {
+                        "description": "Conflict"
                     },
                     "500": {
                         "description": "Unexpected error",
