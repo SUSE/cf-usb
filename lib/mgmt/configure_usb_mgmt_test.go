@@ -152,6 +152,7 @@ func Test_CreateDriverInstance(t *testing.T) {
 	testConfig.Drivers["testDriverID"] = driver
 	provider.On("LoadConfiguration").Return(&testConfig, nil)
 
+	sbMocked.Mock.On("CheckServiceNameExists", mock.Anything).Return(false)
 	sbMocked.Mock.On("GetServiceBrokerGuidByName", mock.Anything).Return("aguid", nil)
 	sbMocked.Mock.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	sbMocked.Mock.On("Update", "aguid", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
@@ -244,6 +245,9 @@ func Test_UpdateDriver(t *testing.T) {
 	params.Driver.ID = &testDriverID
 	params.Driver.Name = "testDriver"
 	params.Driver.DriverType = "testType"
+
+	sbMocked.Mock.On("CheckServiceNameExists", mock.Anything).Return(false)
+
 	provider.On("SetDriver", mock.Anything, mock.Anything).Return(nil)
 	provider.On("GetDriver", mock.Anything).Return(&driver, nil)
 	response := UnitTest.MgmtAPI.UpdateDriverHandler.Handle(*params, true)
