@@ -213,8 +213,10 @@ func (c *redisConfig) DeleteDriverInstance(instanceID string) error {
 	}
 
 	for _, d := range config.Drivers {
-		delete(d.DriverInstances, instanceID)
-		break
+		if _, ok := d.DriverInstances[instanceID]; ok {
+			delete(d.DriverInstances, instanceID)
+			break
+		}
 	}
 
 	data, err := json.Marshal(config)
