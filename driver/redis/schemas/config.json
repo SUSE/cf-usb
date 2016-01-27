@@ -1,26 +1,19 @@
 {
-	"type": "object"
+	"type": "object",
 	"properties": {
-		"brokerGoRedisDriver": {
+		"docker_endpoint": {
 			"type": "string"
 		},
-		"brokerDockerConnection": {
-			"type": "object"
-			"properties": {
-				"docker_endpoint": {
-					"type": "string"
-				},
-				"docker_image": {
-					"type": "string"
-				},
-				"docker_image_version": {
-					"type": "string"
-				}
-			}
+		"docker_image": {
+			"type": "string"
+		},
+		"docker_image_version": {
+			"type": "string"
 		}
-	}
+	},
 	"required": [
-		"brokerGoRedisDriver",
-		"brokerDockerConnection"
+		"docker_endpoint",
+		"docker_image",
+		"docker_image_version"
 	]
 }
