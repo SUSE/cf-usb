@@ -654,6 +654,23 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 			return &DeleteDriverInstanceInternalServerError{Payload: err.Error()}
 		}
 
+		config, err := configProvider.LoadConfiguration()
+		if err != nil {
+			return &DeleteDriverInstanceInternalServerError{Payload: err.Error()}
+		}
+
+		guid, err := ccServiceBroker.GetServiceBrokerGuidByName(brokerName)
+		if err != nil {
+			log.Error("get-service-broker-failed", err)
+			return &DeleteDriverInstanceInternalServerError{Payload: err.Error()}
+		}
+
+		err = ccServiceBroker.Update(guid, brokerName, config.BrokerAPI.ExternalUrl, config.BrokerAPI.Credentials.Username, config.BrokerAPI.Credentials.Password)
+		if err != nil {
+			log.Error("update-service-broker-failed", err)
+			return &DeleteDriverInstanceInternalServerError{Payload: err.Error()}
+		}
+
 		return &DeleteDriverInstanceNoContent{}
 	})
 
