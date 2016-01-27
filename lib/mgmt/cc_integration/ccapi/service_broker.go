@@ -12,6 +12,7 @@ import (
 
 type ServiceBrokerInterface interface {
 	Create(name, url, username, password string) error
+	Delete(name string) error
 	Update(serviceBrokerGuid, name, url, username, password string) error
 	EnableServiceAccess(serviceId string) error
 	GetServiceBrokerGuidByName(name string) (string, error)
@@ -210,4 +211,39 @@ func (sb *ServiceBroker) CheckServiceNameExists(name string) bool {
 	log.Debug(fmt.Sprintf("check service name %s exists complete - returning %t", name, exist))
 
 	return exist
+}
+
+func (sb *ServiceBroker) Delete(name string) error {
+	log := sb.logger.Session("delete-broker", lager.Data{"name": name})
+	log.Debug("starting")
+
+	guid, err := sb.GetServiceBrokerGuidByName(name)
+	if err != nil {
+		return err
+	}
+
+	path := "/v2/service_brokers/" + guid
+	values := ""
+	token, err := sb.tokenGenerator.GetToken()
+	if err != nil {
+		return err
+	}
+
+	headers := make(map[string]string)
+	headers["Authorization"] = token
+
+	log.Debug("preparing-request", lager.Data{"request-content": string(values), "headers": headers})
+
+	request := httpclient.Request{Verb: "DELETE", Endpoint: sb.ccApi, ApiUrl: path, Body: strings.NewReader(string(values)), Headers: headers, StatusCode: 204}
+
+	log.Info("starting-cc-request", lager.Data{"path": path})
+
+	_, err = sb.client.Request(request)
+	if err != nil {
+		return err
+	}
+
+	log.Info("finished-cc-request")
+
+	return nil
 }
