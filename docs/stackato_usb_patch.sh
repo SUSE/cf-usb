@@ -2,14 +2,8 @@
 
 baseurl="https://region-b.geo-1.objects.hpcloudsvc.com/v1/54026737306152/cf-usb-artifacts/verify-162-2016-01-26_14-03-01/linux-amd64.zip"
 
-function random_uuid()
-{
-# generate a random uuid
-echo -n "`cat /dev/urandom | tr -dc 'a-f0-9' | fold -w 8 | head -n 1`-`cat /dev/urandom | tr -dc 'a-f0-9' | fold -w 4 | head -n 1`-`cat /dev/urandom | tr -dc 'a-f0-9' | fold -w 4 | head -n 1`-`cat /dev/urandom | tr -dc 'a-f0-9' | fold -w 4 | head -n 1`-`cat /dev/urandom | tr -dc 'a-f0-9' | fold -w 12 | head -n 1`" 
-}
-
-uaa_secret=`random_uuid`
-broker_secret=`random_uuid`
+uaa_secret=`uuidgen`
+broker_secret=`uuidgen`
 
 function download_bits()
 {
@@ -61,7 +55,7 @@ echo "Adding drivers to redis"
 
 for driver in /s/go/bin/drivers/*;
 do
-        guid=`random_uuid`
+        guid=`uuidgen`
         kato config set usb drivers/${guid}/driver_type "`basename $driver`"
         kato config set usb drivers/${guid}/driver_name "`basename $driver`"
 done
