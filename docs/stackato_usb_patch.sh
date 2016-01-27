@@ -1,6 +1,6 @@
 #!/bin/bash
 
-baseurl="https://region-b.geo-1.objects.hpcloudsvc.com/v1/54026737306152/cf-usb-artifacts/verify-141-2016-01-20_14-16-46/linux-amd64.zip"
+baseurl="https://region-b.geo-1.objects.hpcloudsvc.com/v1/54026737306152/cf-usb-artifacts/verify-162-2016-01-26_14-03-01/linux-amd64.zip"
 
 function random_uuid()
 {
@@ -26,13 +26,12 @@ rm -rf linux-amd64*
 
 function configure_redis()
 {
-cf_usb_secret=`kato config get aok oauth/clients/cc_usb_management/secret`
 aok_verification_key=`kato config get cloud_controller_ng uaa/symmetric_secret`
 cc_external_domain=`kato config get cloud_controller_ng external_domain`
 
 echo "Adding management_api to redis"
 
-kato config set usb management_api/listen ":54053"
+kato config set usb management_api/listen ":23285"
 kato config set usb management_api/uaa_secret "${uaa_secret}"
 kato config set usb management_api/uaa_client "cc_usb_management"
 kato config set usb management_api/authentication/uaa/adminscope "cloud_controller.admin"
@@ -46,7 +45,7 @@ system_domain=`kato config get cloud_controller_ng system_domain`
 echo "Adding broker_api to redis"
 
 kato config set usb broker_api/external_url "http://broker.$system_domain"
-kato config set usb broker_api/listen ":54054"
+kato config set usb broker_api/listen ":23286"
 kato config set usb broker_api/credentials/username "usb-broker-admin"
 kato config set usb broker_api/credentials/password "${broker_secret}"
 
