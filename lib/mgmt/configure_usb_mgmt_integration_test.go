@@ -622,6 +622,9 @@ func Test_IntDelete(t *testing.T) {
 	response = IntegrationConfig.MgmtAPI.DeleteDialHandler.Handle(*dialDeleteParams, true)
 	assert.IsType(&operations.DeleteDialNoContent{}, response)
 
+	IntegrationConfig.CcServiceBroker.Mock.On("GetServiceBrokerGuidByName", mock.Anything).Return("aguid", nil)
+	IntegrationConfig.CcServiceBroker.Mock.On("Update", "aguid", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
 	deleteInstanceParams := &operations.DeleteDriverInstanceParams{}
 	deleteInstanceParams.DriverInstanceID = *existingInstace.ID
 	response = IntegrationConfig.MgmtAPI.DeleteDriverInstanceHandler.Handle(*deleteInstanceParams, true)
