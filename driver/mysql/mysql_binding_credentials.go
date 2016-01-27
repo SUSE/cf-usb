@@ -7,6 +7,7 @@ type MysqlBindingCredentials struct {
 	Port             string `json:"port"`
 	Username         string `json:"user_id"`
 	Password         string `json:"password"`
+	Database         string `json:"database"`
 	ConnectionString string `json:"connectionString"`
 }
 

@@ -659,16 +659,31 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 			return &DeleteDriverInstanceInternalServerError{Payload: err.Error()}
 		}
 
-		guid, err := ccServiceBroker.GetServiceBrokerGuidByName(brokerName)
-		if err != nil {
-			log.Error("get-service-broker-failed", err)
-			return &DeleteDriverInstanceInternalServerError{Payload: err.Error()}
+		instanceCount := 0
+		for _, driver := range config.Drivers {
+			for _, _ = range driver.DriverInstances {
+				instanceCount++
+			}
 		}
 
-		err = ccServiceBroker.Update(guid, brokerName, config.BrokerAPI.ExternalUrl, config.BrokerAPI.Credentials.Username, config.BrokerAPI.Credentials.Password)
-		if err != nil {
-			log.Error("update-service-broker-failed", err)
-			return &DeleteDriverInstanceInternalServerError{Payload: err.Error()}
+		if instanceCount == 0 {
+			err := ccServiceBroker.Delete(brokerName)
+			if err != nil {
+				log.Error("delete-service-broker-failed", err)
+				return &DeleteDriverInstanceInternalServerError{Payload: err.Error()}
+			}
+		} else {
+			guid, err := ccServiceBroker.GetServiceBrokerGuidByName(brokerName)
+			if err != nil {
+				log.Error("get-service-broker-failed", err)
+				return &DeleteDriverInstanceInternalServerError{Payload: err.Error()}
+			}
+
+			err = ccServiceBroker.Update(guid, brokerName, config.BrokerAPI.ExternalUrl, config.BrokerAPI.Credentials.Username, config.BrokerAPI.Credentials.Password)
+			if err != nil {
+				log.Error("update-service-broker-failed", err)
+				return &DeleteDriverInstanceInternalServerError{Payload: err.Error()}
+			}
 		}
 
 		return &DeleteDriverInstanceNoContent{}

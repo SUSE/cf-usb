@@ -174,6 +174,7 @@ func (e *MysqlDriver) GenerateCredentials(request driver.GenerateCredentialsRequ
 		Port:     e.conf.Port,
 		Username: username,
 		Password: password,
+		Database: strings.Replace(request.InstanceID, "-", "", -1),
 		ConnectionString: generateConnectionString(e.conf.Host, e.conf.Port,
 			strings.Replace(request.InstanceID, "-", "", -1), username, password),
 	}

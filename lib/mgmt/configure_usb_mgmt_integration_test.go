@@ -624,6 +624,7 @@ func Test_IntDelete(t *testing.T) {
 
 	IntegrationConfig.CcServiceBroker.Mock.On("GetServiceBrokerGuidByName", mock.Anything).Return("aguid", nil)
 	IntegrationConfig.CcServiceBroker.Mock.On("Update", "aguid", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	IntegrationConfig.CcServiceBroker.Mock.On("Delete", mock.Anything).Return(nil)
 
 	deleteInstanceParams := &operations.DeleteDriverInstanceParams{}
 	deleteInstanceParams.DriverInstanceID = *existingInstace.ID
