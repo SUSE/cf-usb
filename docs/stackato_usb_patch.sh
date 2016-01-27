@@ -84,6 +84,7 @@ EOF
 cat <<EOF >>/s/etc/kato/role_order.yml
 usb:
     min_per_cluster: 0
+    max_per_cluster: 1
     exclude_from_add_all: true
 EOF
 
