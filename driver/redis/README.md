@@ -1,12 +1,12 @@
-# Universal service broker RabbitMQ Driver
+# Universal service broker Redis Driver
 
 A docker image with management api is needed.
 
 Supported image:
 
-https://hub.docker.com/_/rabbitmq/
+https://hub.docker.com/_/redis/
 
-tag: 3.6.0-management
+tag: 3.0.6
 
 Docker version > 1.5
 
@@ -17,7 +17,7 @@ Configuration example:
 ```sh
 {
     "docker_endpoint": "unix:///var/run/docker.sock",
-    "docker_image": "rabbitmq",
-    "docker_image_version": "3.6.0-management"
+    "docker_image": "redis",
+    "docker_image_version": "3.0.6"
 }
 ```
