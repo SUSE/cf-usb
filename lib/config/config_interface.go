@@ -33,7 +33,7 @@ type UaaAuth struct {
 
 type CloudController struct {
 	Api               string `json:"api"`
-	SkipTslValidation bool   `json:"skip_tsl_validation"`
+	SkipTlsValidation bool   `json:"skip_tls_validation"`
 }
 
 type Dial struct {

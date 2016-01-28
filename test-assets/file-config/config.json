@@ -27,7 +27,7 @@
 		},
 		"cloud_controller": {
 			"api": "http://api.bosh-lite.com",
-			"skip_tsl_validation": true
+			"skip_tls_validation": true
 		}
 	},
 	"drivers": {
