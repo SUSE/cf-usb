@@ -29,12 +29,12 @@ type Request struct {
 }
 
 type httpClient struct {
-	skipTslValidation bool
+	skipSslValidation bool
 }
 
-func NewHttpClient(skipTslValidation bool) HttpClient {
+func NewHttpClient(skipSslValidation bool) HttpClient {
 	return &httpClient{
-		skipTslValidation: skipTslValidation,
+		skipSslValidation: skipSslValidation,
 	}
 }
 
@@ -62,7 +62,7 @@ func (client *httpClient) httpRequest(req Request) ([]byte, error) {
 	}
 
 	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: client.skipTslValidation},
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: client.skipSslValidation},
 	}
 	httpClient := &http.Client{Transport: tr}
 

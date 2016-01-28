@@ -92,7 +92,7 @@ func (usb *UsbApp) Run(configProvider config.ConfigProvider, logger lager.Logger
 				logger.Fatal("initializing-uaa-auth-failed", err)
 			}
 
-			client := httpclient.NewHttpClient(usb.config.ManagementAPI.CloudController.SkipTslValidation)
+			client := httpclient.NewHttpClient(usb.config.ManagementAPI.CloudController.SkipTlsValidation)
 			info := ccapi.NewGetInfo(usb.config.ManagementAPI.CloudController.Api, client, logger)
 			tokenUrl, err := info.GetTokenEndpoint()
 			if err != nil {

@@ -31,7 +31,7 @@ kato config set usb management_api/uaa_client "cc_usb_management"
 kato config set usb management_api/authentication/uaa/adminscope "cloud_controller.admin"
 kato config set usb management_api/authentication/uaa/symmetric_verification_key "$aok_verification_key"
 kato config set usb management_api/cloud_controller/api "https://$cc_external_domain"
-kato config set usb management_api/cloud_controller/skip_tsl_validation "true"
+kato config set usb management_api/cloud_controller/skip_tls_validation "true"
 kato config set usb management_api/dev_mode "true"
 
 system_domain=`kato config get cloud_controller_ng system_domain`
