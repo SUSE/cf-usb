@@ -259,19 +259,19 @@ func (_m *ConfigProvider) DeleteDial(dialid string) error {
 
 	return r0
 }
-func (_m *ConfigProvider) ServiceNameExists(servicename string) (bool, error) {
-	ret := _m.Called(servicename)
+func (_m *ConfigProvider) DriverInstanceNameExists(driverInstanceName string) (bool, error) {
+	ret := _m.Called(driverInstanceName)
 
 	var r0 bool
 	if rf, ok := ret.Get(0).(func(string) bool); ok {
-		r0 = rf(servicename)
+		r0 = rf(driverInstanceName)
 	} else {
 		r0 = ret.Get(0).(bool)
 	}
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(servicename)
+		r1 = rf(driverInstanceName)
 	} else {
 		r1 = ret.Error(1)
 	}

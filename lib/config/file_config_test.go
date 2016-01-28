@@ -162,7 +162,7 @@ func TestGetUaaAuthConfig(t *testing.T) {
 	assert.True(strings.Contains(uaaAuth.PublicKey, "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDHFr+KICms+tuT1OXJwhCUmR2d\nKVy7psa8xzElSyzqx7oJyfJ1JZyOzToj9T5SfTIq396agbHJWVfYphNahvZ/7uMX\nqHxf+ZH9BL1gk9Y6kCnbM5R60gfwjyW1/dQPjOzn9N394zd2FJoFHwdq9Qs0wBug\nspULZVNRxq7veq/fzwIDAQAB\n-----END PUBLIC KEY-----"))
 }
 
-func TestServiceNameExists(t *testing.T) {
+func TestDriverInstanceNameExists(t *testing.T) {
 	assert := assert.New(t)
 
 	_, configuration, err := loadConfigAsset()
@@ -170,9 +170,9 @@ func TestServiceNameExists(t *testing.T) {
 		assert.Error(err, "Unable to load from temp config file")
 	}
 
-	exist, err := configuration.ServiceNameExists("echo")
+	exist, err := configuration.DriverInstanceNameExists("dummy1")
 	if err != nil {
-		assert.Error(err, "Unable to check service name existance")
+		assert.Error(err, "Unable to check driver instance name existance")
 	}
 
 	assert.True(exist)

@@ -146,6 +146,7 @@ func Test_CreateDriverInstance(t *testing.T) {
 	provider.On("GetDriver", "testDriverID").Return(&driver, nil)
 	provider.On("SetService", mock.Anything, mock.Anything).Return(nil)
 	provider.On("GetDriversPath").Return(os.Getenv("USB_DRIVER_PATH"), nil)
+	provider.On("DriverInstanceNameExists", mock.Anything).Return(false, nil)
 
 	var testConfig config.Config
 	testConfig.Drivers = make(map[string]config.Driver)
@@ -280,6 +281,7 @@ func Test_UpdateDriverInstance(t *testing.T) {
 	params.DriverConfig.Name = "testInstance"
 	params.DriverInstanceID = "testDriverID"
 
+	provider.On("DriverInstanceNameExists", mock.Anything).Return(false, nil)
 	provider.On("SetDriverInstance", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	response := UnitTest.MgmtAPI.UpdateDriverInstanceHandler.Handle(*params, true)
 	assert.IsType(&operations.UpdateDriverInstanceOK{}, response)
@@ -304,7 +306,7 @@ func Test_UpdateDial(t *testing.T) {
 	params.Dial.Plan = &planID
 
 	var dial config.Dial
-    provider.On("GetDial", updateddialID).Return(&dial, nil)
+	provider.On("GetDial", updateddialID).Return(&dial, nil)
 	provider.On("SetDial", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	response := UnitTest.MgmtAPI.UpdateDialHandler.Handle(*params, true)
 	assert.IsType(&operations.UpdateDialOK{}, response)
@@ -339,7 +341,7 @@ func Test_UpdateService(t *testing.T) {
 	desc := "description"
 	params.Service.Description = &desc
 	provider.On("SetService", mock.Anything, mock.Anything).Return(nil)
-	provider.On("ServiceNameExists", mock.Anything).Return(false, nil)
+	provider.On("DriverInstanceNameExists", mock.Anything).Return(false, nil)
 	response := UnitTest.MgmtAPI.UpdateServiceHandler.Handle(*params, true)
 	assert.IsType(&operations.UpdateServiceOK{}, response)
 }

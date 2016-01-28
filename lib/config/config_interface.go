@@ -85,7 +85,7 @@ type ConfigProvider interface {
 	SetDial(instanceid string, dialid string, dial Dial) error
 	GetDial(dialid string) (*Dial, error)
 	DeleteDial(dialid string) error
-	ServiceNameExists(servicename string) (bool, error)
+	DriverInstanceNameExists(driverInstanceName string) (bool, error)
 	DriverTypeExists(driverType string) (bool, error)
 	GetPlan(plandid string) (plan *brokerapi.ServicePlan, dialid string, instanceid string, err error)
 	GetDriversPath() (string, error)
