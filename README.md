@@ -9,7 +9,7 @@ It uses plugins (drivers) to connect to different services.
 
 ![cf-usb](https://region-b.geo-1.objects.hpcloudsvc.com/v1/11899734124432/imgs/usb.png)
 
-## Unamaged USB
+## Unmanaged USB
 
 Unmanaged USB provides provides a limited number of features and implements the basic functionality of a Cloud Foundry Service Broker.
 
@@ -24,7 +24,7 @@ Constraints:
 
 #### 1. Cloud Foundry application
 
-The unmanaged USB can be deployed as an app to a Cloud Foundry deploymenet. All the services managed must be external services.
+The unmanaged USB can be deployed as an app to a Cloud Foundry deployment. All the services managed must be external services.
 
 #### 2. fissile
 
@@ -52,7 +52,8 @@ USB uses UAA as an authorization provider. It requires the `cc_usb_management` O
 Basic auth can be used when making calls to the USB management API.
 
 #### API Definition
-TODO: add api definitions for the management API.
+
+The usb management API is described [here](https://github.com/hpcloud/cf-usb/blob/b84f846eedc13c2cf9215c53f323b01c545aab42/docs/mgmt.html)
 
 ### fissile
 
