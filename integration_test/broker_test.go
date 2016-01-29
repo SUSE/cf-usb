@@ -72,6 +72,21 @@ var ConsulConfig = struct {
 	consulToken      string
 }{}
 
+type DriverResponse struct {
+	Id              string   `json:"id"`
+	Name            string   `json:"name"`
+	DriverType      string   `json:"driver_type"`
+	DriverInstances []string `json:"driver_instances,omitempty"`
+}
+
+type DriverInstanceResponse struct {
+	Configuration interface{} `json:"configuration,omitempty"`
+	Id            string      `json:"id"`
+	Name          string      `json:"name"`
+	Service       string      `json:"service"`
+	Dials         []string    `json:"dials,omitempty"`
+}
+
 func init() {
 	ConsulConfig.consulAddress = os.Getenv("CONSUL_ADDRESS")
 	ConsulConfig.consulDatacenter = os.Getenv("CONSUL_DATACENTER")
@@ -166,6 +181,74 @@ func start_consulProcess() (ifrit.Process, error) {
 	return consulProcess, nil
 }
 
+func run_consul(brokerApiPort, managementApiPort uint16, ccServerUrl string) (consul.ConsulProvisionerInterface, error) {
+	var consulClient consul.ConsulProvisionerInterface
+
+	getConsulReq, _ := http.NewRequest("GET", "http://localhost:8500", nil)
+	getConsulResp, _ := http.DefaultClient.Do(getConsulReq)
+	consulIsRunning := false
+	if getConsulResp != nil && getConsulResp.StatusCode == 200 {
+		consulIsRunning = true
+	}
+
+	if (strings.Contains(ConsulConfig.consulAddress, "127.0.0.1") || strings.Contains(ConsulConfig.consulAddress, "localhost")) && !consulIsRunning {
+		ConsulConfig.consulAddress = "127.0.0.1:8500"
+		ConsulConfig.consulSchema = "http"
+
+		consulProcess, err := start_consulProcess()
+		if err != nil {
+			return nil, err
+		}
+
+		defer func() {
+			consulProcess.Signal(os.Kill)
+			<-consulProcess.Wait()
+		}()
+	}
+
+	consulClient, err := init_consulProvisioner()
+	if err != nil {
+		return nil, err
+	}
+
+	var list api.KVPairs
+
+	list = append(list, &api.KVPair{Key: "usb/api_version", Value: []byte("2.0")})
+	list = append(list, &api.KVPair{Key: "usb/broker_api", Value: []byte(fmt.Sprintf("{\"listen\":\":%v\",\"credentials\":{\"username\":\"demouser\",\"password\":\"demopassword\"}}", brokerApiPort))})
+	list = append(list, &api.KVPair{Key: "usb/management_api", Value: []byte(fmt.Sprintf("{\"listen\":\":%v\",\"uaa_secret\":\"myuaasecret\",\"uaa_client\":\"myuaaclient\",\"authentication\":{\"uaa\":{\"adminscope\":\"usb.management.admin\",\"public_key\":\"%v\"}},\"cloud_controller\":{\"api\":\"%s\",\"skip_tsl_validation\":true}}", managementApiPort, uaaPublicKey, ccServerUrl))})
+
+	err = consulClient.PutKVs(&list, nil)
+	if err != nil {
+		return consulClient, err
+	}
+
+	return consulClient, nil
+}
+
+func set_fakeServers() (*ghttp.Server, *ghttp.Server) {
+	var uaaFakeServer *ghttp.Server
+	uaaFakeServer = ghttp.NewServer()
+
+	var ccFakeServer *ghttp.Server
+	ccFakeServer = ghttp.NewServer()
+
+	ccFakeServer.AppendHandlers(
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("GET", "/v2/info"),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(200,
+				fmt.Sprintf(
+					`{"name": "vcap","authorization_endpoint": "%[1]s","token_endpoint":"%[1]s","api_version":"2.44.0"}`,
+					uaaFakeServer.URL()),
+			),
+		),
+	)
+
+	return uaaFakeServer, ccFakeServer
+}
+
 func GenerateUaaToken() (string, error) {
 	token := jwt.New(jwt.GetSigningMethod("RS256"))
 
@@ -209,72 +292,19 @@ func Test_BrokerWithConsulConfigProviderCatalog(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var consulClient consul.ConsulProvisionerInterface
-
-	getConsulReq, _ := http.NewRequest("GET", "http://localhost:8500", nil)
-	getConsulResp, _ := http.DefaultClient.Do(getConsulReq)
-	consulIsRunning := false
-	if getConsulResp != nil && getConsulResp.StatusCode == 200 {
-		consulIsRunning = true
-	}
-
-	if (strings.Contains(ConsulConfig.consulAddress, "127.0.0.1") || strings.Contains(ConsulConfig.consulAddress, "localhost")) && !consulIsRunning {
-		ConsulConfig.consulAddress = "127.0.0.1:8500"
-		ConsulConfig.consulSchema = "http"
-
-		consulProcess, err := start_consulProcess()
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		defer func() {
-			consulProcess.Signal(os.Kill)
-			<-consulProcess.Wait()
-		}()
-
-		t.Log("consul started")
-	}
-
-	consulClient, err = init_consulProvisioner()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	var uaaFakeServer *ghttp.Server
-	uaaFakeServer = ghttp.NewServer()
-
-	var ccFakeServer *ghttp.Server
-	ccFakeServer = ghttp.NewServer()
-
-	ccFakeServer.AppendHandlers(
-		ghttp.CombineHandlers(
-			ghttp.VerifyRequest("GET", "/v2/info"),
-			func(http.ResponseWriter, *http.Request) {
-				time.Sleep(0 * time.Second)
-			},
-			ghttp.RespondWith(200,
-				fmt.Sprintf(
-					`{"name": "vcap","authorization_endpoint": "%[1]s","token_endpoint":"%[1]s","api_version":"2.44.0"}`,
-					uaaFakeServer.URL()),
-			),
-		),
-	)
-
-	var list api.KVPairs
+	_, ccFakeServer := set_fakeServers()
 
 	brokerApiPort, err := localip.LocalPort()
 	Expect(err).ToNot(HaveOccurred())
 	managementApiPort, err := localip.LocalPort()
 	Expect(err).ToNot(HaveOccurred())
 
-	list = append(list, &api.KVPair{Key: "usb/api_version", Value: []byte("2.0")})
-	list = append(list, &api.KVPair{Key: "usb/broker_api", Value: []byte(fmt.Sprintf("{\"listen\":\":%v\",\"credentials\":{\"username\":\"demouser\",\"password\":\"demopassword\"}}", brokerApiPort))})
-	list = append(list, &api.KVPair{Key: "usb/management_api", Value: []byte(fmt.Sprintf("{\"listen\":\":%v\",\"uaa_secret\":\"myuaasecret\",\"uaa_client\":\"myuaaclient\",\"authentication\":{\"uaa\":{\"adminscope\":\"usb.management.admin\",\"public_key\":\"%v\"}},\"cloud_controller\":{\"api\":\"%s\",\"skip_tsl_validation\":true}}", managementApiPort, uaaPublicKey, ccFakeServer.URL()))})
-
-	err = consulClient.PutKVs(&list, nil)
+	consulClient, err := run_consul(brokerApiPort, managementApiPort, ccFakeServer.URL())
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	t.Log("consul started")
 
 	usbProcess, err := start_usbProcess(binpath, ConsulConfig.consulAddress)
 	if err != nil {
@@ -341,70 +371,18 @@ func Test_BrokerWithConsulConfigProviderCreateDriverInstance(t *testing.T) {
 		t.Skip("Skipping test as Consul env vars are not set: CONSUL_ADDRESS")
 	}
 
-	var uaaFakeServer *ghttp.Server
-	uaaFakeServer = ghttp.NewServer()
+	uaaFakeServer, ccFakeServer := set_fakeServers()
 
-	var ccFakeServer *ghttp.Server
-	ccFakeServer = ghttp.NewServer()
+	brokerApiPort, err := localip.LocalPort()
+	Expect(err).ToNot(HaveOccurred())
+	managementApiPort, err := localip.LocalPort()
+	Expect(err).ToNot(HaveOccurred())
 
-	ccFakeServer.AppendHandlers(
-		ghttp.CombineHandlers(
-			ghttp.VerifyRequest("GET", "/v2/info"),
-			func(http.ResponseWriter, *http.Request) {
-				time.Sleep(0 * time.Second)
-			},
-			ghttp.RespondWith(200,
-				fmt.Sprintf(
-					`{"name": "vcap","authorization_endpoint": "%[1]s","token_endpoint":"%[1]s","api_version":"2.44.0"}`,
-					uaaFakeServer.URL()),
-			),
-		),
-	)
-
-	for i := 0; i < len(drivers); i++ {
-		setupCcHttpFakeResponses(uaaFakeServer, ccFakeServer)
-	}
-
-	var consulClient consul.ConsulProvisionerInterface
-
-	getConsulReq, _ := http.NewRequest("GET", "http://localhost:8500", nil)
-	getConsulResp, _ := http.DefaultClient.Do(getConsulReq)
-	consulIsRunning := false
-	if getConsulResp != nil && getConsulResp.StatusCode == 200 {
-		consulIsRunning = true
-	}
-
-	if (strings.Contains(ConsulConfig.consulAddress, "127.0.0.1") || strings.Contains(ConsulConfig.consulAddress, "localhost")) && !consulIsRunning {
-		ConsulConfig.consulAddress = "127.0.0.1:8500"
-		ConsulConfig.consulSchema = "http"
-
-		consulProcess, err := start_consulProcess()
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		defer func() {
-			consulProcess.Signal(os.Kill)
-			<-consulProcess.Wait()
-		}()
-
-		t.Log("consul started")
-	}
-
-	consulClient, err = init_consulProvisioner()
+	consulClient, err := run_consul(brokerApiPort, managementApiPort, ccFakeServer.URL())
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	var list api.KVPairs
-	list = append(list, &api.KVPair{Key: "usb/api_version", Value: []byte("2.0")})
-	list = append(list, &api.KVPair{Key: "usb/broker_api", Value: []byte("{\"listen\":\":54054\",\"credentials\":{\"username\":\"demouser\",\"password\":\"demopassword\"}}")})
-	list = append(list, &api.KVPair{Key: "usb/management_api", Value: []byte(fmt.Sprintf("{\"listen\":\":54053\",\"uaa_secret\":\"myuaasecret\",\"uaa_client\":\"myuaaclient\",\"authentication\":{\"uaa\":{\"adminscope\":\"usb.management.admin\",\"public_key\":\"%[1]s\"}},\"cloud_controller\":{\"api\":\"%[2]s\",\"skip_tsl_validation\":true}}", uaaPublicKey, ccFakeServer.URL()))})
-
-	err = consulClient.PutKVs(&list, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	t.Log("consul started")
 
 	provider := config.NewConsulConfig(consulClient)
 
@@ -429,36 +407,92 @@ func Test_BrokerWithConsulConfigProviderCreateDriverInstance(t *testing.T) {
 	time.Sleep(5 * time.Second)
 
 	for _, driver := range drivers {
-		executeTest(t, driver.driverType, driver.envVarsExistFunc, driver.setDriverInstanceValuesFunc)
+		setupCcHttpFakeResponsesCreateDriverInstance(uaaFakeServer, ccFakeServer)
+		executeCreateDriverInstanceTest(t, managementApiPort, driver.driverType, driver.envVarsExistFunc, driver.setDriverInstanceValuesFunc)
 	}
 }
 
-func setupCcHttpFakeResponses(uaaFakeServer, ccFakeServer *ghttp.Server) {
-	uaaFakeServer.AppendHandlers(
+func Test_BrokerWithConsulConfigProviderUpdateDriverInstance(t *testing.T) {
+	RegisterTestingT(t)
+	architecture := fmt.Sprintf("%s-%s", runtime.GOOS, runtime.GOARCH)
+
+	dir, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	binpath := path.Join(dir, "../build", architecture, "usb")
+
+	if _, err := os.Stat(binpath); os.IsNotExist(err) {
+		t.Skip("Please build the solution before testing ", binpath)
+		return
+	}
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if ConsulConfig.consulAddress == "" {
+		t.Skip("Skipping test as Consul env vars are not set: CONSUL_ADDRESS")
+	}
+
+	uaaFakeServer, ccFakeServer := set_fakeServers()
+
+	brokerApiPort, err := localip.LocalPort()
+	Expect(err).ToNot(HaveOccurred())
+	managementApiPort, err := localip.LocalPort()
+	Expect(err).ToNot(HaveOccurred())
+
+	consulClient, err := run_consul(brokerApiPort, managementApiPort, ccFakeServer.URL())
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("consul started")
+
+	provider := config.NewConsulConfig(consulClient)
+
+	_, err = provider.LoadConfiguration()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	usbProcess, err := start_usbProcess(binpath, ConsulConfig.consulAddress)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer func() {
+		usbProcess.Signal(os.Kill)
+		<-usbProcess.Wait()
+	}()
+
+	t.Log("usb started")
+
+	//wait for process to start
+	time.Sleep(5 * time.Second)
+
+	driversContent, driversResp := executeGetDriversTest(t, managementApiPort)
+	brokerGuid := uuid.NewV4().String()
+
+	for _, driver := range drivers {
+		if driver.envVarsExistFunc() {
+
+			Expect(driversContent).To(ContainSubstring(driver.driverType))
+
+			for _, d := range driversResp {
+				if d.DriverType == driver.driverType {
+					setupCcHttpFakeResponsesUpdatePlan(brokerGuid, uaaFakeServer, ccFakeServer)
+					executeTestUpdateDriverInstance(t, managementApiPort, d, driver.setDriverInstanceValuesFunc, uaaFakeServer, ccFakeServer, brokerGuid)
+				}
+			}
+		}
+	}
+}
+
+func setupCcHttpFakeResponsesCreateDriverInstance(uaaFakeServer, ccFakeServer *ghttp.Server) {
+	uaaFakeServer.RouteToHandler("POST", "/oauth/token",
 		ghttp.CombineHandlers(
 			ghttp.VerifyRequest("POST", "/oauth/token"),
 			ghttp.RespondWith(200, `{"access_token":"replace-me", "expires_in": 3404281214}`),
-		),
-	)
-
-	uaaFakeServer.AppendHandlers(
-		ghttp.CombineHandlers(
-			ghttp.VerifyRequest("POST", "/oauth/token"),
-			ghttp.RespondWith(200, `{"access_token":"replace-me", "expires_in": 3404281216}`),
-		),
-	)
-
-	uaaFakeServer.AppendHandlers(
-		ghttp.CombineHandlers(
-			ghttp.VerifyRequest("POST", "/oauth/token"),
-			ghttp.RespondWith(200, `{"access_token":"replace-me", "expires_in": 3404281218}`),
-		),
-	)
-
-	uaaFakeServer.AppendHandlers(
-		ghttp.CombineHandlers(
-			ghttp.VerifyRequest("POST", "/oauth/token"),
-			ghttp.RespondWith(200, `{"access_token":"replace-me", "expires_in": 3404281220}`),
 		),
 	)
 
@@ -469,7 +503,7 @@ func setupCcHttpFakeResponses(uaaFakeServer, ccFakeServer *ghttp.Server) {
 				time.Sleep(0 * time.Second)
 			},
 			ghttp.RespondWith(200,
-				`{"resources":[{"metadata":{"guid":""}}]}`),
+				`{"resources":[]}`),
 		),
 	)
 
@@ -479,7 +513,7 @@ func setupCcHttpFakeResponses(uaaFakeServer, ccFakeServer *ghttp.Server) {
 			func(http.ResponseWriter, *http.Request) {
 				time.Sleep(0 * time.Second)
 			},
-			ghttp.RespondWith(200, `{"resources":[{"metadata":{"guid":""}}]}`),
+			ghttp.RespondWith(200, `{"resources":[]}`),
 		),
 	)
 
@@ -530,14 +564,14 @@ func setupCcHttpFakeResponses(uaaFakeServer, ccFakeServer *ghttp.Server) {
 	)
 }
 
-func executeTest(t *testing.T, driverName string, envVarsExist func() bool, driverInstanceValues func(driverName, driverId string) []byte) {
+func executeCreateDriverInstanceTest(t *testing.T, managementApiPort uint16, driverName string, envVarsExist func() bool, driverInstanceValues func(driverName, driverId string) []byte) {
 	if envVarsExist() {
 		token, err := GenerateUaaToken()
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		newDriverReq, err := http.NewRequest("POST", "http://localhost:54053/drivers", strings.NewReader(fmt.Sprintf(`{"name":"%[1]s", "driver_type":"%[2]s"}`, driverName, driverName)))
+		newDriverReq, err := http.NewRequest("POST", fmt.Sprintf("http://localhost:%[1]v/drivers", managementApiPort), strings.NewReader(fmt.Sprintf(`{"name":"%[1]s", "driver_type":"%[2]s"}`, driverName, driverName)))
 		newDriverReq.Header.Add("Content-Type", "application/json")
 		newDriverReq.Header.Add("Accept", "application/json")
 		newDriverReq.Header.Add("Authorization", token)
@@ -549,6 +583,7 @@ func executeTest(t *testing.T, driverName string, envVarsExist func() bool, driv
 		}
 		defer newDriverResp.Body.Close()
 
+		//instead of skiping test, should get drivers, select driver by name and continue the flow
 		//driver type exists
 		if newDriverResp.StatusCode == 409 {
 			t.Skip(fmt.Sprintf("Skipping test as driver type %[1]s already exists", driverName))
@@ -557,12 +592,6 @@ func executeTest(t *testing.T, driverName string, envVarsExist func() bool, driv
 		driverContent, err := ioutil.ReadAll(newDriverResp.Body)
 		if err != nil {
 			t.Fatal(err)
-		}
-
-		type DriverResponse struct {
-			Id         string `json:"id"`
-			Name       string `json:"name"`
-			DriverType string `json:"driver_type"`
 		}
 
 		var driver DriverResponse
@@ -577,7 +606,7 @@ func executeTest(t *testing.T, driverName string, envVarsExist func() bool, driv
 		Expect(driver.Name).To(Equal(driverName))
 		driverId := driver.Id
 
-		getDriverReq, err := http.NewRequest("GET", fmt.Sprintf("http://localhost:54053/drivers/%[1]s", driverId), nil)
+		getDriverReq, err := http.NewRequest("GET", fmt.Sprintf("http://localhost:%[1]v/drivers/%[2]s", managementApiPort, driverId), nil)
 		getDriverReq.Header.Add("Content-Type", "application/json")
 		getDriverReq.Header.Add("Accept", "application/json")
 		getDriverReq.Header.Add("Authorization", token)
@@ -599,7 +628,7 @@ func executeTest(t *testing.T, driverName string, envVarsExist func() bool, driv
 		Expect(getDriverContent).To(ContainSubstring(driverId))
 
 		instanceValues := driverInstanceValues(driverName, driverId)
-		newDriverInstReq, err := http.NewRequest("POST", "http://localhost:54053/driver_instances", bytes.NewBuffer(instanceValues))
+		newDriverInstReq, err := http.NewRequest("POST", fmt.Sprintf("http://localhost:%[1]v/driver_instances", managementApiPort), bytes.NewBuffer(instanceValues))
 		newDriverInstReq.Header.Add("Content-Type", "application/json")
 		newDriverInstReq.Header.Add("Accept", "application/json")
 		newDriverInstReq.Header.Add("Authorization", token)
@@ -617,13 +646,6 @@ func executeTest(t *testing.T, driverName string, envVarsExist func() bool, driv
 		}
 		t.Logf("driver instance: %s", string(driverInstContent))
 
-		type DriverInstanceResponse struct {
-			Id      string   `json:"id"`
-			Name    string   `json:"name"`
-			Service string   `json:"service"`
-			Dials   []string `json:"dials,omitempty"`
-		}
-
 		var driverInstance DriverInstanceResponse
 
 		err = json.Unmarshal(driverInstContent, &driverInstance)
@@ -632,7 +654,7 @@ func executeTest(t *testing.T, driverName string, envVarsExist func() bool, driv
 		}
 		Expect(driverInstContent).To(ContainSubstring(driver.Name))
 
-		getPlanReq, err := http.NewRequest("GET", fmt.Sprintf("http://localhost:54053/plans?driver_instance_id=%[1]s", driverInstance.Id), nil)
+		getPlanReq, err := http.NewRequest("GET", fmt.Sprintf("http://localhost:%[1]v/plans?driver_instance_id=%[2]s", managementApiPort, driverInstance.Id), nil)
 		getPlanReq.Header.Add("Content-Type", "application/json")
 		getPlanReq.Header.Add("Accept", "application/json")
 		getPlanReq.Header.Add("Authorization", token)
@@ -653,7 +675,7 @@ func executeTest(t *testing.T, driverName string, envVarsExist func() bool, driv
 		t.Logf("get plan response content: %s", string(getPlanContent))
 		Expect(getPlanContent).To(ContainSubstring("default"))
 
-		getDialReq, err := http.NewRequest("GET", fmt.Sprintf("http://localhost:54053/dials?driver_instance_id=%[1]s", driverInstance.Id), nil)
+		getDialReq, err := http.NewRequest("GET", fmt.Sprintf("http://localhost:%[1]v/dials?driver_instance_id=%[2]s", managementApiPort, driverInstance.Id), nil)
 		getDialReq.Header.Add("Content-Type", "application/json")
 		getDialReq.Header.Add("Accept", "application/json")
 		getDialReq.Header.Add("Authorization", token)
@@ -673,7 +695,7 @@ func executeTest(t *testing.T, driverName string, envVarsExist func() bool, driv
 		t.Logf("get dial response content: %s", string(getDialContent))
 		Expect(getDialContent).To(ContainSubstring("plan"))
 
-		getServiceReq, err := http.NewRequest("GET", fmt.Sprintf("http://localhost:54053/services/%[1]s", driverInstance.Service), nil)
+		getServiceReq, err := http.NewRequest("GET", fmt.Sprintf("http://localhost:%[1]v/services?driver_instance_id=%[2]s", managementApiPort, driverInstance.Id), nil)
 		getServiceReq.Header.Add("Content-Type", "application/json")
 		getServiceReq.Header.Add("Accept", "application/json")
 		getServiceReq.Header.Add("Authorization", token)
@@ -693,6 +715,271 @@ func executeTest(t *testing.T, driverName string, envVarsExist func() bool, driv
 		}
 		t.Logf("get service response content: %s", string(getServiceContent))
 		Expect(getServiceContent).To(ContainSubstring(driverInstance.Id))
+	}
+}
+
+func executeGetDriversTest(t *testing.T, managementApiPort uint16) (string, []DriverResponse) {
+	token, err := GenerateUaaToken()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	getDriversReq, err := http.NewRequest("GET", fmt.Sprintf("http://localhost:%[1]v/drivers", managementApiPort), nil)
+	getDriversReq.Header.Add("Content-Type", "application/json")
+	getDriversReq.Header.Add("Accept", "application/json")
+	getDriversReq.Header.Add("Authorization", token)
+
+	getDriversResp, err := http.DefaultClient.Do(getDriversReq)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer getDriversResp.Body.Close()
+
+	Expect(getDriversResp.StatusCode).To((Equal(200)))
+
+	driversContent, err := ioutil.ReadAll(getDriversResp.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("get drivers response content: %s", string(driversContent))
+
+	var drivers []DriverResponse
+
+	err = json.Unmarshal(driversContent, &drivers)
+	if err != nil {
+		fmt.Println("error:", err)
+	}
+
+	return string(driversContent), drivers
+}
+
+func setupCcHttpFakeResponsesUpdatePlan(brokerGuid string, uaaFakeServer, ccFakeServer *ghttp.Server) {
+	uaaFakeServer.RouteToHandler("POST", "/oauth/token",
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("POST", "/oauth/token"),
+			ghttp.RespondWith(200, `{"access_token":"replace-me", "expires_in": 3404281214}`),
+		),
+	)
+
+	ccFakeServer.RouteToHandler("GET", "/v2/service_brokers",
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("GET", "/v2/service_brokers"),
+			ghttp.RespondWith(200, fmt.Sprintf(`{"resources":[{"metadata":{"guid":"%[1]s"}}]}`, brokerGuid)),
+		),
+	)
+
+	ccFakeServer.RouteToHandler("PUT", "/v2/service_brokers/"+brokerGuid,
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("PUT", "/v2/service_brokers/"+brokerGuid),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(200, `{}`),
+		),
+	)
+
+	serviceGuid := uuid.NewV4().String()
+
+	ccFakeServer.AppendHandlers(
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("GET", "/v2/services"),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(200,
+				fmt.Sprintf(`{"resources":[{"metadata":{"guid":"%[1]s"}}]}`, serviceGuid)),
+		),
+	)
+
+	servicePlanGuid := uuid.NewV4().String()
+
+	ccFakeServer.AppendHandlers(
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("GET", "/v2/service_plans"),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(200,
+				fmt.Sprintf(`{"resources":[{"metadata":{"guid":"%[1]s"},"entity":{"name":"default","free":true,"description":"default plan","public":false,"service_guid":"%[2]s"}}]}`, servicePlanGuid, serviceGuid)),
+		),
+	)
+
+	ccFakeServer.AppendHandlers(
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("PUT", fmt.Sprintf("/v2/service_plans/%[1]s", servicePlanGuid)),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(201, `{}`),
+		),
+	)
+}
+
+func executeTestUpdateDriverInstance(t *testing.T, managementApiPort uint16, driver DriverResponse, driverInstanceValues func(driverName, driverId string) []byte, uaaFakeServer, ccFakeServer *ghttp.Server, brokerGuid string) {
+	token, err := GenerateUaaToken()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	getDriverInstancesReq, err := http.NewRequest("GET", fmt.Sprintf("http://localhost:%[1]v/driver_instances?driver_id=%[2]s", managementApiPort, driver.Id), nil)
+	getDriverInstancesReq.Header.Add("Content-Type", "application/json")
+	getDriverInstancesReq.Header.Add("Accept", "application/json")
+	getDriverInstancesReq.Header.Add("Authorization", token)
+
+	getDriverInstancesResp, err := http.DefaultClient.Do(getDriverInstancesReq)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer getDriverInstancesResp.Body.Close()
+
+	Expect(getDriverInstancesResp.StatusCode).To((Equal(200)))
+
+	driverInstancesContent, err := ioutil.ReadAll(getDriverInstancesResp.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("get driver instances response content: %s", string(driverInstancesContent))
+
+	var driverInstances []DriverInstanceResponse
+
+	err = json.Unmarshal(driverInstancesContent, &driverInstances)
+	if err != nil {
+		fmt.Println("error:", err)
+	}
+	t.Logf("driver instances count: %v", len(driverInstances))
+
+	firstDriverInstance := driverInstances[0]
+
+	getDialReq, err := http.NewRequest("GET", fmt.Sprintf("http://localhost:%[1]v/dials/%[2]s", managementApiPort, firstDriverInstance.Dials[0]), nil)
+	getDialReq.Header.Add("Content-Type", "application/json")
+	getDialReq.Header.Add("Accept", "application/json")
+	getDialReq.Header.Add("Authorization", token)
+
+	getDialResp, err := http.DefaultClient.Do(getDialReq)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer getDialResp.Body.Close()
+
+	Expect(getDialResp.StatusCode).To(Equal(200))
+
+	getDialContent, err := ioutil.ReadAll(getDialResp.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("get dial response content: %s", string(getDialContent))
+
+	type DialResponse struct {
+		Configuration    interface{} `json:"configuration,omitempty"`
+		Id               string      `json:"id"`
+		DriverInstanceId string      `json:"driver_instance_id"`
+		Plan             string      `json:"plan"`
+	}
+
+	var dial DialResponse
+
+	err = json.Unmarshal(getDialContent, &dial)
+	if err != nil {
+		fmt.Println("error:", err)
+	}
+	Expect(dial.DriverInstanceId).To(Equal(firstDriverInstance.Id))
+
+	getPlanReq, err := http.NewRequest("GET", fmt.Sprintf("http://localhost:%[1]v/plans/%[2]s", managementApiPort, dial.Plan), nil)
+	getPlanReq.Header.Add("Content-Type", "application/json")
+	getPlanReq.Header.Add("Accept", "application/json")
+	getPlanReq.Header.Add("Authorization", token)
+
+	getPlanResp, err := http.DefaultClient.Do(getPlanReq)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer getPlanResp.Body.Close()
+
+	Expect(getPlanResp.StatusCode).To((Equal(200)))
+
+	getPlanContent, err := ioutil.ReadAll(getPlanResp.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("get plan response content: %s", string(getPlanContent))
+
+	type PlanResponse struct {
+		Name        string `json:"name"`
+		Description string `json:"description"`
+		Id          string `json:"id"`
+		DialId      string `json:"dial_id"`
+		Free        bool   `json:"free"`
+	}
+
+	var plan PlanResponse
+
+	err = json.Unmarshal(getPlanContent, &plan)
+	if err != nil {
+		fmt.Println("error:", err)
+	}
+	Expect(plan.Name).To(ContainSubstring("default"))
+	Expect(plan.Free).To(Equal(true))
+
+	updatePlanName := plan.Name + "updp"
+	updatePlanDesc := plan.Description + "updp"
+
+	planValues := []byte(fmt.Sprintf(`{"description":"%[1]s","dial_id":"%[2]s","id":"%[3]s","free":true,"name":"%[4]s"}`,
+		updatePlanDesc,
+		dial.Id,
+		plan.Id,
+		updatePlanName))
+
+	updatePlanReq, err := http.NewRequest("PUT", fmt.Sprintf("http://localhost:%[1]v/plans/%[2]s", managementApiPort, dial.Plan), bytes.NewBuffer(planValues))
+	updatePlanReq.Header.Add("Content-Type", "application/json")
+	updatePlanReq.Header.Add("Accept", "application/json")
+	updatePlanReq.Header.Add("Authorization", token)
+
+	updatePlanResp, err := http.DefaultClient.Do(updatePlanReq)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer updatePlanResp.Body.Close()
+
+	Expect(updatePlanResp.StatusCode).To(Equal(200))
+
+	updatePlanContent, err := ioutil.ReadAll(updatePlanResp.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	Expect(updatePlanContent).To(ContainSubstring(updatePlanName))
+	Expect(updatePlanContent).To(ContainSubstring(updatePlanDesc))
+
+	newDriverInstanceName := firstDriverInstance.Name + "updi"
+
+	instanceValues := driverInstanceValues(newDriverInstanceName, driver.Id)
+
+	updateDriverInstReq, err := http.NewRequest("PUT",
+		fmt.Sprintf("http://localhost:%[1]v/driver_instances/%[2]s", managementApiPort, firstDriverInstance.Id),
+		bytes.NewBuffer(instanceValues))
+	updateDriverInstReq.Header.Add("Content-Type", "application/json")
+	updateDriverInstReq.Header.Add("Accept", "application/json")
+	updateDriverInstReq.Header.Add("Authorization", token)
+
+	updateDriverInstResp, err := http.DefaultClient.Do(updateDriverInstReq)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer updateDriverInstResp.Body.Close()
+
+	updateDriverInstContent, err := ioutil.ReadAll(updateDriverInstResp.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("update driver instance response content: %s", string(updateDriverInstContent))
+
+	if updateDriverInstResp.StatusCode == 200 {
+		Expect(updateDriverInstContent).To(ContainSubstring(newDriverInstanceName))
 	}
 }
 
