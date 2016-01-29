@@ -17,6 +17,7 @@
 	"management_api": {
 		"listen": ":54053",
 		"dev_mode": false,
+		"broker_name": "usb",
 		"uaa_secret": "myuaasecret",
 		"uaa_client": "myuaaclient",
 		"authentication": {

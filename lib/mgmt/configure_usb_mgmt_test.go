@@ -150,6 +150,8 @@ func Test_CreateDriverInstance(t *testing.T) {
 	var testConfig config.Config
 	testConfig.Drivers = make(map[string]config.Driver)
 	testConfig.Drivers["testDriverID"] = driver
+	testConfig.ManagementAPI = &config.ManagementAPI{}
+	testConfig.ManagementAPI.BrokerName = "usb"
 	provider.On("LoadConfiguration").Return(&testConfig, nil)
 
 	sbMocked.Mock.On("CheckServiceNameExists", mock.Anything).Return(false)
@@ -219,6 +221,8 @@ func Test_CreateServicePlan(t *testing.T) {
 	driver.DriverInstances["testInstanceID"] = instace
 	testConfig.Drivers = make(map[string]config.Driver)
 	testConfig.Drivers["testDriverID"] = driver
+	testConfig.ManagementAPI = &config.ManagementAPI{}
+	testConfig.ManagementAPI.BrokerName = "usb"
 
 	provider.On("LoadConfiguration").Return(&testConfig, nil)
 	provider.On("DeleteDial", mock.Anything, mock.Anything).Return(nil)
@@ -322,6 +326,9 @@ func Test_UpdateService(t *testing.T) {
 	sbMocked.Mock.On("CheckServiceNameExists", mock.Anything).Return(false)
 
 	var testConfig config.Config
+	testConfig.ManagementAPI = &config.ManagementAPI{}
+	testConfig.ManagementAPI.BrokerName = "usb"
+	
 	var service brokerapi.Service
 	provider.On("LoadConfiguration").Return(&testConfig, nil)
 	provider.On("GetService", "testServiceID").Return(&service, "testInstanceID", nil)
@@ -366,7 +373,9 @@ func Test_UpdateServicePlan(t *testing.T) {
 	params.Plan.Free = &pf
 
 	var testConfig config.Config
-
+	testConfig.ManagementAPI = &config.ManagementAPI{}
+	testConfig.ManagementAPI.BrokerName = "usb"
+	
 	var driver config.Driver
 	var instace config.DriverInstance
 	var dial config.Dial
@@ -456,7 +465,9 @@ func Test_GetDrivers(t *testing.T) {
 	driver.DriverInstances["testInstanceID"] = instace
 	testConfig.Drivers = make(map[string]config.Driver)
 	testConfig.Drivers["testDriverID"] = driver
-
+	testConfig.ManagementAPI = &config.ManagementAPI{}
+	testConfig.ManagementAPI.BrokerName = "usb"
+	
 	provider.On("LoadConfiguration").Return(&testConfig, nil)
 
 	response := UnitTest.MgmtAPI.GetDriversHandler.Handle(true)
@@ -564,7 +575,9 @@ func Test_GetDial(t *testing.T) {
 	driver.DriverInstances["testInstanceID"] = instace
 	testConfig.Drivers = make(map[string]config.Driver)
 	testConfig.Drivers["testDriverID"] = driver
-
+	testConfig.ManagementAPI = &config.ManagementAPI{}
+	testConfig.ManagementAPI.BrokerName = "usb"
+	
 	provider.On("LoadConfiguration").Return(&testConfig, nil)
 
 	params := &operations.GetDialParams{}
