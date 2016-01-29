@@ -193,7 +193,7 @@ func (c *fileConfig) DeleteDial(dialID string) error {
 	return errors.New("DeleteDial not available for file config provider")
 }
 
-func (c *fileConfig) ServiceNameExists(serviceName string) (bool, error) {
+func (c *fileConfig) DriverInstanceNameExists(driverInstanceName string) (bool, error) {
 	if !c.loaded {
 		_, err := c.LoadConfiguration()
 		if err != nil {
@@ -203,7 +203,7 @@ func (c *fileConfig) ServiceNameExists(serviceName string) (bool, error) {
 
 	for _, d := range c.config.Drivers {
 		for _, di := range d.DriverInstances {
-			if di.Service.Name == serviceName {
+			if di.Name == driverInstanceName {
 				return true, nil
 			}
 		}

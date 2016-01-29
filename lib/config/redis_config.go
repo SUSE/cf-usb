@@ -384,7 +384,7 @@ func (c *redisConfig) DeleteDial(dialID string) error {
 	return nil
 }
 
-func (c *redisConfig) ServiceNameExists(serviceName string) (bool, error) {
+func (c *redisConfig) DriverInstanceNameExists(driverInstanceName string) (bool, error) {
 	config, err := c.LoadConfiguration()
 	if err != nil {
 		return false, err
@@ -392,7 +392,7 @@ func (c *redisConfig) ServiceNameExists(serviceName string) (bool, error) {
 
 	for _, d := range config.Drivers {
 		for _, di := range d.DriverInstances {
-			if di.Service.Name == serviceName {
+			if di.Name == driverInstanceName {
 				return true, nil
 			}
 		}

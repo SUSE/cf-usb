@@ -487,8 +487,13 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		configuration := json.RawMessage(instanceConfig)
 		instance.Configuration = &configuration
 
-		driverInstanceNameExist := ccServiceBroker.CheckServiceNameExists(params.DriverInstance.Name)
-		if driverInstanceNameExist {
+		driverInstanceNameExist, err := configProvider.DriverInstanceNameExists(params.DriverInstance.Name)
+		if err != nil {
+			return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
+		}
+
+		serviceNameExist := ccServiceBroker.CheckServiceNameExists(params.DriverInstance.Name)
+		if driverInstanceNameExist || serviceNameExist {
 			err := goerrors.New("A driver instance with the same name already exists")
 			log.Error("check-driver-instance-name-exist", err)
 			return &CreateDriverInstanceConflict{}
@@ -607,7 +612,11 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		configuration := json.RawMessage(instanceConfig)
 		instance.Configuration = &configuration
 
-		driverInstanceNameExist := ccServiceBroker.CheckServiceNameExists(params.DriverConfig.Name)
+		driverInstanceNameExist, err := configProvider.DriverInstanceNameExists(params.DriverConfig.Name)
+		if err != nil {
+			return &UpdateDriverInstanceInternalServerError{Payload: err.Error()}
+		}
+
 		if driverInstanceNameExist {
 			err := goerrors.New("A driver instance with the same name already exists")
 			log.Error("check-driver-instance-name-exist", err)

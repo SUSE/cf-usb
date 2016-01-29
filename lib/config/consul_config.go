@@ -460,7 +460,7 @@ func (c *consulConfig) GetUaaAuthConfig() (*UaaAuth, error) {
 	return &uaa.UaaAuth, nil
 }
 
-func (c *consulConfig) ServiceNameExists(serviceName string) (bool, error) {
+func (c *consulConfig) DriverInstanceNameExists(driverInstanceName string) (bool, error) {
 	drivers, err := c.provisioner.GetAllKeys("usb/drivers/", "/", nil)
 	if err != nil {
 		return false, err
@@ -475,19 +475,12 @@ func (c *consulConfig) ServiceNameExists(serviceName string) (bool, error) {
 
 		for _, instance := range instances {
 
-			var service brokerapi.Service
-
-			value, err := c.provisioner.GetValue(instance + "service")
+			value, err := c.provisioner.GetValue(instance + "Name")
 			if err != nil {
 				return false, err
 			}
 
-			err = json.Unmarshal(value, &service)
-			if err != nil {
-				return false, err
-			}
-
-			if service.Name == serviceName {
+			if string(value) == driverInstanceName {
 				return true, nil
 			}
 		}

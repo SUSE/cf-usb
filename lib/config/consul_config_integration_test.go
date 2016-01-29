@@ -231,7 +231,7 @@ func Test_IntGetDial(t *testing.T) {
 	assert.NoError(err)
 }
 
-func Test_IntServiceNameExists(t *testing.T) {
+func Test_IntDriverInstanceNameExists(t *testing.T) {
 	initialized, err := initProvider()
 	if initialized == false {
 		t.Skip("Skipping Consul Set Driver test, environment variables not set: CONSUL_ADDRESS(host:port), CONSUL_DATACENTER, CONSUL_TOKEN / CONSUL_USER + CONSUL_PASSWORD, CONSUL_SCHEMA")
@@ -240,9 +240,9 @@ func Test_IntServiceNameExists(t *testing.T) {
 
 	assert := assert.New(t)
 
-	exist, err := IntegrationConfig.Provider.ServiceNameExists("testService")
+	exist, err := IntegrationConfig.Provider.DriverInstanceNameExists("testInstance")
 	if err != nil {
-		assert.Error(err, "Unable to check service name existance")
+		assert.Error(err, "Unable to check driver instance name existance")
 	}
 	assert.NoError(err)
 	assert.True(exist)
