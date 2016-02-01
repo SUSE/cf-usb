@@ -17,6 +17,7 @@ type ManagementAPI struct {
 	DevMode         bool             `json:"dev_mode"`
 	UaaClient       string           `json:"uaa_client"`
 	UaaSecret       string           `json:"uaa_secret"`
+	BrokerName      string           `json:"broker_name"`
 	Authentication  *json.RawMessage `json:"authentication"`
 	CloudController CloudController  `json:"cloud_controller"`
 }
