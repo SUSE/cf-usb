@@ -720,6 +720,8 @@ func executeCreateDriverInstanceTest(t *testing.T, managementApiPort uint16, dri
 		}
 		defer newDriverInstResp.Body.Close()
 
+		Expect(newDriverInstResp.StatusCode).To((Equal(201)))
+
 		driverInstContent, err := ioutil.ReadAll(newDriverInstResp.Body)
 		if err != nil {
 			t.Fatal(err)
@@ -733,6 +735,27 @@ func executeCreateDriverInstanceTest(t *testing.T, managementApiPort uint16, dri
 			fmt.Println("error:", err)
 		}
 		Expect(driverInstContent).To(ContainSubstring(driver.Name))
+
+		pingDriverInstReq, err := http.NewRequest("GET", fmt.Sprintf("http://localhost:%[1]v/driver_instances/%[2]s/ping", managementApiPort, driverInstance.Id), nil)
+		pingDriverInstReq.Header.Add("Content-Type", "application/json")
+		pingDriverInstReq.Header.Add("Accept", "application/json")
+		pingDriverInstReq.Header.Add("Authorization", token)
+
+		pingDriverInstResp, err := http.DefaultClient.Do(pingDriverInstReq)
+
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer pingDriverInstResp.Body.Close()
+
+		Expect(pingDriverInstResp.StatusCode).To((Equal(200)))
+
+		driverInstPingContent, err := ioutil.ReadAll(pingDriverInstResp.Body)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		Expect(string(driverInstPingContent)).To(Equal(""))
 
 		getPlanReq, err := http.NewRequest("GET", fmt.Sprintf("http://localhost:%[1]v/plans?driver_instance_id=%[2]s", managementApiPort, driverInstance.Id), nil)
 		getPlanReq.Header.Add("Content-Type", "application/json")
