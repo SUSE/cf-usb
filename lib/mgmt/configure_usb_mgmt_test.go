@@ -269,7 +269,12 @@ func Test_UpdateDriverInstance(t *testing.T) {
 		t.Error(err)
 	}
 
-	conf := json.RawMessage([]byte("{\"test\":\"test\"}"))
+	conf := json.RawMessage([]byte(`{"property_one":"one", "property_two":"two"}`))
+
+	var driver config.Driver
+	driver.DriverType = "dummy"
+	driver.DriverName = "testDummy"
+
 	var instanceInfo config.DriverInstance
 	instanceInfo.Name = "testInstance"
 	instanceInfo.Configuration = &conf
@@ -284,6 +289,10 @@ func Test_UpdateDriverInstance(t *testing.T) {
 	params.DriverConfig.ID = &testInstanceID
 	params.DriverConfig.Name = "testInstance"
 	params.DriverInstanceID = "testDriverID"
+	params.DriverConfig.Configuration = map[string]interface{}{"property_one": "oneUp", "property_two": "twoUp"}
+
+	provider.On("GetDriver", "testDriverID").Return(&driver, nil)
+	provider.On("GetDriversPath").Return(os.Getenv("USB_DRIVER_PATH"), nil)
 
 	provider.On("DriverInstanceNameExists", mock.Anything).Return(false, nil)
 	provider.On("SetDriverInstance", mock.Anything, mock.Anything, mock.Anything).Return(nil)
@@ -330,7 +339,7 @@ func Test_UpdateService(t *testing.T) {
 	var testConfig config.Config
 	testConfig.ManagementAPI = &config.ManagementAPI{}
 	testConfig.ManagementAPI.BrokerName = "usb"
-	
+
 	var service brokerapi.Service
 	provider.On("LoadConfiguration").Return(&testConfig, nil)
 	provider.On("GetService", "testServiceID").Return(&service, "testInstanceID", nil)
@@ -377,7 +386,7 @@ func Test_UpdateServicePlan(t *testing.T) {
 	var testConfig config.Config
 	testConfig.ManagementAPI = &config.ManagementAPI{}
 	testConfig.ManagementAPI.BrokerName = "usb"
-	
+
 	var driver config.Driver
 	var instace config.DriverInstance
 	var dial config.Dial
@@ -469,7 +478,7 @@ func Test_GetDrivers(t *testing.T) {
 	testConfig.Drivers["testDriverID"] = driver
 	testConfig.ManagementAPI = &config.ManagementAPI{}
 	testConfig.ManagementAPI.BrokerName = "usb"
-	
+
 	provider.On("LoadConfiguration").Return(&testConfig, nil)
 
 	response := UnitTest.MgmtAPI.GetDriversHandler.Handle(true)
@@ -579,7 +588,7 @@ func Test_GetDial(t *testing.T) {
 	testConfig.Drivers["testDriverID"] = driver
 	testConfig.ManagementAPI = &config.ManagementAPI{}
 	testConfig.ManagementAPI.BrokerName = "usb"
-	
+
 	provider.On("LoadConfiguration").Return(&testConfig, nil)
 
 	params := &operations.GetDialParams{}
