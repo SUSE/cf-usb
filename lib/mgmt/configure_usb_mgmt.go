@@ -609,18 +609,35 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 		configuration := json.RawMessage(instanceConfig)
 		instance.Configuration = &configuration
+		if instanceInfo.Name != params.DriverConfig.Name {
+			driverInstanceNameExist, err := configProvider.DriverInstanceNameExists(params.DriverConfig.Name)
+			if err != nil {
+				return &UpdateDriverInstanceInternalServerError{Payload: err.Error()}
+			}
 
-		driverInstanceNameExist, err := configProvider.DriverInstanceNameExists(params.DriverConfig.Name)
+			if driverInstanceNameExist {
+				err := goerrors.New("A driver instance with the same name already exists")
+				log.Error("check-driver-instance-name-exist", err)
+				return &UpdateDriverInstanceConflict{}
+			}
+		}
+		instance.Name = params.DriverConfig.Name
+
+		existingDriver, err := configProvider.GetDriver(params.DriverConfig.DriverID)
 		if err != nil {
 			return &UpdateDriverInstanceInternalServerError{Payload: err.Error()}
 		}
 
-		if driverInstanceNameExist {
-			err := goerrors.New("A driver instance with the same name already exists")
-			log.Error("check-driver-instance-name-exist", err)
-			return &UpdateDriverInstanceConflict{}
+		driversPath, err := configProvider.GetDriversPath()
+		if err != nil {
+			return &UpdateDriverInstanceInternalServerError{Payload: err.Error()}
 		}
-		instance.Name = params.DriverConfig.Name
+
+		err = lib.Validate(instance, driversPath, existingDriver.DriverType, logger)
+		if err != nil {
+			log.Error("validation-failed", err)
+			return &UpdateDriverInstanceInternalServerError{Payload: err.Error()}
+		}
 
 		err = configProvider.SetDriverInstance(params.DriverConfig.DriverID, params.DriverInstanceID, instance)
 		if err != nil {
