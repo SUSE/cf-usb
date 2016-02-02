@@ -59,23 +59,23 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		log := log.Session("update-driver")
 		log.Info("request", lager.Data{"driver-id": params.DriverID})
 
-		_, err := configProvider.GetDriver(params.DriverID)
+		exists, err := configProvider.DriverExists(params.DriverID)
 		if err != nil {
+			return &UpdateDriverInternalServerError{Payload: err.Error()}
+		}
+		if exists == false {
+			log.Debug("update-driver-does-not-exist", lager.Data{"driver-id-does-not-exit": params.DriverID})
 			return &UpdateDriverNotFound{}
 		}
 
-		exist, err := configProvider.DriverTypeExists(params.Driver.DriverType)
+		driver, err := configProvider.GetDriver(params.DriverID)
 		if err != nil {
-			return &UpdateDriverInstanceInternalServerError{Payload: err.Error()}
-		}
-		if exist {
-			return &UpdateDriverConflict{}
+			return &UpdateDriverInternalServerError{Payload: err.Error()}
 		}
 
-		var driver config.Driver
-		driver.DriverType = params.Driver.DriverType
+		driver.DriverName = params.Driver.Name
 
-		err = configProvider.SetDriver(*params.Driver.ID, driver)
+		err = configProvider.SetDriver(*params.Driver.ID, *driver)
 		if err != nil {
 			return &UpdateDriverInternalServerError{Payload: err.Error()}
 		}

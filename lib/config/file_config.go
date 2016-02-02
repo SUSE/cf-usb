@@ -229,6 +229,23 @@ func (c *fileConfig) DriverTypeExists(driverType string) (bool, error) {
 	return false, nil
 }
 
+func (c *fileConfig) DriverExists(driverID string) (bool, error) {
+	if !c.loaded {
+		_, err := c.LoadConfiguration()
+		if err != nil {
+			return false, err
+		}
+	}
+
+	for id, _ := range c.config.Drivers {
+		if id == driverID {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
 func (c *fileConfig) GetPlan(planid string) (*brokerapi.ServicePlan, string, string, error) {
 	if !c.loaded {
 		_, err := c.LoadConfiguration()

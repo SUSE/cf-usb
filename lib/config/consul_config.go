@@ -511,6 +511,21 @@ func (c *consulConfig) DriverTypeExists(driverType string) (bool, error) {
 	return false, nil
 }
 
+func (c *consulConfig) DriverExists(driverID string) (bool, error) {
+	drivers, err := c.provisioner.GetAllKeys("usb/drivers/", "/", nil)
+	if err != nil {
+		return false, err
+	}
+	exists := false
+	for _, driver := range drivers {
+		if strings.Contains(driver, driverID) {
+			exists = true
+			break
+		}
+	}
+	return exists, nil
+}
+
 func (c *consulConfig) GetPlan(planid string) (*brokerapi.ServicePlan, string, string, error) {
 	config, err := c.LoadConfiguration()
 	if err != nil {

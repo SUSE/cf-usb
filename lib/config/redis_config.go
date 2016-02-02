@@ -416,6 +416,21 @@ func (c *redisConfig) DriverTypeExists(driverType string) (bool, error) {
 	return false, nil
 }
 
+func (c *redisConfig) DriverExists(driverID string) (bool, error) {
+	config, err := c.LoadConfiguration()
+	if err != nil {
+		return false, err
+	}
+
+	for id, _ := range config.Drivers {
+		if id == driverID {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
 func (c *redisConfig) GetPlan(planid string) (*brokerapi.ServicePlan, string, string, error) {
 	config, err := c.LoadConfiguration()
 	if err != nil {
