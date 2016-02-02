@@ -53,14 +53,15 @@ HH6Qlq/6UOV5wP8+GAcCQFgRCcB+hrje8hfEEefHcFpyKH+5g1Eu1k0mLrxK2zd+
 var uaaPublicKey = `-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDHFr+KICms+tuT1OXJwhCUmR2d\nKVy7psa8xzElSyzqx7oJyfJ1JZyOzToj9T5SfTIq396agbHJWVfYphNahvZ/7uMX\nqHxf+ZH9BL1gk9Y6kCnbM5R60gfwjyW1/dQPjOzn9N394zd2FJoFHwdq9Qs0wBug\nspULZVNRxq7veq/fzwIDAQAB\n-----END PUBLIC KEY-----`
 
 var drivers = []struct {
-	driverType                  string
-	envVarsExistFunc            func() bool
-	setDriverInstanceValuesFunc func(driverName, driverId string) []byte
+	driverType                     string
+	envVarsExistFunc               func() bool
+	setDriverInstanceValuesFunc    func(driverName, driverId string) []byte
+	assertDriverSchemaContainsFunc func(schemaContent string)
 }{
-	{"dummy-async", dummyEnvVarsExist, setDummyDriverInstanceValues},
-	{"postgres", postgresEnvVarsExist, setPostgresDriverInstanceValues},
-	{"mongo", mongoEnvVarsExist, setMongoDriverInstanceValues},
-	{"mysql", mysqlEnvVarsExist, setMysqlDriverInstanceValues},
+	{"dummy-async", dummyEnvVarsExist, setDummyDriverInstanceValues, assertDummySchemaContains},
+	{"postgres", postgresEnvVarsExist, setPostgresDriverInstanceValues, assertPostgresSchemaContains},
+	{"mongo", mongoEnvVarsExist, setMongoDriverInstanceValues, assertMongoSchemaContains},
+	{"mysql", mysqlEnvVarsExist, setMysqlDriverInstanceValues, assertMysqlSchemaContains},
 }
 
 var ConsulConfig = struct {
@@ -348,6 +349,7 @@ func Test_BrokerWithConsulConfigProviderCatalog(t *testing.T) {
 	t.Log(string(content))
 }
 
+// create driver, create driver instance, ping tests
 func Test_BrokerWithConsulConfigProviderCreateDriverInstance(t *testing.T) {
 	RegisterTestingT(t)
 	architecture := fmt.Sprintf("%s-%s", runtime.GOOS, runtime.GOARCH)
@@ -412,7 +414,7 @@ func Test_BrokerWithConsulConfigProviderCreateDriverInstance(t *testing.T) {
 	}
 }
 
-// update plan and update driver instance
+// update plan and update driver instance tests
 func Test_BrokerWithConsulConfigProviderUpdateDriverInstance(t *testing.T) {
 	RegisterTestingT(t)
 	architecture := fmt.Sprintf("%s-%s", runtime.GOOS, runtime.GOARCH)
@@ -489,7 +491,7 @@ func Test_BrokerWithConsulConfigProviderUpdateDriverInstance(t *testing.T) {
 	}
 }
 
-// update service and update driver
+// update service and update driver tests
 func Test_BrokerWithConsulConfigProviderUpdateService(t *testing.T) {
 	RegisterTestingT(t)
 	architecture := fmt.Sprintf("%s-%s", runtime.GOOS, runtime.GOARCH)
@@ -561,7 +563,7 @@ func Test_BrokerWithConsulConfigProviderUpdateService(t *testing.T) {
 					setupCcHttpFakeResponsesUpdateService(brokerGuid, uaaFakeServer, ccFakeServer)
 					executeTestUpdateService(t, managementApiPort, d, driver.setDriverInstanceValuesFunc)
 
-					executeTestUpdateDriver(t, managementApiPort, d)
+					executeTestUpdateDriver(t, managementApiPort, d, driver.assertDriverSchemaContainsFunc)
 				}
 			}
 		}
@@ -1269,11 +1271,53 @@ func executeTestUpdateService(t *testing.T, managementApiPort uint16, driver Dri
 	Expect(updateServiceContent).To(ContainSubstring(updateServiceDesc))
 }
 
-func executeTestUpdateDriver(t *testing.T, managementApiPort uint16, driver DriverResponse) {
+func executeTestUpdateDriver(t *testing.T, managementApiPort uint16, driver DriverResponse, assertDriverSchemaContains func(schemaContent string)) {
 	token, err := GenerateUaaToken()
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	getDialSchemaReq, err := http.NewRequest("GET", fmt.Sprintf("http://localhost:%[1]v/drivers/%[2]s/dial_schema", managementApiPort, driver.Id), nil)
+	getDialSchemaReq.Header.Add("Content-Type", "application/json")
+	getDialSchemaReq.Header.Add("Accept", "application/json")
+	getDialSchemaReq.Header.Add("Authorization", token)
+
+	getDialSchemaResp, err := http.DefaultClient.Do(getDialSchemaReq)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer getDialSchemaResp.Body.Close()
+
+	Expect(getDialSchemaResp.StatusCode).To((Equal(200)))
+
+	getDialSchemaContent, err := ioutil.ReadAll(getDialSchemaResp.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("get driver dial schema content: %s", string(getDialSchemaContent))
+	Expect(getDialSchemaContent).To(ContainSubstring("{}"))
+
+	getConfigSchemaReq, err := http.NewRequest("GET", fmt.Sprintf("http://localhost:%[1]v/drivers/%[2]s/config_schema", managementApiPort, driver.Id), nil)
+	getConfigSchemaReq.Header.Add("Content-Type", "application/json")
+	getConfigSchemaReq.Header.Add("Accept", "application/json")
+	getConfigSchemaReq.Header.Add("Authorization", token)
+
+	getConfigSchemaResp, err := http.DefaultClient.Do(getConfigSchemaReq)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer getConfigSchemaResp.Body.Close()
+
+	Expect(getConfigSchemaResp.StatusCode).To((Equal(200)))
+
+	getConfigSchemaContent, err := ioutil.ReadAll(getConfigSchemaResp.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("get driver config schema content: %s", string(getConfigSchemaContent))
+	assertDriverSchemaContains(string(getConfigSchemaContent))
 
 	updateDriverName := driver.Name + "updd"
 
@@ -1324,6 +1368,13 @@ func setPostgresDriverInstanceValues(driverName, driverId string) []byte {
 	return values
 }
 
+func assertPostgresSchemaContains(schemaContent string) {
+	Expect(schemaContent).To(ContainSubstring(`\"host\"`))
+	Expect(schemaContent).To(ContainSubstring(`\"port\"`))
+	Expect(schemaContent).To(ContainSubstring(`\"user\"`))
+	Expect(schemaContent).To(ContainSubstring(`\"password\"`))
+}
+
 func mongoEnvVarsExist() bool {
 	return os.Getenv("MONGO_USER") != "" && os.Getenv("MONGO_PASS") != "" && os.Getenv("MONGO_HOST") != "" && os.Getenv("MONGO_PORT") != ""
 }
@@ -1338,6 +1389,11 @@ func setMongoDriverInstanceValues(driverName, driverId string) []byte {
 		os.Getenv("MONGO_PASS")))
 
 	return values
+}
+
+func assertMongoSchemaContains(schemaContent string) {
+	Expect(schemaContent).To(ContainSubstring(`\"server\"`))
+	Expect(schemaContent).To(ContainSubstring(`\"port\"`))
 }
 
 func mysqlEnvVarsExist() bool {
@@ -1356,6 +1412,13 @@ func setMysqlDriverInstanceValues(driverName, driverId string) []byte {
 	return values
 }
 
+func assertMysqlSchemaContains(schemaContent string) {
+	Expect(schemaContent).To(ContainSubstring(`\"server\"`))
+	Expect(schemaContent).To(ContainSubstring(`\"port\"`))
+	Expect(schemaContent).To(ContainSubstring(`\"userid\"`))
+	Expect(schemaContent).To(ContainSubstring(`\"password\"`))
+}
+
 func dummyEnvVarsExist() bool {
 	return true
 }
@@ -1366,4 +1429,8 @@ func setDummyDriverInstanceValues(driverName, driverId string) []byte {
 		driverId))
 
 	return values
+}
+
+func assertDummySchemaContains(schemaContent string) {
+	Expect(schemaContent).To(ContainSubstring(`\"succeed_count\"`))
 }
