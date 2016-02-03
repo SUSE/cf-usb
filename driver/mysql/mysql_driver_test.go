@@ -34,7 +34,7 @@ func Test_Provision(t *testing.T) {
 	assert := assert.New(t)
 
 	mockProv, mysqlDriver := getMockProvisioner()
-	mockProv.On("CreateDatabase", "testId").Return(nil)
+	mockProv.On("CreateDatabase", "dtestId").Return(nil)
 
 	var req usbDriver.ProvisionInstanceRequest
 
@@ -103,7 +103,7 @@ func Test_GenerateCredentials(t *testing.T) {
 	assert := assert.New(t)
 
 	mockProv, mysqlDriver := getMockProvisioner()
-	mockProv.On("CreateUser", "testId", mock.Anything, mock.Anything).Return(nil)
+	mockProv.On("CreateUser", "dtestId", mock.Anything, mock.Anything).Return(nil)
 
 	var req usbDriver.GenerateCredentialsRequest
 	req.CredentialsID = "user"
@@ -135,7 +135,7 @@ func Test_Deprovision(t *testing.T) {
 	assert := assert.New(t)
 
 	mockProv, mysqlDriver := getMockProvisioner()
-	mockProv.On("DeleteDatabase", "testId").Return(nil)
+	mockProv.On("DeleteDatabase", "dtestId").Return(nil)
 
 	var req usbDriver.DeprovisionInstanceRequest
 	req.Config = getEmptyConfig()
