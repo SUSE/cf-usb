@@ -2,9 +2,13 @@ package integration_test
 
 import (
 	"bytes"
+	"crypto/sha1"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"os/exec"
@@ -58,7 +62,7 @@ var drivers = []struct {
 	setDriverInstanceValuesFunc    func(driverName, driverId string) []byte
 	assertDriverSchemaContainsFunc func(schemaContent string)
 }{
-	{"dummy-async", dummyEnvVarsExist, setDummyDriverInstanceValues, assertDummySchemaContains},
+	//{"dummy-async", dummyEnvVarsExist, setDummyDriverInstanceValues, assertDummySchemaContains},
 	{"postgres", postgresEnvVarsExist, setPostgresDriverInstanceValues, assertPostgresSchemaContains},
 	{"mongo", mongoEnvVarsExist, setMongoDriverInstanceValues, assertMongoSchemaContains},
 	{"mysql", mysqlEnvVarsExist, setMysqlDriverInstanceValues, assertMysqlSchemaContains},
@@ -785,6 +789,75 @@ func executeCreateDriverInstanceTest(t *testing.T, managementApiPort uint16, dri
 	}
 	t.Logf("get driver response content: %s", string(getDriverContent))
 	Expect(getDriverContent).To(ContainSubstring(driverId))
+
+	// upload driver bits test
+	dir, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	bitsPath := path.Join(dir, "../cmd/driver", driver.DriverType, driver.DriverType)
+	sha, err := getFileSha(bitsPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log("bits path:", bitsPath)
+	t.Log("sha:", sha)
+
+	body_buf := bytes.NewBufferString("")
+	body_writer := multipart.NewWriter(body_buf)
+
+	err = body_writer.WriteField("sha", sha)
+	if err != nil {
+		t.Log("error writing to buffer")
+		t.Fatal(err)
+	}
+
+	// use the body_writer to write the Part headers to the buffer
+	_, err = body_writer.CreateFormFile("file", bitsPath)
+	if err != nil {
+		t.Log("error writing to buffer")
+		t.Fatal(err)
+	}
+
+	// the file data will be the second part of the body
+	fh, err := os.Open(bitsPath)
+	if err != nil {
+		t.Log("error opening file")
+		t.Fatal(err)
+	}
+	// need to know the boundary to properly close the part myself.
+	boundary := body_writer.Boundary()
+	_ = fmt.Sprintf("\r\n--%s--\r\n", boundary)
+	close_buf := bytes.NewBufferString(fmt.Sprintf("\r\n--%s--\r\n", boundary))
+
+	// use multi-reader to defer the reading of the file data until writing to the socket buffer.
+	request_reader := io.MultiReader(body_buf, fh, close_buf)
+	_, err = fh.Stat()
+	if err != nil {
+		t.Log("Error Stating file: ", bitsPath)
+		t.Fatal(err)
+	}
+
+	uploadDriverBitsReq, err := http.NewRequest("PUT", fmt.Sprintf("http://localhost:%[1]v/drivers/%[2]s/bits", managementApiPort, driverId), request_reader)
+	uploadDriverBitsReq.Header.Add("Content-Type", "multipart/form-data; boundary="+boundary)
+	uploadDriverBitsReq.Header.Add("Accept", "application/json")
+	uploadDriverBitsReq.Header.Add("Authorization", token)
+
+	uploadDriverBitsResp, err := http.DefaultClient.Do(uploadDriverBitsReq)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer uploadDriverBitsResp.Body.Close()
+
+	Expect(uploadDriverBitsResp.StatusCode).To((Equal(200)))
+
+	uploadDriverBitsContent, err := ioutil.ReadAll(uploadDriverBitsResp.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	Expect(string(uploadDriverBitsContent)).To(Equal(""))
 
 	instanceValues := driverInstanceValues(driverName, driverId)
 	newDriverInstReq, err := http.NewRequest("POST", fmt.Sprintf("http://localhost:%[1]v/driver_instances", managementApiPort), bytes.NewBuffer(instanceValues))
@@ -1831,4 +1904,20 @@ func setDummyDriverInstanceValues(driverName, driverId string) []byte {
 
 func assertDummySchemaContains(schemaContent string) {
 	Expect(schemaContent).To(ContainSubstring(`\"succeed_count\"`))
+}
+
+func getFileSha(filePath string) (string, error) {
+	f, err := os.Open(filePath)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+
+	sha1 := sha1.New()
+	_, err = io.Copy(sha1, f)
+	if err != nil {
+		return "", err
+	}
+
+	return base64.StdEncoding.EncodeToString(sha1.Sum(nil)), nil
 }
