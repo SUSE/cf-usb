@@ -1067,6 +1067,29 @@ func executeTestUpdateDriverInstance(t *testing.T, managementApiPort uint16, dri
 	}
 	Expect(dial.DriverInstanceId).To(Equal(firstDriverInstance.Id))
 
+	dialValues := []byte(fmt.Sprintf(`{"configuration":{"min_dbsize_mb":1},"driver_instance_id":"%[1]s","id":"%[2]s"}`,
+		dial.DriverInstanceId,
+		dial.Id))
+
+	updateDialReq, err := http.NewRequest("PUT", fmt.Sprintf("http://localhost:%[1]v/dials/%[2]s", managementApiPort, dial.Id), bytes.NewBuffer(dialValues))
+	updateDialReq.Header.Add("Content-Type", "application/json")
+	updateDialReq.Header.Add("Accept", "application/json")
+	updateDialReq.Header.Add("Authorization", token)
+
+	updateDialResp, err := http.DefaultClient.Do(updateDialReq)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer updateDialResp.Body.Close()
+
+	Expect(updateDialResp.StatusCode).To(Equal(200))
+
+	updateDialContent, err := ioutil.ReadAll(updateDialResp.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	Expect(string(updateDialContent)).To(ContainSubstring(`"min_dbsize_mb":1`))
+
 	getPlanReq, err := http.NewRequest("GET", fmt.Sprintf("http://localhost:%[1]v/plans/%[2]s", managementApiPort, dial.Plan), nil)
 	getPlanReq.Header.Add("Content-Type", "application/json")
 	getPlanReq.Header.Add("Accept", "application/json")
@@ -1134,6 +1157,35 @@ func executeTestUpdateDriverInstance(t *testing.T, managementApiPort uint16, dri
 
 	Expect(updatePlanContent).To(ContainSubstring(updatePlanName))
 	Expect(updatePlanContent).To(ContainSubstring(updatePlanDesc))
+
+	// negative test update driver instance wrong configuration
+	newDriverInstanceNameNeg := firstDriverInstance.Name + "updierr"
+
+	instanceValuesNeg := []byte(fmt.Sprintf(`{"name":"%[1]s", "driver_id":"%[2]s", "configuration": {"aKey": "aValue"}}`,
+		newDriverInstanceNameNeg,
+		driver.Id))
+
+	updateDriverInstNegReq, err := http.NewRequest("PUT",
+		fmt.Sprintf("http://localhost:%[1]v/driver_instances/%[2]s", managementApiPort, firstDriverInstance.Id),
+		bytes.NewBuffer(instanceValuesNeg))
+	updateDriverInstNegReq.Header.Add("Content-Type", "application/json")
+	updateDriverInstNegReq.Header.Add("Accept", "application/json")
+	updateDriverInstNegReq.Header.Add("Authorization", token)
+
+	updateDriverInstNegResp, err := http.DefaultClient.Do(updateDriverInstNegReq)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer updateDriverInstNegResp.Body.Close()
+
+	Expect(updateDriverInstNegResp.StatusCode).To(Equal(500))
+	updateDriverInstNegContent, err := ioutil.ReadAll(updateDriverInstNegResp.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("negative test update driver instance response content: %s", string(updateDriverInstNegContent))
+	Expect(string(updateDriverInstNegContent)).To(ContainSubstring("Invalid configuration schema"))
 
 	newDriverInstanceName := firstDriverInstance.Name + "updi"
 
