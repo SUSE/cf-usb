@@ -36,7 +36,11 @@ import (
 )
 
 var loggerSB *lagertest.TestLogger = lagertest.NewTestLogger("cc-api")
+var defaultConsulPath string = "consul"
+var tempConsulPath string
 var consulProcess ifrit.Process
+var brokerApiPort uint16
+var managementApiPort uint16
 
 var uaaSigningKey = `-----BEGIN RSA PRIVATE KEY-----
 MIICXAIBAAKBgQDHFr+KICms+tuT1OXJwhCUmR2dKVy7psa8xzElSyzqx7oJyfJ1
@@ -148,30 +152,9 @@ func start_usbProcess(binPath, consulAddress string) (ifrit.Process, error) {
 
 func start_consulProcess() (ifrit.Process, error) {
 
-	defaultConsulPath := "consul"
-
-	tmpConsul := path.Join(os.TempDir(), "consul")
-
-	if _, err := os.Stat(tmpConsul); err == nil {
-		err := os.RemoveAll(tmpConsul)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	err := os.MkdirAll(tmpConsul, 0755)
-	if err != nil {
-		return nil, err
-	}
-
-	tempPath, err := ioutil.TempDir(tmpConsul, "")
-	if err != nil {
-		return nil, err
-	}
-
 	consulRunner := ginkgomon.New(ginkgomon.Config{
 		Name:              "consul",
-		Command:           exec.Command(defaultConsulPath, "agent", "-server", "-bootstrap-expect", "1", "-data-dir", tempPath, "-advertise", "127.0.0.1"),
+		Command:           exec.Command(defaultConsulPath, "agent", "-server", "-bootstrap-expect", "1", "-data-dir", tempConsulPath, "-advertise", "127.0.0.1"),
 		AnsiColorCode:     "",
 		StartCheck:        "New leader elected",
 		StartCheckTimeout: 5 * time.Second,
@@ -200,15 +183,11 @@ func run_consul(brokerApiPort, managementApiPort uint16, ccServerUrl string) (co
 		ConsulConfig.consulAddress = "127.0.0.1:8500"
 		ConsulConfig.consulSchema = "http"
 
-		consulProcess, err := start_consulProcess()
+		var err error
+		consulProcess, err = start_consulProcess()
 		if err != nil {
 			return nil, err
 		}
-
-		defer func() {
-			consulProcess.Signal(os.Kill)
-			<-consulProcess.Wait()
-		}()
 	}
 
 	consulClient, err := init_consulProvisioner()
@@ -252,6 +231,36 @@ func set_fakeServers() (*ghttp.Server, *ghttp.Server) {
 	)
 
 	return uaaFakeServer, ccFakeServer
+}
+
+func setup_firstConsulRun() error {
+	var err error
+
+	brokerApiPort, err = localip.LocalPort()
+	Expect(err).ToNot(HaveOccurred())
+	managementApiPort, err = localip.LocalPort()
+	Expect(err).ToNot(HaveOccurred())
+
+	tmpConsul := path.Join(os.TempDir(), "consul")
+
+	if _, err := os.Stat(tmpConsul); err == nil {
+		err := os.RemoveAll(tmpConsul)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = os.MkdirAll(tmpConsul, 0755)
+	if err != nil {
+		return err
+	}
+
+	tempConsulPath, err = ioutil.TempDir(tmpConsul, "")
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func GenerateUaaToken() (string, error) {
@@ -299,17 +308,24 @@ func Test_BrokerWithConsulConfigProviderCatalog(t *testing.T) {
 
 	_, ccFakeServer := set_fakeServers()
 
-	brokerApiPort, err := localip.LocalPort()
-	Expect(err).ToNot(HaveOccurred())
-	managementApiPort, err := localip.LocalPort()
-	Expect(err).ToNot(HaveOccurred())
+	err = setup_firstConsulRun()
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	consulClient, err := run_consul(brokerApiPort, managementApiPort, ccFakeServer.URL())
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	t.Log("consul started")
+	if consulProcess != nil {
+		defer func() {
+			consulProcess.Signal(os.Kill)
+			<-consulProcess.Wait()
+		}()
+
+		t.Log("consul started")
+	}
 
 	usbProcess, err := start_usbProcess(binpath, ConsulConfig.consulAddress)
 	if err != nil {
@@ -379,15 +395,18 @@ func Test_BrokerWithConsulConfigProviderCreateDriverInstance(t *testing.T) {
 
 	uaaFakeServer, ccFakeServer := set_fakeServers()
 
-	brokerApiPort, err := localip.LocalPort()
-	Expect(err).ToNot(HaveOccurred())
-	managementApiPort, err := localip.LocalPort()
-	Expect(err).ToNot(HaveOccurred())
-
 	consulClient, err := run_consul(brokerApiPort, managementApiPort, ccFakeServer.URL())
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	if consulProcess != nil {
+		defer func() {
+			consulProcess.Signal(os.Kill)
+			<-consulProcess.Wait()
+		}()
+	}
+
 	t.Log("consul started")
 
 	provider := config.NewConsulConfig(consulClient)
@@ -446,15 +465,18 @@ func Test_BrokerWithConsulConfigProviderUpdateDriverInstance(t *testing.T) {
 
 	uaaFakeServer, ccFakeServer := set_fakeServers()
 
-	brokerApiPort, err := localip.LocalPort()
-	Expect(err).ToNot(HaveOccurred())
-	managementApiPort, err := localip.LocalPort()
-	Expect(err).ToNot(HaveOccurred())
-
 	consulClient, err := run_consul(brokerApiPort, managementApiPort, ccFakeServer.URL())
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	if consulProcess != nil {
+		defer func() {
+			consulProcess.Signal(os.Kill)
+			<-consulProcess.Wait()
+		}()
+	}
+
 	t.Log("consul started")
 
 	provider := config.NewConsulConfig(consulClient)
@@ -523,15 +545,18 @@ func Test_BrokerWithConsulConfigProviderUpdateService(t *testing.T) {
 
 	uaaFakeServer, ccFakeServer := set_fakeServers()
 
-	brokerApiPort, err := localip.LocalPort()
-	Expect(err).ToNot(HaveOccurred())
-	managementApiPort, err := localip.LocalPort()
-	Expect(err).ToNot(HaveOccurred())
-
 	consulClient, err := run_consul(brokerApiPort, managementApiPort, ccFakeServer.URL())
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	if consulProcess != nil {
+		defer func() {
+			consulProcess.Signal(os.Kill)
+			<-consulProcess.Wait()
+		}()
+	}
+
 	t.Log("consul started")
 
 	provider := config.NewConsulConfig(consulClient)
@@ -602,15 +627,18 @@ func Test_BrokerWithConsulConfigProviderDeleteDriver(t *testing.T) {
 
 	uaaFakeServer, ccFakeServer := set_fakeServers()
 
-	brokerApiPort, err := localip.LocalPort()
-	Expect(err).ToNot(HaveOccurred())
-	managementApiPort, err := localip.LocalPort()
-	Expect(err).ToNot(HaveOccurred())
-
 	consulClient, err := run_consul(brokerApiPort, managementApiPort, ccFakeServer.URL())
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	if consulProcess != nil {
+		defer func() {
+			consulProcess.Signal(os.Kill)
+			<-consulProcess.Wait()
+		}()
+	}
+
 	t.Log("consul started")
 
 	provider := config.NewConsulConfig(consulClient)
@@ -796,14 +824,16 @@ func executeCreateDriverInstanceTest(t *testing.T, managementApiPort uint16, dri
 		t.Fatal(err)
 	}
 
-	bitsPath := path.Join(dir, "../cmd/driver", driver.DriverType, driver.DriverType)
+	architecture := fmt.Sprintf("%s-%s", runtime.GOOS, runtime.GOARCH)
+
+	//bitsPath := path.Join(dir, "../cmd/driver", driver.DriverType, driver.DriverType)
+	bitsPath := path.Join(dir, "../build", architecture, driver.DriverType)
 	sha, err := getFileSha(bitsPath)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	t.Log("bits path:", bitsPath)
-	t.Log("sha:", sha)
 
 	body_buf := bytes.NewBufferString("")
 	body_writer := multipart.NewWriter(body_buf)
