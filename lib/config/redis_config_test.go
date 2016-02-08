@@ -134,7 +134,6 @@ func Test_Redis_SetDriver(t *testing.T) {
 		t.Error(err)
 	}
 
-
 	provisioner.On("GetValue", "usb").Return(configSring, nil)
 
 	provisioner.On("SetKV", mock.Anything, mock.Anything, mock.Anything).Return(nil)
@@ -282,5 +281,23 @@ func Test_Redis_DeleteService(t *testing.T) {
 	RedisTestConfig.Provider = NewRedisConfig(provisioner)
 
 	err = RedisTestConfig.Provider.DeleteService("A0000000-0000-0000-0000-000000000002")
+	assert.NoError(err)
+}
+
+func Test_Redis_DriverExists(t *testing.T) {
+	assert := assert.New(t)
+	provisioner := new(redisMock.RedisProvisionerInterface)
+
+	configSring, err := getRedisConfigString()
+	if err != nil {
+		t.Error(err)
+	}
+
+	provisioner.On("GetValue", "usb").Return(configSring, nil)
+
+	RedisTestConfig.Provider = NewRedisConfig(provisioner)
+
+	exists, err := RedisTestConfig.Provider.DriverExists("00000000-0000-0000-0000-000000000001")
+	assert.True(exists)
 	assert.NoError(err)
 }

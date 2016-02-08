@@ -193,3 +193,19 @@ func TestDriverTypeExists(t *testing.T) {
 
 	assert.True(exist)
 }
+
+func TestDriverExists(t *testing.T) {
+	assert := assert.New(t)
+
+	_, configuration, err := loadConfigAsset()
+	if err != nil {
+		assert.Error(err, "Unable to load from temp config file")
+	}
+
+	exist, err := configuration.DriverExists("00000000-0000-0000-0000-000000000001")
+	if err != nil {
+		assert.Error(err, "Unable to check driver existance")
+	}
+
+	assert.True(exist)
+}
