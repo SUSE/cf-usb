@@ -31,6 +31,8 @@ import (
 
 // This file is safe to edit. Once it exists it will not be overwritten
 
+const defaultBrokerName string = "usb"
+
 func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, configProvider config.ConfigProvider, ccServiceBroker ccapi.ServiceBrokerInterface, logger lager.Logger) {
 	log := logger.Session("usb-mgmt")
 
@@ -138,13 +140,18 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 			return &DeleteServicePlanInternalServerError{Payload: err.Error()}
 		}
 
-		guid, err := ccServiceBroker.GetServiceBrokerGuidByName(config.ManagementAPI.BrokerName)
+		brokerName := defaultBrokerName
+		if len(config.ManagementAPI.BrokerName) > 0 {
+			brokerName = config.ManagementAPI.BrokerName
+		}
+
+		guid, err := ccServiceBroker.GetServiceBrokerGuidByName(brokerName)
 		if err != nil {
 			log.Error("get-service-broker-failed", err)
 			return &DeleteServicePlanInternalServerError{Payload: err.Error()}
 		}
 
-		err = ccServiceBroker.Update(guid, config.ManagementAPI.BrokerName, config.BrokerAPI.ExternalUrl, config.BrokerAPI.Credentials.Username, config.BrokerAPI.Credentials.Password)
+		err = ccServiceBroker.Update(guid, brokerName, config.BrokerAPI.ExternalUrl, config.BrokerAPI.Credentials.Username, config.BrokerAPI.Credentials.Password)
 		if err != nil {
 			log.Error("update-service-broker-failed", err)
 			return &DeleteServicePlanInternalServerError{Payload: err.Error()}
@@ -567,16 +574,21 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 			return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
 		}
 
-		guid, err := ccServiceBroker.GetServiceBrokerGuidByName(config.ManagementAPI.BrokerName)
+		brokerName := defaultBrokerName
+		if len(config.ManagementAPI.BrokerName) > 0 {
+			brokerName = config.ManagementAPI.BrokerName
+		}
+
+		guid, err := ccServiceBroker.GetServiceBrokerGuidByName(brokerName)
 		if err != nil {
 			log.Error("get-service-broker-failed", err)
 			return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
 		}
 
 		if guid == "" {
-			err = ccServiceBroker.Create(config.ManagementAPI.BrokerName, config.BrokerAPI.ExternalUrl, config.BrokerAPI.Credentials.Username, config.BrokerAPI.Credentials.Password)
+			err = ccServiceBroker.Create(brokerName, config.BrokerAPI.ExternalUrl, config.BrokerAPI.Credentials.Username, config.BrokerAPI.Credentials.Password)
 		} else {
-			err = ccServiceBroker.Update(guid, config.ManagementAPI.BrokerName, config.BrokerAPI.ExternalUrl, config.BrokerAPI.Credentials.Username, config.BrokerAPI.Credentials.Password)
+			err = ccServiceBroker.Update(guid, brokerName, config.BrokerAPI.ExternalUrl, config.BrokerAPI.Credentials.Username, config.BrokerAPI.Credentials.Password)
 		}
 		if err != nil {
 			log.Error("create-or-update-service-broker-failed", err)
@@ -690,20 +702,25 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 			}
 		}
 
+		brokerName := defaultBrokerName
+		if len(config.ManagementAPI.BrokerName) > 0 {
+			brokerName = config.ManagementAPI.BrokerName
+		}
+
 		if instanceCount == 0 {
-			err := ccServiceBroker.Delete(config.ManagementAPI.BrokerName)
+			err := ccServiceBroker.Delete(brokerName)
 			if err != nil {
 				log.Error("delete-service-broker-failed", err)
 				return &DeleteDriverInstanceInternalServerError{Payload: err.Error()}
 			}
 		} else {
-			guid, err := ccServiceBroker.GetServiceBrokerGuidByName(config.ManagementAPI.BrokerName)
+			guid, err := ccServiceBroker.GetServiceBrokerGuidByName(brokerName)
 			if err != nil {
 				log.Error("get-service-broker-failed", err)
 				return &DeleteDriverInstanceInternalServerError{Payload: err.Error()}
 			}
 
-			err = ccServiceBroker.Update(guid, config.ManagementAPI.BrokerName, config.BrokerAPI.ExternalUrl, config.BrokerAPI.Credentials.Username, config.BrokerAPI.Credentials.Password)
+			err = ccServiceBroker.Update(guid, brokerName, config.BrokerAPI.ExternalUrl, config.BrokerAPI.Credentials.Username, config.BrokerAPI.Credentials.Password)
 			if err != nil {
 				log.Error("update-service-broker-failed", err)
 				return &DeleteDriverInstanceInternalServerError{Payload: err.Error()}
@@ -757,13 +774,18 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 			return &UpdateServicePlanNotFound{}
 		}
 
-		guid, err := ccServiceBroker.GetServiceBrokerGuidByName(config.ManagementAPI.BrokerName)
+		brokerName := defaultBrokerName
+		if len(config.ManagementAPI.BrokerName) > 0 {
+			brokerName = config.ManagementAPI.BrokerName
+		}
+
+		guid, err := ccServiceBroker.GetServiceBrokerGuidByName(brokerName)
 		if err != nil {
 			log.Error("get-service-broker-failed", err)
 			return &UpdateServiceInternalServerError{Payload: err.Error()}
 		}
 
-		err = ccServiceBroker.Update(guid, config.ManagementAPI.BrokerName, config.BrokerAPI.ExternalUrl, config.BrokerAPI.Credentials.Username, config.BrokerAPI.Credentials.Password)
+		err = ccServiceBroker.Update(guid, brokerName, config.BrokerAPI.ExternalUrl, config.BrokerAPI.Credentials.Username, config.BrokerAPI.Credentials.Password)
 		if err != nil {
 			log.Error("update-service-broker-failed", err)
 			return &UpdateServiceInternalServerError{Payload: err.Error()}
@@ -984,13 +1006,18 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 			return &UpdateServiceInternalServerError{Payload: err.Error()}
 		}
 
-		guid, err := ccServiceBroker.GetServiceBrokerGuidByName(config.ManagementAPI.BrokerName)
+		brokerName := defaultBrokerName
+		if len(config.ManagementAPI.BrokerName) > 0 {
+			brokerName = config.ManagementAPI.BrokerName
+		}
+
+		guid, err := ccServiceBroker.GetServiceBrokerGuidByName(brokerName)
 		if err != nil {
 			log.Error("get-service-broker-failed", err)
 			return &UpdateServiceInternalServerError{Payload: err.Error()}
 		}
 
-		err = ccServiceBroker.Update(guid, config.ManagementAPI.BrokerName, config.BrokerAPI.ExternalUrl, config.BrokerAPI.Credentials.Username, config.BrokerAPI.Credentials.Password)
+		err = ccServiceBroker.Update(guid, brokerName, config.BrokerAPI.ExternalUrl, config.BrokerAPI.Credentials.Username, config.BrokerAPI.Credentials.Password)
 		if err != nil {
 			log.Error("update-service-broker-failed", err)
 			return &UpdateServiceInternalServerError{Payload: err.Error()}
@@ -1047,13 +1074,18 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 			return &CreateServicePlanInternalServerError{Payload: err.Error()}
 		}
 
-		guid, err := ccServiceBroker.GetServiceBrokerGuidByName(config.ManagementAPI.BrokerName)
+		brokerName := defaultBrokerName
+		if len(config.ManagementAPI.BrokerName) > 0 {
+			brokerName = config.ManagementAPI.BrokerName
+		}
+
+		guid, err := ccServiceBroker.GetServiceBrokerGuidByName(brokerName)
 		if err != nil {
 			log.Error("get-service-broker-failed", err)
 			return &UpdateServiceInternalServerError{Payload: err.Error()}
 		}
 
-		err = ccServiceBroker.Update(guid, config.ManagementAPI.BrokerName, config.BrokerAPI.ExternalUrl, config.BrokerAPI.Credentials.Username, config.BrokerAPI.Credentials.Password)
+		err = ccServiceBroker.Update(guid, brokerName, config.BrokerAPI.ExternalUrl, config.BrokerAPI.Credentials.Username, config.BrokerAPI.Credentials.Password)
 		if err != nil {
 			log.Error("update-service-broker-failed", err)
 			return &UpdateServiceInternalServerError{Payload: err.Error()}
@@ -1113,16 +1145,21 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 			return &UpdateCatalogInternalServerError{Payload: err.Error()}
 		}
 
-		guid, err := ccServiceBroker.GetServiceBrokerGuidByName(config.ManagementAPI.BrokerName)
+		brokerName := defaultBrokerName
+		if len(config.ManagementAPI.BrokerName) > 0 {
+			brokerName = config.ManagementAPI.BrokerName
+		}
+
+		guid, err := ccServiceBroker.GetServiceBrokerGuidByName(brokerName)
 		if err != nil {
 			log.Error("get-service-broker-failed", err)
 			return &UpdateCatalogInternalServerError{Payload: err.Error()}
 		}
 
 		if guid == "" {
-			return &UpdateCatalogInternalServerError{Payload: fmt.Sprintf("Broker %s guid not found", config.ManagementAPI.BrokerName)}
+			return &UpdateCatalogInternalServerError{Payload: fmt.Sprintf("Broker %s guid not found", brokerName)}
 		} else {
-			err = ccServiceBroker.Update(guid, config.ManagementAPI.BrokerName, config.BrokerAPI.ExternalUrl, config.BrokerAPI.Credentials.Username, config.BrokerAPI.Credentials.Password)
+			err = ccServiceBroker.Update(guid, brokerName, config.BrokerAPI.ExternalUrl, config.BrokerAPI.Credentials.Username, config.BrokerAPI.Credentials.Password)
 			if err != nil {
 				return &UpdateCatalogInternalServerError{Payload: err.Error()}
 			}
