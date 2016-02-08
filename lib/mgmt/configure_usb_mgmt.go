@@ -983,9 +983,6 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		if params.Service.Description != nil {
 			service.Description = *params.Service.Description
 		}
-		if params.Service.ID != nil {
-			service.ID = *params.Service.ID
-		}
 		if params.Service.Name != "" {
 			service.Name = params.Service.Name
 		}
