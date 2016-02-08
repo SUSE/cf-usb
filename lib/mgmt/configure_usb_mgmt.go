@@ -390,6 +390,37 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		configuration := json.RawMessage(dialconfig)
 		dial.Configuration = &configuration
 
+		_, parentId, err := configProvider.GetDriverInstance(params.Dial.DriverInstanceID)
+		if err != nil {
+			return &UpdateDialInternalServerError{Payload: err.Error()}
+		}
+
+		driver, err := configProvider.GetDriver(parentId)
+		if err != nil {
+			return &UpdateDialInternalServerError{Payload: err.Error()}
+		}
+
+		path, err := configProvider.GetDriversPath()
+		if err != nil {
+			return &CreateDialInternalServerError{Payload: err.Error()}
+		}
+
+		schema, err := lib.GetDailsSchema(path, driver.DriverType, logger)
+		if err != nil {
+			return &UpdateDialInternalServerError{Payload: err.Error()}
+		}
+		dialsSchemaLoader := gojsonschema.NewStringLoader(schema)
+		dialLoader := gojsonschema.NewGoLoader(dial.Configuration)
+		result, err := gojsonschema.Validate(dialsSchemaLoader, dialLoader)
+		if err != nil {
+			return &UpdateDialInternalServerError{Payload: err.Error()}
+		}
+		if !result.Valid() {
+			err = goerrors.New("Invalid dial configuration")
+			logger.Error("update-dial-validate-schema", err, lager.Data{"Errors": result.Errors()})
+			return &UpdateDialInternalServerError{Payload: err.Error()}
+		}
+
 		err = configProvider.SetDial(params.Dial.DriverInstanceID, dialID, dial)
 		if err != nil {
 			return &CreateDialInternalServerError{Payload: err.Error()}

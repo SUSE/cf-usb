@@ -174,14 +174,24 @@ func Test_CreateDial(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+	var driver config.Driver
+	driver.DriverType = "dummy"
+	driver.DriverName = "testDummy"
 
 	params := &operations.CreateDialParams{}
 	params.Dial = &genmodel.Dial{}
 	params.Dial.DriverInstanceID = "testInstanceID"
+	newconf := json.RawMessage([]byte(`{"max_dbsize_mb":50}`))
+	params.Dial.Configuration = &newconf
+
 	dialID := "dialID"
 	params.Dial.ID = &dialID
 	planID := "planID"
 	params.Dial.Plan = &planID
+
+	provider.On("GetDriverInstance", mock.Anything).Return(nil, "testID", nil)
+	provider.On("GetDriver", "testID").Return(&driver, nil)
+	provider.On("GetDriversPath").Return(os.Getenv("USB_DRIVER_PATH"), nil)
 
 	provider.On("SetDial", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	response := UnitTest.MgmtAPI.CreateDialHandler.Handle(*params, true)
