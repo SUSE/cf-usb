@@ -148,17 +148,17 @@ func (c *fileConfig) GetService(serviceID string) (*brokerapi.Service, string, e
 	return nil, "", errors.New(fmt.Sprintf("Service id %s not found", serviceID))
 }
 
-func (c *fileConfig) GetDial(dialID string) (*Dial, error) {
+func (c *fileConfig) GetDial(dialID string) (*Dial, string, error) {
 	for _, d := range c.config.Drivers {
-		for _, instance := range d.DriverInstances {
+		for instanceID, instance := range d.DriverInstances {
 			for dialID, dial := range instance.Dials {
 				if dialID == dialID {
-					return &dial, nil
+					return &dial, instanceID, nil
 				}
 			}
 		}
 	}
-	return nil, errors.New(fmt.Sprintf("Dial ID: %s not found", dialID))
+	return nil, "", errors.New(fmt.Sprintf("Dial ID: %s not found", dialID))
 }
 
 func (c *fileConfig) SetDriver(driverID string, driverInfo Driver) error {

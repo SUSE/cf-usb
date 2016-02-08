@@ -84,7 +84,7 @@ type ConfigProvider interface {
 	GetService(serviceid string) (service *brokerapi.Service, instanceid string, err error)
 	DeleteService(instanceid string) error
 	SetDial(instanceid string, dialid string, dial Dial) error
-	GetDial(dialid string) (*Dial, error)
+	GetDial(dialid string) (dial *Dial, instanceID string, err error)
 	DeleteDial(dialid string) error
 	DriverInstanceNameExists(driverInstanceName string) (bool, error)
 	DriverTypeExists(driverType string) (bool, error)

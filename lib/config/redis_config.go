@@ -340,21 +340,21 @@ func (c *redisConfig) SetDial(instanceID string, dialID string, dial Dial) error
 	return nil
 }
 
-func (c *redisConfig) GetDial(dialID string) (*Dial, error) {
+func (c *redisConfig) GetDial(dialID string) (*Dial, string, error) {
 	config, err := c.LoadConfiguration()
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	for _, d := range config.Drivers {
-		for _, instance := range d.DriverInstances {
+		for instanceID, instance := range d.DriverInstances {
 			if dialInfo, ok := instance.Dials[dialID]; ok {
-				return &dialInfo, nil
+				return &dialInfo, instanceID, nil
 			}
 		}
 	}
 
-	return nil, nil
+	return nil, "", nil
 }
 
 func (c *redisConfig) DeleteDial(dialID string) error {

@@ -414,7 +414,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 		dialID := params.DialID
 
-		dial, err := configProvider.GetDial(dialID)
+		dial, _, err := configProvider.GetDial(dialID)
 		if err != nil {
 			log.Error("update-dial", err, lager.Data{"dial-id": dialID})
 			return &UpdateDialNotFound{}
@@ -802,12 +802,19 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		log := log.Session("update-service-plan")
 		log.Info("request", lager.Data{"plan-id": params.PlanID})
 
+		if params.Plan == nil {
+			return &UpdateServicePlanInternalServerError{Payload: "Empty plan provided"}
+		}
+		if params.PlanID == "" {
+			return &UpdateServicePlanInternalServerError{Payload: "Empty plan id provided"}
+		}
+
 		config, err := configProvider.LoadConfiguration()
 		if err != nil {
 			return &UpdateServicePlanInternalServerError{Payload: err.Error()}
 		}
 
-		_, _, _, err = configProvider.GetPlan(params.PlanID)
+		plan, dialID, _, err := configProvider.GetPlan(params.PlanID)
 		if err != nil {
 			return &UpdateServicePlanNotFound{}
 		}
@@ -829,41 +836,37 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 			return &UpdateServiceInternalServerError{Payload: err.Error()}
 		}
 
-		for _, driver := range config.Drivers {
-			for instanceID, instance := range driver.DriverInstances {
-				for dialID, dial := range instance.Dials {
-					if dialID == params.Plan.DialID {
-						if dial.Plan.ID == params.PlanID {
-							var plan brokerapi.ServicePlan
-							var meta brokerapi.ServicePlanMetadata
-
-							plan.Description = *params.Plan.Description
-							plan.ID = *params.Plan.ID
-							plan.Name = params.Plan.Name
-							plan.Free = *params.Plan.Free
-
-							meta.DisplayName = params.Plan.Name
-							plan.Metadata = &meta
-							dial.Plan = plan
-							err = configProvider.SetDial(instanceID, dialID, dial)
-
-							if err != nil {
-								return &UpdateServicePlanInternalServerError{Payload: err.Error()}
-							}
-							return &UpdateServicePlanOK{Payload: params.Plan}
-						}
-					}
-				}
-
-				err = ccServiceBroker.EnableServiceAccess(instance.Service.Name)
-				if err != nil {
-					log.Error("enable-service-access-failed", err)
-					return &UpdateServiceInternalServerError{Payload: err.Error()}
-				}
-			}
+		dial, instanceID, err := configProvider.GetDial(dialID)
+		if err != nil {
+			return &UpdateServicePlanInternalServerError{Payload: err.Error()}
+		}
+		instance, _, err := configProvider.GetDriverInstance(instanceID)
+		if err != nil {
+			return &UpdateServicePlanInternalServerError{Payload: err.Error()}
 		}
 
-		return &UpdateServicePlanNotFound{}
+		var meta brokerapi.ServicePlanMetadata
+
+		plan.Description = *params.Plan.Description
+		plan.ID = *params.Plan.ID
+		plan.Name = params.Plan.Name
+		plan.Free = *params.Plan.Free
+
+		meta.DisplayName = params.Plan.Name
+		plan.Metadata = &meta
+		dial.Plan = *plan
+		err = configProvider.SetDial(instanceID, dialID, *dial)
+
+		if err != nil {
+			return &UpdateServicePlanInternalServerError{Payload: err.Error()}
+		}
+		err = ccServiceBroker.EnableServiceAccess(instance.Service.Name)
+		if err != nil {
+			log.Error("enable-service-access-failed", err)
+			return &UpdateServiceInternalServerError{Payload: err.Error()}
+		}
+
+		return &UpdateServicePlanOK{Payload: params.Plan}
 	})
 
 	api.GetServiceHandler = GetServiceHandlerFunc(func(params GetServiceParams, principal interface{}) middleware.Responder {
@@ -895,7 +898,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		log := log.Session("delete-dial")
 		log.Info("request", lager.Data{"dial-id": params.DialID})
 
-		_, err := configProvider.GetDial(params.DialID)
+		_, _, err := configProvider.GetDial(params.DialID)
 		if err != nil {
 			return &DeleteDialNotFound{}
 		}

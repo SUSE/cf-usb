@@ -226,8 +226,9 @@ func Test_IntGetDial(t *testing.T) {
 
 	assert := assert.New(t)
 
-	dialInfo, err := IntegrationConfig.Provider.GetDial("testdialID")
+	dialInfo, instanceID, err := IntegrationConfig.Provider.GetDial("testdialID")
 	t.Log(dialInfo)
+	t.Log(instanceID)
 	assert.NoError(err)
 }
 

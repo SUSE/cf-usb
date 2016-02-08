@@ -331,7 +331,7 @@ func Test_UpdateDial(t *testing.T) {
 	provider.On("GetDriver", "testID").Return(&driver, nil)
 	provider.On("GetDriversPath").Return(os.Getenv("USB_DRIVER_PATH"), nil)
 
-	provider.On("GetDial", mock.Anything).Return(&dial, nil)
+	provider.On("GetDial", mock.Anything).Return(&dial, "testInstanceID", nil)
 	provider.On("SetDial", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	response := UnitTest.MgmtAPI.UpdateDialHandler.Handle(*params, true)
 	assert.IsType(&operations.UpdateDialOK{}, response)
@@ -417,8 +417,10 @@ func Test_UpdateServicePlan(t *testing.T) {
 	testConfig.Drivers = make(map[string]config.Driver)
 	testConfig.Drivers["testDriverID"] = driver
 
-	provider.On("GetPlan", params.PlanID).Return(&plan, mock.Anything, mock.Anything, nil)
+	provider.On("GetPlan", params.PlanID).Return(&plan, "testDialID", mock.Anything, nil)
 	provider.On("LoadConfiguration").Return(&testConfig, nil)
+	provider.On("GetDial", mock.Anything).Return(&dial, "testInstanceID", nil)
+	provider.On("GetDriverInstance", mock.Anything).Return(&instace, "testID", nil)
 	provider.On("SetDial", "testInstanceID", mock.Anything, mock.Anything).Return(nil)
 	response := UnitTest.MgmtAPI.UpdateServicePlanHandler.Handle(*params, true)
 	assert.IsType(&operations.UpdateServicePlanOK{}, response)

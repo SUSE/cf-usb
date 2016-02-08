@@ -102,7 +102,7 @@ func (c *consulConfig) LoadConfiguration() (*Config, error) {
 						dialKey = strings.TrimSuffix(dialKey, "/")
 						dialKey = strings.TrimPrefix(dialKey, "usb/drivers/"+driverID+"/instances/"+instanceKey+"/dials/")
 
-						dialInfo, err := c.GetDial(dialKey)
+						dialInfo, _, err := c.GetDial(dialKey)
 						if err != nil {
 							return nil, err
 						}
@@ -187,7 +187,7 @@ func (c *consulConfig) GetDriver(driverID string) (*Driver, error) {
 				dialKey = strings.TrimSuffix(dialKey, "/")
 				dialKey = strings.TrimPrefix(dialKey, "usb/drivers/"+driverID+"/instances/"+instanceKey+"/dials/")
 
-				dialInfo, err := c.GetDial(dialKey)
+				dialInfo, _, err := c.GetDial(dialKey)
 				if err != nil {
 					return nil, err
 				}
@@ -257,26 +257,26 @@ func (c *consulConfig) GetService(serviceid string) (*brokerapi.Service, string,
 	return nil, "", errors.New(fmt.Sprintf("Service id %s not found", serviceid))
 }
 
-func (c *consulConfig) GetDial(dialID string) (*Dial, error) {
+func (c *consulConfig) GetDial(dialID string) (*Dial, string, error) {
 	var dialInfo Dial
 	key, err := c.getDialKey(dialID)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	if key == "" {
-		return nil, errors.New(fmt.Sprintf("Dial key %s not found", dialID))
+		return nil, "", errors.New(fmt.Sprintf("Dial key %s not found", dialID))
 	}
 	data, err := c.provisioner.GetValue(key)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	if data == nil {
-		return nil, errors.New(fmt.Sprintf("Dial %s not found", dialID))
+		return nil, "", errors.New(fmt.Sprintf("Dial %s not found", dialID))
 	}
 
 	err = json.Unmarshal(data, &dialInfo)
-
-	return &dialInfo, err
+	instanceID := strings.Split(key, "/")[4]
+	return &dialInfo, instanceID, err
 }
 
 func (c *consulConfig) SetDriver(driverID string, driver Driver) error {
@@ -437,7 +437,7 @@ func (c *consulConfig) LoadDriverInstance(instanceID string) (*DriverInstance, e
 		dialKey = strings.TrimSuffix(dialKey, "/")
 		dialKey = strings.TrimPrefix(dialKey, key+"/dials/")
 
-		dialInfo, err := c.GetDial(dialKey)
+		dialInfo, _, err := c.GetDial(dialKey)
 		if err != nil {
 			return nil, err
 		}
