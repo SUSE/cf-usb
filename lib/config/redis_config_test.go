@@ -80,7 +80,7 @@ func Test_Redis_GetDriverInstance(t *testing.T) {
 	provisioner.On("GetValue", "usb").Return(configSring, nil)
 
 	RedisTestConfig.Provider = NewRedisConfig(provisioner)
-	instance, err := RedisTestConfig.Provider.GetDriverInstance("A0000000-0000-0000-0000-000000000004")
+	instance, _, err := RedisTestConfig.Provider.GetDriverInstance("A0000000-0000-0000-0000-000000000004")
 	assert.NoError(err)
 
 	assert.Equal("local-mssql", instance.Name)

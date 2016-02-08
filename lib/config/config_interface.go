@@ -78,7 +78,7 @@ type ConfigProvider interface {
 	GetDriver(driverid string) (*Driver, error)
 	DeleteDriver(driverid string) error
 	SetDriverInstance(driverid string, instanceid string, driverInstance DriverInstance) error
-	GetDriverInstance(instanceid string) (*DriverInstance, error)
+	GetDriverInstance(instanceid string) (instance *DriverInstance, driverId string, err error)
 	DeleteDriverInstance(instanceid string) error
 	SetService(instanceid string, service brokerapi.Service) error
 	GetService(serviceid string) (service *brokerapi.Service, instanceid string, err error)

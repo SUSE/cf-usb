@@ -87,7 +87,7 @@ func Test_RedisGetDriverInstance(t *testing.T) {
 	}
 	err := initRedisProvider()
 	assert.NoError(err)
-	instance, err := RedisIntegrationConfig.Provider.GetDriverInstance("A0000000-0000-0000-0000-000000000004")
+	instance, _, err := RedisIntegrationConfig.Provider.GetDriverInstance("A0000000-0000-0000-0000-000000000004")
 	assert.NoError(err)
 
 	assert.Equal("local-mssql", instance.Name)

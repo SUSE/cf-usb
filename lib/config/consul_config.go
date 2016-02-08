@@ -90,7 +90,7 @@ func (c *consulConfig) LoadConfiguration() (*Config, error) {
 					instanceKey = strings.TrimSuffix(instanceKey, "/")
 					instanceKey = strings.TrimPrefix(instanceKey, "usb/drivers/"+driverID+"/instances/")
 
-					driverInstanceInfo, err := c.GetDriverInstance(instanceKey)
+					driverInstanceInfo, _, err := c.GetDriverInstance(instanceKey)
 
 					if err != nil {
 						return nil, err
@@ -175,7 +175,7 @@ func (c *consulConfig) GetDriver(driverID string) (*Driver, error) {
 			instanceKey = strings.TrimSuffix(instanceKey, "/")
 			instanceKey = strings.TrimPrefix(instanceKey, "usb/drivers/"+driverID+"/instances/")
 
-			driverInstanceInfo, err := c.GetDriverInstance(instanceKey)
+			driverInstanceInfo, _, err := c.GetDriverInstance(instanceKey)
 
 			if err != nil {
 				return nil, err
@@ -206,25 +206,25 @@ func (c *consulConfig) GetDriver(driverID string) (*Driver, error) {
 	return &result, nil
 }
 
-func (c *consulConfig) GetDriverInstance(instanceID string) (*DriverInstance, error) {
+func (c *consulConfig) GetDriverInstance(instanceID string) (*DriverInstance, string, error) {
 	var instance DriverInstance
 	key, err := c.getKey(instanceID)
 
 	if err != nil {
-		return &DriverInstance{}, err
+		return nil, "", err
 	}
 	if key == "" {
-		return &DriverInstance{}, errors.New(fmt.Sprintf("Instance %s not found", instanceID))
+		return nil, "", errors.New(fmt.Sprintf("Instance %s not found", instanceID))
 	}
 	val, err := c.provisioner.GetValue(key + "/Name")
 	if err != nil {
-		return &DriverInstance{}, err
+		return nil, "", err
 	}
 	instance.Name = string(val)
 
 	instanceConfig, err := c.provisioner.GetValue(key + "/Configuration")
 	if err != nil {
-		return &DriverInstance{}, err
+		return nil, "", err
 	}
 
 	configuration := json.RawMessage(instanceConfig)
@@ -235,9 +235,10 @@ func (c *consulConfig) GetDriverInstance(instanceID string) (*DriverInstance, er
 
 	err = json.Unmarshal(serviceInfo, &instance.Service)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
-	return &instance, nil
+	driverID := strings.Split(key, "/")[2]
+	return &instance, driverID, nil
 }
 
 func (c *consulConfig) GetService(serviceid string) (*brokerapi.Service, string, error) {
@@ -423,7 +424,7 @@ func (c *consulConfig) DeleteDial(dialID string) error {
 }
 
 func (c *consulConfig) LoadDriverInstance(instanceID string) (*DriverInstance, error) {
-	driverInstance, err := c.GetDriverInstance(instanceID)
+	driverInstance, _, err := c.GetDriverInstance(instanceID)
 	if err != nil {
 		return nil, err
 	}

@@ -65,7 +65,7 @@ func (p *DriverProvider) GetInstance(instanceID string) (driver.Instance, error)
 
 	var result driver.Instance
 
-	driverInstance, err := p.ConfigProvider.GetDriverInstance(p.driverInstanceID)
+	driverInstance, _, err := p.ConfigProvider.GetDriverInstance(p.driverInstanceID)
 	if err != nil {
 		return result, err
 	}
@@ -87,7 +87,7 @@ func (p *DriverProvider) GenerateCredentials(instanceID, credentialsID string) (
 
 	var result interface{}
 
-	driverInstance, err := p.ConfigProvider.GetDriverInstance(p.driverInstanceID)
+	driverInstance, _, err := p.ConfigProvider.GetDriverInstance(p.driverInstanceID)
 	if err != nil {
 		return result, err
 	}
@@ -110,7 +110,7 @@ func (p *DriverProvider) GetCredentials(instanceID, credentialsID string) (drive
 
 	var result driver.Credentials
 
-	driverInstance, err := p.ConfigProvider.GetDriverInstance(p.driverInstanceID)
+	driverInstance, _, err := p.ConfigProvider.GetDriverInstance(p.driverInstanceID)
 	if err != nil {
 		return result, err
 	}
@@ -133,7 +133,7 @@ func (p *DriverProvider) RevokeCredentials(instanceID, credentialsID string) (dr
 
 	var result driver.Credentials
 
-	driverInstance, err := p.ConfigProvider.GetDriverInstance(p.driverInstanceID)
+	driverInstance, _, err := p.ConfigProvider.GetDriverInstance(p.driverInstanceID)
 	if err != nil {
 		return result, err
 	}
@@ -156,7 +156,7 @@ func (p *DriverProvider) DeprovisionInstance(instanceID string) (driver.Instance
 
 	var result driver.Instance
 
-	driverInstance, err := p.ConfigProvider.GetDriverInstance(p.driverInstanceID)
+	driverInstance, _, err := p.ConfigProvider.GetDriverInstance(p.driverInstanceID)
 	if err != nil {
 		return result, err
 	}

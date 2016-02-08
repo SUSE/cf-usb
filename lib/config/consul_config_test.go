@@ -118,8 +118,8 @@ func Test_GetDriverInstance(t *testing.T) {
 
 	assert := assert.New(t)
 
-	instance, err := TestConfig.Provider.GetDriverInstance("testInstanceID")
-
+	instance, parent, err := TestConfig.Provider.GetDriverInstance("testInstanceID")
+	t.Log(parent)
 	assert.Equal("MockedTestInstanceData", instance.Name)
 	assert.NoError(err)
 }

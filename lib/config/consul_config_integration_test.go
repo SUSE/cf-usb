@@ -117,7 +117,7 @@ func Test_IntGetDriverInstance(t *testing.T) {
 
 	assert := assert.New(t)
 
-	instance, err := IntegrationConfig.Provider.GetDriverInstance("testInstanceID")
+	instance, _, err := IntegrationConfig.Provider.GetDriverInstance("testInstanceID")
 
 	assert.Equal("testInstance", instance.Name)
 	assert.NoError(err)

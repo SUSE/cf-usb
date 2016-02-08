@@ -119,15 +119,15 @@ func (c *fileConfig) GetDriver(driverID string) (*Driver, error) {
 	return nil, errors.New(fmt.Sprintf("Driver ID: %s not found", driverID))
 }
 
-func (c *fileConfig) GetDriverInstance(instanceID string) (*DriverInstance, error) {
-	for _, d := range c.config.Drivers {
+func (c *fileConfig) GetDriverInstance(instanceID string) (*DriverInstance, string, error) {
+	for parentId, d := range c.config.Drivers {
 		for diKey, i := range d.DriverInstances {
 			if diKey == instanceID {
-				return &i, nil
+				return &i, parentId, nil
 			}
 		}
 	}
-	return nil, errors.New(fmt.Sprintf("Driver Instance ID: %s not found", instanceID))
+	return nil, "", errors.New(fmt.Sprintf("Driver Instance ID: %s not found", instanceID))
 }
 
 func (c *fileConfig) GetService(serviceID string) (*brokerapi.Service, string, error) {

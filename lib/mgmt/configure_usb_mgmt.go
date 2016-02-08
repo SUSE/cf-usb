@@ -26,6 +26,8 @@ import (
 	"github.com/hpcloud/cf-usb/lib/mgmt/cc_integration/ccapi"
 	. "github.com/hpcloud/cf-usb/lib/operations"
 	"github.com/pivotal-golang/lager"
+	"github.com/xeipuuv/gojsonschema"
+
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -402,12 +404,19 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		log := log.Session("update-dial")
 		log.Info("request", lager.Data{"driver-instance-id": params.Dial.DriverInstanceID})
 
-		var dial config.Dial
+		if params.DialID == "" {
+			return &UpdateDialInternalServerError{Payload: "Empty dial id parameter provided"}
+		}
 
-		dialID := params.Dial.ID
+		if params.Dial == nil {
+			return &UpdateDialInternalServerError{Payload: "Empty dial provided"}
+		}
 
-		_, err := configProvider.GetDial(*dialID)
+		dialID := params.DialID
+
+		dial, err := configProvider.GetDial(dialID)
 		if err != nil {
+			log.Error("update-dial", err, lager.Data{"dial-id": dialID})
 			return &UpdateDialNotFound{}
 		}
 
@@ -418,9 +427,38 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 		configuration := json.RawMessage(dialconfig)
 		dial.Configuration = &configuration
-		dial.Plan = brokerapi.ServicePlan{ID: *params.Dial.Plan}
 
-		err = configProvider.SetDial(params.Dial.DriverInstanceID, *dialID, dial)
+		_, parentId, err := configProvider.GetDriverInstance(params.Dial.DriverInstanceID)
+		if err != nil {
+			return &UpdateDialInternalServerError{Payload: err.Error()}
+		}
+
+		driver, err := configProvider.GetDriver(parentId)
+		if err != nil {
+			return &UpdateDialInternalServerError{Payload: err.Error()}
+		}
+		path, err := configProvider.GetDriversPath()
+		if err != nil {
+			return &UpdateDialInternalServerError{Payload: err.Error()}
+		}
+
+		schema, err := lib.GetDailsSchema(path, driver.DriverType, logger)
+		if err != nil {
+			return &UpdateDialInternalServerError{Payload: err.Error()}
+		}
+		dialsSchemaLoader := gojsonschema.NewStringLoader(schema)
+		dialLoader := gojsonschema.NewGoLoader(dial.Configuration)
+		result, err := gojsonschema.Validate(dialsSchemaLoader, dialLoader)
+		if err != nil {
+			return &UpdateDialInternalServerError{Payload: err.Error()}
+		}
+		if !result.Valid() {
+			err = goerrors.New("Invalid dial configuration")
+			logger.Error("update-dial-validate-schema", err, lager.Data{"Errors": result.Errors()})
+			return &UpdateDialInternalServerError{Payload: err.Error()}
+		}
+
+		err = configProvider.SetDial(params.Dial.DriverInstanceID, dialID, *dial)
 		if err != nil {
 			return &UpdateDialInternalServerError{Payload: err.Error()}
 		}
@@ -451,7 +489,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		log := log.Session("get-services")
 		log.Info("request", lager.Data{"driver-instance-id": params.DriverInstanceID})
 
-		di, err := configProvider.GetDriverInstance(params.DriverInstanceID)
+		di, _, err := configProvider.GetDriverInstance(params.DriverInstanceID)
 		if err != nil {
 			return &GetServiceByInstanceIDInternalServerError{Payload: err.Error()}
 		}
@@ -608,7 +646,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		log := log.Session("update-driver-instance")
 		log.Info("request", lager.Data{"driver-instance-id": params.DriverInstanceID})
 
-		instanceInfo, err := configProvider.GetDriverInstance(params.DriverInstanceID)
+		instanceInfo, _, err := configProvider.GetDriverInstance(params.DriverInstanceID)
 		if err != nil {
 			return &UpdateDriverInstanceNotFound{}
 		}
@@ -680,7 +718,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		log := log.Session("delete-driver-instance")
 		log.Info("request", lager.Data{"driver-instance-id": params.DriverInstanceID})
 
-		_, err := configProvider.GetDriverInstance(params.DriverInstanceID)
+		_, _, err := configProvider.GetDriverInstance(params.DriverInstanceID)
 		if err != nil {
 			return &DeleteDriverInstanceNotFound{}
 		}
@@ -1033,7 +1071,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		log := log.Session("get-driver-instance")
 		log.Info("request", lager.Data{"driver-instance-id": params.DriverInstanceID})
 
-		instance, err := configProvider.GetDriverInstance(params.DriverInstanceID)
+		instance, _, err := configProvider.GetDriverInstance(params.DriverInstanceID)
 		if err != nil {
 			return &GetDriverInstanceNotFound{}
 		}
