@@ -116,7 +116,7 @@ func (e *MysqlDriver) ProvisionInstance(request driver.ProvisionInstanceRequest,
 		return err
 	}
 
-	err = e.db.CreateDatabase(strings.Replace(request.InstanceID, "-", "", -1))
+	err = e.db.CreateDatabase("d" + strings.Replace(request.InstanceID, "-", "", -1))
 	if err != nil {
 		return err
 	}
@@ -136,7 +136,7 @@ func (e *MysqlDriver) GetInstance(request driver.GetInstanceRequest, response *d
 		return err
 	}
 
-	created, err := e.db.IsDatabaseCreated(strings.Replace(request.InstanceID, "-", "", -1))
+	created, err := e.db.IsDatabaseCreated("d" + strings.Replace(request.InstanceID, "-", "", -1))
 	if err != nil {
 		return err
 	}
@@ -164,7 +164,7 @@ func (e *MysqlDriver) GenerateCredentials(request driver.GenerateCredentialsRequ
 	}
 	password := e.secureRandomString(32)
 
-	err = e.db.CreateUser(strings.Replace(request.InstanceID, "-", "", -1), username, password)
+	err = e.db.CreateUser("d"+strings.Replace(request.InstanceID, "-", "", -1), username, password)
 	if err != nil {
 		return err
 	}
@@ -174,9 +174,9 @@ func (e *MysqlDriver) GenerateCredentials(request driver.GenerateCredentialsRequ
 		Port:     e.conf.Port,
 		Username: username,
 		Password: password,
-		Database: strings.Replace(request.InstanceID, "-", "", -1),
+		Database: "d" + strings.Replace(request.InstanceID, "-", "", -1),
 		ConnectionString: generateConnectionString(e.conf.Host, e.conf.Port,
-			strings.Replace(request.InstanceID, "-", "", -1), username, password),
+			"d"+strings.Replace(request.InstanceID, "-", "", -1), username, password),
 	}
 
 	*response = data
@@ -246,7 +246,7 @@ func (e *MysqlDriver) DeprovisionInstance(request driver.DeprovisionInstanceRequ
 		return err
 	}
 
-	err = e.db.DeleteDatabase(strings.Replace(request.InstanceID, "-", "", -1))
+	err = e.db.DeleteDatabase("d" + strings.Replace(request.InstanceID, "-", "", -1))
 	if err != nil {
 		return err
 	}
