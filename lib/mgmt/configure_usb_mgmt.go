@@ -877,13 +877,16 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		}
 
 		var meta brokerapi.ServicePlanMetadata
-
-		plan.Description = *params.Plan.Description
-		plan.ID = *params.Plan.ID
-		plan.Name = params.Plan.Name
-		plan.Free = *params.Plan.Free
-
-		meta.DisplayName = params.Plan.Name
+		if params.Plan.Description != nil {
+			plan.Description = *params.Plan.Description
+		}
+		if params.Plan.Name != "" {
+			plan.Name = params.Plan.Name
+			meta.DisplayName = params.Plan.Name
+		}
+		if params.Plan.Free != nil {
+			plan.Free = *params.Plan.Free
+		}
 		plan.Metadata = &meta
 		dial.Plan = *plan
 		err = configProvider.SetDial(instanceID, dialID, *dial)
