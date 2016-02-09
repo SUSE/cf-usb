@@ -154,11 +154,11 @@ func (c *consulConfig) GetDriver(driverID string) (*Driver, error) {
 	var result Driver
 	driverType, err := c.provisioner.GetValue("usb/drivers/" + driverID + "/Type")
 	if err != nil {
-		return &Driver{}, err
+		return nil, err
 	}
 	driverName, err := c.provisioner.GetValue("usb/drivers/" + driverID + "/Name")
 	if err != nil {
-		return &Driver{}, err
+		return nil, err
 	}
 
 	if driverType != nil {
@@ -214,7 +214,7 @@ func (c *consulConfig) GetDriverInstance(instanceID string) (*DriverInstance, st
 		return nil, "", err
 	}
 	if key == "" {
-		return nil, "", errors.New(fmt.Sprintf("Instance %s not found", instanceID))
+		return nil, "", nil
 	}
 	val, err := c.provisioner.GetValue(key + "/Name")
 	if err != nil {
@@ -254,7 +254,7 @@ func (c *consulConfig) GetService(serviceid string) (*brokerapi.Service, string,
 			}
 		}
 	}
-	return nil, "", errors.New(fmt.Sprintf("Service id %s not found", serviceid))
+	return nil, "", nil
 }
 
 func (c *consulConfig) GetDial(dialID string) (*Dial, string, error) {
@@ -264,14 +264,14 @@ func (c *consulConfig) GetDial(dialID string) (*Dial, string, error) {
 		return nil, "", err
 	}
 	if key == "" {
-		return nil, "", errors.New(fmt.Sprintf("Dial key %s not found", dialID))
+		return nil, "", nil
 	}
 	data, err := c.provisioner.GetValue(key)
 	if err != nil {
 		return nil, "", err
 	}
 	if data == nil {
-		return nil, "", errors.New(fmt.Sprintf("Dial %s not found", dialID))
+		return nil, "", nil
 	}
 
 	err = json.Unmarshal(data, &dialInfo)

@@ -276,7 +276,7 @@ func (c *redisConfig) GetService(serviceID string) (*brokerapi.Service, string, 
 			}
 		}
 	}
-	return nil, "", errors.New(fmt.Sprintf("Service id %s not found", serviceID))
+	return nil, "", nil
 }
 
 func (c *redisConfig) DeleteService(instanceID string) error {
@@ -445,5 +445,5 @@ func (c *redisConfig) GetPlan(planid string) (*brokerapi.ServicePlan, string, st
 			}
 		}
 	}
-	return nil, "", "", errors.New(fmt.Sprintf("Plan id %s not found", planid))
+	return nil, "", "", nil
 }

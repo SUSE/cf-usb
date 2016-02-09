@@ -74,6 +74,9 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		if err != nil {
 			return &UpdateDriverInternalServerError{Payload: err.Error()}
 		}
+		if driver == nil {
+			return &UpdateDriverNotFound{}
+		}
 
 		driver.DriverName = params.Driver.Name
 
@@ -91,6 +94,9 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 		driver, err := configProvider.GetDriver(params.DriverID)
 		if err != nil {
+			return &UploadDriverInternalServerError{Payload: err.Error()}
+		}
+		if driver == nil {
 			return &UploadDriverNotFound{}
 		}
 
@@ -209,6 +215,9 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 		d, err := configProvider.GetDriver(params.DriverID)
 		if err != nil {
+			return &GetDriverInstanceInternalServerError{Payload: err.Error()}
+		}
+		if d == nil {
 			return &GetDriverNotFound{}
 		}
 
@@ -300,6 +309,9 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		if err != nil {
 			return &GetDriverInstanceInternalServerError{Payload: err.Error()}
 		}
+		if driver == nil {
+			return &GetDriverNotFound{}
+		}
 
 		for diID, di := range driver.DriverInstances {
 			var dials = make([]string, 0)
@@ -360,6 +372,9 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 		planInfo, dialID, _, err := configProvider.GetPlan(params.PlanID)
 		if err != nil {
+			return &GetServicePlanInternalServerError{Payload: err.Error()}
+		}
+		if planInfo == nil {
 			return &GetServicePlanNotFound{}
 		}
 
@@ -398,6 +413,9 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		driver, err := configProvider.GetDriver(parentId)
 		if err != nil {
 			return &UpdateDialInternalServerError{Payload: err.Error()}
+		}
+		if driver == nil {
+			return &GetDriverNotFound{}
 		}
 
 		path, err := configProvider.GetDriversPath()
@@ -448,6 +466,9 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		dial, _, err := configProvider.GetDial(dialID)
 		if err != nil {
 			log.Error("update-dial", err, lager.Data{"dial-id": dialID})
+			return &UpdateDialInternalServerError{Payload: err.Error()}
+		}
+		if dial == nil {
 			return &UpdateDialNotFound{}
 		}
 
@@ -468,6 +489,11 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		if err != nil {
 			return &UpdateDialInternalServerError{Payload: err.Error()}
 		}
+
+		if driver == nil {
+			return &GetDriverNotFound{}
+		}
+
 		path, err := configProvider.GetDriversPath()
 		if err != nil {
 			return &UpdateDialInternalServerError{Payload: err.Error()}
@@ -547,6 +573,9 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		existingDriver, err := configProvider.GetDriver(params.DriverInstance.DriverID)
 		if err != nil {
 			return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
+		}
+		if existingDriver == nil {
+			return &GetDriverNotFound{}
 		}
 
 		var instance config.DriverInstance
@@ -679,6 +708,9 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 		instanceInfo, _, err := configProvider.GetDriverInstance(params.DriverInstanceID)
 		if err != nil {
+			return &UpdateDriverInstanceInternalServerError{Payload: err.Error()}
+		}
+		if instanceInfo == nil {
 			return &UpdateDriverInstanceNotFound{}
 		}
 
@@ -732,8 +764,11 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		log := log.Session("delete-driver")
 		log.Info("request", lager.Data{"driver-id": params.DriverID})
 
-		_, err := configProvider.GetDriver(params.DriverID)
+		driver, err := configProvider.GetDriver(params.DriverID)
 		if err != nil {
+			return &DeleteDriverInternalServerError{Payload: err.Error()}
+		}
+		if driver == nil {
 			return &DeleteDriverNotFound{}
 		}
 
@@ -749,11 +784,13 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		log := log.Session("delete-driver-instance")
 		log.Info("request", lager.Data{"driver-instance-id": params.DriverInstanceID})
 
-		_, _, err := configProvider.GetDriverInstance(params.DriverInstanceID)
+		instance, _, err := configProvider.GetDriverInstance(params.DriverInstanceID)
 		if err != nil {
+			return &DeleteDriverInstanceInternalServerError{Payload: err.Error()}
+		}
+		if instance == nil {
 			return &DeleteDriverInstanceNotFound{}
 		}
-
 		err = configProvider.DeleteDriverInstance(params.DriverInstanceID)
 		if err != nil {
 			return &DeleteDriverInstanceInternalServerError{Payload: err.Error()}
@@ -847,6 +884,9 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 		plan, dialID, _, err := configProvider.GetPlan(params.PlanID)
 		if err != nil {
+			return &UpdateServicePlanInternalServerError{Payload: err.Error()}
+		}
+		if plan == nil {
 			return &UpdateServicePlanNotFound{}
 		}
 
@@ -871,9 +911,16 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		if err != nil {
 			return &UpdateServicePlanInternalServerError{Payload: err.Error()}
 		}
+		if dial == nil {
+			return &GetDialNotFound{}
+		}
+
 		instance, _, err := configProvider.GetDriverInstance(instanceID)
 		if err != nil {
 			return &UpdateServicePlanInternalServerError{Payload: err.Error()}
+		}
+		if instance == nil {
+			return &GetDriverInstanceNotFound{}
 		}
 
 		var meta brokerapi.ServicePlanMetadata
@@ -909,6 +956,9 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 		serviceInfo, instanceID, err := configProvider.GetService(params.ServiceID)
 		if err != nil {
+			return &GetServiceInternalServerError{Payload: err.Error()}
+		}
+		if serviceInfo == nil {
 			return &GetServiceNotFound{}
 		}
 
@@ -932,8 +982,11 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		log := log.Session("delete-dial")
 		log.Info("request", lager.Data{"dial-id": params.DialID})
 
-		_, _, err := configProvider.GetDial(params.DialID)
+		dial, _, err := configProvider.GetDial(params.DialID)
 		if err != nil {
+			return &DeleteDialInternalServerError{Payload: err.Error()}
+		}
+		if dial == nil {
 			return &DeleteDialNotFound{}
 		}
 
@@ -1046,10 +1099,11 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 		service, instanceid, err := configProvider.GetService(params.ServiceID)
 		if err != nil {
-			return &UpdateServiceNotFound{}
+			return &UpdateServiceInternalServerError{Payload: err.Error()}
 		}
+
 		if service == nil {
-			return &UpdateServiceInternalServerError{Payload: fmt.Sprintf("Service-id %s not found", params.ServiceID)}
+			return &UpdateServiceNotFound{}
 		}
 
 		if params.Service.Bindable != nil {
@@ -1110,6 +1164,9 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 		instance, _, err := configProvider.GetDriverInstance(params.DriverInstanceID)
 		if err != nil {
+			return &GetDriverInstanceInternalServerError{Payload: err.Error()}
+		}
+		if instance == nil {
 			return &GetDriverInstanceNotFound{}
 		}
 

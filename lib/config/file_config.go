@@ -3,7 +3,6 @@ package config
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"os"
 
@@ -92,7 +91,7 @@ func (c *fileConfig) LoadDriverInstance(instanceID string) (*DriverInstance, err
 	}
 
 	if !exists {
-		return nil, errors.New(fmt.Sprintf("Cannot find instanceID : %s", instanceID))
+		return nil, nil
 	}
 
 	return &instance, nil
@@ -116,7 +115,7 @@ func (c *fileConfig) GetDriver(driverID string) (*Driver, error) {
 			return &d, nil
 		}
 	}
-	return nil, errors.New(fmt.Sprintf("Driver ID: %s not found", driverID))
+	return nil, nil
 }
 
 func (c *fileConfig) GetDriverInstance(instanceID string) (*DriverInstance, string, error) {
@@ -127,7 +126,7 @@ func (c *fileConfig) GetDriverInstance(instanceID string) (*DriverInstance, stri
 			}
 		}
 	}
-	return nil, "", errors.New(fmt.Sprintf("Driver Instance ID: %s not found", instanceID))
+	return nil, "", nil
 }
 
 func (c *fileConfig) GetService(serviceID string) (*brokerapi.Service, string, error) {
@@ -145,7 +144,7 @@ func (c *fileConfig) GetService(serviceID string) (*brokerapi.Service, string, e
 		}
 	}
 
-	return nil, "", errors.New(fmt.Sprintf("Service id %s not found", serviceID))
+	return nil, "", nil
 }
 
 func (c *fileConfig) GetDial(dialID string) (*Dial, string, error) {
@@ -158,7 +157,7 @@ func (c *fileConfig) GetDial(dialID string) (*Dial, string, error) {
 			}
 		}
 	}
-	return nil, "", errors.New(fmt.Sprintf("Dial ID: %s not found", dialID))
+	return nil, "", nil
 }
 
 func (c *fileConfig) SetDriver(driverID string, driverInfo Driver) error {
@@ -262,7 +261,7 @@ func (c *fileConfig) GetPlan(planid string) (*brokerapi.ServicePlan, string, str
 			}
 		}
 	}
-	return nil, "", "", errors.New(fmt.Sprintf("Plan id %s not found", planid))
+	return nil, "", "", nil
 }
 
 func parseJson(jsonConf []byte) (*Config, error) {
