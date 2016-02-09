@@ -354,7 +354,7 @@ func Test_IntUpdate(t *testing.T) {
 	dial.ID = firstDial.ID
 
 	dial.Configuration = make(map[string]interface{})
-	dial.Configuration.(map[string]interface{})["max_dbsize_mb"] = "400"
+	dial.Configuration.(map[string]interface{})["max_dbsize_mb"] = 400
 
 	dial.Plan = plan.ID
 

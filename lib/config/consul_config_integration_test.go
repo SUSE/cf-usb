@@ -117,7 +117,7 @@ func Test_IntGetDriverInstance(t *testing.T) {
 
 	assert := assert.New(t)
 
-	instance, err := IntegrationConfig.Provider.GetDriverInstance("testInstanceID")
+	instance, _, err := IntegrationConfig.Provider.GetDriverInstance("testInstanceID")
 
 	assert.Equal("testInstance", instance.Name)
 	assert.NoError(err)
@@ -226,8 +226,9 @@ func Test_IntGetDial(t *testing.T) {
 
 	assert := assert.New(t)
 
-	dialInfo, err := IntegrationConfig.Provider.GetDial("testdialID")
+	dialInfo, instanceID, err := IntegrationConfig.Provider.GetDial("testdialID")
 	t.Log(dialInfo)
+	t.Log(instanceID)
 	assert.NoError(err)
 }
 

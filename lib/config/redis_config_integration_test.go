@@ -87,7 +87,7 @@ func Test_RedisGetDriverInstance(t *testing.T) {
 	}
 	err := initRedisProvider()
 	assert.NoError(err)
-	instance, err := RedisIntegrationConfig.Provider.GetDriverInstance("A0000000-0000-0000-0000-000000000004")
+	instance, _, err := RedisIntegrationConfig.Provider.GetDriverInstance("A0000000-0000-0000-0000-000000000004")
 	assert.NoError(err)
 
 	assert.Equal("local-mssql", instance.Name)
@@ -100,7 +100,8 @@ func Test_RedisGetDial(t *testing.T) {
 	}
 	err := initRedisProvider()
 	assert.NoError(err)
-	dial, err := RedisIntegrationConfig.Provider.GetDial("C0000000-0000-0000-0000-000000000001")
+	dial, instanceID, err := RedisIntegrationConfig.Provider.GetDial("C0000000-0000-0000-0000-000000000001")
+	t.Log(instanceID)
 	assert.NoError(err)
 
 	assert.Equal("planmssql", dial.Plan.Name)

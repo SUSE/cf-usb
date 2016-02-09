@@ -58,7 +58,7 @@ func (c *redisConfig) GetDriversPath() (string, error) {
 }
 
 func (c *redisConfig) LoadDriverInstance(driverInstanceID string) (*DriverInstance, error) {
-	driver, err := c.GetDriverInstance(driverInstanceID)
+	driver, _, err := c.GetDriverInstance(driverInstanceID)
 	if err != nil {
 		return nil, err
 	}
@@ -189,20 +189,20 @@ func (c *redisConfig) SetDriverInstance(driverID string, instanceID string, inst
 	return nil
 }
 
-func (c *redisConfig) GetDriverInstance(instanceID string) (*DriverInstance, error) {
+func (c *redisConfig) GetDriverInstance(instanceID string) (*DriverInstance, string, error) {
 	config, err := c.LoadConfiguration()
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
-	for _, d := range config.Drivers {
+	for parentId, d := range config.Drivers {
 		for diKey, i := range d.DriverInstances {
 			if diKey == instanceID {
-				return &i, nil
+				return &i, parentId, nil
 			}
 		}
 	}
-	return nil, nil
+	return nil, "", nil
 }
 
 func (c *redisConfig) DeleteDriverInstance(instanceID string) error {
@@ -276,7 +276,7 @@ func (c *redisConfig) GetService(serviceID string) (*brokerapi.Service, string, 
 			}
 		}
 	}
-	return nil, "", errors.New(fmt.Sprintf("Service id %s not found", serviceID))
+	return nil, "", nil
 }
 
 func (c *redisConfig) DeleteService(instanceID string) error {
@@ -340,21 +340,21 @@ func (c *redisConfig) SetDial(instanceID string, dialID string, dial Dial) error
 	return nil
 }
 
-func (c *redisConfig) GetDial(dialID string) (*Dial, error) {
+func (c *redisConfig) GetDial(dialID string) (*Dial, string, error) {
 	config, err := c.LoadConfiguration()
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	for _, d := range config.Drivers {
-		for _, instance := range d.DriverInstances {
+		for instanceID, instance := range d.DriverInstances {
 			if dialInfo, ok := instance.Dials[dialID]; ok {
-				return &dialInfo, nil
+				return &dialInfo, instanceID, nil
 			}
 		}
 	}
 
-	return nil, nil
+	return nil, "", nil
 }
 
 func (c *redisConfig) DeleteDial(dialID string) error {
@@ -445,5 +445,5 @@ func (c *redisConfig) GetPlan(planid string) (*brokerapi.ServicePlan, string, st
 			}
 		}
 	}
-	return nil, "", "", errors.New(fmt.Sprintf("Plan id %s not found", planid))
+	return nil, "", "", nil
 }

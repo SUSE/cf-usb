@@ -129,7 +129,7 @@ func (_m *ConfigProvider) SetDriverInstance(driverid string, instanceid string, 
 
 	return r0
 }
-func (_m *ConfigProvider) GetDriverInstance(instanceid string) (*config.DriverInstance, error) {
+func (_m *ConfigProvider) GetDriverInstance(instanceid string) (*config.DriverInstance, string, error) {
 	ret := _m.Called(instanceid)
 
 	var r0 *config.DriverInstance
@@ -141,14 +141,21 @@ func (_m *ConfigProvider) GetDriverInstance(instanceid string) (*config.DriverIn
 		}
 	}
 
-	var r1 error
-	if rf, ok := ret.Get(1).(func(string) error); ok {
+	var r1 string
+	if rf, ok := ret.Get(1).(func(string) string); ok {
 		r1 = rf(instanceid)
 	} else {
-		r1 = ret.Error(1)
+		r1 = ret.Get(1).(string)
 	}
 
-	return r0, r1
+	var r2 error
+	if rf, ok := ret.Get(2).(func(string) error); ok {
+		r2 = rf(instanceid)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }
 func (_m *ConfigProvider) DeleteDriverInstance(instanceid string) error {
 	ret := _m.Called(instanceid)
@@ -226,7 +233,7 @@ func (_m *ConfigProvider) SetDial(instanceid string, dialid string, dial config.
 
 	return r0
 }
-func (_m *ConfigProvider) GetDial(dialid string) (*config.Dial, error) {
+func (_m *ConfigProvider) GetDial(dialid string) (*config.Dial, string, error) {
 	ret := _m.Called(dialid)
 
 	var r0 *config.Dial
@@ -238,14 +245,21 @@ func (_m *ConfigProvider) GetDial(dialid string) (*config.Dial, error) {
 		}
 	}
 
-	var r1 error
-	if rf, ok := ret.Get(1).(func(string) error); ok {
+	var r1 string
+	if rf, ok := ret.Get(1).(func(string) string); ok {
 		r1 = rf(dialid)
 	} else {
-		r1 = ret.Error(1)
+		r1 = ret.Get(1).(string)
 	}
 
-	return r0, r1
+	var r2 error
+	if rf, ok := ret.Get(2).(func(string) error); ok {
+		r2 = rf(dialid)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }
 func (_m *ConfigProvider) DeleteDial(dialid string) error {
 	ret := _m.Called(dialid)

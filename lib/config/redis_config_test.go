@@ -80,7 +80,7 @@ func Test_Redis_GetDriverInstance(t *testing.T) {
 	provisioner.On("GetValue", "usb").Return(configSring, nil)
 
 	RedisTestConfig.Provider = NewRedisConfig(provisioner)
-	instance, err := RedisTestConfig.Provider.GetDriverInstance("A0000000-0000-0000-0000-000000000004")
+	instance, _, err := RedisTestConfig.Provider.GetDriverInstance("A0000000-0000-0000-0000-000000000004")
 	assert.NoError(err)
 
 	assert.Equal("local-mssql", instance.Name)
@@ -97,7 +97,8 @@ func Test_Redis_GetDial(t *testing.T) {
 	provisioner.On("GetValue", "usb").Return(configSring, nil)
 
 	RedisTestConfig.Provider = NewRedisConfig(provisioner)
-	dial, err := RedisTestConfig.Provider.GetDial("C0000000-0000-0000-0000-000000000001")
+	dial, instanceID, err := RedisTestConfig.Provider.GetDial("C0000000-0000-0000-0000-000000000001")
+	t.Log(instanceID)
 	assert.NoError(err)
 
 	assert.Equal("planmssql", dial.Plan.Name)

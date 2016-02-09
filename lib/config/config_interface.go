@@ -78,13 +78,13 @@ type ConfigProvider interface {
 	GetDriver(driverid string) (*Driver, error)
 	DeleteDriver(driverid string) error
 	SetDriverInstance(driverid string, instanceid string, driverInstance DriverInstance) error
-	GetDriverInstance(instanceid string) (*DriverInstance, error)
+	GetDriverInstance(instanceid string) (instance *DriverInstance, driverId string, err error)
 	DeleteDriverInstance(instanceid string) error
 	SetService(instanceid string, service brokerapi.Service) error
 	GetService(serviceid string) (service *brokerapi.Service, instanceid string, err error)
 	DeleteService(instanceid string) error
 	SetDial(instanceid string, dialid string, dial Dial) error
-	GetDial(dialid string) (*Dial, error)
+	GetDial(dialid string) (dial *Dial, instanceID string, err error)
 	DeleteDial(dialid string) error
 	DriverInstanceNameExists(driverInstanceName string) (bool, error)
 	DriverTypeExists(driverType string) (bool, error)
