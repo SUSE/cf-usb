@@ -3,9 +3,10 @@ package mongo
 import "fmt"
 
 type MongoBindingCredentials struct {
-	Host             string `json:"server"`
+	Hostname         string `json:"hostname"`
+	Host             string `json:"host"`
 	Port             string `json:"port"`
-	Username         string `json:"user_id"`
+	Username         string `json:"username"`
 	Password         string `json:"password"`
 	ConnectionString string `json:"connectionString"`
 }

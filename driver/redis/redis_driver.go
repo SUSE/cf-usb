@@ -121,6 +121,7 @@ func (d *RedisDriver) GenerateCredentials(request driver.GenerateCredentialsRequ
 		Password: cred["password"],
 		Port:     cred["port"],
 		Host:     localIp,
+		Hostname: localIp,
 	}
 
 	*response = data

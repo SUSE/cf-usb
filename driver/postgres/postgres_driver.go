@@ -169,7 +169,8 @@ func (d *PostgresDriver) GenerateCredentials(request driver.GenerateCredentialsR
 
 	data := PostgresBindingCredentials{
 		Hostname:         d.conf.Host,
-		Name:             request.InstanceID,
+		Host:             d.conf.Host,
+		Database:         dbName,
 		Password:         password,
 		Port:             d.conf.Port,
 		Username:         username,

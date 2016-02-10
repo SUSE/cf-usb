@@ -1,6 +1,7 @@
 package rabbitmq
 
 type RabbitmqBindingCredentials struct {
+	Hostname     string `json:"hostname"`
 	Host         string `json:"host"`
 	VHost        string `json:"vhost"`
 	Port         string `json:"port"`
