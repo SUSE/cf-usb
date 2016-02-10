@@ -66,7 +66,7 @@ var drivers = []struct {
 	setDriverInstanceValuesFunc    func(driverName, driverId string) []byte
 	assertDriverSchemaContainsFunc func(schemaContent string)
 }{
-	//{"dummy-async", dummyEnvVarsExist, setDummyDriverInstanceValues, assertDummySchemaContains},
+	{"dummy-async", dummyEnvVarsExist, setDummyDriverInstanceValues, assertDummySchemaContains},
 	{"postgres", postgresEnvVarsExist, setPostgresDriverInstanceValues, assertPostgresSchemaContains},
 	{"mongo", mongoEnvVarsExist, setMongoDriverInstanceValues, assertMongoSchemaContains},
 	{"mysql", mysqlEnvVarsExist, setMysqlDriverInstanceValues, assertMysqlSchemaContains},
@@ -105,17 +105,21 @@ func init() {
 	ConsulConfig.consulToken = os.Getenv("CONSUL_TOKEN")
 }
 
-func init_consulProvisioner() (consul.ConsulProvisionerInterface, error) {
+func init_consulProvisioner(driversPath string) (consul.ConsulProvisionerInterface, error) {
 	var consulConfig api.Config
 	consulConfig.Address = ConsulConfig.consulAddress
 	consulConfig.Datacenter = ConsulConfig.consulPassword
 
-	workDir, err := os.Getwd()
-	if err != nil {
-		return nil, err
+	if driversPath == "" {
+		workDir, err := os.Getwd()
+		if err != nil {
+			return nil, err
+		}
+		buildDir := filepath.Join(workDir, "../build", fmt.Sprintf("%s-%s", runtime.GOOS, runtime.GOARCH))
+		os.Setenv("USB_DRIVER_PATH", buildDir)
+	} else {
+		os.Setenv("USB_DRIVER_PATH", driversPath)
 	}
-	buildDir := filepath.Join(workDir, "../build", fmt.Sprintf("%s-%s", runtime.GOOS, runtime.GOARCH))
-	os.Setenv("USB_DRIVER_PATH", buildDir)
 
 	var auth api.HttpBasicAuth
 	auth.Username = ConsulConfig.consulUser
@@ -169,7 +173,7 @@ func start_consulProcess() (ifrit.Process, error) {
 	return consulProcess, nil
 }
 
-func run_consul(brokerApiPort, managementApiPort uint16, ccServerUrl string) (consul.ConsulProvisionerInterface, error) {
+func run_consul(brokerApiPort, managementApiPort uint16, ccServerUrl, driversPath string) (consul.ConsulProvisionerInterface, error) {
 	var consulClient consul.ConsulProvisionerInterface
 
 	getConsulReq, _ := http.NewRequest("GET", "http://localhost:8500", nil)
@@ -190,7 +194,7 @@ func run_consul(brokerApiPort, managementApiPort uint16, ccServerUrl string) (co
 		}
 	}
 
-	consulClient, err := init_consulProvisioner()
+	consulClient, err := init_consulProvisioner(driversPath)
 	if err != nil {
 		return nil, err
 	}
@@ -313,7 +317,7 @@ func Test_BrokerWithConsulConfigProviderCatalog(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	consulClient, err := run_consul(brokerApiPort, managementApiPort, ccFakeServer.URL())
+	consulClient, err := run_consul(brokerApiPort, managementApiPort, ccFakeServer.URL(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -395,7 +399,13 @@ func Test_BrokerWithConsulConfigProviderCreateDriverInstance(t *testing.T) {
 
 	uaaFakeServer, ccFakeServer := set_fakeServers()
 
-	consulClient, err := run_consul(brokerApiPort, managementApiPort, ccFakeServer.URL())
+	tmpDriverPath := path.Join(os.TempDir(), "drivers")
+	err = os.MkdirAll(tmpDriverPath, 0755)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	consulClient, err := run_consul(brokerApiPort, managementApiPort, ccFakeServer.URL(), tmpDriverPath)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -437,6 +447,11 @@ func Test_BrokerWithConsulConfigProviderCreateDriverInstance(t *testing.T) {
 			executeCreateDriverInstanceTest(t, managementApiPort, driver.driverType, driver.setDriverInstanceValuesFunc)
 		}
 	}
+
+	err = os.RemoveAll(tmpDriverPath)
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
 // update plan and update driver instance tests
@@ -465,7 +480,7 @@ func Test_BrokerWithConsulConfigProviderUpdateDriverInstance(t *testing.T) {
 
 	uaaFakeServer, ccFakeServer := set_fakeServers()
 
-	consulClient, err := run_consul(brokerApiPort, managementApiPort, ccFakeServer.URL())
+	consulClient, err := run_consul(brokerApiPort, managementApiPort, ccFakeServer.URL(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -545,7 +560,7 @@ func Test_BrokerWithConsulConfigProviderUpdateService(t *testing.T) {
 
 	uaaFakeServer, ccFakeServer := set_fakeServers()
 
-	consulClient, err := run_consul(brokerApiPort, managementApiPort, ccFakeServer.URL())
+	consulClient, err := run_consul(brokerApiPort, managementApiPort, ccFakeServer.URL(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -627,7 +642,7 @@ func Test_BrokerWithConsulConfigProviderDeleteDriver(t *testing.T) {
 
 	uaaFakeServer, ccFakeServer := set_fakeServers()
 
-	consulClient, err := run_consul(brokerApiPort, managementApiPort, ccFakeServer.URL())
+	consulClient, err := run_consul(brokerApiPort, managementApiPort, ccFakeServer.URL(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -826,7 +841,19 @@ func executeCreateDriverInstanceTest(t *testing.T, managementApiPort uint16, dri
 
 	architecture := fmt.Sprintf("%s-%s", runtime.GOOS, runtime.GOARCH)
 
-	//bitsPath := path.Join(dir, "../cmd/driver", driver.DriverType, driver.DriverType)
+	//	driverPath := os.Getenv("USB_DRIVER_PATH")
+	//	tmpDriverPath := path.Join(os.TempDir(), "drivers")
+	//	err = os.MkdirAll(tmpDriverPath, 0755)
+	//	if err != nil {
+	//		t.Fatal(err)
+	//	}
+
+	//	err = os.Setenv("USB_DRIVER_PATH", tmpDriverPath)
+	//	if err != nil {
+	//		t.Fatal(err)
+	//	}
+	//	t.Log("tmp driver path:", tmpDriverPath)
+
 	bitsPath := path.Join(dir, "../build", architecture, driver.DriverType)
 	sha, err := getFileSha(bitsPath)
 	if err != nil {
@@ -888,6 +915,10 @@ func executeCreateDriverInstanceTest(t *testing.T, managementApiPort uint16, dri
 		t.Fatal(err)
 	}
 	Expect(string(uploadDriverBitsContent)).To(Equal(""))
+
+	//check if driver bits file exists
+	_, err = os.Stat(path.Join(os.Getenv("USB_DRIVER_PATH"), driver.DriverType))
+	Expect(err).To(BeNil())
 
 	instanceValues := driverInstanceValues(driverName, driverId)
 	newDriverInstReq, err := http.NewRequest("POST", fmt.Sprintf("http://localhost:%[1]v/driver_instances", managementApiPort), bytes.NewBuffer(instanceValues))
