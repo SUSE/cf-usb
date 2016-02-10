@@ -1,8 +1,6 @@
 package consul
 
 import (
-	"errors"
-	"fmt"
 	"github.com/hashicorp/consul/api"
 	"strings"
 )
@@ -58,7 +56,7 @@ func (e *ConsulProvisioner) GetValue(key string) ([]byte, error) {
 		}
 	}
 	if exists == false {
-		return nil, errors.New(fmt.Sprintf("Key %s not found", key))
+		return nil, nil
 	}
 	var options api.QueryOptions
 	options.AllowStale = false

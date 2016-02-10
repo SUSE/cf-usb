@@ -541,5 +541,5 @@ func (c *consulConfig) GetPlan(planid string) (*brokerapi.ServicePlan, string, s
 			}
 		}
 	}
-	return nil, "", "", errors.New(fmt.Sprintf("Plan id %s not found", planid))
+	return nil, "", "", nil
 }
