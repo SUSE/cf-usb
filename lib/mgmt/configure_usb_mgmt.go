@@ -322,13 +322,16 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 			var driverInstanceID string
 			driverInstanceID = diID
 
+			var serviceID string
+			serviceID = di.Service.ID
+
 			driverInstance := &genmodel.DriverInstance{
 				Configuration: di.Configuration,
 				Dials:         dials,
 				DriverID:      params.DriverID,
 				ID:            &driverInstanceID,
 				Name:          di.Name,
-				Service:       &di.Service.ID,
+				Service:       &serviceID,
 			}
 
 			driverInstances = append(driverInstances, driverInstance)
@@ -407,12 +410,12 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 		_, parentId, err := configProvider.GetDriverInstance(params.Dial.DriverInstanceID)
 		if err != nil {
-			return &UpdateDialInternalServerError{Payload: err.Error()}
+			return &CreateDialInternalServerError{Payload: err.Error()}
 		}
 
 		driver, err := configProvider.GetDriver(parentId)
 		if err != nil {
-			return &UpdateDialInternalServerError{Payload: err.Error()}
+			return &CreateDialInternalServerError{Payload: err.Error()}
 		}
 		if driver == nil {
 			return &GetDriverNotFound{}
@@ -425,18 +428,18 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 		schema, err := lib.GetDailsSchema(path, driver.DriverType, logger)
 		if err != nil {
-			return &UpdateDialInternalServerError{Payload: err.Error()}
+			return &CreateDialInternalServerError{Payload: err.Error()}
 		}
 		dialsSchemaLoader := gojsonschema.NewStringLoader(schema)
 		dialLoader := gojsonschema.NewGoLoader(dial.Configuration)
 		result, err := gojsonschema.Validate(dialsSchemaLoader, dialLoader)
 		if err != nil {
-			return &UpdateDialInternalServerError{Payload: err.Error()}
+			return &CreateDialInternalServerError{Payload: err.Error()}
 		}
 		if !result.Valid() {
 			err = goerrors.New("Invalid dial configuration")
 			logger.Error("update-dial-validate-schema", err, lager.Data{"Errors": result.Errors()})
-			return &UpdateDialInternalServerError{Payload: err.Error()}
+			return &CreateDialInternalServerError{Payload: err.Error()}
 		}
 
 		err = configProvider.SetDial(params.Dial.DriverInstanceID, dialID, dial)
@@ -850,12 +853,13 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		}
 
 		for diaID, dia := range instanceInfo.Dials {
-
+			dialID := diaID
+			planID := dia.Plan.ID
 			dial := &genmodel.Dial{
 				Configuration:    dia.Configuration,
 				DriverInstanceID: *params.DriverInstanceID,
-				ID:               &diaID,
-				Plan:             &dia.Plan.ID,
+				ID:               &dialID,
+				Plan:             &planID,
 			}
 
 			dials = append(dials, dial)
@@ -1032,12 +1036,15 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		}
 
 		for diaID, dia := range instanceInfo.Dials {
+			planID := dia.Plan.ID
+			description := dia.Plan.Description
+			free := dia.Plan.Free
 			plan := &genmodel.Plan{
 				Name:        dia.Plan.Name,
-				ID:          &dia.Plan.ID,
+				ID:          &planID,
 				DialID:      diaID,
-				Description: &dia.Plan.Description,
-				Free:        &dia.Plan.Free,
+				Description: &description,
+				Free:        &free,
 			}
 
 			servicePlans = append(servicePlans, plan)
