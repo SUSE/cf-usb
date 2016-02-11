@@ -1286,6 +1286,17 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 				return &UpdateCatalogInternalServerError{Payload: err.Error()}
 			}
 		}
+
+		for _, driver := range config.Drivers {
+			for _, instance := range driver.DriverInstances {
+				err = ccServiceBroker.EnableServiceAccess(instance.Service.Name)
+				if err != nil {
+					log.Error("enable-service-access-failed", err)
+					return &UpdateCatalogInternalServerError{Payload: err.Error()}
+				}
+			}
+		}
+
 		return &UpdateCatalogOK{}
 	})
 }
