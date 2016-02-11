@@ -663,35 +663,6 @@
                         }
                     }
                 }
-            },
-            "post": {
-                "description": "Create a plan",
-                "operationId": "createServicePlan",
-                "parameters": [
-                    {
-                        "name": "plan",
-                        "in": "body",
-                        "description": "Add a plan for a **dialID**",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/plan"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Sucessfull response",
-                        "schema": {
-                            "$ref": "#/definitions/plan"
-                        }
-                    },
-                    "500": {
-                        "description": "Unexpected error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
             }
         },
         "/plans/{plan_id}": {

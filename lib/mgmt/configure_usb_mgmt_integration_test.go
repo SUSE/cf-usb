@@ -178,6 +178,7 @@ func Test_IntCreate(t *testing.T) {
 	assert.IsType(&operations.CreateDialCreated{}, response)
 
 	infoDial := response.(*operations.CreateDialCreated).Payload
+	t.Log(infoDial.Plan)
 	//	serviceParams := operations.CreateServiceParams{}
 	//	var instaceService genmodel.Service
 
@@ -192,23 +193,6 @@ func Test_IntCreate(t *testing.T) {
 	//	infoService, err := IntegrationConfig.MgmtAPI.CreateServiceHandler.Handle(serviceParams)
 	//	t.Log(infoService)
 	//	assert.NoError(err)
-
-	splanParams := &operations.CreateServicePlanParams{}
-	var plan genmodel.Plan
-
-	plan.DialID = *infoDial.ID
-	desc := "testDescription"
-	plan.Description = &desc
-	pf := true
-	plan.Free = &pf
-	testPlanID := "testPlanID"
-	plan.ID = &testPlanID
-	plan.Name = "testPlan"
-
-	splanParams.Plan = &plan
-
-	response = IntegrationConfig.MgmtAPI.CreateServicePlanHandler.Handle(*splanParams, true)
-	assert.IsType(&operations.CreateServicePlanCreated{}, response)
 }
 
 func Test_IntCreateDriverConflict(t *testing.T) {
@@ -429,38 +413,16 @@ func Test_IntServicePlan(t *testing.T) {
 	dialsAfter := response.(*operations.GetAllDialsOK).Payload
 	assert.Len(dialsAfter, len(dials)+1, "The size of slice is not as expected")
 
-	// create service plan
-	planDescription := "test plan description"
-	planName := "someName"
-	splanParams := &operations.CreateServicePlanParams{}
-	var plan genmodel.Plan
-
-	plan.DialID = *createdDial.ID
-	plan.Description = &planDescription
-	pf := true
-	plan.Free = &pf
-	plan.Name = planName
-
-	splanParams.Plan = &plan
-
-	response = IntegrationConfig.MgmtAPI.CreateServicePlanHandler.Handle(*splanParams, true)
-	assert.IsType(&operations.CreateServicePlanCreated{}, response)
-
-	createdPlan := response.(*operations.CreateServicePlanCreated).Payload
-	t.Log("CREATED PLAN", createdPlan)
-
 	//get service plan
 	getPlanParams := &operations.GetServicePlanParams{}
-	getPlanParams.PlanID = *createdPlan.ID
+	getPlanParams.PlanID = *createdDial.Plan
 
 	response = IntegrationConfig.MgmtAPI.GetServicePlanHandler.Handle(*getPlanParams, true)
 	assert.IsType(&operations.GetServicePlanOK{}, response)
 
 	existingPlan := response.(*operations.GetServicePlanOK).Payload
-	assert.Equal(planDescription, *existingPlan.Description, "Service plan description is not "+planDescription)
-	assert.Equal(true, *existingPlan.Free, "Service plan should be free")
+	assert.Equal(false, *existingPlan.Free, "Service plan should be false")
 	assert.Equal(*createdDial.ID, existingPlan.DialID, "Dial Id for service plan should be "+*createdDial.ID)
-	assert.Equal(planName, existingPlan.Name, "Service plan name should be "+planName)
 	t.Log("EXISTING PLAN", existingPlan)
 
 	params := &operations.UpdateServicePlanParams{}

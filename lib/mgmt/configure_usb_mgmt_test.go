@@ -189,57 +189,18 @@ func Test_CreateDial(t *testing.T) {
 	planID := "planID"
 	params.Dial.Plan = &planID
 
-	provider.On("GetDriverInstance", mock.Anything).Return(nil, "testID", nil)
+	var instance config.DriverInstance
+	instance.Name = "testInstance"
+	instance.Service = brokerapi.Service{Name: "testService"}
+
+	provider.On("GetDriverInstance", mock.Anything).Return(&instance, "testID", nil)
 	provider.On("GetDriver", "testID").Return(&driver, nil)
 	provider.On("GetDriversPath").Return(os.Getenv("USB_DRIVER_PATH"), nil)
+	sbMocked.Mock.On("EnableServiceAccess", mock.Anything).Return(nil)
 
 	provider.On("SetDial", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	response := UnitTest.MgmtAPI.CreateDialHandler.Handle(*params, true)
 	assert.IsType(&operations.CreateDialCreated{}, response)
-}
-
-func Test_CreateServicePlan(t *testing.T) {
-	assert := assert.New(t)
-	provider := new(mocks.ConfigProvider)
-
-	err := init_mgmt(provider)
-	if err != nil {
-		t.Error(err)
-	}
-
-	params := &operations.CreateServicePlanParams{}
-	params.Plan = &genmodel.Plan{}
-	testDesc := "test desc"
-	params.Plan.Description = &testDesc
-	params.Plan.DialID = "testDialID"
-	testPlanID := "testPlanID"
-	params.Plan.ID = &testPlanID
-	params.Plan.Name = "testPlan"
-	pf := true
-	params.Plan.Free = &pf
-
-	var testConfig config.Config
-
-	var driver config.Driver
-	var instace config.DriverInstance
-	var dial config.Dial
-
-	driver.DriverType = "testDriver"
-
-	instace.Dials = make(map[string]config.Dial)
-	instace.Dials["testDialID"] = dial
-	driver.DriverInstances = make(map[string]config.DriverInstance)
-	driver.DriverInstances["testInstanceID"] = instace
-	testConfig.Drivers = make(map[string]config.Driver)
-	testConfig.Drivers["testDriverID"] = driver
-	testConfig.ManagementAPI = &config.ManagementAPI{}
-	testConfig.ManagementAPI.BrokerName = "usb"
-
-	provider.On("LoadConfiguration").Return(&testConfig, nil)
-	provider.On("DeleteDial", mock.Anything, mock.Anything).Return(nil)
-	provider.On("SetDial", "testInstanceID", mock.Anything, mock.Anything).Return(nil)
-	response := UnitTest.MgmtAPI.CreateServicePlanHandler.Handle(*params, true)
-	assert.IsType(&operations.CreateServicePlanCreated{}, response)
 }
 
 func Test_UpdateDriver(t *testing.T) {
