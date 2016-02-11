@@ -457,14 +457,6 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		log := log.Session("update-dial")
 		log.Info("request", lager.Data{"driver-instance-id": params.Dial.DriverInstanceID})
 
-		if params.DialID == "" {
-			return &UpdateDialInternalServerError{Payload: "Empty dial id parameter provided"}
-		}
-
-		if params.Dial == nil {
-			return &UpdateDialInternalServerError{Payload: "Empty dial provided"}
-		}
-
 		dialID := params.DialID
 
 		dial, _, err := configProvider.GetDial(dialID)
@@ -874,13 +866,6 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	api.UpdateServicePlanHandler = UpdateServicePlanHandlerFunc(func(params UpdateServicePlanParams, principal interface{}) middleware.Responder {
 		log := log.Session("update-service-plan")
 		log.Info("request", lager.Data{"plan-id": params.PlanID})
-
-		if params.Plan == nil {
-			return &UpdateServicePlanInternalServerError{Payload: "Empty plan provided"}
-		}
-		if params.PlanID == "" {
-			return &UpdateServicePlanInternalServerError{Payload: "Empty plan id provided"}
-		}
 
 		config, err := configProvider.LoadConfiguration()
 		if err != nil {
