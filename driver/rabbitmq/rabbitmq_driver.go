@@ -146,6 +146,7 @@ func (d *RabbitmqDriver) GenerateCredentials(request driver.GenerateCredentialsR
 	}
 
 	data := RabbitmqBindingCredentials{
+		Hostname:     credentials["host"],
 		Host:         credentials["host"],
 		VHost:        credentials["vhost"],
 		Port:         credentials["port"],
@@ -173,7 +174,7 @@ func (d *RabbitmqDriver) GetCredentials(request driver.GetCredentialsRequest, re
 	exist, err := d.rabbitmqProvisioner.UserExists(request.InstanceID, request.CredentialsID)
 	if err != nil {
 		d.logger.Error("credentials-exists-request-failed", err)
-                return err
+		return err
 	}
 	if exist {
 		response.Status = status.Exists

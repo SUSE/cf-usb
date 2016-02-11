@@ -170,6 +170,7 @@ func (e *MysqlDriver) GenerateCredentials(request driver.GenerateCredentialsRequ
 	}
 
 	data := MysqlBindingCredentials{
+		Hostname: e.conf.Host,
 		Host:     e.conf.Host,
 		Port:     e.conf.Port,
 		Username: username,

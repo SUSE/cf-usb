@@ -3,9 +3,10 @@ package driver
 import "fmt"
 
 type MysqlBindingCredentials struct {
-	Host             string `json:"server"`
+	Hostname         string `json:"hostname"`
+	Host             string `json:"host"`
 	Port             string `json:"port"`
-	Username         string `json:"user_id"`
+	Username         string `json:"username"`
 	Password         string `json:"password"`
 	Database         string `json:"database"`
 	ConnectionString string `json:"connectionString"`

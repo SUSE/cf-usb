@@ -6,7 +6,8 @@ import (
 
 type PostgresBindingCredentials struct {
 	Hostname         string `json:"hostname"`
-	Name             string `json:"name"`
+	Host             string `json:"host"`
+	Database         string `json:"database"`
 	Password         string `json:"password"`
 	Port             string `json:"port"`
 	Username         string `json:"username"`

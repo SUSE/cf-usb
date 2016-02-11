@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
-
 	"github.com/hpcloud/cf-usb/driver"
 	"github.com/hpcloud/cf-usb/driver/mongo/config"
 	"github.com/hpcloud/cf-usb/driver/mongo/driverdata"
@@ -143,8 +142,8 @@ func (e *MongoDriver) GenerateCredentials(request driver.GenerateCredentialsRequ
 	if err != nil {
 		return err
 	}
-
 	data := MongoBindingCredentials{
+		Hostname:         e.conf.Host,
 		Host:             e.conf.Host,
 		Port:             e.conf.Port,
 		Username:         username,
