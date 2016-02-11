@@ -102,10 +102,11 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 		driverType := driver.DriverType
 
-		driverPath := os.Getenv("USB_DRIVER_PATH")
-		if driverPath == "" {
-			driverPath = "drivers"
+		driverPath, err := configProvider.GetDriversPath()
+		if err != nil {
+			return &UploadDriverInternalServerError{Payload: err.Error()}
 		}
+
 		driverPath = filepath.Join(driverPath, driverType)
 		if runtime.GOOS == "windows" {
 			driverPath = driverPath + ".exe"
