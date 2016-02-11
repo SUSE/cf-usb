@@ -96,6 +96,21 @@ type DriverInstanceResponse struct {
 	Dials         []string    `json:"dials,omitempty"`
 }
 
+type PlanResponse struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Id          string `json:"id"`
+	DialId      string `json:"dial_id"`
+	Free        bool   `json:"free"`
+}
+
+type DialResponse struct {
+	Configuration    interface{} `json:"configuration,omitempty"`
+	Id               string      `json:"id"`
+	DriverInstanceId string      `json:"driver_instance_id"`
+	Plan             string      `json:"plan"`
+}
+
 func init() {
 	ConsulConfig.consulAddress = os.Getenv("CONSUL_ADDRESS")
 	ConsulConfig.consulDatacenter = os.Getenv("CONSUL_DATACENTER")
@@ -441,6 +456,8 @@ func Test_BrokerWithConsulConfigProviderCreateDriverInstance(t *testing.T) {
 	//wait for process to start
 	time.Sleep(5 * time.Second)
 
+	executeGetInfoTest(t, managementApiPort)
+
 	for _, driver := range drivers {
 		if driver.envVarsExistFunc() {
 			setupCcHttpFakeResponsesCreateDriverInstance(uaaFakeServer, ccFakeServer)
@@ -452,6 +469,151 @@ func Test_BrokerWithConsulConfigProviderCreateDriverInstance(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+}
+
+// create dial, create service plan tests
+func Test_BrokerWithConsulConfigProviderCreateDial(t *testing.T) {
+	RegisterTestingT(t)
+	architecture := fmt.Sprintf("%s-%s", runtime.GOOS, runtime.GOARCH)
+
+	dir, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	binpath := path.Join(dir, "../build", architecture, "usb")
+
+	if _, err := os.Stat(binpath); os.IsNotExist(err) {
+		t.Skip("Please build the solution before testing ", binpath)
+		return
+	}
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if ConsulConfig.consulAddress == "" {
+		t.Skip("Skipping test as Consul env vars are not set: CONSUL_ADDRESS")
+	}
+
+	uaaFakeServer, ccFakeServer := set_fakeServers()
+
+	consulClient, err := run_consul(brokerApiPort, managementApiPort, ccFakeServer.URL(), "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if consulProcess != nil {
+		defer func() {
+			consulProcess.Signal(os.Kill)
+			<-consulProcess.Wait()
+		}()
+	}
+
+	t.Log("consul started")
+
+	provider := config.NewConsulConfig(consulClient)
+
+	_, err = provider.LoadConfiguration()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	usbProcess, err := start_usbProcess(binpath, ConsulConfig.consulAddress)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer func() {
+		usbProcess.Signal(os.Kill)
+		<-usbProcess.Wait()
+	}()
+
+	t.Log("usb started")
+
+	//wait for process to start
+	time.Sleep(5 * time.Second)
+
+	driversContent, driversResp := executeGetDriversTest(t, managementApiPort)
+
+	for _, driver := range drivers {
+		if driver.envVarsExistFunc() {
+
+			Expect(driversContent).To(ContainSubstring(driver.driverType))
+
+			for _, d := range driversResp {
+				if d.DriverType == driver.driverType {
+					setupCcHttpFakeResponsesCreateDial(uaaFakeServer, ccFakeServer)
+					executeCreateDialTest(t, managementApiPort, d)
+				}
+			}
+		}
+	}
+}
+
+// update catalog test
+func Test_BrokerWithConsulConfigProviderUpdateCatalog(t *testing.T) {
+	RegisterTestingT(t)
+	architecture := fmt.Sprintf("%s-%s", runtime.GOOS, runtime.GOARCH)
+
+	dir, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	binpath := path.Join(dir, "../build", architecture, "usb")
+
+	if _, err := os.Stat(binpath); os.IsNotExist(err) {
+		t.Skip("Please build the solution before testing ", binpath)
+		return
+	}
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if ConsulConfig.consulAddress == "" {
+		t.Skip("Skipping test as Consul env vars are not set: CONSUL_ADDRESS")
+	}
+
+	uaaFakeServer, ccFakeServer := set_fakeServers()
+
+	consulClient, err := run_consul(brokerApiPort, managementApiPort, ccFakeServer.URL(), "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if consulProcess != nil {
+		defer func() {
+			consulProcess.Signal(os.Kill)
+			<-consulProcess.Wait()
+		}()
+	}
+
+	t.Log("consul started")
+
+	provider := config.NewConsulConfig(consulClient)
+
+	_, err = provider.LoadConfiguration()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	usbProcess, err := start_usbProcess(binpath, ConsulConfig.consulAddress)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer func() {
+		usbProcess.Signal(os.Kill)
+		<-usbProcess.Wait()
+	}()
+
+	t.Log("usb started")
+
+	//wait for process to start
+	time.Sleep(5 * time.Second)
+
+	setupCcHttpFakeResponsesUpdateCatalog(uaaFakeServer, ccFakeServer)
+	executeUpdateCatalogTest(t, managementApiPort)
 }
 
 // update plan and update driver instance tests
@@ -696,6 +858,34 @@ func Test_BrokerWithConsulConfigProviderDeleteDriver(t *testing.T) {
 	}
 }
 
+func executeGetInfoTest(t *testing.T, managementApiPort uint16) {
+	token, err := GenerateUaaToken()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	getInfoReq, err := http.NewRequest("GET", fmt.Sprintf("http://localhost:%[1]v/info", managementApiPort), nil)
+	getInfoReq.Header.Add("Content-Type", "application/json")
+	getInfoReq.Header.Add("Accept", "application/json")
+	getInfoReq.Header.Add("Authorization", token)
+
+	getInfoResp, err := http.DefaultClient.Do(getInfoReq)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer getInfoResp.Body.Close()
+
+	Expect(getInfoResp.StatusCode).To((Equal(200)))
+
+	getInfoContent, err := ioutil.ReadAll(getInfoResp.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("get info response content: %s", string(getInfoContent))
+	Expect(string(getInfoContent)).To(ContainSubstring("version"))
+}
+
 func setupCcHttpFakeResponsesCreateDriverInstance(uaaFakeServer, ccFakeServer *ghttp.Server) {
 	uaaFakeServer.RouteToHandler("POST", "/oauth/token",
 		ghttp.CombineHandlers(
@@ -795,6 +985,8 @@ func executeCreateDriverInstanceTest(t *testing.T, managementApiPort uint16, dri
 		return
 	}
 
+	Expect(newDriverResp.StatusCode).To((Equal(201)))
+
 	driverContent, err := ioutil.ReadAll(newDriverResp.Body)
 	if err != nil {
 		t.Fatal(err)
@@ -804,7 +996,7 @@ func executeCreateDriverInstanceTest(t *testing.T, managementApiPort uint16, dri
 
 	err = json.Unmarshal(driverContent, &driver)
 	if err != nil {
-		fmt.Println("error:", err)
+		t.Fatal(err)
 	}
 	t.Logf("create driver response content: %s", string(driverContent))
 
@@ -840,19 +1032,6 @@ func executeCreateDriverInstanceTest(t *testing.T, managementApiPort uint16, dri
 	}
 
 	architecture := fmt.Sprintf("%s-%s", runtime.GOOS, runtime.GOARCH)
-
-	//	driverPath := os.Getenv("USB_DRIVER_PATH")
-	//	tmpDriverPath := path.Join(os.TempDir(), "drivers")
-	//	err = os.MkdirAll(tmpDriverPath, 0755)
-	//	if err != nil {
-	//		t.Fatal(err)
-	//	}
-
-	//	err = os.Setenv("USB_DRIVER_PATH", tmpDriverPath)
-	//	if err != nil {
-	//		t.Fatal(err)
-	//	}
-	//	t.Log("tmp driver path:", tmpDriverPath)
 
 	bitsPath := path.Join(dir, "../build", architecture, driver.DriverType)
 	sha, err := getFileSha(bitsPath)
@@ -945,7 +1124,7 @@ func executeCreateDriverInstanceTest(t *testing.T, managementApiPort uint16, dri
 
 	err = json.Unmarshal(driverInstContent, &driverInstance)
 	if err != nil {
-		fmt.Println("error:", err)
+		t.Fatal(err)
 	}
 	Expect(driverInstContent).To(ContainSubstring(driver.Name))
 
@@ -970,47 +1149,6 @@ func executeCreateDriverInstanceTest(t *testing.T, managementApiPort uint16, dri
 
 	Expect(string(driverInstPingContent)).To(Equal(""))
 
-	getPlanReq, err := http.NewRequest("GET", fmt.Sprintf("http://localhost:%[1]v/plans?driver_instance_id=%[2]s", managementApiPort, driverInstance.Id), nil)
-	getPlanReq.Header.Add("Content-Type", "application/json")
-	getPlanReq.Header.Add("Accept", "application/json")
-	getPlanReq.Header.Add("Authorization", token)
-
-	getPlanResp, err := http.DefaultClient.Do(getPlanReq)
-
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer getPlanResp.Body.Close()
-
-	Expect(getPlanResp.StatusCode).To((Equal(200)))
-
-	getPlanContent, err := ioutil.ReadAll(getPlanResp.Body)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Logf("get plan response content: %s", string(getPlanContent))
-	Expect(getPlanContent).To(ContainSubstring("default"))
-
-	getDialReq, err := http.NewRequest("GET", fmt.Sprintf("http://localhost:%[1]v/dials?driver_instance_id=%[2]s", managementApiPort, driverInstance.Id), nil)
-	getDialReq.Header.Add("Content-Type", "application/json")
-	getDialReq.Header.Add("Accept", "application/json")
-	getDialReq.Header.Add("Authorization", token)
-
-	getDialResp, err := http.DefaultClient.Do(getDialReq)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer getDialResp.Body.Close()
-
-	Expect(getDialResp.StatusCode).To((Equal(200)))
-
-	getDialContent, err := ioutil.ReadAll(getDialResp.Body)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Logf("get dial response content: %s", string(getDialContent))
-	Expect(getDialContent).To(ContainSubstring("plan"))
-
 	getServiceReq, err := http.NewRequest("GET", fmt.Sprintf("http://localhost:%[1]v/services?driver_instance_id=%[2]s", managementApiPort, driverInstance.Id), nil)
 	getServiceReq.Header.Add("Content-Type", "application/json")
 	getServiceReq.Header.Add("Accept", "application/json")
@@ -1031,6 +1169,293 @@ func executeCreateDriverInstanceTest(t *testing.T, managementApiPort uint16, dri
 	}
 	t.Logf("get service response content: %s", string(getServiceContent))
 	Expect(getServiceContent).To(ContainSubstring(driverInstance.Id))
+}
+
+func setupCcHttpFakeResponsesCreateDial(uaaFakeServer, ccFakeServer *ghttp.Server) {
+	uaaFakeServer.RouteToHandler("POST", "/oauth/token",
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("POST", "/oauth/token"),
+			ghttp.RespondWith(200, `{"access_token":"replace-me", "expires_in": 3404281214}`),
+		),
+	)
+
+	brokerGuid := uuid.NewV4().String()
+
+	ccFakeServer.RouteToHandler("GET", "/v2/service_brokers",
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("GET", "/v2/service_brokers"),
+			ghttp.RespondWith(200, fmt.Sprintf(`{"resources":[{"metadata":{"guid":"%[1]s"}}]}`, brokerGuid)),
+		),
+	)
+
+	ccFakeServer.RouteToHandler("PUT", "/v2/service_brokers/"+brokerGuid,
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("PUT", "/v2/service_brokers/"+brokerGuid),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(200, `{}`),
+		),
+	)
+
+	serviceGuid := uuid.NewV4().String()
+
+	ccFakeServer.AppendHandlers(
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("GET", "/v2/services"),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(200,
+				fmt.Sprintf(`{"resources":[{"metadata":{"guid":"%[1]s"}}]}`, serviceGuid)),
+		),
+	)
+
+	servicePlanGuid := uuid.NewV4().String()
+
+	ccFakeServer.AppendHandlers(
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("GET", "/v2/service_plans"),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(200,
+				fmt.Sprintf(`{"resources":[{"metadata":{"guid":"%[1]s"},"entity":{"name":"default","free":true,"description":"default plan","public":false,"service_guid":"%[2]s"}}]}`, servicePlanGuid, serviceGuid)),
+		),
+	)
+
+	ccFakeServer.AppendHandlers(
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("PUT", fmt.Sprintf("/v2/service_plans/%[1]s", servicePlanGuid)),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(201, `{}`),
+		),
+	)
+}
+
+func executeCreateDialTest(t *testing.T, managementApiPort uint16, driver DriverResponse) {
+	token, err := GenerateUaaToken()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	getDriverInstancesReq, err := http.NewRequest("GET", fmt.Sprintf("http://localhost:%[1]v/driver_instances?driver_id=%[2]s", managementApiPort, driver.Id), nil)
+	getDriverInstancesReq.Header.Add("Content-Type", "application/json")
+	getDriverInstancesReq.Header.Add("Accept", "application/json")
+	getDriverInstancesReq.Header.Add("Authorization", token)
+
+	getDriverInstancesResp, err := http.DefaultClient.Do(getDriverInstancesReq)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer getDriverInstancesResp.Body.Close()
+
+	Expect(getDriverInstancesResp.StatusCode).To((Equal(200)))
+
+	driverInstancesContent, err := ioutil.ReadAll(getDriverInstancesResp.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("get driver instances response content: %s", string(driverInstancesContent))
+
+	var driverInstances []DriverInstanceResponse
+
+	err = json.Unmarshal(driverInstancesContent, &driverInstances)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("driver instances count: %v", len(driverInstances))
+
+	firstDriverInstance := driverInstances[0]
+
+	dialValues := []byte(fmt.Sprintf(`{"configuration":{"max_dbsize_mb":3},"driver_instance_id":"%[1]s"}`, firstDriverInstance.Id))
+	createDialReq, err := http.NewRequest("POST", fmt.Sprintf("http://localhost:%[1]v/dials", managementApiPort), bytes.NewBuffer(dialValues))
+	createDialReq.Header.Add("Content-Type", "application/json")
+	createDialReq.Header.Add("Accept", "application/json")
+	createDialReq.Header.Add("Authorization", token)
+
+	createDialResp, err := http.DefaultClient.Do(createDialReq)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer createDialResp.Body.Close()
+
+	Expect(createDialResp.StatusCode).To((Equal(201)))
+
+	createDialContent, err := ioutil.ReadAll(createDialResp.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("create dial response content: %s", string(createDialContent))
+	Expect(string(createDialContent)).To(ContainSubstring(`"max_dbsize_mb":3`))
+
+	var createdDial DialResponse
+
+	err = json.Unmarshal(createDialContent, &createdDial)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	getDialsReq, err := http.NewRequest("GET", fmt.Sprintf("http://localhost:%[1]v/dials?driver_instance_id=%[2]s", managementApiPort, firstDriverInstance.Id), nil)
+	getDialsReq.Header.Add("Content-Type", "application/json")
+	getDialsReq.Header.Add("Accept", "application/json")
+	getDialsReq.Header.Add("Authorization", token)
+
+	getDialsResp, err := http.DefaultClient.Do(getDialsReq)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer getDialsResp.Body.Close()
+
+	Expect(getDialsResp.StatusCode).To((Equal(200)))
+
+	getDialsContent, err := ioutil.ReadAll(getDialsResp.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("get dials response content: %s", string(getDialsContent))
+	Expect(getDialsContent).To(ContainSubstring("plan"))
+
+	var dials []DialResponse
+
+	err = json.Unmarshal(getDialsContent, &dials)
+	if err != nil {
+		t.Fatal(err)
+	}
+	Expect(len(dials)).To(Equal(2))
+	Expect(dials[0].Id).NotTo(Equal(dials[1].Id))
+	Expect(dials[0].Plan).NotTo(Equal(dials[1].Plan))
+
+	getPlansReq, err := http.NewRequest("GET", fmt.Sprintf("http://localhost:%[1]v/plans?driver_instance_id=%[2]s", managementApiPort, firstDriverInstance.Id), nil)
+	getPlansReq.Header.Add("Content-Type", "application/json")
+	getPlansReq.Header.Add("Accept", "application/json")
+	getPlansReq.Header.Add("Authorization", token)
+
+	getPlansResp, err := http.DefaultClient.Do(getPlansReq)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer getPlansResp.Body.Close()
+
+	Expect(getPlansResp.StatusCode).To((Equal(200)))
+
+	getPlansContent, err := ioutil.ReadAll(getPlansResp.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("get plans response content: %s", string(getPlansContent))
+	Expect(getPlansContent).To(ContainSubstring("default"))
+
+	var plans []PlanResponse
+
+	err = json.Unmarshal(getPlansContent, &plans)
+	if err != nil {
+		t.Fatal(err)
+	}
+	Expect(len(plans)).To(Equal(2))
+	Expect(plans[0].Id).NotTo(Equal(plans[1].Id))
+	Expect(plans[0].Description).NotTo(Equal(plans[1].Description))
+	Expect(plans[0].Name).NotTo(Equal(plans[1].Name))
+	Expect(plans[0].Free).NotTo(Equal(plans[1].Free))
+	Expect(plans[0].DialId).NotTo(Equal(plans[1].DialId))
+}
+
+func setupCcHttpFakeResponsesUpdateCatalog(uaaFakeServer, ccFakeServer *ghttp.Server) {
+	uaaFakeServer.RouteToHandler("POST", "/oauth/token",
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("POST", "/oauth/token"),
+			ghttp.RespondWith(200, `{"access_token":"replace-me", "expires_in": 3404281214}`),
+		),
+	)
+
+	brokerGuid := uuid.NewV4().String()
+
+	ccFakeServer.RouteToHandler("GET", "/v2/service_brokers",
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("GET", "/v2/service_brokers"),
+			ghttp.RespondWith(200, fmt.Sprintf(`{"resources":[{"metadata":{"guid":"%[1]s"}}]}`, brokerGuid)),
+		),
+	)
+
+	ccFakeServer.RouteToHandler("PUT", "/v2/service_brokers/"+brokerGuid,
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("PUT", "/v2/service_brokers/"+brokerGuid),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(200, `{}`),
+		),
+	)
+
+	serviceGuid := uuid.NewV4().String()
+
+	ccFakeServer.AppendHandlers(
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("GET", "/v2/services"),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(200,
+				fmt.Sprintf(`{"resources":[{"metadata":{"guid":"%[1]s"}}]}`, serviceGuid)),
+		),
+	)
+
+	servicePlanGuid := uuid.NewV4().String()
+
+	ccFakeServer.AppendHandlers(
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("GET", "/v2/service_plans"),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(200,
+				fmt.Sprintf(`{"resources":[{"metadata":{"guid":"%[1]s"},"entity":{"name":"default","free":true,"description":"default plan","public":false,"service_guid":"%[2]s"}}]}`, servicePlanGuid, serviceGuid)),
+		),
+	)
+
+	ccFakeServer.AppendHandlers(
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("PUT", fmt.Sprintf("/v2/service_plans/%[1]s", servicePlanGuid)),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(201, `{}`),
+		),
+	)
+}
+
+func executeUpdateCatalogTest(t *testing.T, managementApiPort uint16) {
+	token, err := GenerateUaaToken()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	updateCatalogReq, err := http.NewRequest("POST", fmt.Sprintf("http://localhost:%[1]v/update_catalog", managementApiPort), nil)
+	updateCatalogReq.Header.Add("Content-Type", "application/json")
+	updateCatalogReq.Header.Add("Accept", "application/json")
+	updateCatalogReq.Header.Add("Authorization", token)
+
+	updateCatalogResp, err := http.DefaultClient.Do(updateCatalogReq)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer updateCatalogResp.Body.Close()
+
+	Expect(updateCatalogResp.StatusCode).To((Equal(200)))
+
+	updateCatalogContent, err := ioutil.ReadAll(updateCatalogResp.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Logf("update catalog response content: %s", string(updateCatalogContent))
+
+	Expect(string(updateCatalogContent)).To(Equal(""))
 }
 
 func executeGetDriversTest(t *testing.T, managementApiPort uint16) (string, []DriverResponse) {
@@ -1063,7 +1488,7 @@ func executeGetDriversTest(t *testing.T, managementApiPort uint16) (string, []Dr
 
 	err = json.Unmarshal(driversContent, &drivers)
 	if err != nil {
-		fmt.Println("error:", err)
+		t.Fatal(err)
 	}
 
 	return string(driversContent), drivers
@@ -1161,7 +1586,7 @@ func executeTestUpdateDriverInstance(t *testing.T, managementApiPort uint16, dri
 
 	err = json.Unmarshal(driverInstancesContent, &driverInstances)
 	if err != nil {
-		fmt.Println("error:", err)
+		t.Fatal(err)
 	}
 	t.Logf("driver instances count: %v", len(driverInstances))
 
@@ -1186,18 +1611,11 @@ func executeTestUpdateDriverInstance(t *testing.T, managementApiPort uint16, dri
 	}
 	t.Logf("get dial response content: %s", string(getDialContent))
 
-	type DialResponse struct {
-		Configuration    interface{} `json:"configuration,omitempty"`
-		Id               string      `json:"id"`
-		DriverInstanceId string      `json:"driver_instance_id"`
-		Plan             string      `json:"plan"`
-	}
-
 	var dial DialResponse
 
 	err = json.Unmarshal(getDialContent, &dial)
 	if err != nil {
-		fmt.Println("error:", err)
+		t.Fatal(err)
 	}
 	Expect(dial.DriverInstanceId).To(Equal(firstDriverInstance.Id))
 
@@ -1244,19 +1662,11 @@ func executeTestUpdateDriverInstance(t *testing.T, managementApiPort uint16, dri
 	}
 	t.Logf("get plan response content: %s", string(getPlanContent))
 
-	type PlanResponse struct {
-		Name        string `json:"name"`
-		Description string `json:"description"`
-		Id          string `json:"id"`
-		DialId      string `json:"dial_id"`
-		Free        bool   `json:"free"`
-	}
-
 	var plan PlanResponse
 
 	err = json.Unmarshal(getPlanContent, &plan)
 	if err != nil {
-		fmt.Println("error:", err)
+		t.Fatal(err)
 	}
 	Expect(plan.Name).To(ContainSubstring("default"))
 	Expect(plan.Free).To(Equal(true))
@@ -1453,7 +1863,7 @@ func executeTestUpdateService(t *testing.T, managementApiPort uint16, driver Dri
 
 	err = json.Unmarshal(driverInstancesContent, &driverInstances)
 	if err != nil {
-		fmt.Println("error:", err)
+		t.Fatal(err)
 	}
 	t.Logf("driver instances count: %v", len(driverInstances))
 
@@ -1493,7 +1903,7 @@ func executeTestUpdateService(t *testing.T, managementApiPort uint16, driver Dri
 
 	err = json.Unmarshal(getServiceContent, &service)
 	if err != nil {
-		fmt.Println("error:", err)
+		t.Fatal(err)
 	}
 	Expect(service.Description).To(ContainSubstring("Default"))
 	Expect(service.Bindable).To(Equal(true))
@@ -1713,7 +2123,7 @@ func executeTestDeleteDriver(t *testing.T, managementApiPort uint16, driver Driv
 
 	err = json.Unmarshal(driverInstancesContent, &driverInstances)
 	if err != nil {
-		fmt.Println("error:", err)
+		t.Fatal(err)
 	}
 	t.Logf("driver instances count: %v", len(driverInstances))
 
@@ -1750,7 +2160,7 @@ func executeTestDeleteDriver(t *testing.T, managementApiPort uint16, driver Driv
 
 		err = json.Unmarshal(getDialContent, &dial)
 		if err != nil {
-			fmt.Println("error:", err)
+			t.Fatal(err)
 		}
 		Expect(dial.DriverInstanceId).To(Equal(firstDriverInstance.Id))
 
