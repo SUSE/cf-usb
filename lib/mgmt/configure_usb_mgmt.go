@@ -102,10 +102,11 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 		driverType := driver.DriverType
 
-		driverPath := os.Getenv("USB_DRIVER_PATH")
-		if driverPath == "" {
-			driverPath = "drivers"
+		driverPath, err := configProvider.GetDriversPath()
+		if err != nil {
+			return &UploadDriverInternalServerError{Payload: err.Error()}
 		}
+
 		driverPath = filepath.Join(driverPath, driverType)
 		if runtime.GOOS == "windows" {
 			driverPath = driverPath + ".exe"
@@ -137,56 +138,6 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		}
 
 		return &UploadDriverOK{}
-	})
-
-	api.DeleteServicePlanHandler = DeleteServicePlanHandlerFunc(func(params DeleteServicePlanParams, principal interface{}) middleware.Responder {
-		log := log.Session("delete-service-plan")
-		log.Info("request", lager.Data{"plan-id": params.PlanID})
-
-		config, err := configProvider.LoadConfiguration()
-		if err != nil {
-			return &DeleteServicePlanInternalServerError{Payload: err.Error()}
-		}
-
-		brokerName := defaultBrokerName
-		if len(config.ManagementAPI.BrokerName) > 0 {
-			brokerName = config.ManagementAPI.BrokerName
-		}
-
-		guid, err := ccServiceBroker.GetServiceBrokerGuidByName(brokerName)
-		if err != nil {
-			log.Error("get-service-broker-failed", err)
-			return &DeleteServicePlanInternalServerError{Payload: err.Error()}
-		}
-
-		err = ccServiceBroker.Update(guid, brokerName, config.BrokerAPI.ExternalUrl, config.BrokerAPI.Credentials.Username, config.BrokerAPI.Credentials.Password)
-		if err != nil {
-			log.Error("update-service-broker-failed", err)
-			return &DeleteServicePlanInternalServerError{Payload: err.Error()}
-		}
-
-		//TODO improve this
-		for _, driver := range config.Drivers {
-			for _, instance := range driver.DriverInstances {
-				for dialID, dial := range instance.Dials {
-					if dial.Plan.ID == params.PlanID {
-						err = configProvider.DeleteDial(dialID)
-						if err != nil {
-							return &DeleteServicePlanInternalServerError{Payload: err.Error()}
-						}
-						return &DeleteServicePlanNoContent{}
-					}
-				}
-
-				err = ccServiceBroker.EnableServiceAccess(instance.Service.Name)
-				if err != nil {
-					log.Error("enable-service-access-failed", err)
-					return &DeleteServicePlanInternalServerError{Payload: err.Error()}
-				}
-			}
-		}
-
-		return &DeleteServicePlanNotFound{}
 	})
 
 	api.GetDriverSchemaHandler = GetDriverSchemaHandlerFunc(func(params GetDriverSchemaParams, principal interface{}) middleware.Responder {
@@ -442,12 +393,37 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 			return &CreateDialInternalServerError{Payload: err.Error()}
 		}
 
+		var defaultPlan brokerapi.ServicePlan
+		var defaultMeta brokerapi.ServicePlanMetadata
+
+		defaultPlan.ID = uuid.NewV4().String()
+		defaultMeta.DisplayName = "Plan-" + defaultPlan.ID[:8]
+
+		defaultPlan.Description = "N/A"
+		defaultPlan.Name = "plan-" + defaultPlan.ID[:8]
+		defaultPlan.Free = false
+
+		defaultPlan.Metadata = &defaultMeta
+		dial.Plan = defaultPlan
+
 		err = configProvider.SetDial(params.Dial.DriverInstanceID, dialID, dial)
 		if err != nil {
 			return &CreateDialInternalServerError{Payload: err.Error()}
 		}
 
 		params.Dial.ID = &dialID
+		params.Dial.Plan = &defaultPlan.ID
+
+		instance, _, err := configProvider.GetDriverInstance(params.Dial.DriverInstanceID)
+		if err != nil {
+			return &CreateDialInternalServerError{Payload: err.Error()}
+		}
+
+		err = ccServiceBroker.EnableServiceAccess(instance.Service.Name)
+		if err != nil {
+			log.Error("enable-service-access-failed", err)
+			return &UpdateServiceInternalServerError{Payload: err.Error()}
+		}
 
 		return &CreateDialCreated{Payload: params.Dial}
 	})
@@ -455,14 +431,6 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 	api.UpdateDialHandler = UpdateDialHandlerFunc(func(params UpdateDialParams, principal interface{}) middleware.Responder {
 		log := log.Session("update-dial")
 		log.Info("request", lager.Data{"driver-instance-id": params.Dial.DriverInstanceID})
-
-		if params.DialID == "" {
-			return &UpdateDialInternalServerError{Payload: "Empty dial id parameter provided"}
-		}
-
-		if params.Dial == nil {
-			return &UpdateDialInternalServerError{Payload: "Empty dial provided"}
-		}
 
 		dialID := params.DialID
 
@@ -874,13 +842,6 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		log := log.Session("update-service-plan")
 		log.Info("request", lager.Data{"plan-id": params.PlanID})
 
-		if params.Plan == nil {
-			return &UpdateServicePlanInternalServerError{Payload: "Empty plan provided"}
-		}
-		if params.PlanID == "" {
-			return &UpdateServicePlanInternalServerError{Payload: "Empty plan id provided"}
-		}
-
 		config, err := configProvider.LoadConfiguration()
 		if err != nil {
 			return &UpdateServicePlanInternalServerError{Payload: err.Error()}
@@ -1201,77 +1162,6 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		return &GetDriverInstanceOK{Payload: driverInstance}
 	})
 
-	api.CreateServicePlanHandler = CreateServicePlanHandlerFunc(func(params CreateServicePlanParams, principal interface{}) middleware.Responder {
-		log := log.Session("create-service-plan")
-		log.Info("request", lager.Data{"dial-id": params.Plan.DialID})
-
-		config, err := configProvider.LoadConfiguration()
-		if err != nil {
-			return &CreateServicePlanInternalServerError{Payload: err.Error()}
-		}
-
-		brokerName := defaultBrokerName
-		if len(config.ManagementAPI.BrokerName) > 0 {
-			brokerName = config.ManagementAPI.BrokerName
-		}
-
-		guid, err := ccServiceBroker.GetServiceBrokerGuidByName(brokerName)
-		if err != nil {
-			log.Error("get-service-broker-failed", err)
-			return &UpdateServiceInternalServerError{Payload: err.Error()}
-		}
-
-		err = ccServiceBroker.Update(guid, brokerName, config.BrokerAPI.ExternalUrl, config.BrokerAPI.Credentials.Username, config.BrokerAPI.Credentials.Password)
-		if err != nil {
-			log.Error("update-service-broker-failed", err)
-			return &UpdateServiceInternalServerError{Payload: err.Error()}
-		}
-
-		for _, driver := range config.Drivers {
-			for instanceID, instance := range driver.DriverInstances {
-				for dialID, dial := range instance.Dials {
-					if dialID == params.Plan.DialID {
-						err = configProvider.DeleteDial(dialID)
-						if err != nil {
-							return &CreateServicePlanInternalServerError{Payload: err.Error()}
-						}
-
-						var plan brokerapi.ServicePlan
-						var meta brokerapi.ServicePlanMetadata
-
-						plan.Description = *params.Plan.Description
-						plan.ID = uuid.NewV4().String()
-						plan.Name = params.Plan.Name
-						plan.Free = *params.Plan.Free
-
-						meta.DisplayName = params.Plan.Name
-
-						plan.Metadata = &meta
-
-						dial.Plan = plan
-
-						err = configProvider.SetDial(instanceID, dialID, dial)
-						if err != nil {
-							return &CreateServicePlanInternalServerError{Payload: err.Error()}
-						}
-
-						params.Plan.ID = &plan.ID
-
-						return &CreateServicePlanCreated{Payload: params.Plan}
-					}
-				}
-
-				err = ccServiceBroker.EnableServiceAccess(instance.Service.Name)
-				if err != nil {
-					log.Error("enable-service-access-failed", err)
-					return &UpdateServiceInternalServerError{Payload: err.Error()}
-				}
-			}
-		}
-
-		return &CreateServicePlanInternalServerError{Payload: fmt.Sprintf("Dial %s not found", params.Plan.DialID)}
-	})
-
 	api.UpdateCatalogHandler = UpdateCatalogHandlerFunc(func(principal interface{}) middleware.Responder {
 		log := log.Session("update-catalog")
 		log.Info("request")
@@ -1300,6 +1190,17 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 				return &UpdateCatalogInternalServerError{Payload: err.Error()}
 			}
 		}
+
+		for _, driver := range config.Drivers {
+			for _, instance := range driver.DriverInstances {
+				err = ccServiceBroker.EnableServiceAccess(instance.Service.Name)
+				if err != nil {
+					log.Error("enable-service-access-failed", err)
+					return &UpdateCatalogInternalServerError{Payload: err.Error()}
+				}
+			}
+		}
+
 		return &UpdateCatalogOK{}
 	})
 }

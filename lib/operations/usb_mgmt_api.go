@@ -54,16 +54,12 @@ type UsbMgmtAPI struct {
 	CreateDriverHandler CreateDriverHandler
 	// CreateDriverInstanceHandler sets the operation handler for the create driver instance operation
 	CreateDriverInstanceHandler CreateDriverInstanceHandler
-	// CreateServicePlanHandler sets the operation handler for the create service plan operation
-	CreateServicePlanHandler CreateServicePlanHandler
 	// DeleteDialHandler sets the operation handler for the delete dial operation
 	DeleteDialHandler DeleteDialHandler
 	// DeleteDriverHandler sets the operation handler for the delete driver operation
 	DeleteDriverHandler DeleteDriverHandler
 	// DeleteDriverInstanceHandler sets the operation handler for the delete driver instance operation
 	DeleteDriverInstanceHandler DeleteDriverInstanceHandler
-	// DeleteServicePlanHandler sets the operation handler for the delete service plan operation
-	DeleteServicePlanHandler DeleteServicePlanHandler
 	// GetAllDialsHandler sets the operation handler for the get all dials operation
 	GetAllDialsHandler GetAllDialsHandler
 	// GetDialHandler sets the operation handler for the get dial operation
@@ -177,10 +173,6 @@ func (o *UsbMgmtAPI) Validate() error {
 		unregistered = append(unregistered, "CreateDriverInstanceHandler")
 	}
 
-	if o.CreateServicePlanHandler == nil {
-		unregistered = append(unregistered, "CreateServicePlanHandler")
-	}
-
 	if o.DeleteDialHandler == nil {
 		unregistered = append(unregistered, "DeleteDialHandler")
 	}
@@ -191,10 +183,6 @@ func (o *UsbMgmtAPI) Validate() error {
 
 	if o.DeleteDriverInstanceHandler == nil {
 		unregistered = append(unregistered, "DeleteDriverInstanceHandler")
-	}
-
-	if o.DeleteServicePlanHandler == nil {
-		unregistered = append(unregistered, "DeleteServicePlanHandler")
 	}
 
 	if o.GetAllDialsHandler == nil {
@@ -379,11 +367,6 @@ func (o *UsbMgmtAPI) initHandlerCache() {
 	}
 	o.handlers["POST"]["/driver_instances"] = NewCreateDriverInstance(o.context, o.CreateDriverInstanceHandler)
 
-	if o.handlers["POST"] == nil {
-		o.handlers[strings.ToUpper("POST")] = make(map[string]http.Handler)
-	}
-	o.handlers["POST"]["/plans"] = NewCreateServicePlan(o.context, o.CreateServicePlanHandler)
-
 	if o.handlers["DELETE"] == nil {
 		o.handlers[strings.ToUpper("DELETE")] = make(map[string]http.Handler)
 	}
@@ -398,11 +381,6 @@ func (o *UsbMgmtAPI) initHandlerCache() {
 		o.handlers[strings.ToUpper("DELETE")] = make(map[string]http.Handler)
 	}
 	o.handlers["DELETE"]["/driver_instances/{driver_instance_id}"] = NewDeleteDriverInstance(o.context, o.DeleteDriverInstanceHandler)
-
-	if o.handlers["DELETE"] == nil {
-		o.handlers[strings.ToUpper("DELETE")] = make(map[string]http.Handler)
-	}
-	o.handlers["DELETE"]["/plans/{plan_id}"] = NewDeleteServicePlan(o.context, o.DeleteServicePlanHandler)
 
 	if o.handlers["GET"] == nil {
 		o.handlers[strings.ToUpper("GET")] = make(map[string]http.Handler)

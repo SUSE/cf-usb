@@ -663,35 +663,6 @@
                         }
                     }
                 }
-            },
-            "post": {
-                "description": "Create a plan",
-                "operationId": "createServicePlan",
-                "parameters": [
-                    {
-                        "name": "plan",
-                        "in": "body",
-                        "description": "Add a plan for a **dialID**",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/plan"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Sucessfull response",
-                        "schema": {
-                            "$ref": "#/definitions/plan"
-                        }
-                    },
-                    "500": {
-                        "description": "Unexpected error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
             }
         },
         "/plans/{plan_id}": {
@@ -752,33 +723,6 @@
                         "schema": {
                             "$ref": "#/definitions/plan"
                         }
-                    },
-                    "404": {
-                        "description": "Not Found"
-                    },
-                    "500": {
-                        "description": "Unexpected error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "Delets the `plan` with the **planID** for the **serviceID**",
-                "operationId": "deleteServicePlan",
-                "parameters": [
-                    {
-                        "name": "plan_id",
-                        "in": "path",
-                        "description": "ID of the plan",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "Sucessfull response"
                     },
                     "404": {
                         "description": "Not Found"
