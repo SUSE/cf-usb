@@ -437,11 +437,6 @@ func Test_IntServicePlan(t *testing.T) {
 
 	response = IntegrationConfig.MgmtAPI.UpdateServicePlanHandler.Handle(*params, true)
 	assert.IsType(&operations.UpdateServicePlanOK{}, response)
-
-	deletePlanParams := &operations.DeleteServicePlanParams{}
-	deletePlanParams.PlanID = *existingPlan.ID
-	response = IntegrationConfig.MgmtAPI.DeleteServicePlanHandler.Handle(*deletePlanParams, true)
-	assert.IsType(&operations.DeleteServicePlanNoContent{}, response)
 }
 
 func Test_IntGetDriverSchema(t *testing.T) {

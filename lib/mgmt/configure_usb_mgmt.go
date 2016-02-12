@@ -140,56 +140,6 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		return &UploadDriverOK{}
 	})
 
-	api.DeleteServicePlanHandler = DeleteServicePlanHandlerFunc(func(params DeleteServicePlanParams, principal interface{}) middleware.Responder {
-		log := log.Session("delete-service-plan")
-		log.Info("request", lager.Data{"plan-id": params.PlanID})
-
-		config, err := configProvider.LoadConfiguration()
-		if err != nil {
-			return &DeleteServicePlanInternalServerError{Payload: err.Error()}
-		}
-
-		brokerName := defaultBrokerName
-		if len(config.ManagementAPI.BrokerName) > 0 {
-			brokerName = config.ManagementAPI.BrokerName
-		}
-
-		guid, err := ccServiceBroker.GetServiceBrokerGuidByName(brokerName)
-		if err != nil {
-			log.Error("get-service-broker-failed", err)
-			return &DeleteServicePlanInternalServerError{Payload: err.Error()}
-		}
-
-		err = ccServiceBroker.Update(guid, brokerName, config.BrokerAPI.ExternalUrl, config.BrokerAPI.Credentials.Username, config.BrokerAPI.Credentials.Password)
-		if err != nil {
-			log.Error("update-service-broker-failed", err)
-			return &DeleteServicePlanInternalServerError{Payload: err.Error()}
-		}
-
-		//TODO improve this
-		for _, driver := range config.Drivers {
-			for _, instance := range driver.DriverInstances {
-				for dialID, dial := range instance.Dials {
-					if dial.Plan.ID == params.PlanID {
-						err = configProvider.DeleteDial(dialID)
-						if err != nil {
-							return &DeleteServicePlanInternalServerError{Payload: err.Error()}
-						}
-						return &DeleteServicePlanNoContent{}
-					}
-				}
-
-				err = ccServiceBroker.EnableServiceAccess(instance.Service.Name)
-				if err != nil {
-					log.Error("enable-service-access-failed", err)
-					return &DeleteServicePlanInternalServerError{Payload: err.Error()}
-				}
-			}
-		}
-
-		return &DeleteServicePlanNotFound{}
-	})
-
 	api.GetDriverSchemaHandler = GetDriverSchemaHandlerFunc(func(params GetDriverSchemaParams, principal interface{}) middleware.Responder {
 		log := log.Session("get-driver-schema")
 		log.Info("request", lager.Data{"driver-id": params.DriverID})
