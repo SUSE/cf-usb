@@ -1283,7 +1283,7 @@ func executeCreateDialTest(t *testing.T, managementApiPort uint16, driver Driver
 	}
 	defer createDialResp.Body.Close()
 
-	Expect(createDialResp.StatusCode).To((Equal(201)))
+	Expect(createDialResp.StatusCode).To(Equal(201))
 
 	createDialContent, err := ioutil.ReadAll(createDialResp.Body)
 	if err != nil {
@@ -1298,6 +1298,7 @@ func executeCreateDialTest(t *testing.T, managementApiPort uint16, driver Driver
 	if err != nil {
 		t.Fatal(err)
 	}
+	Expect(createdDial.Plan).NotTo(Equal(""))
 
 	getDialsReq, err := http.NewRequest("GET", fmt.Sprintf("http://localhost:%[1]v/dials?driver_instance_id=%[2]s", managementApiPort, firstDriverInstance.Id), nil)
 	getDialsReq.Header.Add("Content-Type", "application/json")
@@ -1348,7 +1349,11 @@ func executeCreateDialTest(t *testing.T, managementApiPort uint16, driver Driver
 		t.Fatal(err)
 	}
 	t.Logf("get plans response content: %s", string(getPlansContent))
-	Expect(getPlansContent).To(ContainSubstring("default"))
+	Expect(getPlansContent).To(ContainSubstring(`"name":"default"`))
+	Expect(getPlansContent).To(ContainSubstring(`"name":"plan-`))
+	Expect(getPlansContent).To(ContainSubstring(`"description":"N/A"`))
+	Expect(getPlansContent).To(ContainSubstring(`"free":true`))
+	Expect(getPlansContent).To(ContainSubstring(`"free":false`))
 
 	var plans []PlanResponse
 
@@ -1393,7 +1398,7 @@ func setupCcHttpFakeResponsesUpdateCatalog(uaaFakeServer, ccFakeServer *ghttp.Se
 
 	serviceGuid := uuid.NewV4().String()
 
-	ccFakeServer.AppendHandlers(
+	ccFakeServer.RouteToHandler("GET", "/v2/services",
 		ghttp.CombineHandlers(
 			ghttp.VerifyRequest("GET", "/v2/services"),
 			func(http.ResponseWriter, *http.Request) {
@@ -1406,7 +1411,7 @@ func setupCcHttpFakeResponsesUpdateCatalog(uaaFakeServer, ccFakeServer *ghttp.Se
 
 	servicePlanGuid := uuid.NewV4().String()
 
-	ccFakeServer.AppendHandlers(
+	ccFakeServer.RouteToHandler("GET", "/v2/service_plans",
 		ghttp.CombineHandlers(
 			ghttp.VerifyRequest("GET", "/v2/service_plans"),
 			func(http.ResponseWriter, *http.Request) {
@@ -1417,7 +1422,7 @@ func setupCcHttpFakeResponsesUpdateCatalog(uaaFakeServer, ccFakeServer *ghttp.Se
 		),
 	)
 
-	ccFakeServer.AppendHandlers(
+	ccFakeServer.RouteToHandler("PUT", fmt.Sprintf("/v2/service_plans/%[1]s", servicePlanGuid),
 		ghttp.CombineHandlers(
 			ghttp.VerifyRequest("PUT", fmt.Sprintf("/v2/service_plans/%[1]s", servicePlanGuid)),
 			func(http.ResponseWriter, *http.Request) {
@@ -1619,9 +1624,7 @@ func executeTestUpdateDriverInstance(t *testing.T, managementApiPort uint16, dri
 	}
 	Expect(dial.DriverInstanceId).To(Equal(firstDriverInstance.Id))
 
-	dialValues := []byte(fmt.Sprintf(`{"configuration":{"min_dbsize_mb":1},"driver_instance_id":"%[1]s","id":"%[2]s"}`,
-		dial.DriverInstanceId,
-		dial.Id))
+	dialValues := []byte(fmt.Sprintf(`{"configuration":{"min_dbsize_mb":1},"driver_instance_id":"%[1]s"}`, dial.DriverInstanceId))
 
 	updateDialReq, err := http.NewRequest("PUT", fmt.Sprintf("http://localhost:%[1]v/dials/%[2]s", managementApiPort, dial.Id), bytes.NewBuffer(dialValues))
 	updateDialReq.Header.Add("Content-Type", "application/json")
@@ -1668,16 +1671,15 @@ func executeTestUpdateDriverInstance(t *testing.T, managementApiPort uint16, dri
 	if err != nil {
 		t.Fatal(err)
 	}
-	Expect(plan.Name).To(ContainSubstring("default"))
-	Expect(plan.Free).To(Equal(true))
+	Expect(plan.Name).To(Or(ContainSubstring("default"), ContainSubstring("plan-")))
+	Expect(plan.Description).To(Or(ContainSubstring("N/A"), ContainSubstring("default plan")))
 
 	updatePlanName := plan.Name + "updp"
 	updatePlanDesc := plan.Description + "updp"
 
-	planValues := []byte(fmt.Sprintf(`{"description":"%[1]s","dial_id":"%[2]s","id":"%[3]s","free":true,"name":"%[4]s"}`,
+	planValues := []byte(fmt.Sprintf(`{"description":"%[1]s","dial_id":"%[2]s","free":true,"name":"%[3]s"}`,
 		updatePlanDesc,
 		dial.Id,
-		plan.Id,
 		updatePlanName))
 
 	updatePlanReq, err := http.NewRequest("PUT", fmt.Sprintf("http://localhost:%[1]v/plans/%[2]s", managementApiPort, dial.Plan), bytes.NewBuffer(planValues))
@@ -1911,11 +1913,10 @@ func executeTestUpdateService(t *testing.T, managementApiPort uint16, driver Dri
 	updateServiceName := service.Name + "upds"
 	updateServiceDesc := service.Description + "upds"
 
-	serviceValues := []byte(fmt.Sprintf(`{"bindable":%[1]v,"description":"%[2]s","driver_instance_id":"%[3]s","id":"%[4]s","name":"%[5]s"}`,
+	serviceValues := []byte(fmt.Sprintf(`{"bindable":%[1]v,"description":"%[2]s","driver_instance_id":"%[3]s","name":"%[4]s"}`,
 		service.Bindable,
 		updateServiceDesc,
 		service.DriverInstanceID,
-		service.ID,
 		updateServiceName))
 
 	updateServiceReq, err := http.NewRequest("PUT", fmt.Sprintf("http://localhost:%[1]v/services/%[2]s", managementApiPort, firstDriverInstance.Service), bytes.NewBuffer(serviceValues))
@@ -1993,9 +1994,8 @@ func executeTestUpdateDriver(t *testing.T, managementApiPort uint16, driver Driv
 
 	updateDriverName := driver.Name + "updd"
 
-	driverValues := []byte(fmt.Sprintf(`{"driver_type":"%[1]s","id":"%[2]s","name":"%[3]s"}`,
+	driverValues := []byte(fmt.Sprintf(`{"driver_type":"%[1]s","name":"%[2]s"}`,
 		driver.DriverType,
-		driver.Id,
 		updateDriverName))
 
 	updateDriverReq, err := http.NewRequest("PUT", fmt.Sprintf("http://localhost:%[1]v/drivers/%[2]s", managementApiPort, driver.Id), bytes.NewBuffer(driverValues))
@@ -2164,27 +2164,27 @@ func executeTestDeleteDriver(t *testing.T, managementApiPort uint16, driver Driv
 		}
 		Expect(dial.DriverInstanceId).To(Equal(firstDriverInstance.Id))
 
-		// delete plan
-		deletePlanReq, err := http.NewRequest("DELETE", fmt.Sprintf("http://localhost:%[1]v/plans/%[2]s", managementApiPort, dial.Plan), nil)
-		deletePlanReq.Header.Add("Content-Type", "application/json")
-		deletePlanReq.Header.Add("Accept", "application/json")
-		deletePlanReq.Header.Add("Authorization", token)
+		//delete dial
+		deleteDialReq, err := http.NewRequest("DELETE", fmt.Sprintf("http://localhost:%[1]v/dials/%[2]s", managementApiPort, dial.Id), nil)
+		deleteDialReq.Header.Add("Content-Type", "application/json")
+		deleteDialReq.Header.Add("Accept", "application/json")
+		deleteDialReq.Header.Add("Authorization", token)
 
-		deletePlanResp, err := http.DefaultClient.Do(deletePlanReq)
-
+		deleteDialResp, err := http.DefaultClient.Do(deleteDialReq)
 		if err != nil {
 			t.Fatal(err)
 		}
-		defer deletePlanResp.Body.Close()
+		defer deleteDialResp.Body.Close()
 
-		Expect(deletePlanResp.StatusCode).To((Equal(204)))
+		Expect(deleteDialResp.StatusCode).To(Equal(204))
 
-		deletePlanContent, err := ioutil.ReadAll(deletePlanResp.Body)
+		deleteDialContent, err := ioutil.ReadAll(deleteDialResp.Body)
 		if err != nil {
 			t.Fatal(err)
 		}
-		Expect(string(deletePlanContent)).To(Equal(""))
+		Expect(string(deleteDialContent)).To(Equal(""))
 
+		// check plan is deleted too
 		getPlanReq, err := http.NewRequest("GET", fmt.Sprintf("http://localhost:%[1]v/plans/%[2]s", managementApiPort, dial.Plan), nil)
 		getPlanReq.Header.Add("Content-Type", "application/json")
 		getPlanReq.Header.Add("Accept", "application/json")
@@ -2198,26 +2198,6 @@ func executeTestDeleteDriver(t *testing.T, managementApiPort uint16, driver Driv
 		defer getPlanResp.Body.Close()
 
 		Expect(getPlanResp.StatusCode).To((Equal(404)))
-
-		//check dial is deleted too
-		deleteDialReq, err := http.NewRequest("DELETE", fmt.Sprintf("http://localhost:%[1]v/dials/%[2]s", managementApiPort, dial.Id), nil)
-		deleteDialReq.Header.Add("Content-Type", "application/json")
-		deleteDialReq.Header.Add("Accept", "application/json")
-		deleteDialReq.Header.Add("Authorization", token)
-
-		deleteDialResp, err := http.DefaultClient.Do(deleteDialReq)
-		if err != nil {
-			t.Fatal(err)
-		}
-		defer deleteDialResp.Body.Close()
-
-		Expect(deleteDialResp.StatusCode).To(Equal(404))
-
-		deleteDialContent, err := ioutil.ReadAll(deleteDialResp.Body)
-		if err != nil {
-			t.Fatal(err)
-		}
-		Expect(string(deleteDialContent)).To(Equal(""))
 
 		// delete driver instance
 		deleteDriverInstReq, err := http.NewRequest("DELETE", fmt.Sprintf("http://localhost:%[1]v/driver_instances/%[2]s", managementApiPort, firstDriverInstance.Id), nil)
