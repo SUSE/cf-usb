@@ -80,7 +80,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 
 		driver.DriverName = params.Driver.Name
 
-		err = configProvider.SetDriver(*params.Driver.ID, *driver)
+		err = configProvider.SetDriver(params.DriverID, *driver)
 		if err != nil {
 			return &UpdateDriverInternalServerError{Payload: err.Error()}
 		}

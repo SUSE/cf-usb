@@ -156,6 +156,10 @@ func (c *consulConfig) GetDriver(driverID string) (*Driver, error) {
 	if err != nil {
 		return nil, err
 	}
+	if driverType == nil {
+		return nil, nil
+	}
+
 	driverName, err := c.provisioner.GetValue("usb/drivers/" + driverID + "/Name")
 	if err != nil {
 		return nil, err
