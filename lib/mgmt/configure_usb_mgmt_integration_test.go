@@ -106,7 +106,7 @@ func initManager() error {
 
 	IntegrationConfig.CcServiceBroker = new(sbMocks.ServiceBrokerInterface)
 
-	ConfigureAPI(IntegrationConfig.MgmtAPI, auth, IntegrationConfig.Provider, IntegrationConfig.CcServiceBroker, testLogger)
+	ConfigureAPI(IntegrationConfig.MgmtAPI, auth, IntegrationConfig.Provider, IntegrationConfig.CcServiceBroker, testLogger, "t.t.t")
 	return nil
 }
 

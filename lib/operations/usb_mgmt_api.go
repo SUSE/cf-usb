@@ -13,7 +13,6 @@ import (
 	"github.com/go-swagger/go-swagger/httpkit/security"
 	"github.com/go-swagger/go-swagger/spec"
 	"github.com/go-swagger/go-swagger/strfmt"
-	"github.com/go-swagger/go-swagger/swag"
 )
 
 // NewUsbMgmtAPI creates a new UsbMgmt instance
@@ -110,9 +109,6 @@ type UsbMgmtAPI struct {
 	// ServerShutdown is called when the HTTP(S) server is shut down and done
 	// handling all active connections and does not accept connections any more
 	ServerShutdown func()
-
-	// Custom command line argument groups with their descriptions
-	CommandLineOptionsGroups []swag.CommandLineOptionsGroup
 }
 
 // SetDefaultProduces sets the default produces media type

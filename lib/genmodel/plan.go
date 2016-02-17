@@ -66,7 +66,7 @@ func (m *Plan) Validate(formats strfmt.Registry) error {
 
 func (m *Plan) validateDialID(formats strfmt.Registry) error {
 
-	if err := validate.RequiredString("dial_id", "body", string(m.DialID)); err != nil {
+	if err := validate.Required("dial_id", "body", string(m.DialID)); err != nil {
 		return err
 	}
 
@@ -83,7 +83,7 @@ func (m *Plan) validateDialID(formats strfmt.Registry) error {
 
 func (m *Plan) validateName(formats strfmt.Registry) error {
 
-	if err := validate.RequiredString("name", "body", string(m.Name)); err != nil {
+	if err := validate.Required("name", "body", string(m.Name)); err != nil {
 		return err
 	}
 

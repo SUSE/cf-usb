@@ -76,7 +76,7 @@ func (m *Driver) validateDriverInstances(formats strfmt.Registry) error {
 
 	for i := 0; i < len(m.DriverInstances); i++ {
 
-		if err := validate.RequiredString("driver_instances"+"."+strconv.Itoa(i), "body", string(m.DriverInstances[i])); err != nil {
+		if err := validate.Required("driver_instances"+"."+strconv.Itoa(i), "body", string(m.DriverInstances[i])); err != nil {
 			return err
 		}
 
@@ -87,7 +87,7 @@ func (m *Driver) validateDriverInstances(formats strfmt.Registry) error {
 
 func (m *Driver) validateDriverType(formats strfmt.Registry) error {
 
-	if err := validate.RequiredString("driver_type", "body", string(m.DriverType)); err != nil {
+	if err := validate.Required("driver_type", "body", string(m.DriverType)); err != nil {
 		return err
 	}
 
@@ -104,7 +104,7 @@ func (m *Driver) validateDriverType(formats strfmt.Registry) error {
 
 func (m *Driver) validateName(formats strfmt.Registry) error {
 
-	if err := validate.RequiredString("name", "body", string(m.Name)); err != nil {
+	if err := validate.Required("name", "body", string(m.Name)); err != nil {
 		return err
 	}
 

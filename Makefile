@@ -7,8 +7,7 @@ GOPKGS=$(shell go list -f '{{.Dir}}' ./...)
 
 include version.mk
 
-BUILD:=$(shell echo `whoami`-`git rev-parse --short HEAD`-`date -u +%Y%m%d%H%M%S`)
-APP_VERSION=$(VERSION)-$(BUILD)
+APP_VERSION=$(VERSION)-$(BUILD_NUMBER)
 DIST_FIND_BUILDS=find * -type d -not -path "forpatches" -exec
 
 .PHONY: all dist format lint vet build test tools bench clean generate cleangeneratedfiles
