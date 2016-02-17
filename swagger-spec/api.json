@@ -900,11 +900,15 @@
         "info": {
             "type": "object",
             "required": [
-                "version"
+                "broker_api_version",
+				"usb_version"
             ],
             "properties": {
-                "version": {
-                    "type": "string"
+                "broker_api_version": {
+                   "type": "string"
+                },
+				 "usb_version": {
+                   "type": "string"
                 }
             }
         },

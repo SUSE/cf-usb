@@ -53,7 +53,7 @@ func init_mgmt(provider config.ConfigProvider) error {
 		return err
 	}
 
-	ConfigureAPI(mgmtAPI, auth, provider, sbMocked, logger)
+	ConfigureAPI(mgmtAPI, auth, provider, sbMocked, logger, "t.t.t")
 
 	UnitTest.MgmtAPI = mgmtAPI
 	return nil
@@ -79,7 +79,7 @@ func TestGetInfo(t *testing.T) {
 	assert.IsType(&operations.GetInfoOK{}, response)
 	info := response.(*operations.GetInfoOK).Payload
 
-	assert.Equal("2.6", info.Version)
+	assert.Equal("2.6", info.BrokerAPIVersion)
 }
 
 func Test_CreateDriver(t *testing.T) {

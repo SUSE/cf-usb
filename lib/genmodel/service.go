@@ -82,7 +82,7 @@ func (m *Service) Validate(formats strfmt.Registry) error {
 
 func (m *Service) validateDriverInstanceID(formats strfmt.Registry) error {
 
-	if err := validate.RequiredString("driver_instance_id", "body", string(m.DriverInstanceID)); err != nil {
+	if err := validate.Required("driver_instance_id", "body", string(m.DriverInstanceID)); err != nil {
 		return err
 	}
 
@@ -99,7 +99,7 @@ func (m *Service) validateDriverInstanceID(formats strfmt.Registry) error {
 
 func (m *Service) validateName(formats strfmt.Registry) error {
 
-	if err := validate.RequiredString("name", "body", string(m.Name)); err != nil {
+	if err := validate.Required("name", "body", string(m.Name)); err != nil {
 		return err
 	}
 
@@ -122,7 +122,7 @@ func (m *Service) validateTags(formats strfmt.Registry) error {
 
 	for i := 0; i < len(m.Tags); i++ {
 
-		if err := validate.RequiredString("tags"+"."+strconv.Itoa(i), "body", string(m.Tags[i])); err != nil {
+		if err := validate.Required("tags"+"."+strconv.Itoa(i), "body", string(m.Tags[i])); err != nil {
 			return err
 		}
 

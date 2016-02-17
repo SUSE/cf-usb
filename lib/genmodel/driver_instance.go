@@ -82,7 +82,7 @@ func (m *DriverInstance) validateDials(formats strfmt.Registry) error {
 
 	for i := 0; i < len(m.Dials); i++ {
 
-		if err := validate.RequiredString("dials"+"."+strconv.Itoa(i), "body", string(m.Dials[i])); err != nil {
+		if err := validate.Required("dials"+"."+strconv.Itoa(i), "body", string(m.Dials[i])); err != nil {
 			return err
 		}
 
@@ -93,7 +93,7 @@ func (m *DriverInstance) validateDials(formats strfmt.Registry) error {
 
 func (m *DriverInstance) validateDriverID(formats strfmt.Registry) error {
 
-	if err := validate.RequiredString("driver_id", "body", string(m.DriverID)); err != nil {
+	if err := validate.Required("driver_id", "body", string(m.DriverID)); err != nil {
 		return err
 	}
 
@@ -110,7 +110,7 @@ func (m *DriverInstance) validateDriverID(formats strfmt.Registry) error {
 
 func (m *DriverInstance) validateName(formats strfmt.Registry) error {
 
-	if err := validate.RequiredString("name", "body", string(m.Name)); err != nil {
+	if err := validate.Required("name", "body", string(m.Name)); err != nil {
 		return err
 	}
 

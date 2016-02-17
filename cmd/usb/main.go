@@ -7,12 +7,15 @@ import (
 	"github.com/codegangsta/cli"
 )
 
+var version string
+
 func main() {
 
 	usb := NewUsbApp()
 
 	app := cli.NewApp()
 	app.Name = "usb"
+	app.Version = version
 
 	for _, command := range usb.GetCommands() {
 		for _, cliCommand := range command.GetCLICommands(usb) {

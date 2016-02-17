@@ -53,7 +53,7 @@ func (m *Dial) Validate(formats strfmt.Registry) error {
 
 func (m *Dial) validateDriverInstanceID(formats strfmt.Registry) error {
 
-	if err := validate.RequiredString("driver_instance_id", "body", string(m.DriverInstanceID)); err != nil {
+	if err := validate.Required("driver_instance_id", "body", string(m.DriverInstanceID)); err != nil {
 		return err
 	}
 

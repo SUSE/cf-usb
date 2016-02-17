@@ -15,18 +15,29 @@ swagger:model info
 */
 type Info struct {
 
-	/* Version version
+	/* BrokerAPIVersion broker api version
 
 	Required: true
 	*/
-	Version string `json:"version,omitempty"`
+	BrokerAPIVersion string `json:"broker_api_version,omitempty"`
+
+	/* UsbVersion usb version
+
+	Required: true
+	*/
+	UsbVersion string `json:"usb_version,omitempty"`
 }
 
 // Validate validates this info
 func (m *Info) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateVersion(formats); err != nil {
+	if err := m.validateBrokerAPIVersion(formats); err != nil {
+		// prop
+		res = append(res, err)
+	}
+
+	if err := m.validateUsbVersion(formats); err != nil {
 		// prop
 		res = append(res, err)
 	}
@@ -37,9 +48,18 @@ func (m *Info) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *Info) validateVersion(formats strfmt.Registry) error {
+func (m *Info) validateBrokerAPIVersion(formats strfmt.Registry) error {
 
-	if err := validate.RequiredString("version", "body", string(m.Version)); err != nil {
+	if err := validate.Required("broker_api_version", "body", string(m.BrokerAPIVersion)); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *Info) validateUsbVersion(formats strfmt.Registry) error {
+
+	if err := validate.Required("usb_version", "body", string(m.UsbVersion)); err != nil {
 		return err
 	}
 

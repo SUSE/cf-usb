@@ -35,7 +35,9 @@ import (
 
 const defaultBrokerName string = "usb"
 
-func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, configProvider config.ConfigProvider, ccServiceBroker ccapi.ServiceBrokerInterface, logger lager.Logger) {
+func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface,
+	configProvider config.ConfigProvider, ccServiceBroker ccapi.ServiceBrokerInterface,
+	logger lager.Logger, usbVersion string) {
 	log := logger.Session("usb-mgmt")
 
 	// configure the api here
@@ -974,7 +976,8 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface, 
 		}
 
 		info := &genmodel.Info{
-			Version: config.APIVersion,
+			BrokerAPIVersion: config.APIVersion,
+			UsbVersion:       usbVersion,
 		}
 
 		return &GetInfoOK{
