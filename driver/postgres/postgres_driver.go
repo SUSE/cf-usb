@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"regexp"
 
 	"github.com/hpcloud/cf-usb/driver"
@@ -94,13 +95,13 @@ func (d *PostgresDriver) ProvisionInstance(request driver.ProvisionInstanceReque
 
 	dbName, err := d.getMD5Hash(request.InstanceID)
 	if err != nil {
-		d.logger.Fatal("provision-error", err)
+		d.logger.Error("provision-error", err)
 		return err
 	}
 
 	err = d.postgresProvisioner.CreateDatabase(dbName)
 	if err != nil {
-		d.logger.Fatal("provision-error", err)
+		d.logger.Error("provision-error", err)
 		return err
 	}
 
@@ -119,14 +120,14 @@ func (d *PostgresDriver) GetInstance(request driver.GetInstanceRequest, response
 
 	dbName, err := d.getMD5Hash(request.InstanceID)
 	if err != nil {
-		d.logger.Fatal("get-instance-request-failed", err)
+		d.logger.Error("get-instance-request-failed", err)
 		return err
 	}
 
 	response.Status = status.DoesNotExist
 	exist, err := d.postgresProvisioner.DatabaseExists(dbName)
 	if err != nil {
-		d.logger.Fatal("get-instance-request-failed", err)
+		d.logger.Error("get-instance-request-failed", err)
 		return err
 	}
 	if exist {
@@ -146,13 +147,13 @@ func (d *PostgresDriver) GenerateCredentials(request driver.GenerateCredentialsR
 
 	dbName, err := d.getMD5Hash(request.InstanceID)
 	if err != nil {
-		d.logger.Fatal("generate-credentials-request-failed", err)
+		d.logger.Error("generate-credentials-request-failed", err)
 		return err
 	}
 
 	username, err := d.getMD5Hash(request.InstanceID + request.CredentialsID)
 	if err != nil {
-		d.logger.Fatal("generate-credentials-request-failed", err)
+		d.logger.Error("generate-credentials-request-failed", err)
 		return err
 	}
 
@@ -163,7 +164,7 @@ func (d *PostgresDriver) GenerateCredentials(request driver.GenerateCredentialsR
 
 	err = d.postgresProvisioner.CreateUser(dbName, username, password)
 	if err != nil {
-		d.logger.Fatal("generate-credentials-request-failed", err)
+		d.logger.Error("generate-credentials-request-failed", err)
 		return err
 	}
 
@@ -194,13 +195,13 @@ func (d *PostgresDriver) GetCredentials(request driver.GetCredentialsRequest, re
 
 	username, err := d.getMD5Hash(request.InstanceID + request.CredentialsID)
 	if err != nil {
-		d.logger.Fatal("credentials-exists-request-failed", err)
+		d.logger.Error("credentials-exists-request-failed", err)
 		return err
 	}
 
 	exist, err := d.postgresProvisioner.UserExists(username)
 	if err != nil {
-		d.logger.Fatal("credentials-exists-request-failed", err)
+		d.logger.Error("credentials-exists-request-failed", err)
 	}
 	if exist {
 		response.Status = status.Exists
@@ -218,19 +219,19 @@ func (d *PostgresDriver) RevokeCredentials(request driver.RevokeCredentialsReque
 	}
 	dbName, err := d.getMD5Hash(request.InstanceID)
 	if err != nil {
-		d.logger.Fatal("revoke-credentials-request-failed", err)
+		d.logger.Error("revoke-credentials-request-failed", err)
 		return err
 	}
 
 	username, err := d.getMD5Hash(request.InstanceID + request.CredentialsID)
 	if err != nil {
-		d.logger.Fatal("revoke-credentials-request-failed", err)
+		d.logger.Error("revoke-credentials-request-failed", err)
 		return err
 	}
 
 	err = d.postgresProvisioner.DeleteUser(dbName, username)
 	if err != nil {
-		d.logger.Fatal("revoke-credentials-request-failed", err)
+		d.logger.Error("revoke-credentials-request-failed", err)
 		return err
 	}
 
@@ -248,13 +249,13 @@ func (d *PostgresDriver) DeprovisionInstance(request driver.DeprovisionInstanceR
 
 	dbName, err := d.getMD5Hash(request.InstanceID)
 	if err != nil {
-		d.logger.Fatal("deprovision-request-failed", err)
+		d.logger.Error("deprovision-request-failed", err)
 		return err
 	}
 
 	err = d.postgresProvisioner.DeleteDatabase(dbName)
 	if err != nil {
-		d.logger.Fatal("deprovision-request-failed", err)
+		d.logger.Error("deprovision-request-failed", err)
 		return err
 	}
 
@@ -270,7 +271,8 @@ func (d *PostgresDriver) getMD5Hash(text string) (string, error) {
 
 	reg := regexp.MustCompile("[^A-Za-z0-9]+")
 
-	return reg.ReplaceAllString(generated, ""), nil
+	dbName := fmt.Sprintf("d%s", reg.ReplaceAllString(generated, ""))
+	return dbName, nil
 }
 
 func secureRandomString(bytesOfEntpry int) (string, error) {
