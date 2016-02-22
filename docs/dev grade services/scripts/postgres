@@ -1,0 +1,43 @@
+#!/bin/bash
+
+
+POSTGRES_PASSWORD="postgresqlpassword"
+POSTGRES_USER=""
+PGDATA="" #default: /var/lib/postgresql/data
+POSTGRES_DB=""
+
+POSTGRESQL_HOST_PORT=54321
+
+POSTGRESQL_CONTAINER_NAME="postgresql_container"
+
+POSTGRESQL_VERSION="postgres:9.4"
+
+
+function check_port_is_open()
+{
+    exec 6<>/dev/tcp/127.0.0.1/$1 && return 1 || return 0
+    exec 6>&-
+    exec 6<&-
+}
+
+
+
+check_port_is_open ${POSTGRESQL_HOST_PORT} 1>/dev/null 2>&1
+
+[ $? -eq 1 ] && \
+{
+    echo "Port ${POSTGRESQL_HOST_PORT} is already in use"
+    exit 1
+}
+
+docker run -p ${POSTGRESQL_HOST_PORT}:5432 --name ${POSTGRESQL_CONTAINER_NAME} -e POSTGRES_PASSWORD=${POSTGRES_PASSWORD} -d ${POSTGRESQL_VERSION}
+
+[ $? -eq 0 ] && \
+{
+    CONTAINER_ID=`docker ps|grep -w ${POSTGRESQL_CONTAINER_NAME=}|awk '{print $1}'`
+    echo "container id: ${CONTAINER_ID}"
+} ||
+{
+    echo "Error creating container"
+}
+

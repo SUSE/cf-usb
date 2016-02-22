@@ -1,0 +1,40 @@
+#!/bin/bash
+
+
+MONGO_CONTAINER_NAME="mongo_container"
+MONGO_VERSION="mongo:3.1"
+
+MONGO_HOST_PORT=27017
+
+MONGO_HOST_DATA_DIR="/tmp"
+MONGO_GUEST_DATA_DIR="/data/db"
+
+MONGO_DATA_CMD=""
+[ ! -z "${MONGO_HOST_DATA_DIR}" -a ! -z "${MONGO_GUEST_DATA_DIR}" ] && MONGO_DATA_CMD="-v ${MONGO_HOST_DATA_DIR}:${MONGO_GUEST_DATA_DIR}"
+
+function check_port_is_open()
+{
+    exec 6<>/dev/tcp/127.0.0.1/$1 && return 1 || return 0
+    exec 6>&-
+    exec 6<&-
+}
+
+check_port_is_open ${MONGO_HOST_PORT} 1>/dev/null 2>&1
+
+[ $? -eq 1 ] && \
+{
+    echo "Port ${MONGO_HOST_PORT} is already in use"
+    exit 1
+}
+
+
+docker run -p ${MONGO_HOST_PORT}:27017 --name ${MONGO_CONTAINER_NAME} ${MONGO_DATA_CMD} -d ${MONGO_VERSION}
+
+[ $? -eq 0 ] && \
+    {
+    CONTAINER_ID=`docker ps|grep -w ${MONGO_CONTAINER_NAME=}|awk '{print $1}'`
+    echo "container id: ${CONTAINER_ID}"
+    } ||
+    {
+    echo "Error creating container"
+    }

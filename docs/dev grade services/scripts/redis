@@ -1,0 +1,33 @@
+#!/bin/bash
+
+
+REDIS_CONTAINER_NAME="redis_container"
+REDIS_VERSION="redis:3"
+
+REDIS_HOST_PORT=6379
+
+function check_port_is_open()
+{
+    exec 6<>/dev/tcp/127.0.0.1/$1 && return 1 || return 0
+    exec 6>&-
+    exec 6<&-
+}
+
+check_port_is_open ${REDIS_HOST_PORT} 1>/dev/null 2>&1
+
+[ $? -eq 1 ] && \
+{
+    echo "Port ${REDIS_HOST_PORT} is already in use"
+    exit 1
+}
+
+docker run -p ${REDIS_HOST_PORT}:6379 --name ${REDIS_CONTAINER_NAME} -d ${REDIS_VERSION}
+
+[ $? -eq 0 ] && \
+    {
+    CONTAINER_ID=`docker ps|grep -w ${REDIS_CONTAINER_NAME=}|awk '{print $1}'`
+    echo "container id: ${CONTAINER_ID}"
+    } ||
+    {
+    echo "Error creating container"
+    }
