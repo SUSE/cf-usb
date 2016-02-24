@@ -1,41 +1,30 @@
 #!/bin/bash
 
-MYSQL_ROOT_PASSWORD="mysqlrootpassword"
-MYSQL_RANDOM_ROOT_PASSWORD="" # can be "yes"
-MYSQL_ONETIME_PASSWORD=""
-
-MYSQL_DATABASE=""
-MYSQL_USER=""
-MYSQL_PASSWORD=""
-MYSQL_ALLOW_EMPTY_PASSWORD=""
+MYSQL_ROOT_PASSWORD="mypassword"
 
 MYSQL_CONTAINER_NAME="mysql_container"
+
 MYSQL_VERSION="mysql/mysql-server:5.6"
 
-MYSQL_HOST_PORT=3306
+CF_SERVICE_NAME="mysql"
 
-function check_port_is_open()
-{
-    exec 6<>/dev/tcp/127.0.0.1/$1 && return 1 || return 0
-    exec 6>&-
-    exec 6<&-
-}
+docker run --name ${MYSQL_CONTAINER_NAME} \
+-e MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD} \
+-d ${MYSQL_VERSION}
 
-check_port_is_open ${MYSQL_HOST_PORT} 1>/dev/null 2>&1
-
-[ $? -eq 1 ] && \
-{
-    echo "Port ${MYSQL_HOST_PORT} is already in use"
-    exit 1
-}
-
-
-docker run -p ${MYSQL_HOST_PORT}:3306 --name ${MYSQL_CONTAINER_NAME} -e MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD} -d ${MYSQL_VERSION}
 [ $? -eq 0 ] && \
-    {
-    CONTAINER_ID=`docker ps|grep -w ${MYSQL_CONTAINER_NAME=}|awk '{print $1}'`
+{
+    CONTAINER_ID=`docker ps|grep -w ${MYSQL_CONTAINER_NAME}|awk '{print $1}'`
     echo "container id: ${CONTAINER_ID}"
-    } ||
-    {
+
+    docker network connect hcf ${CONTAINER_ID}
+
+    CONTAINER_IP=`docker inspect --format '{{ .NetworkSettings.Networks.hcf.IPAddress }}' ${CONTAINER_ID}`
+    echo "container ip: ${CONTAINER_IP}"
+
+    sleep 10
+    cf usb create-instance mysql ${CF_SERVICE_NAME} configValue "{\"server\":\"${CONTAINER_IP}\",\"port\":\"3306\",\"userid\":\"root\",\"password\":\"${MYSQL_ROOT_PASSWORD}\"}"
+} ||
+{
     echo "Error creating container"
-    }
+}
