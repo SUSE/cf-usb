@@ -153,7 +153,7 @@ func validateConfigSchema(client *rpc.Client, driverType string, configuration *
 	}
 
 	if !result.Valid() {
-		err = errors.New("Invalid configuration schema")
+		err = errors.New("Invalid configuration")
 
 		errData := lager.Data{}
 		for _, e := range result.Errors() {
