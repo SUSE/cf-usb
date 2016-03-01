@@ -24,7 +24,7 @@ func GenerateCommand(c *cli.Context) {
 
 	di.GeneratedPath = c.String("path")
 
-	baseImp, err := baseImport(di.DriverName)
+	baseImp, err := baseImport(di.GeneratedPath)
 	if err != nil {
 
 	}
@@ -36,28 +36,33 @@ func GenerateCommand(c *cli.Context) {
 		return
 	}
 
-	fmt.Println("Generateing:", di.DriverName, "to", di.GeneratedPath)
+	log.Println("Generateing:", di.DriverName, "to", di.GeneratedPath)
 
-	//	//Create folder structure
-	//	os.MkdirAll(path.Join(di.GeneratedPath, "cmd", "driver", di.DriverName), 0777)
-	//	os.MkdirAll(path.Join(di.GeneratedPath, "driver", di.DriverName, "driverdata"), 0777)
-	//	os.MkdirAll(path.Join(di.GeneratedPath, "driver", di.DriverName, "schemas"), 0777)
-	err = writeTemplate("config", filepath.Join("driver", di.DriverName, "config"), di)
+	err = writeTemplate("config.go", filepath.Join("driver", di.DriverName, "config"), di)
 	if err != nil {
 		log.Fatalln("cannot generate config.go:", err)
 	}
 
-	err = writeTemplate("main", filepath.Join("cmd", "driver", di.DriverName), di)
+	err = writeTemplate("main.go", filepath.Join("cmd", "driver", di.DriverName), di)
 	if err != nil {
 		log.Fatalln("cannot generate main.go:", err)
 	}
 
-	err = writeTemplate("driver", filepath.Join("driver", di.DriverName), di)
+	err = writeTemplate("driver.go", filepath.Join("driver", di.DriverName), di)
 	if err != nil {
 		log.Fatalln("cannot generate driver.go:", err)
 	}
 
+	err = writeTemplate("Makefile", "", di)
+	if err != nil {
+		log.Fatalln("cannot generate makefile:", err)
+	}
+
 	os.MkdirAll(path.Join(di.GeneratedPath, "driver", di.DriverName, "schemas"), 0777)
+
+	log.Println("Done!")
+	log.Println("You can build the driver by running make in the generated directory.")
+
 }
 
 func baseImport(tgt string) (string, error) {
@@ -100,7 +105,7 @@ func writeTemplate(templateName, relativePath string, di driverInfo) error {
 
 	os.MkdirAll(parentFolder, 0777)
 
-	file, err := os.Create(filepath.Join(parentFolder, fmt.Sprintf("%s.go", templateName)))
+	file, err := os.Create(filepath.Join(parentFolder, templateName))
 	if err != nil {
 		return err
 	}

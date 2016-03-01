@@ -31,12 +31,6 @@ vet:
 	@echo $(GOPKGS) | tr ' ' '\n' | xargs -I '{p}' -n1 go tool vet -composites=false {p} | sed "s/^/Failed: /"
 	@echo "$(NO_COLOR)\c"
 
-driversbindata:
-	@echo "$(OK_COLOR)==> Embedding JSON schemas into drivers$(NO_COLOR)"
-	find driver/ -maxdepth 1 -type d \( ! -name driver \) -exec \
-	bash -c "(cd '{}' && go-bindata -pkg="driverdata" -o driverdata/schemas.go schemas/ )" \;
-	
-
 build: generate #deps
 	@echo "$(OK_COLOR)==> Building$(NO_COLOR)"
 	export GOPATH=$(shell godep path):$(shell echo $$GOPATH) &&\
@@ -45,24 +39,6 @@ build: generate #deps
 	-os="windows linux darwin " \
 	-arch="amd64" \
 	-output="build/{{.OS}}-{{.Arch}}/{{.Dir}}" ./...
-
-patch: cleangeneratedfiles
-	@echo "$(OK_COLOR)==> Generating Update Patches$(NO_COLOR)"
-	export CGOENABLED=1 && \
-	export GOPATH=$(shell godep path):$(shell echo $$GOPATH) &&\
-	gox -verbose \
-	-ldflags="-X main.version $(APP_VERSION) -X main.updateserver $(PATCH_SERVER) -X main.branch $(PATCH_CHANNEL)" \
-	-os="windows linux darwin " \
-	-arch="amd64" \
-	-output="build/forpatches/{{.OS}}-{{.Arch}}" ./...
-	mv build/forpatches/windows-amd64.exe build/forpatches/windows-amd64
-
-	go-selfupdate "build/forpatches" $(APP_VERSION)
-	ln -s public cf-mgmt_$(MAJOR_MINOR)_$(PATCH_CHANNEL)
-
-cleangeneratedfiles:
-	rm -rf build/forpatches
-	rm -rf public
 
 test:
 	@echo "$(OK_COLOR)==> Testing$(NO_COLOR)"
@@ -80,7 +56,6 @@ tools:
 	#Tools for the project
 	go get -u github.com/codegangsta/cli
 	go get -u github.com/tools/godep
-	go get -u github.com/mitchellh/gox
 	go get -u github.com/vektra/mockery/cmd/mockery
 	go get -u github.com/axw/gocov/gocov
 	go get -u github.com/go-swagger/go-swagger/cmd/swagger

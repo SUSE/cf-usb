@@ -1,0 +1,14 @@
+
+all: genbindata build
+
+build:
+	@echo "$(OK_COLOR)==> Building$(NO_COLOR)"
+	export GOPATH=$(shell godep path):$(shell echo $$GOPATH) &&\
+	go build -o mynewdriver cmd/driver/mynewdriver/main.go
+
+genbindata:
+	@echo "$(OK_COLOR)==> Embedding JSON schemas into drivers$(NO_COLOR)"
+	find driver/ -maxdepth 1 -type d \( ! -name driver \) -exec \
+	bash -c "(cd '{}' && go-bindata -pkg="driverdata" -o driverdata/schemas.go schemas/ )" \;	
+
+	
