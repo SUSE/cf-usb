@@ -1133,7 +1133,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface,
 		log := log.Session("get-driver-instance")
 		log.Info("request", lager.Data{"driver-instance-id": params.DriverInstanceID})
 
-		instance, _, err := configProvider.GetDriverInstance(params.DriverInstanceID)
+		instance, driverID, err := configProvider.GetDriverInstance(params.DriverInstanceID)
 		if err != nil {
 			return &GetDriverInstanceInternalServerError{Payload: err.Error()}
 		}
@@ -1160,6 +1160,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface,
 			ID:            &params.DriverInstanceID,
 			Name:          instance.Name,
 			Service:       &instance.Service.ID,
+			DriverID:      driverID,
 		}
 
 		return &GetDriverInstanceOK{Payload: driverInstance}
