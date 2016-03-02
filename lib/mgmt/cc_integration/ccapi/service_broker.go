@@ -17,6 +17,7 @@ type ServiceBrokerInterface interface {
 	EnableServiceAccess(serviceId string) error
 	GetServiceBrokerGuidByName(name string) (string, error)
 	CheckServiceNameExists(name string) bool
+	CheckServiceInstancesExist(serviceName string) bool
 }
 
 type ServiceBroker struct {
@@ -43,6 +44,24 @@ type BrokerResource struct {
 
 type BrokerMetadata struct {
 	Guid string `json:"guid"`
+}
+
+type ServiceInstanceResources struct {
+	Resources []ServiceInstance `json:"resources"`
+}
+
+type ServiceInstance struct {
+	Meta  ServiceInstanceMetadata `json:"metadata"`
+	Value ServiceInstanceEntity   `json:"entity"`
+}
+
+type ServiceInstanceMetadata struct {
+	Guid string `json:"guid"`
+}
+
+type ServiceInstanceEntity struct {
+	Name            string `json:"name"`
+	ServicePlanGuid string `json:"service_plan_guid"`
 }
 
 func NewServiceBroker(client httpclient.HttpClient, token uaaapi.GetTokenInterface, ccApi string, logger lager.Logger) ServiceBrokerInterface {
@@ -209,6 +228,82 @@ func (sb *ServiceBroker) CheckServiceNameExists(name string) bool {
 		exist = true
 	}
 	log.Debug(fmt.Sprintf("check service name %s exists complete - returning %t", name, exist))
+
+	return exist
+}
+
+func (sb *ServiceBroker) CheckServiceInstancesExist(serviceName string) bool {
+	exist := false
+	log := sb.logger.Session("check-service-instances-exist", lager.Data{"service-name": serviceName})
+	log.Debug("starting")
+
+	token, err := sb.tokenGenerator.GetToken()
+	if err != nil {
+		log.Error("get-token-error", err)
+		return false
+	}
+
+	sp := NewServicePlan(sb.client, sb.tokenGenerator, sb.ccApi, log)
+	serviceGuid, err := sp.GetServiceGuidByLabel(serviceName, token)
+	if err != nil {
+		log.Error("check-service-instance-exists-get-service-guid-by-label", err)
+		return false
+	}
+
+	path := fmt.Sprintf("/v2/service_plans?q=service_guid:%s", serviceGuid)
+
+	headers := make(map[string]string)
+	headers["Authorization"] = token
+	headers["Content-Type"] = "application/x-www-form-urlencoded; charset=UTF-8"
+	headers["Accept"] = "application/json; charset=utf-8"
+
+	log.Debug("preparing-request-service_plans", lager.Data{"path": path, "headers": headers})
+
+	findRequest := httpclient.Request{Verb: "GET", Endpoint: sb.ccApi, ApiUrl: path, Headers: headers, StatusCode: 200}
+
+	log.Info("starting-cc-request-service_plans", lager.Data{"path": path})
+
+	response, err := sb.client.Request(findRequest)
+	if err != nil {
+		log.Error("client-request-error-service_plans", err)
+		return false
+	}
+
+	log.Debug("cc-reponse-service_plans", lager.Data{"response": string(response)})
+
+	resources := &PlanResources{}
+	err = json.Unmarshal(response, &resources)
+	if err != nil {
+		log.Error("unmarshal-service-plans-resources", err)
+		return false
+	}
+
+	for _, plan := range resources.Resources {
+		path := fmt.Sprintf("/v2/service_plans/%s/service_instances", plan.Values.Guid)
+
+		log.Debug("preparing-request-service_instances", lager.Data{"path": path, "headers": headers})
+
+		findRequest := httpclient.Request{Verb: "GET", Endpoint: sb.ccApi, ApiUrl: path, Headers: headers, StatusCode: 200}
+
+		log.Info("starting-cc-request-service_instances", lager.Data{"path": path})
+
+		responseInstances, err := sb.client.Request(findRequest)
+		if err != nil {
+			log.Error("client-request-error-service_instances", err)
+			return false
+		}
+
+		resourcesInstances := &ServiceInstanceResources{}
+		err = json.Unmarshal(responseInstances, &resourcesInstances)
+		if err != nil {
+			log.Error("unmarshal-service-instances-resources", err)
+			return false
+		}
+		if len(resourcesInstances.Resources) > 0 {
+			exist = true
+			break
+		}
+	}
 
 	return exist
 }
