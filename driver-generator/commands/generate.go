@@ -58,7 +58,21 @@ func GenerateCommand(c *cli.Context) {
 		log.Fatalln("cannot generate makefile:", err)
 	}
 
-	os.MkdirAll(path.Join(di.GeneratedPath, "driver", di.DriverName, "schemas"), 0777)
+	schemasPath := path.Join(di.GeneratedPath, "driver", di.DriverName, "schemas")
+	os.MkdirAll(schemasPath, 0777)
+
+	configFile, err := os.Create(path.Join(schemasPath, "config.json"))
+	if err != nil {
+		log.Fatalln("cannot write config json file", err)
+	}
+	defer configFile.Close()
+
+	configFile.WriteString("{}")
+
+	dialsFile, err := os.Create(path.Join(schemasPath, "dials.json"))
+	defer dialsFile.Close()
+
+	dialsFile.WriteString("{}")
 
 	log.Println("Done!")
 	log.Println("You can build the driver by running make in the generated directory.")
