@@ -15,6 +15,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 
 	"github.com/frodenas/brokerapi"
 	"github.com/go-swagger/go-swagger/errors"
@@ -543,6 +544,10 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface,
 		log := log.Session("create-driver-instance")
 		log.Info("request", lager.Data{"driver-id": params.DriverInstance.DriverID, "driver-instance-name": params.DriverInstance.Name})
 
+		if strings.ContainsAny(params.DriverInstance.Name, " ") {
+			return &CreateDriverInstanceInternalServerError{Payload: fmt.Sprintf("Driver instance name cannot contain spaces")}
+		}
+
 		existingDriver, err := configProvider.GetDriver(params.DriverInstance.DriverID)
 		if err != nil {
 			return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
@@ -747,6 +752,20 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface,
 		}
 		if driver == nil {
 			return &DeleteDriverNotFound{}
+		}
+
+		driverPath, err := configProvider.GetDriversPath()
+		if err != nil {
+			return &DeleteDriverInternalServerError{Payload: err.Error()}
+		}
+
+		driverPath = filepath.Join(driverPath, driver.DriverType)
+		if runtime.GOOS == "windows" {
+			driverPath = driverPath + ".exe"
+		}
+		err = os.Remove(driverPath)
+		if err != nil {
+			return &DeleteDriverInternalServerError{Payload: err.Error()}
 		}
 
 		err = configProvider.DeleteDriver(params.DriverID)
