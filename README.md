@@ -95,6 +95,8 @@ OPTIONS:
 
 ### Folder structure
 ```
+|-- cmd
+|	|-- main.go
 |-- drivers
 |   |-- {driver_type}
 |       |-- data

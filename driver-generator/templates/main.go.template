@@ -1,0 +1,26 @@
+package main
+
+import (
+	"net/rpc/jsonrpc"
+	"os"
+
+	"{{.BaseImport}}/driver/{{.DriverName}}"
+	"github.com/natefinch/pie"
+	"github.com/pivotal-golang/lager"
+)
+
+func main() {
+	var logger = lager.NewLogger("{{.DriverName}}-driver")
+
+	logger.RegisterSink(lager.NewWriterSink(os.Stderr, lager.DEBUG))
+
+	p := pie.NewProvider()
+
+	driver := {{.DriverName}}.New{{.DriverName}}Driver(logger)
+	if err := p.RegisterName("{{.DriverName}}", driver); err != nil {
+		logger.Fatal("register-plugin", err)
+	}
+
+	p.ServeCodec(jsonrpc.NewServerCodec)
+
+}
