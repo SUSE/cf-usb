@@ -738,6 +738,10 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface,
 		log.Info("request", lager.Data{"driver-id": params.DriverID})
 
 		driver, err := configProvider.GetDriver(params.DriverID)
+
+		if len(driver.DriverInstances) > 0 {
+			return &DeleteDriverInstanceInternalServerError{Payload: fmt.Sprintf("Cannot delete driver '%s' while instances still exist", driver.DriverName)}
+		}
 		if err != nil {
 			return &DeleteDriverInternalServerError{Payload: err.Error()}
 		}
@@ -763,6 +767,9 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface,
 		}
 		if instance == nil {
 			return &DeleteDriverInstanceNotFound{}
+		}
+		if ccServiceBroker.CheckServiceInstancesExist(instance.Service.Name) == true {
+			return &DeleteDriverInstanceInternalServerError{Payload: fmt.Sprintf("Cannot delete instance '%s', it still has provisioned service instances", instance.Name)}
 		}
 		err = configProvider.DeleteDriverInstance(params.DriverInstanceID)
 		if err != nil {

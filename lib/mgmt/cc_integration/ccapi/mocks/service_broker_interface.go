@@ -85,3 +85,15 @@ func (_m *ServiceBrokerInterface) CheckServiceNameExists(name string) bool {
 
 	return r0
 }
+func (_m *ServiceBrokerInterface) CheckServiceInstancesExist(service_name string) bool {
+	ret := _m.Called(service_name)
+
+	var r0 bool
+	if rf, ok := ret.Get(0).(func(string) bool); ok {
+		r0 = rf(service_name)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	return r0
+}
