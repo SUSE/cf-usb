@@ -22,7 +22,11 @@ func GenerateCommand(c *cli.Context) {
 
 	di.DriverName = c.Args().First()
 
-	di.GeneratedPath = c.String("path")
+	di.GeneratedPath = strings.TrimSpace(c.String("path"))
+
+	if di.GeneratedPath == "" {
+		log.Fatalln("Incorrect Usage, Requires --path argument")
+	}
 
 	baseImp, err := baseImport(di.GeneratedPath)
 	if err != nil {
