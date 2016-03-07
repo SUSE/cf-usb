@@ -1116,12 +1116,14 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface,
 			service.Tags = params.Service.Tags
 		}
 
-		exists := ccServiceBroker.CheckServiceNameExists(params.Service.Name)
+		if service.Name != params.Service.Name {
+			exists := ccServiceBroker.CheckServiceNameExists(params.Service.Name)
 
-		if exists == true {
-			err := goerrors.New("Service update name parameter validation failed - duplicate naming eror")
-			log.Error("update-service-name-validation", err, lager.Data{"Name validation failed for name": params.Service.Name})
-			return &UpdateServiceConflict{}
+			if exists == true {
+				err := goerrors.New("Service update name parameter validation failed - duplicate naming eror")
+				log.Error("update-service-name-validation", err, lager.Data{"Name validation failed for name": params.Service.Name})
+				return &UpdateServiceConflict{}
+			}
 		}
 
 		err = configProvider.SetService(instanceid, *service)

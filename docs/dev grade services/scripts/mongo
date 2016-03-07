@@ -1,0 +1,35 @@
+#!/bin/bash
+
+
+MONGO_CONTAINER_NAME="mongo_container"
+MONGO_VERSION="mongo:3.1"
+
+MONGO_HOST_PORT=27017
+
+#MONGO_HOST_DATA_DIR="/tmp"
+#MONGO_GUEST_DATA_DIR="/data/db"
+
+CF_SERVICE_NAME="mongo"
+
+MONGO_DATA_CMD=""
+[ ! -z "${MONGO_HOST_DATA_DIR}" -a ! -z "${MONGO_GUEST_DATA_DIR}" ] && MONGO_DATA_CMD="-v ${MONGO_HOST_DATA_DIR}:${MONGO_GUEST_DATA_DIR}"
+
+docker run --name ${MONGO_CONTAINER_NAME} ${MONGO_DATA_CMD} -d ${MONGO_VERSION}
+
+[ $? -eq 0 ] && \
+    {
+    CONTAINER_ID=`docker ps|grep -w ${MONGO_CONTAINER_NAME}|awk '{print $1}'`
+    echo "container id: ${CONTAINER_ID}"
+
+    docker network connect hcf ${CONTAINER_ID}
+
+    CONTAINER_IP=`docker inspect --format '{{ .NetworkSettings.Networks.hcf.IPAddress }}' ${CONTAINER_ID}`
+    echo "container ip: ${CONTAINER_IP}"
+
+    sleep 10
+    cf usb create-instance mongo ${CF_SERVICE_NAME} configValue "{\"server\":\"${CONTAINER_IP}\",\"port\":\"27017\",\"userid\":\"\",\"password\":\"\"}"
+
+    } ||
+    {
+    echo "Error creating container"
+    }

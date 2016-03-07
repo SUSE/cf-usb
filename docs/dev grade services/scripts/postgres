@@ -1,0 +1,36 @@
+#!/bin/bash
+
+
+POSTGRES_PASSWORD="postgresqlpassword"
+POSTGRES_USER="postgresuser"
+POSTGRES_DB="postgresdb"
+
+POSTGRESQL_CONTAINER_NAME="postgresql_container"
+
+POSTGRESQL_VERSION="postgres:9.4"
+
+CF_SERVICE_NAME="postgres"
+
+docker run --name ${POSTGRESQL_CONTAINER_NAME} \
+-e POSTGRES_PASSWORD=${POSTGRES_PASSWORD} \
+-e POSTGRES_USER=${POSTGRES_USER} \
+-e POSTGRES_DB=${POSTGRES_DB} \
+-d ${POSTGRESQL_VERSION}
+
+[ $? -eq 0 ] && \
+{
+    CONTAINER_ID=`docker ps|grep -w ${POSTGRESQL_CONTAINER_NAME=}|awk '{print $1}'`
+    echo "container id: ${CONTAINER_ID}"
+
+    docker network connect hcf ${CONTAINER_ID}
+
+    CONTAINER_IP=`docker inspect --format '{{ .NetworkSettings.Networks.hcf.IPAddress }}' ${CONTAINER_ID}`
+    echo "container ip: ${CONTAINER_IP}"
+
+    sleep 5
+    cf usb create-instance postgres ${CF_SERVICE_NAME} configValue "{\"host\":\"${CONTAINER_IP}\",\"port\":\"5432\",\"user\":\"${POSTGRES_USER}\",\"password\":\"${POSTGRES_PASSWORD}\",\"dbname\":\"${POSTGRES_DB}\",\"sslmode\":\"disable\"}"
+} ||
+{
+    echo "Error creating container"
+}
+

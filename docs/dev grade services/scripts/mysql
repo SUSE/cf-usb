@@ -1,0 +1,30 @@
+#!/bin/bash
+
+MYSQL_ROOT_PASSWORD="mypassword"
+
+MYSQL_CONTAINER_NAME="mysql_container"
+
+MYSQL_VERSION="mysql/mysql-server:5.6"
+
+CF_SERVICE_NAME="mysql"
+
+docker run --name ${MYSQL_CONTAINER_NAME} \
+-e MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD} \
+-d ${MYSQL_VERSION}
+
+[ $? -eq 0 ] && \
+{
+    CONTAINER_ID=`docker ps|grep -w ${MYSQL_CONTAINER_NAME}|awk '{print $1}'`
+    echo "container id: ${CONTAINER_ID}"
+
+    docker network connect hcf ${CONTAINER_ID}
+
+    CONTAINER_IP=`docker inspect --format '{{ .NetworkSettings.Networks.hcf.IPAddress }}' ${CONTAINER_ID}`
+    echo "container ip: ${CONTAINER_IP}"
+
+    sleep 10
+    cf usb create-instance mysql ${CF_SERVICE_NAME} configValue "{\"server\":\"${CONTAINER_IP}\",\"port\":\"3306\",\"userid\":\"root\",\"password\":\"${MYSQL_ROOT_PASSWORD}\"}"
+} ||
+{
+    echo "Error creating container"
+}
