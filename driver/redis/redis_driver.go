@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"net/url"
+	"strings"
 
 	"github.com/hpcloud/cf-usb/driver"
 	"github.com/hpcloud/cf-usb/driver/redis/config"
@@ -112,16 +114,25 @@ func (d *RedisDriver) GenerateCredentials(request driver.GenerateCredentialsRequ
 		return err
 	}
 
-	localIp, err := getLocalIP()
+	host := ""
+	dockerUrl, err := url.Parse(d.conf.DockerEndpoint)
 	if err != nil {
 		return err
 	}
 
+	if dockerUrl.Scheme == "unix" {
+		host, err = getLocalIP()
+		if err != nil {
+			return err
+		}
+	} else {
+		host = strings.Split(dockerUrl.Host, ":")[0]
+	}
 	data := RedisBindingCredentials{
 		Password: cred["password"],
 		Port:     cred["port"],
-		Host:     localIp,
-		Hostname: localIp,
+		Host:     host,
+		Hostname: host,
 	}
 
 	*response = data

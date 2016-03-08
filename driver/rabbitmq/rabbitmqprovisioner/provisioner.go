@@ -6,11 +6,13 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"github.com/hpcloud/cf-usb/driver/rabbitmq/config"
 	"github.com/michaelklishin/rabbit-hole"
 	"github.com/pivotal-golang/lager"
 	"net"
+	"net/url"
 	"regexp"
 	"strings"
 
@@ -31,6 +33,15 @@ func NewRabbitmqProvisioner(logger lager.Logger) RabbitmqProvisionerInterface {
 
 func (provisioner *RabbitmqProvisioner) Connect(driverConfig config.RabbitmqDriverConfig) error {
 	var err error
+
+	dockerUrl, err := url.Parse(driverConfig.DockerEndpoint)
+	if err != nil {
+		return err
+	}
+
+	if dockerUrl.Scheme == "" {
+		return errors.New("Invalid URL format")
+	}
 
 	provisioner.driverConfig = driverConfig
 	provisioner.client, err = provisioner.getClient()
@@ -221,7 +232,7 @@ func (provisioner *RabbitmqProvisioner) PingServer() error {
 }
 
 func (provisioner *RabbitmqProvisioner) DeleteUser(containerName, credentialId string) error {
-	host, err := getLocalIP()
+	host, err := provisioner.getHost()
 	if err != nil {
 		return err
 	}
@@ -247,7 +258,7 @@ func (provisioner *RabbitmqProvisioner) DeleteUser(containerName, credentialId s
 }
 
 func (provisioner *RabbitmqProvisioner) UserExists(containerName, credentialId string) (bool, error) {
-	host, err := getLocalIP()
+	host, err := provisioner.getHost()
 	if err != nil {
 		return false, err
 	}
@@ -289,7 +300,7 @@ func (provisioner *RabbitmqProvisioner) getContainerState(containerName string) 
 }
 
 func (provisioner *RabbitmqProvisioner) CreateUser(containerName, credentialId string) (map[string]string, error) {
-	host, err := getLocalIP()
+	host, err := provisioner.getHost()
 	if err != nil {
 		return nil, err
 	}
@@ -334,6 +345,25 @@ func (provisioner *RabbitmqProvisioner) CreateUser(containerName, credentialId s
 	m["vhost"] = x.Name
 
 	return m, nil
+}
+
+func (provisioner *RabbitmqProvisioner) getHost() (string, error) {
+	host := ""
+	dockerUrl, err := url.Parse(provisioner.driverConfig.DockerEndpoint)
+	if err != nil {
+		return "", err
+	}
+
+	if dockerUrl.Scheme == "unix" {
+		host, err = getLocalIP()
+		if err != nil {
+			return "", err
+		}
+	} else {
+		host = strings.Split(dockerUrl.Host, ":")[0]
+	}
+
+	return host, nil
 }
 
 func secureRandomString(bytesOfEntpry int) (string, error) {

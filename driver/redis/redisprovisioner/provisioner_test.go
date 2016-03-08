@@ -19,8 +19,8 @@ var testRedisProv = struct {
 func init() {
 	testRedisProv.driverConfig = config.RedisDriverConfig{
 		DockerEndpoint: os.Getenv("DOCKER_ENDPOINT"),
-		DockerImage:    os.Getenv("DOCKER_IMAGE"),
-		ImageVersion:   os.Getenv("DOCKER_IMAGE_VERSION"),
+		DockerImage:    os.Getenv("REDIS_DOCKER_IMAGE"),
+		ImageVersion:   os.Getenv("REDIS_DOCKER_IMAGE_VERSION"),
 	}
 
 	testRedisProv.redisProvisioner = NewRedisProvisioner(logger)
