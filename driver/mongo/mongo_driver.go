@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
+
 	"github.com/hpcloud/cf-usb/driver"
 	"github.com/hpcloud/cf-usb/driver/mongo/config"
 	"github.com/hpcloud/cf-usb/driver/mongo/driverdata"
@@ -85,6 +86,11 @@ func (e *MongoDriver) GetConfigSchema(request string, response *string) error {
 
 	*response = string(configSchema)
 
+	return nil
+}
+
+func (d *MongoDriver) GetParametersSchema(request string, response *string) error {
+	//Does not support custom parameters
 	return nil
 }
 

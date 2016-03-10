@@ -70,11 +70,26 @@ func (d dummyDriver) GetConfigSchema(request string, response *string) error {
 	d.logger.Info("get-config-schema-request", lager.Data{"request": request})
 
 	configSchema, err := driverdata.Asset("schemas/config.json")
+
 	if err != nil {
 		return err
 	}
 
 	*response = string(configSchema)
+
+	return nil
+}
+
+func (d dummyDriver) GetParametersSchema(request string, response *string) error {
+	d.logger.Info("get-parameters-schema-request", lager.Data{"request": request})
+
+	parametersSchema, err := driverdata.Asset("schemas/parameters.json")
+
+	if err != nil {
+		return err
+	}
+
+	*response = string(parametersSchema)
 
 	return nil
 }

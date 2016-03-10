@@ -85,6 +85,11 @@ func (d *PostgresDriver) GetConfigSchema(request string, response *string) error
 	return nil
 }
 
+func (d *PostgresDriver) GetParametersSchema(request string, response *string) error {
+	//Does not support custom parameters
+	return nil
+}
+
 func (d *PostgresDriver) ProvisionInstance(request driver.ProvisionInstanceRequest, response *driver.Instance) error {
 	d.logger.Info("provision-instance-request", lager.Data{"instance-id": request.InstanceID, "config": string(*request.Config), "dials": string(*request.Dials)})
 

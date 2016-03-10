@@ -4,15 +4,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/hpcloud/cf-usb/lib/config"
-	"github.com/natefinch/pie"
-	"github.com/pivotal-golang/lager"
-	"github.com/xeipuuv/gojsonschema"
 	"net/rpc"
 	"net/rpc/jsonrpc"
 	"os"
 	"path/filepath"
 	"runtime"
+
+	"github.com/hpcloud/cf-usb/lib/config"
+	"github.com/natefinch/pie"
+	"github.com/pivotal-golang/lager"
+	"github.com/xeipuuv/gojsonschema"
 )
 
 func Validate(driverInstance config.DriverInstance, driverPath string, driverType string, logger lager.Logger) error {
@@ -26,16 +27,30 @@ func Validate(driverInstance config.DriverInstance, driverPath string, driverTyp
 
 	log.Debug("validate-config-schema", lager.Data{"configuration": string(*driverInstance.Configuration)})
 
-	err = validateConfigSchema(client, driverType, driverInstance.Configuration, logger)
+	configSchema, err := getConfigSchema(client, driverType)
 	if err != nil {
+		return err
+	}
+
+	err = validateSchema(configSchema, driverInstance.Configuration, logger)
+	if err != nil {
+		log.Error("validate-config-schema", err)
 		return err
 	}
 
 	log.Debug("validate-dials-schema", lager.Data{"dials-count": len(driverInstance.Dials)})
 
-	err = validateDialsSchema(client, driverType, driverInstance, logger)
+	dialSchema, err := getDailsSchema(client, driverType)
 	if err != nil {
 		return err
+	}
+
+	for _, dial := range driverInstance.Dials {
+		err = validateSchema(dialSchema, dial.Configuration, log)
+		if err != nil {
+			log.Error("validate-dial-schema", err, lager.Data{"PlanID": dial.Plan.ID})
+			return err
+		}
 	}
 
 	log.Debug("ping-driver", lager.Data{"configuration": string(*driverInstance.Configuration)})
@@ -103,49 +118,10 @@ func createProviderClient(driverPath string) (*rpc.Client, error) {
 	return client, err
 }
 
-func validateDialsSchema(client *rpc.Client, driverType string, driverInstance config.DriverInstance,
+func validateSchema(schema string, jsonMessage *json.RawMessage,
 	logger lager.Logger) error {
-
-	dialSchema, err := getDailsSchema(client, driverType)
-	if err != nil {
-		return err
-	}
-
-	dialsSchemaLoader := gojsonschema.NewStringLoader(dialSchema)
-	for _, dial := range driverInstance.Dials {
-		dialLoader := gojsonschema.NewGoLoader(dial.Configuration)
-		result, err := gojsonschema.Validate(dialsSchemaLoader, dialLoader)
-		if err != nil {
-			return err
-		}
-
-		if !result.Valid() {
-			err = errors.New("Invalid dials configuration")
-
-			errData := lager.Data{}
-			for _, e := range result.Errors() {
-				errData[e.Field()] = e.Description()
-			}
-
-			logger.Error("driver-init", err, errData)
-
-			return err
-		}
-	}
-
-	return nil
-}
-
-func validateConfigSchema(client *rpc.Client, driverType string, configuration *json.RawMessage,
-	logger lager.Logger) error {
-
-	configSchema, err := getConfigSchema(client, driverType)
-	if err != nil {
-		return err
-	}
-
-	schemaLoader := gojsonschema.NewStringLoader(configSchema)
-	configLoader := gojsonschema.NewGoLoader(configuration)
+	schemaLoader := gojsonschema.NewStringLoader(schema)
+	configLoader := gojsonschema.NewGoLoader(jsonMessage)
 
 	result, err := gojsonschema.Validate(schemaLoader, configLoader)
 	if err != nil {
@@ -153,14 +129,14 @@ func validateConfigSchema(client *rpc.Client, driverType string, configuration *
 	}
 
 	if !result.Valid() {
-		err = errors.New("Invalid configuration")
-
 		errData := lager.Data{}
+		errString := ""
 		for _, e := range result.Errors() {
 			errData[e.Field()] = e.Description()
+			errString = fmt.Sprintf("%s, %s:%s", errString, e.Field(), e.Description())
+			logger.Error("validate-schema", err, errData)
 		}
-		logger.Error("driver-init", err, errData)
-
+		err = errors.New(errString)
 		return err
 	}
 

@@ -10,6 +10,7 @@ type ProvisionInstanceRequest struct {
 	InstanceID string
 	Config     *json.RawMessage
 	Dials      *json.RawMessage
+	Parameters map[string]interface{}
 }
 
 type GetInstanceRequest struct {
@@ -40,6 +41,12 @@ type RevokeCredentialsRequest struct {
 	Config        *json.RawMessage
 }
 
+type Schemas struct {
+	Config     *string
+	Dials      *string
+	Parameters *string
+}
+
 type Instance struct {
 	InstanceID  string
 	Status      status.Status
@@ -56,6 +63,7 @@ type Driver interface {
 	Ping(*json.RawMessage, *bool) error
 	GetDailsSchema(string, *string) error
 	GetConfigSchema(string, *string) error
+	GetParametersSchema(string, *string) error
 	ProvisionInstance(ProvisionInstanceRequest, *Instance) error
 	GetInstance(GetInstanceRequest, *Instance) error
 	GenerateCredentials(GenerateCredentialsRequest, *interface{}) error

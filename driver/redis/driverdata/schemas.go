@@ -84,7 +84,7 @@ func schemasConfigJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "schemas/config.json", size: 270, mode: os.FileMode(436), modTime: time.Unix(1453897203, 0)}
+	info := bindataFileInfo{name: "schemas/config.json", size: 270, mode: os.FileMode(420), modTime: time.Unix(1454502151, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -104,7 +104,7 @@ func schemasDialsJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "schemas/dials.json", size: 2, mode: os.FileMode(436), modTime: time.Unix(1445956379, 0)}
+	info := bindataFileInfo{name: "schemas/dials.json", size: 2, mode: os.FileMode(420), modTime: time.Unix(1444834151, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }

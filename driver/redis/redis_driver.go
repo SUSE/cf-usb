@@ -171,6 +171,11 @@ func (d *RedisDriver) GetConfigSchema(request string, response *string) error {
 	return nil
 }
 
+func (d *RedisDriver) GetParametersSchema(request string, response *string) error {
+	//Does not support custom parameters
+	return nil
+}
+
 func (d *RedisDriver) GetInstance(request driver.GetInstanceRequest, response *driver.Instance) error {
 	d.logger.Info("get-instance-request", lager.Data{"instance-id": request.InstanceID, "config": string(*request.Config)})
 
