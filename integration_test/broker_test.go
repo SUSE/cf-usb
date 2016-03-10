@@ -1188,9 +1188,9 @@ func setupCcHttpFakeResponsesCreateDial(uaaFakeServer, ccFakeServer *ghttp.Serve
 		),
 	)
 
-	ccFakeServer.RouteToHandler("PUT", "/v2/service_brokers/"+brokerGuid,
+	ccFakeServer.RouteToHandler("PUT", fmt.Sprintf("/v2/service_brokers/%[1]s", brokerGuid),
 		ghttp.CombineHandlers(
-			ghttp.VerifyRequest("PUT", "/v2/service_brokers/"+brokerGuid),
+			ghttp.VerifyRequest("PUT", fmt.Sprintf("/v2/service_brokers/%[1]s", brokerGuid)),
 			func(http.ResponseWriter, *http.Request) {
 				time.Sleep(0 * time.Second)
 			},
@@ -1386,9 +1386,9 @@ func setupCcHttpFakeResponsesUpdateCatalog(uaaFakeServer, ccFakeServer *ghttp.Se
 		),
 	)
 
-	ccFakeServer.RouteToHandler("PUT", "/v2/service_brokers/"+brokerGuid,
+	ccFakeServer.RouteToHandler("PUT", fmt.Sprintf("/v2/service_brokers/%[1]s", brokerGuid),
 		ghttp.CombineHandlers(
-			ghttp.VerifyRequest("PUT", "/v2/service_brokers/"+brokerGuid),
+			ghttp.VerifyRequest("PUT", fmt.Sprintf("/v2/service_brokers/%[1]s", brokerGuid)),
 			func(http.ResponseWriter, *http.Request) {
 				time.Sleep(0 * time.Second)
 			},
@@ -1514,9 +1514,9 @@ func setupCcHttpFakeResponsesUpdatePlan(brokerGuid string, uaaFakeServer, ccFake
 		),
 	)
 
-	ccFakeServer.RouteToHandler("PUT", "/v2/service_brokers/"+brokerGuid,
+	ccFakeServer.RouteToHandler("PUT", fmt.Sprintf("/v2/service_brokers/%[1]s", brokerGuid),
 		ghttp.CombineHandlers(
-			ghttp.VerifyRequest("PUT", "/v2/service_brokers/"+brokerGuid),
+			ghttp.VerifyRequest("PUT", fmt.Sprintf("/v2/service_brokers/%[1]s", brokerGuid)),
 			func(http.ResponseWriter, *http.Request) {
 				time.Sleep(0 * time.Second)
 			},
@@ -1731,7 +1731,7 @@ func executeTestUpdateDriverInstance(t *testing.T, managementApiPort uint16, dri
 		t.Fatal(err)
 	}
 	t.Logf("negative test update driver instance response content: %s", string(updateDriverInstNegContent))
-	Expect(string(updateDriverInstNegContent)).To(ContainSubstring("Invalid configuration schema"))
+	Expect(string(updateDriverInstNegContent)).To(ContainSubstring("Invalid configuration"))
 
 	newDriverInstanceName := firstDriverInstance.Name + "updi"
 
@@ -1770,34 +1770,6 @@ func setupCcHttpFakeResponsesUpdateService(brokerGuid string, uaaFakeServer, ccF
 		),
 	)
 
-	ccFakeServer.AppendHandlers(
-		ghttp.CombineHandlers(
-			ghttp.VerifyRequest("GET", "/v2/services"),
-			func(http.ResponseWriter, *http.Request) {
-				time.Sleep(0 * time.Second)
-			},
-			ghttp.RespondWith(200,
-				`{"resources":[]}`),
-		),
-	)
-
-	ccFakeServer.RouteToHandler("GET", "/v2/service_brokers",
-		ghttp.CombineHandlers(
-			ghttp.VerifyRequest("GET", "/v2/service_brokers"),
-			ghttp.RespondWith(200, fmt.Sprintf(`{"resources":[{"metadata":{"guid":"%[1]s"}}]}`, brokerGuid)),
-		),
-	)
-
-	ccFakeServer.RouteToHandler("PUT", "/v2/service_brokers/"+brokerGuid,
-		ghttp.CombineHandlers(
-			ghttp.VerifyRequest("PUT", "/v2/service_brokers/"+brokerGuid),
-			func(http.ResponseWriter, *http.Request) {
-				time.Sleep(0 * time.Second)
-			},
-			ghttp.RespondWith(200, `{}`),
-		),
-	)
-
 	serviceGuid := uuid.NewV4().String()
 
 	ccFakeServer.AppendHandlers(
@@ -1807,7 +1779,7 @@ func setupCcHttpFakeResponsesUpdateService(brokerGuid string, uaaFakeServer, ccF
 				time.Sleep(0 * time.Second)
 			},
 			ghttp.RespondWith(200,
-				fmt.Sprintf(`{"resources":[{"metadata":{"guid":"%[1]s"}}]}`, serviceGuid)),
+				fmt.Sprintf(`{"resources":[{"metadata":{"guid":"%[1]s"},"entity":{"name":"aLabel"}}]}`, serviceGuid)),
 		),
 	)
 
@@ -1831,6 +1803,23 @@ func setupCcHttpFakeResponsesUpdateService(brokerGuid string, uaaFakeServer, ccF
 				time.Sleep(0 * time.Second)
 			},
 			ghttp.RespondWith(201, `{}`),
+		),
+	)
+
+	ccFakeServer.RouteToHandler("GET", "/v2/service_brokers",
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("GET", "/v2/service_brokers"),
+			ghttp.RespondWith(200, fmt.Sprintf(`{"resources":[{"metadata":{"guid":"%[1]s"}}]}`, brokerGuid)),
+		),
+	)
+
+	ccFakeServer.RouteToHandler("PUT", fmt.Sprintf("/v2/service_brokers/%[1]s", brokerGuid),
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("PUT", fmt.Sprintf("/v2/service_brokers/%[1]s", brokerGuid)),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(200, `{}`),
 		),
 	)
 }
@@ -2029,33 +2018,6 @@ func setupCcHttpFakeResponsesDeleteDriver(brokerGuid string, uaaFakeServer, ccFa
 		),
 	)
 
-	ccFakeServer.RouteToHandler("GET", "/v2/service_brokers",
-		ghttp.CombineHandlers(
-			ghttp.VerifyRequest("GET", "/v2/service_brokers"),
-			ghttp.RespondWith(200, fmt.Sprintf(`{"resources":[{"metadata":{"guid":"%[1]s"}}]}`, brokerGuid)),
-		),
-	)
-
-	ccFakeServer.RouteToHandler("PUT", "/v2/service_brokers/"+brokerGuid,
-		ghttp.CombineHandlers(
-			ghttp.VerifyRequest("PUT", "/v2/service_brokers/"+brokerGuid),
-			func(http.ResponseWriter, *http.Request) {
-				time.Sleep(0 * time.Second)
-			},
-			ghttp.RespondWith(200, `{}`),
-		),
-	)
-
-	ccFakeServer.RouteToHandler("DELETE", "/v2/service_brokers/"+brokerGuid,
-		ghttp.CombineHandlers(
-			ghttp.VerifyRequest("DELETE", "/v2/service_brokers/"+brokerGuid),
-			func(http.ResponseWriter, *http.Request) {
-				time.Sleep(0 * time.Second)
-			},
-			ghttp.RespondWith(204, `{}`),
-		),
-	)
-
 	serviceGuid := uuid.NewV4().String()
 
 	ccFakeServer.AppendHandlers(
@@ -2084,11 +2046,48 @@ func setupCcHttpFakeResponsesDeleteDriver(brokerGuid string, uaaFakeServer, ccFa
 
 	ccFakeServer.AppendHandlers(
 		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("GET", fmt.Sprintf("/v2/service_plans/%[1]s/service_instances", servicePlanGuid)),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(200, `{}`),
+		),
+	)
+
+	ccFakeServer.AppendHandlers(
+		ghttp.CombineHandlers(
 			ghttp.VerifyRequest("PUT", fmt.Sprintf("/v2/service_plans/%[1]s", servicePlanGuid)),
 			func(http.ResponseWriter, *http.Request) {
 				time.Sleep(0 * time.Second)
 			},
 			ghttp.RespondWith(201, `{}`),
+		),
+	)
+
+	ccFakeServer.RouteToHandler("GET", "/v2/service_brokers",
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("GET", "/v2/service_brokers"),
+			ghttp.RespondWith(200, fmt.Sprintf(`{"resources":[{"metadata":{"guid":"%[1]s"}}]}`, brokerGuid)),
+		),
+	)
+
+	ccFakeServer.RouteToHandler("PUT", fmt.Sprintf("/v2/service_brokers/%[1]s", brokerGuid),
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("PUT", fmt.Sprintf("/v2/service_brokers/%[1]s", brokerGuid)),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(200, `{}`),
+		),
+	)
+
+	ccFakeServer.RouteToHandler("DELETE", fmt.Sprintf("/v2/service_brokers/%[1]s", brokerGuid),
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("DELETE", fmt.Sprintf("/v2/service_brokers/%[1]s", brokerGuid)),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(204, `{}`),
 		),
 	)
 }
