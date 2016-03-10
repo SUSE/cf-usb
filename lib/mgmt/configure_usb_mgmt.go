@@ -1085,10 +1085,6 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface,
 		log := log.Session("update-service")
 		log.Info("request", lager.Data{"service-id": params.ServiceID})
 
-		if params.Service == nil {
-			return &UpdateServiceInternalServerError{Payload: "Service information cannot be nil"}
-		}
-
 		config, err := configProvider.LoadConfiguration()
 		if err != nil {
 			return &UpdateServiceInternalServerError{Payload: err.Error()}
@@ -1103,20 +1099,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface,
 			return &UpdateServiceNotFound{}
 		}
 
-		if params.Service.Bindable != nil {
-			service.Bindable = *params.Service.Bindable
-		}
-		if params.Service.Description != nil {
-			service.Description = *params.Service.Description
-		}
-		if params.Service.Name != "" {
-			service.Name = params.Service.Name
-		}
-		if len(params.Service.Tags) > 0 {
-			service.Tags = params.Service.Tags
-		}
-
-		if service.Name != params.Service.Name {
+		if service.Name != params.Service.Name && params.Service.Name != "" {
 			exists := ccServiceBroker.CheckServiceNameExists(params.Service.Name)
 
 			if exists == true {
@@ -1124,6 +1107,18 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface,
 				log.Error("update-service-name-validation", err, lager.Data{"Name validation failed for name": params.Service.Name})
 				return &UpdateServiceConflict{}
 			}
+
+			service.Name = params.Service.Name
+		}
+
+		if params.Service.Bindable != nil {
+			service.Bindable = *params.Service.Bindable
+		}
+		if params.Service.Description != nil {
+			service.Description = *params.Service.Description
+		}
+		if len(params.Service.Tags) > 0 {
+			service.Tags = params.Service.Tags
 		}
 
 		err = configProvider.SetService(instanceid, *service)

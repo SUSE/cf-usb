@@ -145,13 +145,13 @@ func (sb *ServiceBroker) Update(serviceBrokerGuid, name, url, username, password
 	return nil
 }
 
-func (sb *ServiceBroker) EnableServiceAccess(serviceId string) error {
-	log := sb.logger.Session("enableservice-access", lager.Data{"serviceID": serviceId})
+func (sb *ServiceBroker) EnableServiceAccess(serviceName string) error {
+	log := sb.logger.Session("enableservice-access", lager.Data{"service-name": serviceName})
 	log.Debug("starting")
 
 	sp := NewServicePlan(sb.client, sb.tokenGenerator, sb.ccApi, log)
 
-	err := sp.Update(serviceId)
+	err := sp.Update(serviceName)
 	if err != nil {
 		return err
 	}
@@ -269,7 +269,7 @@ func (sb *ServiceBroker) CheckServiceInstancesExist(serviceName string) bool {
 		return false
 	}
 
-	log.Debug("cc-reponse-service_plans", lager.Data{"response": string(response)})
+	log.Debug("cc-response-service_plans", lager.Data{"response": string(response)})
 
 	resources := &PlanResources{}
 	err = json.Unmarshal(response, &resources)
