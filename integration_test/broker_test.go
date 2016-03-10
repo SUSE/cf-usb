@@ -218,7 +218,7 @@ func run_consul(brokerApiPort, managementApiPort uint16, ccServerUrl, driversPat
 
 	list = append(list, &api.KVPair{Key: "usb/api_version", Value: []byte("2.0")})
 	list = append(list, &api.KVPair{Key: "usb/broker_api", Value: []byte(fmt.Sprintf("{\"listen\":\":%v\",\"credentials\":{\"username\":\"demouser\",\"password\":\"demopassword\"}}", brokerApiPort))})
-	list = append(list, &api.KVPair{Key: "usb/management_api", Value: []byte(fmt.Sprintf("{\"listen\":\":%v\",\"uaa_secret\":\"myuaasecret\",\"uaa_client\":\"myuaaclient\",\"authentication\":{\"uaa\":{\"adminscope\":\"usb.management.admin\",\"public_key\":\"%v\"}},\"cloud_controller\":{\"api\":\"%s\",\"skip_tsl_validation\":true}}", managementApiPort, uaaPublicKey, ccServerUrl))})
+	list = append(list, &api.KVPair{Key: "usb/management_api", Value: []byte(fmt.Sprintf("{\"listen\":\":%v\",\"uaa_secret\":\"myuaasecret\",\"uaa_client\":\"myuaaclient\",\"authentication\":{\"uaa\":{\"adminscope\":\"usb.management.admin\",\"public_key\":\"%v\"}},\"cloud_controller\":{\"api\":\"%s\",\"skip_tls_validation\":true}}", managementApiPort, uaaPublicKey, ccServerUrl))})
 
 	err = consulClient.PutKVs(&list, nil)
 	if err != nil {

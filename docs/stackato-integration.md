@@ -81,7 +81,7 @@ read -d '' management_api << EOF
         },
         "cloud_controller": {
                 "api": "https://$cc_external_domain",
-                "skip_tsl_validation": true
+                "skip_tls_validation": true
         }
 }
 EOF
