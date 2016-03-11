@@ -1,6 +1,8 @@
 package lib
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/hpcloud/cf-usb/driver"
@@ -31,7 +33,7 @@ func NewDriverProvider(driversPath string, driverType string, configProvider con
 	return &p
 }
 
-func (p *DriverProvider) ProvisionInstance(instanceID, planID string) (driver.Instance, error) {
+func (p *DriverProvider) ProvisionInstance(instanceID, planID string, parameters map[string]interface{}) (driver.Instance, error) {
 	p.logger.Debug("provision-instance-request", lager.Data{"instance-id": instanceID, "plan-id": planID})
 
 	var result driver.Instance
@@ -41,21 +43,55 @@ func (p *DriverProvider) ProvisionInstance(instanceID, planID string) (driver.In
 		return result, err
 	}
 
-	provisonRequest := driver.ProvisionInstanceRequest{}
-	provisonRequest.Config = driverInstance.Configuration
-	provisonRequest.InstanceID = instanceID
+	provisionRequest := driver.ProvisionInstanceRequest{}
+	provisionRequest.Config = driverInstance.Configuration
+	provisionRequest.InstanceID = instanceID
+	provisionRequest.Parameters = parameters
 
 	for _, d := range driverInstance.Dials {
 		if d.Plan.ID == planID {
-			provisonRequest.Dials = d.Configuration
+			provisionRequest.Dials = d.Configuration
 			break
+		}
+	}
+
+	var parametersSchema string
+
+	err = createClientAndCall(fmt.Sprintf("%s.GetParametersSchema",
+		p.driverType), p.driverPath, "", &parametersSchema)
+	if err != nil {
+
+		return result, err
+	}
+
+	if provisionRequest.Parameters == nil {
+		if parametersSchema != "" {
+			err = errors.New("The service requires user provided configration.")
+		}
+	} else {
+		if parametersSchema == "" {
+			err = errors.New("The service does not accept user provided configuration.")
+			return result, err
+		} else {
+
+			param, err := json.Marshal(provisionRequest.Parameters)
+
+			if err != nil {
+				return result, err
+			}
+			err = validateSchema(parametersSchema, (*json.RawMessage)(&param), p.logger)
+			if err != nil {
+
+				p.logger.Error("provision-instance-validate-parameters-schema", err)
+				return result, err
+			}
 		}
 	}
 
 	p.logger.Debug("provision-instance-call-client", lager.Data{"service-method": fmt.Sprintf("%s.ProvisionInstance", p.driverType), "driver-path": p.driverPath})
 
 	err = createClientAndCall(fmt.Sprintf("%s.ProvisionInstance", p.driverType), p.driverPath,
-		provisonRequest, &result)
+		provisionRequest, &result)
 
 	return result, err
 }

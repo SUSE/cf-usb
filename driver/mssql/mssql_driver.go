@@ -106,6 +106,11 @@ func (e *MssqlDriver) GetConfigSchema(request string, response *string) error {
 	return nil
 }
 
+func (d *MssqlDriver) GetParametersSchema(request string, response *string) error {
+	//Does not support custom parameters
+	return nil
+}
+
 func (e *MssqlDriver) ProvisionInstance(request driver.ProvisionInstanceRequest, response *driver.Instance) error {
 	e.logger.Info("provision-instance-request", lager.Data{"instance-id": request.InstanceID, "config": string(*request.Config), "dials": string(*request.Dials)})
 

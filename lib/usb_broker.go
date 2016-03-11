@@ -3,6 +3,7 @@ package lib
 import (
 	"errors"
 	"fmt"
+
 	"github.com/frodenas/brokerapi"
 	"github.com/hpcloud/cf-usb/driver/status"
 	"github.com/hpcloud/cf-usb/lib/config"
@@ -66,7 +67,7 @@ func (broker *UsbBroker) Provision(instanceID string, serviceDetails brokerapi.P
 		return brokerapi.ProvisioningResponse{}, false, brokerapi.ErrInstanceAlreadyExists
 	}
 
-	instance, err = driver.ProvisionInstance(instanceID, serviceDetails.PlanID)
+	instance, err = driver.ProvisionInstance(instanceID, serviceDetails.PlanID, serviceDetails.Parameters)
 	if err != nil {
 		return brokerapi.ProvisioningResponse{}, false, err
 	}

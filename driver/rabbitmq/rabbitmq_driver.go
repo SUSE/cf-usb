@@ -3,6 +3,7 @@ package rabbitmq
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/hpcloud/cf-usb/driver"
 	"github.com/hpcloud/cf-usb/driver/rabbitmq/config"
 	"github.com/hpcloud/cf-usb/driver/rabbitmq/driverdata"
@@ -86,6 +87,11 @@ func (d *RabbitmqDriver) GetConfigSchema(request string, response *string) error
 
 	*response = string(configSchema)
 
+	return nil
+}
+
+func (d *RabbitmqDriver) GetParametersSchema(request string, response *string) error {
+	//Does not support custom parameters
 	return nil
 }
 

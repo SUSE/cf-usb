@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"testing"
-	
+
 	"github.com/frodenas/brokerapi"
 	"github.com/hpcloud/cf-usb/lib/config"
 	"github.com/pivotal-golang/lager/lagertest"
@@ -70,11 +70,43 @@ func TestProvisionService(t *testing.T) {
 		assert.Fail(err.Error())
 	}
 
-	_, _, err = broker.Provision("newInstanceID", brokerapi.ProvisionDetails{
-		ServiceID: "GUID",
-		PlanID:    "53425178-F731-49E7-9E53-5CF4BE9D807A",
-	}, false)
+	provisionDetails := brokerapi.ProvisionDetails{}
+	provisionDetails.ServiceID = "GUID"
+	provisionDetails.PlanID = "53425178-F731-49E7-9E53-5CF4BE9D807A"
+	provisionDetails.Parameters = make(map[string]interface{})
+	provisionDetails.Parameters["param"] = "myparam"
+	_, _, err = broker.Provision("newInstanceID", provisionDetails, false)
 	assert.Nil(err)
+}
+
+func TestProvisionServiceNoParams(t *testing.T) {
+	assert := assert.New(t)
+	broker, err := setupEnv()
+	if err != nil {
+		assert.Fail(err.Error())
+	}
+
+	provisionDetails := brokerapi.ProvisionDetails{}
+	provisionDetails.ServiceID = "GUID"
+	provisionDetails.PlanID = "53425178-F731-49E7-9E53-5CF4BE9D807A"
+	_, _, err = broker.Provision("newInstanceID", provisionDetails, false)
+	assert.Nil(err)
+}
+
+func TestProvisionServiceInvalidParams(t *testing.T) {
+	assert := assert.New(t)
+	broker, err := setupEnv()
+	if err != nil {
+		assert.Fail(err.Error())
+	}
+
+	provisionDetails := brokerapi.ProvisionDetails{}
+	provisionDetails.ServiceID = "GUID"
+	provisionDetails.PlanID = "53425178-F731-49E7-9E53-5CF4BE9D807A"
+	provisionDetails.Parameters = make(map[string]interface{})
+	provisionDetails.Parameters["notvalid"] = "myparam"
+	_, _, err = broker.Provision("newInstanceID", provisionDetails, false)
+	assert.NotNil(err)
 }
 
 func TestProvisionServiceExists(t *testing.T) {

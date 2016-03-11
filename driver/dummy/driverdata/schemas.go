@@ -2,6 +2,7 @@
 // sources:
 // schemas/config.json
 // schemas/dials.json
+// schemas/parameters.json
 // DO NOT EDIT!
 
 package driverdata
@@ -84,7 +85,7 @@ func schemasConfigJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "schemas/config.json", size: 184, mode: os.FileMode(420), modTime: time.Unix(1445004047, 0)}
+	info := bindataFileInfo{name: "schemas/config.json", size: 184, mode: os.FileMode(420), modTime: time.Unix(1444834151, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -104,7 +105,27 @@ func schemasDialsJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "schemas/dials.json", size: 178, mode: os.FileMode(420), modTime: time.Unix(1445004047, 0)}
+	info := bindataFileInfo{name: "schemas/dials.json", size: 178, mode: os.FileMode(420), modTime: time.Unix(1444834151, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _schemasParametersJson = []byte("\x1f\x8b\x08\x00\x00\x09\x6e\x88\x00\xff\xaa\xe6\xe2\x54\x2a\xa9\x2c\x48\x55\x52\xb0\x52\x50\xca\x4f\xca\x4a\x4d\x2e\x51\xd2\x01\x8a\x15\x14\xe5\x17\xa4\x16\x95\x64\xa6\x16\x83\x64\x80\xaa\x80\x42\x89\x45\x89\xb9\x4a\x10\x0e\x92\xa6\xe2\x92\xa2\xcc\xbc\x74\x25\xa0\x60\x2d\x17\x67\x2d\x48\x6f\x51\x6a\x61\x69\x66\x51\x6a\x0a\x48\x3a\x1a\xaa\x2d\x96\xab\x16\x10\x00\x00\xff\xff\x3e\x36\x5c\xde\x6b\x00\x00\x00")
+
+func schemasParametersJsonBytes() ([]byte, error) {
+	return bindataRead(
+		_schemasParametersJson,
+		"schemas/parameters.json",
+	)
+}
+
+func schemasParametersJson() (*asset, error) {
+	bytes, err := schemasParametersJsonBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "schemas/parameters.json", size: 107, mode: os.FileMode(420), modTime: time.Unix(1457431814, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -163,6 +184,7 @@ func AssetNames() []string {
 var _bindata = map[string]func() (*asset, error){
 	"schemas/config.json": schemasConfigJson,
 	"schemas/dials.json": schemasDialsJson,
+	"schemas/parameters.json": schemasParametersJson,
 }
 
 // AssetDir returns the file names below a certain
@@ -208,6 +230,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 	"schemas": &bintree{nil, map[string]*bintree{
 		"config.json": &bintree{schemasConfigJson, map[string]*bintree{}},
 		"dials.json": &bintree{schemasDialsJson, map[string]*bintree{}},
+		"parameters.json": &bintree{schemasParametersJson, map[string]*bintree{}},
 	}},
 }}
 
