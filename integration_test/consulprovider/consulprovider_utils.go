@@ -1,12 +1,15 @@
 package consulprovider
 
 import (
+	"bytes"
 	"crypto/sha1"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"os/exec"
@@ -24,6 +27,7 @@ import (
 	"github.com/onsi/gomega/ghttp"
 	"github.com/pivotal-golang/lager/lagertest"
 	"github.com/pivotal-golang/localip"
+	"github.com/satori/go.uuid"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/ginkgomon"
 )
@@ -31,6 +35,8 @@ import (
 var LoggerSB *lagertest.TestLogger = lagertest.NewTestLogger("cc-api")
 var DefaultConsulPath string = "consul"
 var TempConsulPath string
+var DefaultBuildDir string = "../../../build"
+var TempDriversPath string
 var ConsulProcess ifrit.Process
 var BrokerApiPort uint16
 var ManagementApiPort uint16
@@ -53,6 +59,17 @@ HH6Qlq/6UOV5wP8+GAcCQFgRCcB+hrje8hfEEefHcFpyKH+5g1Eu1k0mLrxK2zd+
 
 var UaaPublicKey = `-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDHFr+KICms+tuT1OXJwhCUmR2d\nKVy7psa8xzElSyzqx7oJyfJ1JZyOzToj9T5SfTIq396agbHJWVfYphNahvZ/7uMX\nqHxf+ZH9BL1gk9Y6kCnbM5R60gfwjyW1/dQPjOzn9N394zd2FJoFHwdq9Qs0wBug\nspULZVNRxq7veq/fzwIDAQAB\n-----END PUBLIC KEY-----`
 
+var ConsulConfig = struct {
+	ConsulAddress    string
+	ConsulDatacenter string
+	ConsulUser       string
+	ConsulPassword   string
+	ConsulSchema     string
+	ConsulToken      string
+}{}
+
+// list of drivers to be tested
+
 var Drivers = []struct {
 	DriverType                     string
 	EnvVarsExistFunc               func() bool
@@ -65,14 +82,7 @@ var Drivers = []struct {
 	{"mysql", mysqlEnvVarsExist, setMysqlDriverInstanceValues, assertMysqlSchemaContains},
 }
 
-var ConsulConfig = struct {
-	ConsulAddress    string
-	ConsulDatacenter string
-	ConsulUser       string
-	ConsulPassword   string
-	ConsulSchema     string
-	ConsulToken      string
-}{}
+// models http responses
 
 type DriverResponse struct {
 	Id              string   `json:"id"`
@@ -104,75 +114,9 @@ type DialResponse struct {
 	Plan             string      `json:"plan"`
 }
 
-func init_consulProvisioner(driversPath string) (consul.ConsulProvisionerInterface, error) {
-	var consulConfig api.Config
-	consulConfig.Address = ConsulConfig.ConsulAddress
-	consulConfig.Datacenter = ConsulConfig.ConsulPassword
+// init test functions
 
-	if driversPath == "" {
-		workDir, err := os.Getwd()
-		if err != nil {
-			return nil, err
-		}
-		buildDir := filepath.Join(workDir, "../../build", fmt.Sprintf("%s-%s", runtime.GOOS, runtime.GOARCH))
-		os.Setenv("USB_DRIVER_PATH", buildDir)
-	} else {
-		os.Setenv("USB_DRIVER_PATH", driversPath)
-	}
-
-	var auth api.HttpBasicAuth
-	auth.Username = ConsulConfig.ConsulUser
-	auth.Password = ConsulConfig.ConsulPassword
-
-	consulConfig.HttpAuth = &auth
-	consulConfig.Scheme = ConsulConfig.ConsulSchema
-
-	consulConfig.Token = ConsulConfig.ConsulToken
-
-	provisioner, err := consul.New(&consulConfig)
-	if err != nil {
-		return nil, err
-	}
-	return provisioner, nil
-}
-
-func Start_usbProcess(binPath, consulAddress string) (ifrit.Process, error) {
-	usbRunner := ginkgomon.New(ginkgomon.Config{
-		Name:              "cf-usb",
-		Command:           exec.Command(binPath, "--loglevel", "debug", "consulConfigProvider", "-a", consulAddress),
-		StartCheck:        "usb.start-listening-brokerapi",
-		StartCheckTimeout: 5 * time.Second,
-		Cleanup:           func() {},
-	})
-
-	usbProcess := ginkgomon.Invoke(usbRunner)
-
-	// wait for the processes to start before returning
-	<-usbProcess.Ready()
-
-	return usbProcess, nil
-}
-
-func start_consulProcess() (ifrit.Process, error) {
-
-	consulRunner := ginkgomon.New(ginkgomon.Config{
-		Name:              "consul",
-		Command:           exec.Command(DefaultConsulPath, "agent", "-server", "-bootstrap-expect", "1", "-data-dir", TempConsulPath, "-advertise", "127.0.0.1"),
-		AnsiColorCode:     "",
-		StartCheck:        "New leader elected",
-		StartCheckTimeout: 5 * time.Second,
-		Cleanup:           func() {},
-	})
-
-	consulProcess := ginkgomon.Invoke(consulRunner)
-
-	// wait for the processes to start before returning
-	<-consulProcess.Ready()
-
-	return consulProcess, nil
-}
-
-func Check_solutionBuild() (string, bool, error) {
+func CheckSolutionIsBuild() (string, bool, error) {
 	architecture := fmt.Sprintf("%s-%s", runtime.GOOS, runtime.GOARCH)
 
 	dir, err := os.Getwd()
@@ -180,77 +124,13 @@ func Check_solutionBuild() (string, bool, error) {
 		return "", false, err
 	}
 
-	binpath := path.Join(dir, "../../../build", architecture, "usb")
+	binpath := path.Join(dir, DefaultBuildDir, architecture, "usb")
 
 	_, err = os.Stat(binpath)
 	return binpath, os.IsNotExist(err), err
 }
 
-func Run_consul(brokerApiPort, managementApiPort uint16, ccServerUrl, driversPath string) (consul.ConsulProvisionerInterface, error) {
-	var consulClient consul.ConsulProvisionerInterface
-
-	getConsulReq, _ := http.NewRequest("GET", "http://localhost:8500", nil)
-	getConsulResp, _ := http.DefaultClient.Do(getConsulReq)
-	consulIsRunning := false
-	if getConsulResp != nil && getConsulResp.StatusCode == 200 {
-		consulIsRunning = true
-	}
-
-	if (strings.Contains(ConsulConfig.ConsulAddress, "127.0.0.1") || strings.Contains(ConsulConfig.ConsulAddress, "localhost")) && !consulIsRunning {
-		ConsulConfig.ConsulAddress = "127.0.0.1:8500"
-		ConsulConfig.ConsulSchema = "http"
-
-		var err error
-		ConsulProcess, err = start_consulProcess()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	consulClient, err := init_consulProvisioner(driversPath)
-	if err != nil {
-		return nil, err
-	}
-
-	var list api.KVPairs
-
-	list = append(list, &api.KVPair{Key: "usb/api_version", Value: []byte("2.0")})
-	list = append(list, &api.KVPair{Key: "usb/broker_api", Value: []byte(fmt.Sprintf("{\"listen\":\":%v\",\"credentials\":{\"username\":\"demouser\",\"password\":\"demopassword\"}}", brokerApiPort))})
-	list = append(list, &api.KVPair{Key: "usb/management_api", Value: []byte(fmt.Sprintf("{\"listen\":\":%v\",\"uaa_secret\":\"myuaasecret\",\"uaa_client\":\"myuaaclient\",\"authentication\":{\"uaa\":{\"adminscope\":\"usb.management.admin\",\"public_key\":\"%v\"}},\"cloud_controller\":{\"api\":\"%s\",\"skip_tls_validation\":true}}", ManagementApiPort, UaaPublicKey, ccServerUrl))})
-
-	err = consulClient.PutKVs(&list, nil)
-	if err != nil {
-		return consulClient, err
-	}
-
-	return consulClient, nil
-}
-
-func Set_fakeServers() (*ghttp.Server, *ghttp.Server) {
-	var uaaFakeServer *ghttp.Server
-	uaaFakeServer = ghttp.NewServer()
-
-	var ccFakeServer *ghttp.Server
-	ccFakeServer = ghttp.NewServer()
-
-	ccFakeServer.AppendHandlers(
-		ghttp.CombineHandlers(
-			ghttp.VerifyRequest("GET", "/v2/info"),
-			func(http.ResponseWriter, *http.Request) {
-				time.Sleep(0 * time.Second)
-			},
-			ghttp.RespondWith(200,
-				fmt.Sprintf(
-					`{"name": "vcap","authorization_endpoint": "%[1]s","token_endpoint":"%[1]s","api_version":"2.44.0"}`,
-					uaaFakeServer.URL()),
-			),
-		),
-	)
-
-	return uaaFakeServer, ccFakeServer
-}
-
-func Setup_firstConsulRun() error {
+func SetupConsulForFirstRun() error {
 	var err error
 
 	BrokerApiPort, err = localip.LocalPort()
@@ -277,8 +157,98 @@ func Setup_firstConsulRun() error {
 		return err
 	}
 
+	TempDriversPath = path.Join(os.TempDir(), "drivers")
+
+	err = os.MkdirAll(TempDriversPath, 0755)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
+
+func RunConsulProcess(brokerApiPort, managementApiPort uint16, ccServerUrl, driversPath string) (consul.ConsulProvisionerInterface, error) {
+	var consulClient consul.ConsulProvisionerInterface
+
+	getConsulReq, _ := http.NewRequest("GET", "http://localhost:8500", nil)
+	getConsulResp, _ := http.DefaultClient.Do(getConsulReq)
+	consulIsRunning := false
+	if getConsulResp != nil && getConsulResp.StatusCode == 200 {
+		consulIsRunning = true
+	}
+
+	if (strings.Contains(ConsulConfig.ConsulAddress, "127.0.0.1") || strings.Contains(ConsulConfig.ConsulAddress, "localhost")) && !consulIsRunning {
+		ConsulConfig.ConsulAddress = "127.0.0.1:8500"
+		ConsulConfig.ConsulSchema = "http"
+
+		var err error
+		ConsulProcess, err = startConsulProcess()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	consulClient, err := initConsulProvisioner(driversPath)
+	if err != nil {
+		return nil, err
+	}
+
+	var list api.KVPairs
+
+	list = append(list, &api.KVPair{Key: "usb/api_version", Value: []byte("2.0")})
+	list = append(list, &api.KVPair{Key: "usb/broker_api", Value: []byte(fmt.Sprintf("{\"listen\":\":%v\",\"credentials\":{\"username\":\"demouser\",\"password\":\"demopassword\"}}", brokerApiPort))})
+	list = append(list, &api.KVPair{Key: "usb/management_api", Value: []byte(fmt.Sprintf("{\"listen\":\":%v\",\"uaa_secret\":\"myuaasecret\",\"uaa_client\":\"myuaaclient\",\"authentication\":{\"uaa\":{\"adminscope\":\"usb.management.admin\",\"public_key\":\"%v\"}},\"cloud_controller\":{\"api\":\"%s\",\"skip_tls_validation\":true}}", ManagementApiPort, UaaPublicKey, ccServerUrl))})
+
+	err = consulClient.PutKVs(&list, nil)
+	if err != nil {
+		return consulClient, err
+	}
+
+	return consulClient, nil
+}
+
+func RunUsbProcess(binPath, consulAddress string) (ifrit.Process, error) {
+	usbRunner := ginkgomon.New(ginkgomon.Config{
+		Name:              "cf-usb",
+		Command:           exec.Command(binPath, "--loglevel", "debug", "consulConfigProvider", "-a", consulAddress),
+		StartCheck:        "usb.start-listening-brokerapi",
+		StartCheckTimeout: 5 * time.Second,
+		Cleanup:           func() {},
+	})
+
+	usbProcess := ginkgomon.Invoke(usbRunner)
+
+	// wait for the processes to start before returning
+	<-usbProcess.Ready()
+
+	return usbProcess, nil
+}
+
+func SetFakeServers() (*ghttp.Server, *ghttp.Server) {
+	var uaaFakeServer *ghttp.Server
+	uaaFakeServer = ghttp.NewServer()
+
+	var ccFakeServer *ghttp.Server
+	ccFakeServer = ghttp.NewServer()
+
+	ccFakeServer.AppendHandlers(
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("GET", "/v2/info"),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(200,
+				fmt.Sprintf(
+					`{"name": "vcap","authorization_endpoint": "%[1]s","token_endpoint":"%[1]s","api_version":"2.44.0"}`,
+					uaaFakeServer.URL()),
+			),
+		),
+	)
+
+	return uaaFakeServer, ccFakeServer
+}
+
+// external packages functions
 
 func GenerateUaaToken() (string, error) {
 	token := jwt.New(jwt.GetSigningMethod("RS256"))
@@ -298,92 +268,6 @@ func GenerateUaaToken() (string, error) {
 	}
 
 	return "bearer " + signedKey, nil
-}
-
-func postgresEnvVarsExist() bool {
-	return os.Getenv("POSTGRES_USER") != "" && os.Getenv("POSTGRES_PASSWORD") != "" && os.Getenv("POSTGRES_HOST") != "" &&
-		os.Getenv("POSTGRES_PORT") != "" && os.Getenv("POSTGRES_DBNAME") != "" && os.Getenv("POSTGRES_SSLMODE") != ""
-}
-
-func setPostgresDriverInstanceValues(driverName, driverId string) []byte {
-	values := []byte(fmt.Sprintf(`{"name":"%[1]s", "driver_id":"%[2]s", "configuration": {"host":"%[3]s","port":"%[4]s","user":"%[5]s","password":"%[6]s","dbname":"%[7]s","sslmode":"%[8]s"}}`,
-		driverName,
-		driverId,
-		os.Getenv("POSTGRES_HOST"),
-		os.Getenv("POSTGRES_PORT"),
-		os.Getenv("POSTGRES_USER"),
-		os.Getenv("POSTGRES_PASSWORD"),
-		os.Getenv("POSTGRES_DBNAME"),
-		os.Getenv("POSTGRES_SSLMODE")))
-
-	return values
-}
-
-func assertPostgresSchemaContains(schemaContent string) {
-	Expect(schemaContent).To(ContainSubstring(`\"host\"`))
-	Expect(schemaContent).To(ContainSubstring(`\"port\"`))
-	Expect(schemaContent).To(ContainSubstring(`\"user\"`))
-	Expect(schemaContent).To(ContainSubstring(`\"password\"`))
-}
-
-func mongoEnvVarsExist() bool {
-	return os.Getenv("MONGO_USER") != "" && os.Getenv("MONGO_PASS") != "" && os.Getenv("MONGO_HOST") != "" && os.Getenv("MONGO_PORT") != ""
-}
-
-func setMongoDriverInstanceValues(driverName, driverId string) []byte {
-	values := []byte(fmt.Sprintf(`{"name":"%[1]s", "driver_id":"%[2]s", "configuration": {"server":"%[3]s","port":"%[4]s","userid":"%[5]s","password":"%[6]s"}}`,
-		driverName,
-		driverId,
-		os.Getenv("MONGO_HOST"),
-		os.Getenv("MONGO_PORT"),
-		os.Getenv("MONGO_USER"),
-		os.Getenv("MONGO_PASS")))
-
-	return values
-}
-
-func assertMongoSchemaContains(schemaContent string) {
-	Expect(schemaContent).To(ContainSubstring(`\"server\"`))
-	Expect(schemaContent).To(ContainSubstring(`\"port\"`))
-}
-
-func mysqlEnvVarsExist() bool {
-	return os.Getenv("MYSQL_USER") != "" && os.Getenv("MYSQL_PASS") != "" && os.Getenv("MYSQL_HOST") != "" && os.Getenv("MYSQL_PORT") != ""
-}
-
-func setMysqlDriverInstanceValues(driverName, driverId string) []byte {
-	values := []byte(fmt.Sprintf(`{"name":"%[1]s", "driver_id":"%[2]s", "configuration": {"server":"%[3]s","port":"%[4]s","userid":"%[5]s","password":"%[6]s"}}`,
-		driverName,
-		driverId,
-		os.Getenv("MYSQL_HOST"),
-		os.Getenv("MYSQL_PORT"),
-		os.Getenv("MYSQL_USER"),
-		os.Getenv("MYSQL_PASS")))
-
-	return values
-}
-
-func assertMysqlSchemaContains(schemaContent string) {
-	Expect(schemaContent).To(ContainSubstring(`\"server\"`))
-	Expect(schemaContent).To(ContainSubstring(`\"port\"`))
-	Expect(schemaContent).To(ContainSubstring(`\"userid\"`))
-	Expect(schemaContent).To(ContainSubstring(`\"password\"`))
-}
-
-func dummyEnvVarsExist() bool {
-	return true
-}
-
-func setDummyDriverInstanceValues(driverName, driverId string) []byte {
-	values := []byte(fmt.Sprintf(`{"name":"%[1]s", "driver_id":"%[2]s", "configuration": {"succeed_count": "3"}}`,
-		driverName,
-		driverId))
-
-	return values
-}
-
-func assertDummySchemaContains(schemaContent string) {
-	Expect(schemaContent).To(ContainSubstring(`\"succeed_count\"`))
 }
 
 func GetFileSha(filePath string) (string, error) {
@@ -421,6 +305,8 @@ func ExecuteHttpCall(verb, path string, body io.Reader) (*http.Response, error) 
 	return response, nil
 }
 
+// unmarshal http responses
+
 func UnmarshalDriverResponse(body io.ReadCloser) (string, DriverResponse, error) {
 	var driver DriverResponse
 
@@ -451,4 +337,459 @@ func UnmarshalDriversResponse(body io.ReadCloser) (string, []DriverResponse, err
 	}
 
 	return string(driversContent), drivers, nil
+}
+
+func UnmarshalDriverInstanceResponse(body io.ReadCloser) (string, DriverInstanceResponse, error) {
+	var driverInstance DriverInstanceResponse
+
+	driverInstContent, err := ioutil.ReadAll(body)
+	if err != nil {
+		return "", driverInstance, err
+	}
+
+	err = json.Unmarshal(driverInstContent, &driverInstance)
+	if err != nil {
+		return "", driverInstance, err
+	}
+
+	return string(driverInstContent), driverInstance, nil
+}
+
+func UnmarshalDriverInstancesResponse(body io.ReadCloser) (string, []DriverInstanceResponse, error) {
+	var driverInstances []DriverInstanceResponse
+
+	driverInstancesContent, err := ioutil.ReadAll(body)
+	if err != nil {
+		return "", driverInstances, err
+	}
+
+	err = json.Unmarshal(driverInstancesContent, &driverInstances)
+	if err != nil {
+		return "", driverInstances, err
+	}
+
+	return string(driverInstancesContent), driverInstances, nil
+}
+
+// operations shared between tests
+
+func GetDrivers(managementApiPort uint16) ([]DriverResponse, error) {
+	var drivers []DriverResponse
+
+	getDriversResp, err := ExecuteHttpCall("GET", fmt.Sprintf("http://localhost:%[1]v/drivers", managementApiPort), nil)
+	if err != nil {
+		return drivers, err
+	}
+	defer getDriversResp.Body.Close()
+
+	_, drivers, err = UnmarshalDriversResponse(getDriversResp.Body)
+	if err != nil {
+		return drivers, err
+	}
+
+	return drivers, nil
+}
+
+func CreateDriver(managementApiPort uint16, driverName string) (DriverResponse, error) {
+	var driver DriverResponse
+
+	newDriverResp, err := ExecuteHttpCall("POST", fmt.Sprintf("http://localhost:%[1]v/drivers", managementApiPort), strings.NewReader(fmt.Sprintf(`{"name":"%[1]s", "driver_type":"%[2]s"}`, driverName, driverName)))
+	if err != nil {
+		return driver, err
+	}
+	defer newDriverResp.Body.Close()
+
+	_, driver, err = UnmarshalDriverResponse(newDriverResp.Body)
+	if err != nil {
+		return driver, err
+	}
+
+	return driver, nil
+}
+
+func UploadDriver(managementApiPort uint16, driverType, driverId string) (int, string, error) {
+	token, err := GenerateUaaToken()
+	if err != nil {
+		return 0, "", err
+	}
+
+	// upload driver bits test
+	dir, err := os.Getwd()
+	if err != nil {
+		return 0, "", err
+	}
+
+	architecture := fmt.Sprintf("%s-%s", runtime.GOOS, runtime.GOARCH)
+
+	bitsPath := path.Join(dir, DefaultBuildDir, architecture, driverType)
+	sha, err := GetFileSha(bitsPath)
+	if err != nil {
+		return 0, "", err
+	}
+
+	body_buf := bytes.NewBufferString("")
+	body_writer := multipart.NewWriter(body_buf)
+
+	err = body_writer.WriteField("sha", sha)
+	if err != nil {
+		return 0, "", errors.New(fmt.Sprintf("Error writing to buffer: ", err.Error()))
+	}
+
+	// use the body_writer to write the Part headers to the buffer
+	_, err = body_writer.CreateFormFile("file", bitsPath)
+	if err != nil {
+		return 0, "", errors.New(fmt.Sprintf("Error writing to buffer: ", err.Error()))
+	}
+
+	// the file data will be the second part of the body
+	fh, err := os.Open(bitsPath)
+	if err != nil {
+		return 0, "", errors.New(fmt.Sprintf("Error opening file: ", err.Error()))
+	}
+	// need to know the boundary to properly close the part myself.
+	boundary := body_writer.Boundary()
+	_ = fmt.Sprintf("\r\n--%s--\r\n", boundary)
+	close_buf := bytes.NewBufferString(fmt.Sprintf("\r\n--%s--\r\n", boundary))
+
+	// use multi-reader to defer the reading of the file data until writing to the socket buffer.
+	request_reader := io.MultiReader(body_buf, fh, close_buf)
+	_, err = fh.Stat()
+	if err != nil {
+		return 0, "", errors.New(fmt.Sprintf("Error stating file: %s. %s", bitsPath, err.Error()))
+	}
+
+	uploadDriverBitsReq, err := http.NewRequest("PUT", fmt.Sprintf("http://localhost:%[1]v/drivers/%[2]s/bits", managementApiPort, driverId), request_reader)
+	uploadDriverBitsReq.Header.Add("Content-Type", "multipart/form-data; boundary="+boundary)
+	uploadDriverBitsReq.Header.Add("Accept", "application/json")
+	uploadDriverBitsReq.Header.Add("Authorization", token)
+
+	uploadDriverBitsResp, err := http.DefaultClient.Do(uploadDriverBitsReq)
+	if err != nil {
+		return 0, "", err
+	}
+	defer uploadDriverBitsResp.Body.Close()
+
+	uploadDriverBitsContent, err := ioutil.ReadAll(uploadDriverBitsResp.Body)
+	if err != nil {
+		return 0, "", err
+	}
+
+	return uploadDriverBitsResp.StatusCode, string(uploadDriverBitsContent), nil
+}
+
+func DeleteDriver(managementApiPort uint16, driverId string) error {
+	deleteDriverResp, err := ExecuteHttpCall("DELETE", fmt.Sprintf("http://localhost:%[1]v/drivers/%[2]s", managementApiPort, driverId), nil)
+	if err != nil {
+		return err
+	}
+	defer deleteDriverResp.Body.Close()
+
+	return nil
+}
+
+// cc fake responses functions
+
+func SetupCcHttpFakeResponsesCreateDriverInstance(uaaFakeServer, ccFakeServer *ghttp.Server) {
+	uaaFakeServer.RouteToHandler("POST", "/oauth/token",
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("POST", "/oauth/token"),
+			ghttp.RespondWith(200, `{"access_token":"replace-me", "expires_in": 3404281214}`),
+		),
+	)
+
+	ccFakeServer.AppendHandlers(
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("GET", "/v2/services"),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(200,
+				`{"resources":[]}`),
+		),
+	)
+
+	ccFakeServer.AppendHandlers(
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("GET", "/v2/service_brokers"),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(200, `{"resources":[]}`),
+		),
+	)
+
+	ccFakeServer.AppendHandlers(
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("POST", "/v2/service_brokers"),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(201, `{}`),
+		),
+	)
+
+	serviceGuid := uuid.NewV4().String()
+
+	ccFakeServer.AppendHandlers(
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("GET", "/v2/services"),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(200,
+				fmt.Sprintf(`{"resources":[{"metadata":{"guid":"%[1]s"}}]}`, serviceGuid)),
+		),
+	)
+
+	servicePlanGuid := uuid.NewV4().String()
+
+	ccFakeServer.AppendHandlers(
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("GET", "/v2/service_plans"),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(200,
+				fmt.Sprintf(`{"resources":[{"metadata":{"guid":"%[1]s"},"entity":{"name":"default","free":true,"description":"default plan","public":false,"service_guid":"%[2]s"}}]}`, servicePlanGuid, serviceGuid)),
+		),
+	)
+
+	ccFakeServer.AppendHandlers(
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("PUT", fmt.Sprintf("/v2/service_plans/%[1]s", servicePlanGuid)),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(201, `{}`),
+		),
+	)
+}
+
+func SetupCcHttpFakeResponsesDeleteDriverInstance(brokerGuid string, uaaFakeServer, ccFakeServer *ghttp.Server) {
+	uaaFakeServer.RouteToHandler("POST", "/oauth/token",
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("POST", "/oauth/token"),
+			ghttp.RespondWith(200, `{"access_token":"replace-me", "expires_in": 3404281214}`),
+		),
+	)
+
+	serviceGuid := uuid.NewV4().String()
+
+	ccFakeServer.AppendHandlers(
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("GET", "/v2/services"),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(200,
+				fmt.Sprintf(`{"resources":[{"metadata":{"guid":"%[1]s"}}]}`, serviceGuid)),
+		),
+	)
+
+	servicePlanGuid := uuid.NewV4().String()
+
+	ccFakeServer.AppendHandlers(
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("GET", "/v2/service_plans"),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(200,
+				fmt.Sprintf(`{"resources":[{"metadata":{"guid":"%[1]s"},"entity":{"name":"default","free":true,"description":"default plan","public":false,"service_guid":"%[2]s"}}]}`, servicePlanGuid, serviceGuid)),
+		),
+	)
+
+	ccFakeServer.AppendHandlers(
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("GET", fmt.Sprintf("/v2/service_plans/%[1]s/service_instances", servicePlanGuid)),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(200, `{}`),
+		),
+	)
+
+	ccFakeServer.AppendHandlers(
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("PUT", fmt.Sprintf("/v2/service_plans/%[1]s", servicePlanGuid)),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(201, `{}`),
+		),
+	)
+
+	ccFakeServer.RouteToHandler("GET", "/v2/service_brokers",
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("GET", "/v2/service_brokers"),
+			ghttp.RespondWith(200, fmt.Sprintf(`{"resources":[{"metadata":{"guid":"%[1]s"}}]}`, brokerGuid)),
+		),
+	)
+
+	ccFakeServer.RouteToHandler("PUT", fmt.Sprintf("/v2/service_brokers/%[1]s", brokerGuid),
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("PUT", fmt.Sprintf("/v2/service_brokers/%[1]s", brokerGuid)),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(200, `{}`),
+		),
+	)
+
+	ccFakeServer.RouteToHandler("DELETE", fmt.Sprintf("/v2/service_brokers/%[1]s", brokerGuid),
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("DELETE", fmt.Sprintf("/v2/service_brokers/%[1]s", brokerGuid)),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(204, `{}`),
+		),
+	)
+}
+
+// functions for running consul
+
+func initConsulProvisioner(driversPath string) (consul.ConsulProvisionerInterface, error) {
+	var consulConfig api.Config
+	consulConfig.Address = ConsulConfig.ConsulAddress
+	consulConfig.Datacenter = ConsulConfig.ConsulPassword
+
+	if driversPath == "" {
+		workDir, err := os.Getwd()
+		if err != nil {
+			return nil, err
+		}
+		buildDir := filepath.Join(workDir, DefaultBuildDir, fmt.Sprintf("%s-%s", runtime.GOOS, runtime.GOARCH))
+		os.Setenv("USB_DRIVER_PATH", buildDir)
+	} else {
+		os.Setenv("USB_DRIVER_PATH", driversPath)
+	}
+
+	var auth api.HttpBasicAuth
+	auth.Username = ConsulConfig.ConsulUser
+	auth.Password = ConsulConfig.ConsulPassword
+
+	consulConfig.HttpAuth = &auth
+	consulConfig.Scheme = ConsulConfig.ConsulSchema
+
+	consulConfig.Token = ConsulConfig.ConsulToken
+
+	provisioner, err := consul.New(&consulConfig)
+	if err != nil {
+		return nil, err
+	}
+	return provisioner, nil
+}
+
+func startConsulProcess() (ifrit.Process, error) {
+
+	consulRunner := ginkgomon.New(ginkgomon.Config{
+		Name:              "consul",
+		Command:           exec.Command(DefaultConsulPath, "agent", "-server", "-bootstrap-expect", "1", "-data-dir", TempConsulPath, "-advertise", "127.0.0.1"),
+		AnsiColorCode:     "",
+		StartCheck:        "New leader elected",
+		StartCheckTimeout: 5 * time.Second,
+		Cleanup:           func() {},
+	})
+
+	consulProcess := ginkgomon.Invoke(consulRunner)
+
+	// wait for the processes to start before returning
+	<-consulProcess.Ready()
+
+	return consulProcess, nil
+}
+
+// postgres driver specific functions
+
+func postgresEnvVarsExist() bool {
+	return os.Getenv("POSTGRES_USER") != "" && os.Getenv("POSTGRES_PASSWORD") != "" && os.Getenv("POSTGRES_HOST") != "" &&
+		os.Getenv("POSTGRES_PORT") != "" && os.Getenv("POSTGRES_DBNAME") != "" && os.Getenv("POSTGRES_SSLMODE") != ""
+}
+
+func setPostgresDriverInstanceValues(driverName, driverId string) []byte {
+	values := []byte(fmt.Sprintf(`{"name":"%[1]s", "driver_id":"%[2]s", "configuration": {"host":"%[3]s","port":"%[4]s","user":"%[5]s","password":"%[6]s","dbname":"%[7]s","sslmode":"%[8]s"}}`,
+		driverName,
+		driverId,
+		os.Getenv("POSTGRES_HOST"),
+		os.Getenv("POSTGRES_PORT"),
+		os.Getenv("POSTGRES_USER"),
+		os.Getenv("POSTGRES_PASSWORD"),
+		os.Getenv("POSTGRES_DBNAME"),
+		os.Getenv("POSTGRES_SSLMODE")))
+
+	return values
+}
+
+func assertPostgresSchemaContains(schemaContent string) {
+	Expect(schemaContent).To(ContainSubstring(`\"host\"`))
+	Expect(schemaContent).To(ContainSubstring(`\"port\"`))
+	Expect(schemaContent).To(ContainSubstring(`\"user\"`))
+	Expect(schemaContent).To(ContainSubstring(`\"password\"`))
+}
+
+// mongo driver specific functions
+
+func mongoEnvVarsExist() bool {
+	return os.Getenv("MONGO_USER") != "" && os.Getenv("MONGO_PASS") != "" && os.Getenv("MONGO_HOST") != "" && os.Getenv("MONGO_PORT") != ""
+}
+
+func setMongoDriverInstanceValues(driverName, driverId string) []byte {
+	values := []byte(fmt.Sprintf(`{"name":"%[1]s", "driver_id":"%[2]s", "configuration": {"server":"%[3]s","port":"%[4]s","userid":"%[5]s","password":"%[6]s"}}`,
+		driverName,
+		driverId,
+		os.Getenv("MONGO_HOST"),
+		os.Getenv("MONGO_PORT"),
+		os.Getenv("MONGO_USER"),
+		os.Getenv("MONGO_PASS")))
+
+	return values
+}
+
+func assertMongoSchemaContains(schemaContent string) {
+	Expect(schemaContent).To(ContainSubstring(`\"server\"`))
+	Expect(schemaContent).To(ContainSubstring(`\"port\"`))
+}
+
+// mysql driver specific functions
+
+func mysqlEnvVarsExist() bool {
+	return os.Getenv("MYSQL_USER") != "" && os.Getenv("MYSQL_PASS") != "" && os.Getenv("MYSQL_HOST") != "" && os.Getenv("MYSQL_PORT") != ""
+}
+
+func setMysqlDriverInstanceValues(driverName, driverId string) []byte {
+	values := []byte(fmt.Sprintf(`{"name":"%[1]s", "driver_id":"%[2]s", "configuration": {"server":"%[3]s","port":"%[4]s","userid":"%[5]s","password":"%[6]s"}}`,
+		driverName,
+		driverId,
+		os.Getenv("MYSQL_HOST"),
+		os.Getenv("MYSQL_PORT"),
+		os.Getenv("MYSQL_USER"),
+		os.Getenv("MYSQL_PASS")))
+
+	return values
+}
+
+func assertMysqlSchemaContains(schemaContent string) {
+	Expect(schemaContent).To(ContainSubstring(`\"server\"`))
+	Expect(schemaContent).To(ContainSubstring(`\"port\"`))
+	Expect(schemaContent).To(ContainSubstring(`\"userid\"`))
+	Expect(schemaContent).To(ContainSubstring(`\"password\"`))
+}
+
+// dummy-async driver specific functions
+
+func dummyEnvVarsExist() bool {
+	return true
+}
+
+func setDummyDriverInstanceValues(driverName, driverId string) []byte {
+	values := []byte(fmt.Sprintf(`{"name":"%[1]s", "driver_id":"%[2]s", "configuration": {"succeed_count": "3"}}`,
+		driverName,
+		driverId))
+
+	return values
+}
+
+func assertDummySchemaContains(schemaContent string) {
+	Expect(schemaContent).To(ContainSubstring(`\"succeed_count\"`))
 }

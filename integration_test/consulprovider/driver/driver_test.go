@@ -1,15 +1,11 @@
-package driver_test
+package drivertest
 
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"io/ioutil"
-	"mime/multipart"
-	"net/http"
 	"os"
 	"path"
-	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -20,8 +16,6 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var tmpDriverPath string
-
 func init() {
 	ConsulConfig.ConsulAddress = os.Getenv("CONSUL_ADDRESS")
 	ConsulConfig.ConsulDatacenter = os.Getenv("CONSUL_DATACENTER")
@@ -29,14 +23,12 @@ func init() {
 	ConsulConfig.ConsulUser = os.Getenv("CONSUL_USER")
 	ConsulConfig.ConsulSchema = os.Getenv("CONSUL_SCHEMA")
 	ConsulConfig.ConsulToken = os.Getenv("CONSUL_TOKEN")
-
-	tmpDriverPath = path.Join(os.TempDir(), "drivers")
 }
 
-func Test_MgmtApi_ConsulProvider_CreateDriver(t *testing.T) {
+func TestMgmtApiConsulProviderCreateDriver(t *testing.T) {
 	RegisterTestingT(t)
 
-	binpath, buildNotExist, err := Check_solutionBuild()
+	binpath, buildNotExist, err := CheckSolutionIsBuild()
 	if buildNotExist {
 		t.Skip("Please build the solution before testing ", binpath)
 		return
@@ -49,19 +41,14 @@ func Test_MgmtApi_ConsulProvider_CreateDriver(t *testing.T) {
 		t.Skip("Skipping test as Consul env vars are not set: CONSUL_ADDRESS")
 	}
 
-	_, ccFakeServer := Set_fakeServers()
+	_, ccFakeServer := SetFakeServers()
 
-	err = Setup_firstConsulRun()
+	err = SetupConsulForFirstRun()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = os.MkdirAll(tmpDriverPath, 0755)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	consulClient, err := Run_consul(BrokerApiPort, ManagementApiPort, ccFakeServer.URL(), tmpDriverPath)
+	consulClient, err := RunConsulProcess(BrokerApiPort, ManagementApiPort, ccFakeServer.URL(), TempDriversPath)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -82,7 +69,7 @@ func Test_MgmtApi_ConsulProvider_CreateDriver(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	usbProcess, err := Start_usbProcess(binpath, ConsulConfig.ConsulAddress)
+	usbProcess, err := RunUsbProcess(binpath, ConsulConfig.ConsulAddress)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -104,17 +91,12 @@ func Test_MgmtApi_ConsulProvider_CreateDriver(t *testing.T) {
 			executeUploadDriverTest(t, ManagementApiPort, driver.DriverType, driverId)
 		}
 	}
-
-	//	err = os.RemoveAll(tmpDriverPath)
-	//	if err != nil {
-	//		t.Fatal(err)
-	//	}
 }
 
-func Test_MgmtApi_ConsulProvider_UpdateDriver(t *testing.T) {
+func TestMgmtApiConsulProviderUpdateDriver(t *testing.T) {
 	RegisterTestingT(t)
 
-	binpath, buildNotExist, err := Check_solutionBuild()
+	binpath, buildNotExist, err := CheckSolutionIsBuild()
 	if buildNotExist {
 		t.Skip("Please build the solution before testing ", binpath)
 		return
@@ -127,9 +109,9 @@ func Test_MgmtApi_ConsulProvider_UpdateDriver(t *testing.T) {
 		t.Skip("Skipping test as Consul env vars are not set: CONSUL_ADDRESS")
 	}
 
-	_, ccFakeServer := Set_fakeServers()
+	_, ccFakeServer := SetFakeServers()
 
-	consulClient, err := Run_consul(BrokerApiPort, ManagementApiPort, ccFakeServer.URL(), tmpDriverPath)
+	consulClient, err := RunConsulProcess(BrokerApiPort, ManagementApiPort, ccFakeServer.URL(), TempDriversPath)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -150,7 +132,7 @@ func Test_MgmtApi_ConsulProvider_UpdateDriver(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	usbProcess, err := Start_usbProcess(binpath, ConsulConfig.ConsulAddress)
+	usbProcess, err := RunUsbProcess(binpath, ConsulConfig.ConsulAddress)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -181,10 +163,10 @@ func Test_MgmtApi_ConsulProvider_UpdateDriver(t *testing.T) {
 	}
 }
 
-func Test_MgmtApi_ConsulProvider_DeleteDriver(t *testing.T) {
+func TestMgmtApiConsulProviderDeleteDriver(t *testing.T) {
 	RegisterTestingT(t)
 
-	binpath, buildNotExist, err := Check_solutionBuild()
+	binpath, buildNotExist, err := CheckSolutionIsBuild()
 	if buildNotExist {
 		t.Skip("Please build the solution before testing ", binpath)
 		return
@@ -197,9 +179,9 @@ func Test_MgmtApi_ConsulProvider_DeleteDriver(t *testing.T) {
 		t.Skip("Skipping test as Consul env vars are not set: CONSUL_ADDRESS")
 	}
 
-	_, ccFakeServer := Set_fakeServers()
+	_, ccFakeServer := SetFakeServers()
 
-	consulClient, err := Run_consul(BrokerApiPort, ManagementApiPort, ccFakeServer.URL(), tmpDriverPath)
+	consulClient, err := RunConsulProcess(BrokerApiPort, ManagementApiPort, ccFakeServer.URL(), TempDriversPath)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -220,7 +202,7 @@ func Test_MgmtApi_ConsulProvider_DeleteDriver(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	usbProcess, err := Start_usbProcess(binpath, ConsulConfig.ConsulAddress)
+	usbProcess, err := RunUsbProcess(binpath, ConsulConfig.ConsulAddress)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -262,7 +244,7 @@ func executeCreateDriverTest(t *testing.T, managementApiPort uint16, driverName 
 		t.Skipf("Skipping test as driver type %[1]s already exists", driverName)
 	}
 
-	Expect(newDriverResp.StatusCode).To((Equal(201)))
+	Expect(newDriverResp.StatusCode).To(Equal(201))
 
 	driverContent, driver, err := UnmarshalDriverResponse(newDriverResp.Body)
 	if err != nil {
@@ -284,7 +266,7 @@ func executeGetDriverTest(t *testing.T, managementApiPort uint16, driverId strin
 	}
 	defer getDriverResp.Body.Close()
 
-	Expect(getDriverResp.StatusCode).To((Equal(200)))
+	Expect(getDriverResp.StatusCode).To(Equal(200))
 
 	getDriverContent, err := ioutil.ReadAll(getDriverResp.Body)
 	if err != nil {
@@ -295,79 +277,12 @@ func executeGetDriverTest(t *testing.T, managementApiPort uint16, driverId strin
 }
 
 func executeUploadDriverTest(t *testing.T, managementApiPort uint16, driverType, driverId string) {
-	token, err := GenerateUaaToken()
+	statusCode, uploadDriverBitsContent, err := UploadDriver(managementApiPort, driverType, driverId)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	// upload driver bits test
-	dir, err := os.Getwd()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	architecture := fmt.Sprintf("%s-%s", runtime.GOOS, runtime.GOARCH)
-
-	bitsPath := path.Join(dir, "../../../build", architecture, driverType)
-	sha, err := GetFileSha(bitsPath)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	t.Log("bits path:", bitsPath)
-
-	body_buf := bytes.NewBufferString("")
-	body_writer := multipart.NewWriter(body_buf)
-
-	err = body_writer.WriteField("sha", sha)
-	if err != nil {
-		t.Log("error writing to buffer")
-		t.Fatal(err)
-	}
-
-	// use the body_writer to write the Part headers to the buffer
-	_, err = body_writer.CreateFormFile("file", bitsPath)
-	if err != nil {
-		t.Log("error writing to buffer")
-		t.Fatal(err)
-	}
-
-	// the file data will be the second part of the body
-	fh, err := os.Open(bitsPath)
-	if err != nil {
-		t.Log("error opening file")
-		t.Fatal(err)
-	}
-	// need to know the boundary to properly close the part myself.
-	boundary := body_writer.Boundary()
-	_ = fmt.Sprintf("\r\n--%s--\r\n", boundary)
-	close_buf := bytes.NewBufferString(fmt.Sprintf("\r\n--%s--\r\n", boundary))
-
-	// use multi-reader to defer the reading of the file data until writing to the socket buffer.
-	request_reader := io.MultiReader(body_buf, fh, close_buf)
-	_, err = fh.Stat()
-	if err != nil {
-		t.Log("Error Stating file: ", bitsPath)
-		t.Fatal(err)
-	}
-
-	uploadDriverBitsReq, err := http.NewRequest("PUT", fmt.Sprintf("http://localhost:%[1]v/drivers/%[2]s/bits", managementApiPort, driverId), request_reader)
-	uploadDriverBitsReq.Header.Add("Content-Type", "multipart/form-data; boundary="+boundary)
-	uploadDriverBitsReq.Header.Add("Accept", "application/json")
-	uploadDriverBitsReq.Header.Add("Authorization", token)
-
-	uploadDriverBitsResp, err := http.DefaultClient.Do(uploadDriverBitsReq)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer uploadDriverBitsResp.Body.Close()
-
-	Expect(uploadDriverBitsResp.StatusCode).To((Equal(200)))
-
-	uploadDriverBitsContent, err := ioutil.ReadAll(uploadDriverBitsResp.Body)
-	if err != nil {
-		t.Fatal(err)
-	}
+	Expect(statusCode).To(Equal(200))
 	Expect(string(uploadDriverBitsContent)).To(Equal(""))
 
 	//check if driver bits file exists
@@ -382,7 +297,7 @@ func executeGetDriversTest(t *testing.T, managementApiPort uint16) (string, []Dr
 	}
 	defer getDriversResp.Body.Close()
 
-	Expect(getDriversResp.StatusCode).To((Equal(200)))
+	Expect(getDriversResp.StatusCode).To(Equal(200))
 
 	driversContent, drivers, err := UnmarshalDriversResponse(getDriversResp.Body)
 	if err != nil {
@@ -407,7 +322,7 @@ func executeUpdateDriverTest(t *testing.T, managementApiPort uint16, driver Driv
 	}
 	defer updateDriverResp.Body.Close()
 
-	Expect(updateDriverResp.StatusCode).To((Equal(200)))
+	Expect(updateDriverResp.StatusCode).To(Equal(200))
 
 	updatedDriverContent, err := ioutil.ReadAll(updateDriverResp.Body)
 	if err != nil {
@@ -425,7 +340,7 @@ func executeDeleteDriverTest(t *testing.T, managementApiPort uint16, driver Driv
 	}
 	defer deleteDriverResp.Body.Close()
 
-	Expect(deleteDriverResp.StatusCode).To((Equal(204)))
+	Expect(deleteDriverResp.StatusCode).To(Equal(204))
 
 	deleteDriverContent, err := ioutil.ReadAll(deleteDriverResp.Body)
 	if err != nil {
@@ -439,5 +354,5 @@ func executeDeleteDriverTest(t *testing.T, managementApiPort uint16, driver Driv
 	}
 	defer getDriverDeletedResp.Body.Close()
 
-	Expect(getDriverDeletedResp.StatusCode).To((Equal(404)))
+	Expect(getDriverDeletedResp.StatusCode).To(Equal(404))
 }
