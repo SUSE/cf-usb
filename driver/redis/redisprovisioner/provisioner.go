@@ -3,7 +3,9 @@ package redisprovisioner
 import (
 	"bytes"
 	"crypto/rand"
+	"errors"
 	"fmt"
+	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
@@ -26,6 +28,15 @@ func NewRedisProvisioner(logger lager.Logger) RedisProvisionerInterface {
 
 func (provisioner *RedisProvisioner) Connect(driverConfig config.RedisDriverConfig) error {
 	var err error
+
+	dockerUrl, err := url.Parse(driverConfig.DockerEndpoint)
+	if err != nil {
+		return err
+	}
+	
+	if dockerUrl.Scheme == "" {
+		return errors.New("Invalid URL format")
+	}
 
 	provisioner.driverConfig = driverConfig
 	provisioner.client, err = provisioner.getClient()

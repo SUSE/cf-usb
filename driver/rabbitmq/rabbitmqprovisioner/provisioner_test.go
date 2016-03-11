@@ -19,8 +19,8 @@ var testRabbitmqProv = struct {
 func init() {
 	testRabbitmqProv.driverConfig = config.RabbitmqDriverConfig{
 		DockerEndpoint: os.Getenv("DOCKER_ENDPOINT"),
-		DockerImage:    os.Getenv("DOCKER_IMAGE"),
-		ImageVersion:   os.Getenv("DOCKER_IMAGE_VERSION"),
+		DockerImage:    os.Getenv("RABBIT_DOCKER_IMAGE"),
+		ImageVersion:   os.Getenv("RABBIT_DOCKER_IMAGE_VERSION"),
 	}
 
 	testRabbitmqProv.rabbitmqProvisioner = NewRabbitmqProvisioner(logger)
@@ -49,7 +49,7 @@ func TestCreateUser(t *testing.T) {
 		t.SkipNow()
 	}
 
-	time.Sleep(7 * time.Second)
+	time.Sleep(9 * time.Second)
 	assert := assert.New(t)
 
 	name := "rabbitContainer"
