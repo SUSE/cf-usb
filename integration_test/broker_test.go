@@ -768,7 +768,7 @@ func Test_BrokerWithConsulConfigProviderUpdateService(t *testing.T) {
 
 			for _, d := range driversResp {
 				if d.DriverType == driver.driverType {
-					setupCcHttpFakeResponsesUpdateService(brokerGuid, uaaFakeServer, ccFakeServer)
+					setupCcHttpFakeResponsesUpdateService(brokerGuid, fmt.Sprintf("%supds", d.DriverType), uaaFakeServer, ccFakeServer)
 					executeTestUpdateService(t, managementApiPort, d, driver.setDriverInstanceValuesFunc)
 
 					executeTestUpdateDriver(t, managementApiPort, d, driver.assertDriverSchemaContainsFunc)
@@ -1731,7 +1731,7 @@ func executeTestUpdateDriverInstance(t *testing.T, managementApiPort uint16, dri
 		t.Fatal(err)
 	}
 	t.Logf("negative test update driver instance response content: %s", string(updateDriverInstNegContent))
-	Expect(string(updateDriverInstNegContent)).To(ContainSubstring("succeed_count is required"))
+	Expect(string(updateDriverInstNegContent)).To(ContainSubstring("is required"))
 
 	newDriverInstanceName := firstDriverInstance.Name + "updi"
 
@@ -1762,7 +1762,7 @@ func executeTestUpdateDriverInstance(t *testing.T, managementApiPort uint16, dri
 	}
 }
 
-func setupCcHttpFakeResponsesUpdateService(brokerGuid string, uaaFakeServer, ccFakeServer *ghttp.Server) {
+func setupCcHttpFakeResponsesUpdateService(brokerGuid, notExistLabel string, uaaFakeServer, ccFakeServer *ghttp.Server) {
 	uaaFakeServer.RouteToHandler("POST", "/oauth/token",
 		ghttp.CombineHandlers(
 			ghttp.VerifyRequest("POST", "/oauth/token"),
@@ -1774,7 +1774,7 @@ func setupCcHttpFakeResponsesUpdateService(brokerGuid string, uaaFakeServer, ccF
 
 	ccFakeServer.AppendHandlers(
 		ghttp.CombineHandlers(
-			ghttp.VerifyRequest("GET", "/v2/services", "q=label:dummy-asyncupds"),
+			ghttp.VerifyRequest("GET", "/v2/services", fmt.Sprintf("q=label:%s", notExistLabel)),
 			func(http.ResponseWriter, *http.Request) {
 				time.Sleep(0 * time.Second)
 			},
