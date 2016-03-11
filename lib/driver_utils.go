@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 
 	"github.com/hpcloud/cf-usb/lib/config"
 	"github.com/natefinch/pie"
@@ -133,7 +134,8 @@ func validateSchema(schema string, jsonMessage *json.RawMessage,
 		errString := ""
 		for _, e := range result.Errors() {
 			errData[e.Field()] = e.Description()
-			errString = fmt.Sprintf("%s, %s:%s", errString, e.Field(), e.Description())
+
+			errString = strings.Trim(fmt.Sprintf("%s, %s:%s", errString, e.Field(), e.Description()), ",")
 			logger.Error("validate-schema", err, errData)
 		}
 		err = errors.New(errString)
