@@ -373,38 +373,38 @@ func UnmarshalDriverInstancesResponse(body io.ReadCloser) (string, []DriverInsta
 
 // operations shared between tests
 
-func GetDrivers(managementApiPort uint16) ([]DriverResponse, error) {
+func GetDrivers(managementApiPort uint16) (int, string, []DriverResponse, error) {
 	var drivers []DriverResponse
 
 	getDriversResp, err := ExecuteHttpCall("GET", fmt.Sprintf("http://localhost:%[1]v/drivers", managementApiPort), nil)
 	if err != nil {
-		return drivers, err
+		return 0, "", drivers, err
 	}
 	defer getDriversResp.Body.Close()
 
-	_, drivers, err = UnmarshalDriversResponse(getDriversResp.Body)
+	driversContent, drivers, err := UnmarshalDriversResponse(getDriversResp.Body)
 	if err != nil {
-		return drivers, err
+		return 0, "", drivers, err
 	}
 
-	return drivers, nil
+	return getDriversResp.StatusCode, driversContent, drivers, nil
 }
 
-func CreateDriver(managementApiPort uint16, driverName string) (DriverResponse, error) {
+func CreateDriver(managementApiPort uint16, driverName string) (int, string, DriverResponse, error) {
 	var driver DriverResponse
 
 	newDriverResp, err := ExecuteHttpCall("POST", fmt.Sprintf("http://localhost:%[1]v/drivers", managementApiPort), strings.NewReader(fmt.Sprintf(`{"name":"%[1]s", "driver_type":"%[2]s"}`, driverName, driverName)))
 	if err != nil {
-		return driver, err
+		return 0, "", driver, err
 	}
 	defer newDriverResp.Body.Close()
 
-	_, driver, err = UnmarshalDriverResponse(newDriverResp.Body)
+	driverContent, driver, err := UnmarshalDriverResponse(newDriverResp.Body)
 	if err != nil {
-		return driver, err
+		return 0, "", driver, err
 	}
 
-	return driver, nil
+	return newDriverResp.StatusCode, driverContent, driver, nil
 }
 
 func UploadDriver(managementApiPort uint16, driverType, driverId string) (int, string, error) {
@@ -477,14 +477,70 @@ func UploadDriver(managementApiPort uint16, driverType, driverId string) (int, s
 	return uploadDriverBitsResp.StatusCode, string(uploadDriverBitsContent), nil
 }
 
-func DeleteDriver(managementApiPort uint16, driverId string) error {
+func DeleteDriver(managementApiPort uint16, driverId string) (int, string, error) {
 	deleteDriverResp, err := ExecuteHttpCall("DELETE", fmt.Sprintf("http://localhost:%[1]v/drivers/%[2]s", managementApiPort, driverId), nil)
 	if err != nil {
-		return err
+		return 0, "", err
 	}
 	defer deleteDriverResp.Body.Close()
 
-	return nil
+	deleteDriverContent, err := ioutil.ReadAll(deleteDriverResp.Body)
+	if err != nil {
+		return 0, "", err
+	}
+
+	return deleteDriverResp.StatusCode, string(deleteDriverContent), nil
+}
+
+func GetDriverInstances(managementApiPort uint16, driverId string) (int, string, []DriverInstanceResponse, error) {
+	var driverInstances []DriverInstanceResponse
+
+	getDriverInstancesResp, err := ExecuteHttpCall("GET", fmt.Sprintf("http://localhost:%[1]v/driver_instances?driver_id=%[2]s", managementApiPort, driverId), nil)
+	if err != nil {
+		return 0, "", driverInstances, err
+	}
+	defer getDriverInstancesResp.Body.Close()
+
+	driverInstancesContent, driverInstances, err := UnmarshalDriverInstancesResponse(getDriverInstancesResp.Body)
+	if err != nil {
+		return 0, "", driverInstances, err
+	}
+
+	return getDriverInstancesResp.StatusCode, driverInstancesContent, driverInstances, nil
+}
+
+func CreateDriverInstance(managementApiPort uint16, driver DriverResponse, driverInstanceValues func(driverName, driverId string) []byte) (int, string, DriverInstanceResponse, error) {
+	var driverInstance DriverInstanceResponse
+
+	instanceValues := driverInstanceValues(driver.Name, driver.Id)
+
+	newDriverInstResp, err := ExecuteHttpCall("POST", fmt.Sprintf("http://localhost:%[1]v/driver_instances", managementApiPort), bytes.NewBuffer(instanceValues))
+	if err != nil {
+		return 0, "", driverInstance, err
+	}
+	defer newDriverInstResp.Body.Close()
+
+	driverInstContent, driverInstance, err := UnmarshalDriverInstanceResponse(newDriverInstResp.Body)
+	if err != nil {
+		return 0, "", driverInstance, err
+	}
+
+	return newDriverInstResp.StatusCode, driverInstContent, driverInstance, nil
+}
+
+func DeleteDriverInstance(managementApiPort uint16, driverInstanceId string) (int, string, error) {
+	deleteDriverInstResp, err := ExecuteHttpCall("DELETE", fmt.Sprintf("http://localhost:%[1]v/driver_instances/%[2]s", managementApiPort, driverInstanceId), nil)
+	if err != nil {
+		return 0, "", err
+	}
+	defer deleteDriverInstResp.Body.Close()
+
+	deleteDriverInstContent, err := ioutil.ReadAll(deleteDriverInstResp.Body)
+	if err != nil {
+		return 0, "", err
+	}
+
+	return deleteDriverInstResp.StatusCode, string(deleteDriverInstContent), nil
 }
 
 // cc fake responses functions
@@ -565,7 +621,7 @@ func SetupCcHttpFakeResponsesCreateDriverInstance(uaaFakeServer, ccFakeServer *g
 	)
 }
 
-func SetupCcHttpFakeResponsesDeleteDriverInstance(brokerGuid string, uaaFakeServer, ccFakeServer *ghttp.Server) {
+func SetupCcHttpFakeResponsesDeleteDriverInstance(notExistLabel string, uaaFakeServer, ccFakeServer *ghttp.Server) {
 	uaaFakeServer.RouteToHandler("POST", "/oauth/token",
 		ghttp.CombineHandlers(
 			ghttp.VerifyRequest("POST", "/oauth/token"),
@@ -574,6 +630,17 @@ func SetupCcHttpFakeResponsesDeleteDriverInstance(brokerGuid string, uaaFakeServ
 	)
 
 	serviceGuid := uuid.NewV4().String()
+
+	ccFakeServer.AppendHandlers(
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("GET", "/v2/services", fmt.Sprintf("q=label:%s", notExistLabel)),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(200,
+				`{"resources":[]}`),
+		),
+	)
 
 	ccFakeServer.AppendHandlers(
 		ghttp.CombineHandlers(
@@ -619,6 +686,8 @@ func SetupCcHttpFakeResponsesDeleteDriverInstance(brokerGuid string, uaaFakeServ
 		),
 	)
 
+	brokerGuid := uuid.NewV4().String()
+
 	ccFakeServer.RouteToHandler("GET", "/v2/service_brokers",
 		ghttp.CombineHandlers(
 			ghttp.VerifyRequest("GET", "/v2/service_brokers"),
@@ -643,6 +712,115 @@ func SetupCcHttpFakeResponsesDeleteDriverInstance(brokerGuid string, uaaFakeServ
 				time.Sleep(0 * time.Second)
 			},
 			ghttp.RespondWith(204, `{}`),
+		),
+	)
+}
+
+func SetupCcHttpFakeResponsesCreateDial(notExistLabel string, uaaFakeServer, ccFakeServer *ghttp.Server) {
+	uaaFakeServer.RouteToHandler("POST", "/oauth/token",
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("POST", "/oauth/token"),
+			ghttp.RespondWith(200, `{"access_token":"replace-me", "expires_in": 3404281214}`),
+		),
+	)
+
+	serviceGuid := uuid.NewV4().String()
+
+	ccFakeServer.AppendHandlers(
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("GET", "/v2/services", fmt.Sprintf("q=label:%s", notExistLabel)),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(200,
+				fmt.Sprintf(`{"resources":[{"metadata":{"guid":"%[1]s"}}]}`, serviceGuid)),
+		),
+	)
+
+	servicePlanGuid := uuid.NewV4().String()
+
+	ccFakeServer.AppendHandlers(
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("GET", "/v2/service_plans"),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(200,
+				fmt.Sprintf(`{"resources":[{"metadata":{"guid":"%[1]s"},"entity":{"name":"default","free":true,"description":"default plan","public":false,"service_guid":"%[2]s"}}]}`, servicePlanGuid, serviceGuid)),
+		),
+	)
+
+	ccFakeServer.AppendHandlers(
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("PUT", fmt.Sprintf("/v2/service_plans/%[1]s", servicePlanGuid)),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(201, `{}`),
+		),
+	)
+}
+
+func SetupCcHttpFakeResponsesUpdatePlan(uaaFakeServer, ccFakeServer *ghttp.Server) {
+	uaaFakeServer.RouteToHandler("POST", "/oauth/token",
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("POST", "/oauth/token"),
+			ghttp.RespondWith(200, `{"access_token":"replace-me", "expires_in": 3404281214}`),
+		),
+	)
+
+	brokerGuid := uuid.NewV4().String()
+
+	ccFakeServer.RouteToHandler("GET", "/v2/service_brokers",
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("GET", "/v2/service_brokers"),
+			ghttp.RespondWith(200, fmt.Sprintf(`{"resources":[{"metadata":{"guid":"%[1]s"}}]}`, brokerGuid)),
+		),
+	)
+
+	ccFakeServer.RouteToHandler("PUT", fmt.Sprintf("/v2/service_brokers/%[1]s", brokerGuid),
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("PUT", fmt.Sprintf("/v2/service_brokers/%[1]s", brokerGuid)),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(200, `{}`),
+		),
+	)
+
+	serviceGuid := uuid.NewV4().String()
+
+	ccFakeServer.AppendHandlers(
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("GET", "/v2/services"),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(200,
+				fmt.Sprintf(`{"resources":[{"metadata":{"guid":"%[1]s"}}]}`, serviceGuid)),
+		),
+	)
+
+	servicePlanGuid := uuid.NewV4().String()
+
+	ccFakeServer.AppendHandlers(
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("GET", "/v2/service_plans"),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(200,
+				fmt.Sprintf(`{"resources":[{"metadata":{"guid":"%[1]s"},"entity":{"name":"default","free":true,"description":"default plan","public":false,"service_guid":"%[2]s"}}]}`, servicePlanGuid, serviceGuid)),
+		),
+	)
+
+	ccFakeServer.AppendHandlers(
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("PUT", fmt.Sprintf("/v2/service_plans/%[1]s", servicePlanGuid)),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(201, `{}`),
 		),
 	)
 }

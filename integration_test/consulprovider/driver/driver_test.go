@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
-	"strings"
 	"testing"
 	"time"
 
@@ -234,22 +233,16 @@ func TestMgmtApiConsulProviderDeleteDriver(t *testing.T) {
 }
 
 func executeCreateDriverTest(t *testing.T, managementApiPort uint16, driverName string) string {
-	newDriverResp, err := ExecuteHttpCall("POST", fmt.Sprintf("http://localhost:%[1]v/drivers", managementApiPort), strings.NewReader(fmt.Sprintf(`{"name":"%[1]s", "driver_type":"%[2]s"}`, driverName, driverName)))
+	createDriverStatusCode, driverContent, driver, err := CreateDriver(managementApiPort, driverName)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer newDriverResp.Body.Close()
 
-	if newDriverResp.StatusCode == 409 {
+	if createDriverStatusCode == 409 {
 		t.Skipf("Skipping test as driver type %[1]s already exists", driverName)
 	}
 
-	Expect(newDriverResp.StatusCode).To(Equal(201))
-
-	driverContent, driver, err := UnmarshalDriverResponse(newDriverResp.Body)
-	if err != nil {
-		t.Fatal(err)
-	}
+	Expect(createDriverStatusCode).To(Equal(201))
 
 	t.Logf("create driver response content: %s", driverContent)
 
@@ -291,18 +284,12 @@ func executeUploadDriverTest(t *testing.T, managementApiPort uint16, driverType,
 }
 
 func executeGetDriversTest(t *testing.T, managementApiPort uint16) (string, []DriverResponse) {
-	getDriversResp, err := ExecuteHttpCall("GET", fmt.Sprintf("http://localhost:%[1]v/drivers", managementApiPort), nil)
+	getDriversStatusCode, driversContent, drivers, err := GetDrivers(managementApiPort)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer getDriversResp.Body.Close()
 
-	Expect(getDriversResp.StatusCode).To(Equal(200))
-
-	driversContent, drivers, err := UnmarshalDriversResponse(getDriversResp.Body)
-	if err != nil {
-		t.Fatal(err)
-	}
+	Expect(getDriversStatusCode).To(Equal(200))
 
 	t.Logf("get drivers response content: %s", driversContent)
 
@@ -334,18 +321,13 @@ func executeUpdateDriverTest(t *testing.T, managementApiPort uint16, driver Driv
 }
 
 func executeDeleteDriverTest(t *testing.T, managementApiPort uint16, driver DriverResponse) {
-	deleteDriverResp, err := ExecuteHttpCall("DELETE", fmt.Sprintf("http://localhost:%[1]v/drivers/%[2]s", managementApiPort, driver.Id), nil)
+	deleteDriverStatusCode, deleteDriverContent, err := DeleteDriver(managementApiPort, driver.Id)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer deleteDriverResp.Body.Close()
 
-	Expect(deleteDriverResp.StatusCode).To(Equal(204))
+	Expect(deleteDriverStatusCode).To(Equal(204))
 
-	deleteDriverContent, err := ioutil.ReadAll(deleteDriverResp.Body)
-	if err != nil {
-		t.Fatal(err)
-	}
 	Expect(string(deleteDriverContent)).To(Equal(""))
 
 	getDriverDeletedResp, err := ExecuteHttpCall("GET", fmt.Sprintf("http://localhost:%[1]v/drivers/%[2]s", managementApiPort, driver.Id), nil)
