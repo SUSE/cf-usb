@@ -47,7 +47,7 @@ func TestMgmtApiConsulProviderCreateDriverInstance(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	consulClient, err := RunConsulProcess(BrokerApiPort, ManagementApiPort, ccFakeServer.URL(), TempConsulPath)
+	consulClient, err := RunConsulProcess(BrokerApiPort, ManagementApiPort, ccFakeServer.URL(), TempDriversPath)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -122,7 +122,7 @@ func TestMgmtApiConsulProviderUpdateDriverInstance(t *testing.T) {
 
 	_, ccFakeServer := SetFakeServers()
 
-	consulClient, err := RunConsulProcess(BrokerApiPort, ManagementApiPort, ccFakeServer.URL(), TempConsulPath)
+	consulClient, err := RunConsulProcess(BrokerApiPort, ManagementApiPort, ccFakeServer.URL(), TempDriversPath)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -204,7 +204,7 @@ func TestMgmtApiConsulProviderDeleteDriverInstance(t *testing.T) {
 
 	uaaFakeServer, ccFakeServer := SetFakeServers()
 
-	consulClient, err := RunConsulProcess(BrokerApiPort, ManagementApiPort, ccFakeServer.URL(), TempConsulPath)
+	consulClient, err := RunConsulProcess(BrokerApiPort, ManagementApiPort, ccFakeServer.URL(), TempDriversPath)
 	if err != nil {
 		t.Fatal(err)
 	}

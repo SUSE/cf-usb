@@ -47,7 +47,7 @@ func TestMgmtApiConsulProviderCreateDial(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	consulClient, err := RunConsulProcess(BrokerApiPort, ManagementApiPort, ccFakeServer.URL(), TempConsulPath)
+	consulClient, err := RunConsulProcess(BrokerApiPort, ManagementApiPort, ccFakeServer.URL(), TempDriversPath)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -129,7 +129,7 @@ func TestMgmtApiConsulProviderUpdateDial(t *testing.T) {
 
 	uaaFakeServer, ccFakeServer := SetFakeServers()
 
-	consulClient, err := RunConsulProcess(BrokerApiPort, ManagementApiPort, ccFakeServer.URL(), TempConsulPath)
+	consulClient, err := RunConsulProcess(BrokerApiPort, ManagementApiPort, ccFakeServer.URL(), TempDriversPath)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -219,7 +219,7 @@ func TestMgmtApiConsulProviderDeleteDial(t *testing.T) {
 
 	uaaFakeServer, ccFakeServer := SetFakeServers()
 
-	consulClient, err := RunConsulProcess(BrokerApiPort, ManagementApiPort, ccFakeServer.URL(), TempConsulPath)
+	consulClient, err := RunConsulProcess(BrokerApiPort, ManagementApiPort, ccFakeServer.URL(), TempDriversPath)
 	if err != nil {
 		t.Fatal(err)
 	}

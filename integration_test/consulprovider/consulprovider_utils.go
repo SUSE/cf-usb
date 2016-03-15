@@ -114,6 +114,16 @@ type DialResponse struct {
 	Plan             string      `json:"plan"`
 }
 
+type ServiceResponse struct {
+	Bindable         bool        `json:"bindable"`
+	Description      string      `json:"description"`
+	DriverInstanceID string      `json:"driver_instance_id"`
+	Id               string      `json:"id"`
+	Metadata         interface{} `json:"metadata"`
+	Name             string      `json:"name"`
+	Tags             []string    `json:"tags"`
+}
+
 // init test functions
 
 func CheckSolutionIsBuild() (string, bool, error) {
@@ -432,19 +442,19 @@ func UploadDriver(managementApiPort uint16, driverType, driverId string) (int, s
 
 	err = body_writer.WriteField("sha", sha)
 	if err != nil {
-		return 0, "", errors.New(fmt.Sprintf("Error writing to buffer: ", err.Error()))
+		return 0, "", errors.New(fmt.Sprintf("Error writing to buffer: %s", err.Error()))
 	}
 
 	// use the body_writer to write the Part headers to the buffer
 	_, err = body_writer.CreateFormFile("file", bitsPath)
 	if err != nil {
-		return 0, "", errors.New(fmt.Sprintf("Error writing to buffer: ", err.Error()))
+		return 0, "", errors.New(fmt.Sprintf("Error writing to buffer: %s", err.Error()))
 	}
 
 	// the file data will be the second part of the body
 	fh, err := os.Open(bitsPath)
 	if err != nil {
-		return 0, "", errors.New(fmt.Sprintf("Error opening file: ", err.Error()))
+		return 0, "", errors.New(fmt.Sprintf("Error opening file: %s", err.Error()))
 	}
 	// need to know the boundary to properly close the part myself.
 	boundary := body_writer.Boundary()
@@ -821,6 +831,81 @@ func SetupCcHttpFakeResponsesUpdatePlan(uaaFakeServer, ccFakeServer *ghttp.Serve
 				time.Sleep(0 * time.Second)
 			},
 			ghttp.RespondWith(201, `{}`),
+		),
+	)
+}
+
+func SetupCcHttpFakeResponsesUpdateService(notExistLabel string, uaaFakeServer, ccFakeServer *ghttp.Server) {
+	uaaFakeServer.RouteToHandler("POST", "/oauth/token",
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("POST", "/oauth/token"),
+			ghttp.RespondWith(200, `{"access_token":"replace-me", "expires_in": 3404281214}`),
+		),
+	)
+
+	serviceGuid := uuid.NewV4().String()
+
+	ccFakeServer.AppendHandlers(
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("GET", "/v2/services", fmt.Sprintf("q=label:%s", notExistLabel)),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(200,
+				`{"resources":[]}`),
+		),
+	)
+
+	ccFakeServer.AppendHandlers(
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("GET", "/v2/services"),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(200,
+				fmt.Sprintf(`{"resources":[{"metadata":{"guid":"%[1]s"},"entity":{"name":"%[2]s"}}]}`, serviceGuid, notExistLabel)),
+		),
+	)
+
+	servicePlanGuid := uuid.NewV4().String()
+
+	ccFakeServer.AppendHandlers(
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("GET", "/v2/service_plans"),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(200,
+				fmt.Sprintf(`{"resources":[{"metadata":{"guid":"%[1]s"},"entity":{"name":"default","free":true,"description":"default plan","public":false,"service_guid":"%[2]s"}}]}`, servicePlanGuid, serviceGuid)),
+		),
+	)
+
+	ccFakeServer.AppendHandlers(
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("PUT", fmt.Sprintf("/v2/service_plans/%[1]s", servicePlanGuid)),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(201, `{}`),
+		),
+	)
+
+	brokerGuid := uuid.NewV4().String()
+
+	ccFakeServer.RouteToHandler("GET", "/v2/service_brokers",
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("GET", "/v2/service_brokers"),
+			ghttp.RespondWith(200, fmt.Sprintf(`{"resources":[{"metadata":{"guid":"%[1]s"}}]}`, brokerGuid)),
+		),
+	)
+
+	ccFakeServer.RouteToHandler("PUT", fmt.Sprintf("/v2/service_brokers/%[1]s", brokerGuid),
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("PUT", fmt.Sprintf("/v2/service_brokers/%[1]s", brokerGuid)),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(200, `{}`),
 		),
 	)
 }
