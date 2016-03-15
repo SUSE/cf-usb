@@ -529,6 +529,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface,
 			ID:               &di.Service.ID,
 			DriverInstanceID: params.DriverInstanceID,
 			Bindable:         &di.Service.Bindable,
+			Description:      &di.Service.Description,
 			Name:             di.Service.Name,
 			Tags:             di.Service.Tags,
 		}

@@ -89,7 +89,6 @@ tools:
 	# gox -build-toolchain
 	#dependencies for project
 	go get gopkg.in/yaml.v2
-	go get github.com/hpcloud/loom
 	go get github.com/stretchr/testify/assert
 	go get github.com/stretchr/testify/mock
 	#Tools for code coverage reporting
