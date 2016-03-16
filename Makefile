@@ -97,6 +97,13 @@ tools:
 	go get gopkg.in/matm/v1/gocov-html
 	#Tools for integration tests
 	go get github.com/nats-io/gnatsd
+	#Fix for consul
+	if [ ! -d "$(GOPATH)/src/github.com/hasicorp/consul" ]; then \
+	git clone https://github.com/concourse/concourse.git $(GOPATH)/src/github.com/hasicorp/consul; \
+	cd $(GOPATH)/src/github.com/hasicorp/consul; \
+	git checkout tags/v0.63.0; \
+	cd -; \
+	fi
 	go get github.com/hashicorp/consul
 
 clean: cleangeneratedfiles
