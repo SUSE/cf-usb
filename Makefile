@@ -98,10 +98,10 @@ tools:
 	#Tools for integration tests
 	go get github.com/nats-io/gnatsd
 	#Fix for consul
-	if [ ! -d "$(GOPATH)/src/github.com/hasicorp/consul" ]; then \
-	git clone https://github.com/concourse/concourse.git $(GOPATH)/src/github.com/hashicorp/consul; \
+	if [ ! -d "$(GOPATH)/src/github.com/hashicorp/consul" ]; then \
+	git clone https://github.com/hashicorp/consul.git $(GOPATH)/src/github.com/hashicorp/consul; \
 	cd $(GOPATH)/src/github.com/hashicorp/consul; \
-	git checkout tags/v0.63.0; \
+	git checkout tags/v0.6.3; \
 	cd -; \
 	fi
 	go get github.com/hashicorp/consul
