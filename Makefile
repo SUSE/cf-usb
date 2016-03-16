@@ -99,8 +99,8 @@ tools:
 	go get github.com/nats-io/gnatsd
 	#Fix for consul
 	if [ ! -d "$(GOPATH)/src/github.com/hasicorp/consul" ]; then \
-	git clone https://github.com/concourse/concourse.git $(GOPATH)/src/github.com/hasicorp/consul; \
-	cd $(GOPATH)/src/github.com/hasicorp/consul; \
+	git clone https://github.com/concourse/concourse.git $(GOPATH)/src/github.com/hashicorp/consul; \
+	cd $(GOPATH)/src/github.com/hashicorp/consul; \
 	git checkout tags/v0.63.0; \
 	cd -; \
 	fi
