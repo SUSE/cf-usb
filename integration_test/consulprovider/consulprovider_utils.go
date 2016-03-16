@@ -910,6 +910,70 @@ func SetupCcHttpFakeResponsesUpdateService(notExistLabel string, uaaFakeServer, 
 	)
 }
 
+func SetupCcHttpFakeResponsesUpdateCatalog(uaaFakeServer, ccFakeServer *ghttp.Server) {
+	uaaFakeServer.RouteToHandler("POST", "/oauth/token",
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("POST", "/oauth/token"),
+			ghttp.RespondWith(200, `{"access_token":"replace-me", "expires_in": 3404281214}`),
+		),
+	)
+
+	brokerGuid := uuid.NewV4().String()
+
+	ccFakeServer.RouteToHandler("GET", "/v2/service_brokers",
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("GET", "/v2/service_brokers"),
+			ghttp.RespondWith(200, fmt.Sprintf(`{"resources":[{"metadata":{"guid":"%[1]s"}}]}`, brokerGuid)),
+		),
+	)
+
+	ccFakeServer.RouteToHandler("PUT", fmt.Sprintf("/v2/service_brokers/%[1]s", brokerGuid),
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("PUT", fmt.Sprintf("/v2/service_brokers/%[1]s", brokerGuid)),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(200, `{}`),
+		),
+	)
+
+	serviceGuid := uuid.NewV4().String()
+
+	ccFakeServer.RouteToHandler("GET", "/v2/services",
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("GET", "/v2/services"),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(200,
+				fmt.Sprintf(`{"resources":[{"metadata":{"guid":"%[1]s"}}]}`, serviceGuid)),
+		),
+	)
+
+	servicePlanGuid := uuid.NewV4().String()
+
+	ccFakeServer.RouteToHandler("GET", "/v2/service_plans",
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("GET", "/v2/service_plans"),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(200,
+				fmt.Sprintf(`{"resources":[{"metadata":{"guid":"%[1]s"},"entity":{"name":"default","free":true,"description":"default plan","public":false,"service_guid":"%[2]s"}}]}`, servicePlanGuid, serviceGuid)),
+		),
+	)
+
+	ccFakeServer.RouteToHandler("PUT", fmt.Sprintf("/v2/service_plans/%[1]s", servicePlanGuid),
+		ghttp.CombineHandlers(
+			ghttp.VerifyRequest("PUT", fmt.Sprintf("/v2/service_plans/%[1]s", servicePlanGuid)),
+			func(http.ResponseWriter, *http.Request) {
+				time.Sleep(0 * time.Second)
+			},
+			ghttp.RespondWith(201, `{}`),
+		),
+	)
+}
+
 // functions for running consul
 
 func initConsulProvisioner(driversPath string) (consul.ConsulProvisionerInterface, error) {
