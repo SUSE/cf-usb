@@ -72,7 +72,7 @@ func (broker *UsbBroker) Provision(instanceID string, serviceDetails brokerapi.P
 		return brokerapi.ProvisioningResponse{}, false, err
 	}
 
-	broker.logger.Info("provision-instance-request-completed", lager.Data{"instance-id": instance.InstanceID})
+	broker.logger.Info("provision-instance-request-completed", lager.Data{"instance-id": instance.InstanceID, "status": instance.Status, "description": instance.Description})
 
 	if instance.Status == status.Created {
 		return brokerapi.ProvisioningResponse{}, false, nil
@@ -118,7 +118,7 @@ func (broker *UsbBroker) Deprovision(instanceID string, deprovisionDetails broke
 		return false, err
 	}
 
-	broker.logger.Info("deprovision-instance-request-completed", lager.Data{"instance-id": instance.InstanceID})
+	broker.logger.Info("deprovision-instance-request-completed", lager.Data{"instance-id": instance.InstanceID, "status": instance.Status, "description": instance.Description})
 
 	if instance.Status == status.Deleted {
 		return false, nil
