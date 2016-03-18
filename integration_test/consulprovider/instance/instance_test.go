@@ -172,7 +172,7 @@ func TestMgmtApiConsulProviderUpdateDriverInstance(t *testing.T) {
 					if len(driverInstances) > 0 {
 						firstDriverInstance := driverInstances[0]
 
-						executeGetDriverDialSchemaTest(t, ManagementApiPort, d.Id)
+						executeGetDriverDialSchemaTest(t, ManagementApiPort, d.Id, d.DriverType)
 
 						executeGetDriverConfigSchemaTest(t, ManagementApiPort, d.Id, driver.AssertDriverSchemaContainsFunc)
 
@@ -336,7 +336,7 @@ func executeGetDriverInstancesTest(t *testing.T, managementApiPort uint16, drive
 	return driverInstances
 }
 
-func executeGetDriverDialSchemaTest(t *testing.T, managementApiPort uint16, driverId string) {
+func executeGetDriverDialSchemaTest(t *testing.T, managementApiPort uint16, driverId, driverType string) {
 	getDialSchemaResp, err := ExecuteHttpCall("GET", fmt.Sprintf("http://localhost:%[1]v/drivers/%[2]s/dial_schema", managementApiPort, driverId), nil)
 	if err != nil {
 		t.Fatal(err)
@@ -350,7 +350,12 @@ func executeGetDriverDialSchemaTest(t *testing.T, managementApiPort uint16, driv
 		t.Fatal(err)
 	}
 	t.Logf("get driver dial schema content: %s", string(getDialSchemaContent))
-	Expect(getDialSchemaContent).To(ContainSubstring("{}"))
+
+	if driverType != "dummy" {
+		Expect(getDialSchemaContent).To(ContainSubstring("{}"))
+	} else {
+		Expect(getDialSchemaContent).To(ContainSubstring(`\"required\":[  \n      \"max_dbsize_mb\"\n   ]\`))
+	}
 }
 
 func executeGetDriverConfigSchemaTest(t *testing.T, managementApiPort uint16, driverId string, assertDriverSchemaContains func(schemaContent string)) {

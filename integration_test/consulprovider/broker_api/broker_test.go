@@ -21,6 +21,7 @@ import (
 var orgGuid string = uuid.NewV4().String()
 var spaceGuid string = uuid.NewV4().String()
 var serviceGuid string = uuid.NewV4().String()
+var serviceGuidAsync string = fmt.Sprintf("%[1]s-async", uuid.NewV4().String())
 var serviceBindingGuid string = uuid.NewV4().String()
 var driverInstances []DriverInstanceResponse
 
@@ -400,11 +401,8 @@ func TestBrokerApiConsulProviderUnbind(t *testing.T) {
 			for _, service := range services {
 				if service.Name == driver.DriverType {
 
-					if strings.Contains(driver.DriverType, "dummy-async") {
-						t.Log("Unable to unbind dummy-async driver type, because when try to get credentials always return binding-missing error")
-					} else {
-						executeUnbindTest(t, BrokerApiPort, configInfo.BrokerAPI.Credentials, service)
-					}
+					executeUnbindTest(t, BrokerApiPort, configInfo.BrokerAPI.Credentials, service, driver.DriverType)
+
 				}
 			}
 		}
@@ -471,7 +469,8 @@ func TestBrokerApiConsulProviderDeprovision(t *testing.T) {
 		if driver.EnvVarsExistFunc() {
 			for _, service := range services {
 				if service.Name == driver.DriverType {
-					executeDeprovisionTest(t, BrokerApiPort, configInfo.BrokerAPI.Credentials, service)
+
+					executeDeprovisionTest(t, BrokerApiPort, configInfo.BrokerAPI.Credentials, service, driver.DriverType)
 				}
 			}
 		}
@@ -682,8 +681,12 @@ func executeBindTest(t *testing.T, brokerApiPort uint16, credentials brokerapi.B
 	t.Logf("bind response content: %s", string(bindContent))
 }
 
-func executeUnbindTest(t *testing.T, brokerApiPort uint16, credentials brokerapi.BrokerCredentials, service brokerapi.Service) {
+func executeUnbindTest(t *testing.T, brokerApiPort uint16, credentials brokerapi.BrokerCredentials, service brokerapi.Service, driverType string) {
 	servicePlanId := service.Plans[0].ID
+
+	if strings.Contains(driverType, "dummy") {
+		serviceBindingGuid = "credentialsID"
+	}
 
 	t.Logf("start unbinding service %[1]s, with service binding guid %[2]s", service.Name, serviceBindingGuid)
 
@@ -707,8 +710,12 @@ func executeUnbindTest(t *testing.T, brokerApiPort uint16, credentials brokerapi
 	t.Logf("unbind response content: %s", string(unbindContent))
 }
 
-func executeDeprovisionTest(t *testing.T, brokerApiPort uint16, credentials brokerapi.BrokerCredentials, service brokerapi.Service) {
+func executeDeprovisionTest(t *testing.T, brokerApiPort uint16, credentials brokerapi.BrokerCredentials, service brokerapi.Service, driverType string) {
 	servicePlanId := service.Plans[0].ID
+
+	if driverType == "dummy" {
+		serviceGuid = "instanceID"
+	}
 
 	t.Logf("start deprovisioning service %[1]s, with service guid %[2]s", service.Name, serviceGuid)
 

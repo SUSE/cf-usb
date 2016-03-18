@@ -76,10 +76,15 @@ var Drivers = []struct {
 	SetDriverInstanceValuesFunc    func(driverName, driverId string) []byte
 	AssertDriverSchemaContainsFunc func(schemaContent string)
 }{
-	{"dummy-async", dummyEnvVarsExist, setDummyDriverInstanceValues, assertDummySchemaContains},
 	{"postgres", postgresEnvVarsExist, setPostgresDriverInstanceValues, assertPostgresSchemaContains},
 	{"mongo", mongoEnvVarsExist, setMongoDriverInstanceValues, assertMongoSchemaContains},
 	{"mysql", mysqlEnvVarsExist, setMysqlDriverInstanceValues, assertMysqlSchemaContains},
+	{"mssql", mssqlEnvVarsExist, setMssqlDriverInstanceValues, assertMssqlSchemaContains},
+	{"rabbitmq", rabbitmqEnvVarsExist, setRabbitmqDriverInstanceValues, assertRabbitmqSchemaContains},
+	{"redis", redisEnvVarsExist, setRedisDriverInstanceValues, assertRedisSchemaContains},
+	// do not change order of dummy drivers or change their position (requires specific values for testing)
+	{"dummy-async", dummyEnvVarsExist, setDummyAsyncDriverInstanceValues, assertDummyAsyncSchemaContains},
+	{"dummy", dummyEnvVarsExist, setDummyDriverInstanceValues, assertDummySchemaContains},
 }
 
 // models http responses
@@ -1103,13 +1108,85 @@ func assertMysqlSchemaContains(schemaContent string) {
 	Expect(schemaContent).To(ContainSubstring(`\"password\"`))
 }
 
+// mssql driver specific functions
+
+func mssqlEnvVarsExist() bool {
+	return os.Getenv("MSSQL_USER") != "" && os.Getenv("MSSQL_PASS") != "" && os.Getenv("MSSQL_HOST") != "" && os.Getenv("MSSQL_PORT") != ""
+}
+
+func setMssqlDriverInstanceValues(driverName, driverId string) []byte {
+	values := []byte(fmt.Sprintf(`{"name":"%[1]s", "driver_id":"%[2]s", "configuration": {"server":"%[3]s","port":"%[4]s","userid":"%[5]s","password":"%[6]s","db_identifier_prefix":"%[7]s"}}`,
+		driverName,
+		driverId,
+		os.Getenv("MSSQL_HOST"),
+		os.Getenv("MSSQL_PORT"),
+		os.Getenv("MSSQL_USER"),
+		os.Getenv("MSSQL_PASS"),
+		os.Getenv("MSSQL_DB_PREFIX")))
+
+	return values
+}
+
+func assertMssqlSchemaContains(schemaContent string) {
+	Expect(schemaContent).To(ContainSubstring(`\"server\"`))
+	Expect(schemaContent).To(ContainSubstring(`\"port\"`))
+	Expect(schemaContent).To(ContainSubstring(`\"userid\"`))
+	Expect(schemaContent).To(ContainSubstring(`\"password\"`))
+}
+
+// rabbitmq driver specific functions
+
+func rabbitmqEnvVarsExist() bool {
+	return os.Getenv("DOCKER_ENDPOINT") != "" && os.Getenv("RABBIT_DOCKER_IMAGE") != "" && os.Getenv("RABBIT_DOCKER_IMAGE_VERSION") != ""
+}
+
+func setRabbitmqDriverInstanceValues(driverName, driverId string) []byte {
+	values := []byte(fmt.Sprintf(`{"name":"%[1]s", "driver_id":"%[2]s", "configuration": {"docker_endpoint":"%[3]s","docker_image":"%[4]s","docker_image_version":"%[5]s"}}`,
+		driverName,
+		driverId,
+		os.Getenv("DOCKER_ENDPOINT"),
+		os.Getenv("RABBIT_DOCKER_IMAGE"),
+		os.Getenv("RABBIT_DOCKER_IMAGE_VERSION")))
+
+	return values
+}
+
+func assertRabbitmqSchemaContains(schemaContent string) {
+	Expect(schemaContent).To(ContainSubstring(`\"docker_endpoint\"`))
+	Expect(schemaContent).To(ContainSubstring(`\"docker_image\"`))
+	Expect(schemaContent).To(ContainSubstring(`\"docker_image_version\"`))
+}
+
+// redis driver specific functions
+
+func redisEnvVarsExist() bool {
+	return os.Getenv("DOCKER_ENDPOINT") != "" && os.Getenv("REDIS_DOCKER_IMAGE") != "" && os.Getenv("REDIS_DOCKER_IMAGE_VERSION") != ""
+}
+
+func setRedisDriverInstanceValues(driverName, driverId string) []byte {
+	values := []byte(fmt.Sprintf(`{"name":"%[1]s", "driver_id":"%[2]s", "configuration": {"docker_endpoint":"%[3]s","docker_image":"%[4]s","docker_image_version":"%[5]s"}}`,
+		driverName,
+		driverId,
+		os.Getenv("DOCKER_ENDPOINT"),
+		os.Getenv("REDIS_DOCKER_IMAGE"),
+		os.Getenv("REDIS_DOCKER_IMAGE_VERSION")))
+
+	return values
+}
+
+func assertRedisSchemaContains(schemaContent string) {
+	Expect(schemaContent).To(ContainSubstring(`\"docker_endpoint\"`))
+	Expect(schemaContent).To(ContainSubstring(`\"docker_image\"`))
+	Expect(schemaContent).To(ContainSubstring(`\"docker_image_version\"`))
+}
+
 // dummy-async driver specific functions
 
 func dummyEnvVarsExist() bool {
 	return true
 }
 
-func setDummyDriverInstanceValues(driverName, driverId string) []byte {
+func setDummyAsyncDriverInstanceValues(driverName, driverId string) []byte {
 	values := []byte(fmt.Sprintf(`{"name":"%[1]s", "driver_id":"%[2]s", "configuration": {"succeed_count": "3"}}`,
 		driverName,
 		driverId))
@@ -1117,6 +1194,21 @@ func setDummyDriverInstanceValues(driverName, driverId string) []byte {
 	return values
 }
 
-func assertDummySchemaContains(schemaContent string) {
+func assertDummyAsyncSchemaContains(schemaContent string) {
 	Expect(schemaContent).To(ContainSubstring(`\"succeed_count\"`))
+}
+
+// dummy driver specific functions
+
+func setDummyDriverInstanceValues(driverName, driverId string) []byte {
+	values := []byte(fmt.Sprintf(`{"name":"%[1]s", "driver_id":"%[2]s", "configuration": {"property_one": "one", "property_two": "two"}}`,
+		driverName,
+		driverId))
+
+	return values
+}
+
+func assertDummySchemaContains(schemaContent string) {
+	Expect(schemaContent).To(ContainSubstring(`\"property_one\"`))
+	Expect(schemaContent).To(ContainSubstring(`\"property_two\"`))
 }

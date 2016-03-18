@@ -186,7 +186,7 @@ func TestMgmtApiConsulProviderUpdateDial(t *testing.T) {
 						if len(firstDriverInstance.Dials) > 0 {
 							firstDial := executeGetDialTest(t, ManagementApiPort, firstDriverInstance)
 
-							executeUpdateDialTest(t, ManagementApiPort, firstDial)
+							executeUpdateDialTest(t, ManagementApiPort, firstDial, d.DriverType)
 
 							plan := executeGetPlanTest(t, ManagementApiPort, firstDial)
 
@@ -415,7 +415,7 @@ func executeGetDialTest(t *testing.T, managementApiPort uint16, firstDriverInsta
 	return dial
 }
 
-func executeUpdateDialTest(t *testing.T, managementApiPort uint16, dial DialResponse) {
+func executeUpdateDialTest(t *testing.T, managementApiPort uint16, dial DialResponse, driverType string) {
 	dialValues := []byte(fmt.Sprintf(`{"configuration":{"min_dbsize_mb":1},"driver_instance_id":"%[1]s"}`, dial.DriverInstanceId))
 
 	updateDialResp, err := ExecuteHttpCall("PUT", fmt.Sprintf("http://localhost:%[1]v/dials/%[2]s", managementApiPort, dial.Id), bytes.NewBuffer(dialValues))
@@ -424,14 +424,23 @@ func executeUpdateDialTest(t *testing.T, managementApiPort uint16, dial DialResp
 	}
 	defer updateDialResp.Body.Close()
 
-	Expect(updateDialResp.StatusCode).To(Equal(200))
+	if driverType != "dummy" {
+		Expect(updateDialResp.StatusCode).To(Equal(200))
+	} else {
+		Expect(updateDialResp.StatusCode).To(Equal(500))
+	}
 
 	updateDialContent, err := ioutil.ReadAll(updateDialResp.Body)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	Expect(string(updateDialContent)).To(ContainSubstring(`"min_dbsize_mb":1`))
+	if driverType != "dummy" {
+		Expect(string(updateDialContent)).To(ContainSubstring(`"min_dbsize_mb":1`))
+	} else {
+		Expect(string(updateDialContent)).To(ContainSubstring(`Invalid dial configuration`))
+	}
+
 }
 
 func executeGetPlanTest(t *testing.T, managementApiPort uint16, dial DialResponse) PlanResponse {
