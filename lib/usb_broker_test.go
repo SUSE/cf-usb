@@ -20,7 +20,7 @@ func setupEnv() (*UsbBroker, error) {
 	if err != nil {
 		return nil, err
 	}
-	buildDir := filepath.Join(workDir, "../build", fmt.Sprintf("%s-%s", runtime.GOOS, runtime.GOARCH))
+	buildDir := filepath.Join(workDir, "../build", fmt.Sprintf("%s-%s", runtime.GOOS, runtime.GOARCH), "drivers")
 	os.Setenv("USB_DRIVER_PATH", buildDir)
 
 	configFile := filepath.Join(workDir, "../test-assets/file-config/dummy_config.json")

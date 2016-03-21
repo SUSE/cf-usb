@@ -36,57 +36,55 @@ driversbindata:
 	@echo "$(OK_COLOR)==> Embedding JSON schemas into drivers$(NO_COLOR)"
 	find driver/ -maxdepth 1 -type d \( ! -name driver \) -exec \
 	bash -c "(cd '{}' && go-bindata -pkg="driverdata" -o driverdata/schemas.go schemas/ )" \;
-	
-build: build-usb build-drivers build-driver-generator
-#       calls all the other necessary builds
+
+build: generate build-usb build-drivers build-driver-generator
+	#       calls all the other necessary builds
 
 build-drivers : build-dummy-async-driver build-dummy-driver build-mongo-driver build-mysql-driver
 
 build-drivers : build-mssql-driver build-postgres-driver build-rabbitmq-driver build-redis-driver
 
 build-usb:
-        $(call buildme,./cmd/usb,usb)
+	@godep restore
+	$(call buildme,./cmd/usb,usb)
+
 
 build-driver-generator:
-        $(call buildme,./driver-generator/cmd/driver-generator,driver-generator)
+	$(call buildme,./driver-generator/cmd/driver-generator,driver-generator)
 
 build-dummy-async-driver:
-        $(call buildme,./cmd/driver/dummy-async,drivers)
+	$(call buildme,./cmd/driver/dummy-async,drivers)
 
 build-dummy-driver:
-        $(call buildme,./cmd/driver/dummy,drivers)
+	$(call buildme,./cmd/driver/dummy,drivers)
 
 build-mongo-driver:
-        $(call buildme,./cmd/driver/mongo,drivers)
-
-build-mongo-driver:
-        $(call buildme,./cmd/driver/mongo,drivers)
+	$(call buildme,./cmd/driver/mongo,drivers)
 
 build-mssql-driver:
-        $(call buildme,./cmd/driver/mssql,drivers)
+	$(call buildme,./cmd/driver/mssql,drivers)
 
 build-postgres-driver:
-        $(call buildme,./cmd/driver/postgres,drivers)
+	$(call buildme,./cmd/driver/postgres,drivers)
 
 build-rabbitmq-driver:
-        $(call buildme,./cmd/driver/rabbitmq,drivers)
+	$(call buildme,./cmd/driver/rabbitmq,drivers)
 
 build-redis-driver:
-        $(call buildme,./cmd/driver/redis,drivers)
+	$(call buildme,./cmd/driver/redis,drivers)
 
 build-mysql-driver:
-        $(call buildme,./cmd/driver/mysql,drivers)
+	$(call buildme,./cmd/driver/mysql,drivers)
 
 
 buildme =  @(DIRNAME=$$(basename $(1));\
-        echo "$(OK_COLOR)==>Building$(NO_COLOR) $$DIRNAME"; \
-        for OS in $(OSES); do \
-                DIRNAME=$$(basename $(1)); \
-                env GOOS=$$OS GOARCH=amd64 go build \
-                -ldflags="-X main.version=$(APP_VERSION)" \
-                -o build/$$OS-amd64/$(2)/$$DIRNAME $(1); \
+	echo "$(OK_COLOR)==> Building$(NO_COLOR) $$DIRNAME"; \
+	for OS in $(OSES); do \
+		DIRNAME=$$(basename $(1)); \
+		 env GOOS=$$OS GOARCH=amd64 go build \
+		 -ldflags="-X main.version=$(APP_VERSION)" \
+		 -o build/$$OS-amd64/$(2)/$$DIRNAME $(1); \
 	done)
-
 
 patch: cleangeneratedfiles
 	@echo "$(OK_COLOR)==> Generating Update Patches$(NO_COLOR)"

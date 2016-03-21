@@ -44,14 +44,14 @@ func getBinPath() string {
 	dir, err := os.Getwd()
 	Expect(err).NotTo(HaveOccurred())
 
-	return path.Join(dir, "../../build", fmt.Sprintf("%s-%s", runtime.GOOS, runtime.GOARCH), "usb")
+	return path.Join(dir, "../../build", fmt.Sprintf("%s-%s", runtime.GOOS, runtime.GOARCH), "usb", "usb")
 }
 
 func setDriverPathEnv() {
 	dir, err := os.Getwd()
 	Expect(err).NotTo(HaveOccurred())
 
-	os.Setenv("USB_DRIVER_PATH", path.Join(dir, "../../build", fmt.Sprintf("%s-%s", runtime.GOOS, runtime.GOARCH)))
+	os.Setenv("USB_DRIVER_PATH", path.Join(dir, "../../build", fmt.Sprintf("%s-%s", runtime.GOOS, runtime.GOARCH), "drivers"))
 }
 
 func initializeRunner() (*UsbRunner, *natsrunner.NATSRunner, *config.Config) {
