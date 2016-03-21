@@ -158,6 +158,10 @@ func (d dummyAsyncDriver) GetCredentials(request driver.GetCredentialsRequest, r
 
 	response.Status = status.DoesNotExist
 
+	if request.CredentialsID == "credentialsID" {
+		response.Status = status.Exists
+	}
+
 	return nil
 }
 
