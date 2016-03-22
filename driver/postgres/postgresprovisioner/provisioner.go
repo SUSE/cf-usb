@@ -14,7 +14,7 @@ import (
 	"github.com/pivotal-golang/lager"
 )
 
-var createDatabaseQuery = "CREATE DATABASE {{.Database}} ENCODING 'UTF8'"
+var createDatabaseQuery = "CREATE DATABASE {{.Database}}"
 var revokeOnDatabaseQuery = "REVOKE all on database {{.Database}} from public"
 var dbCountQuery = "SELECT COUNT(*) FROM pg_database WHERE datname = '{{.Database}}'"
 var createRoleQuery = "CREATE ROLE {{.User}} LOGIN PASSWORD '{{.Password}}'"

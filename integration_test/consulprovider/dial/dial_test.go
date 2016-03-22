@@ -304,7 +304,7 @@ func TestMgmtApiConsulProviderDeleteDial(t *testing.T) {
 func executeCreateDialTest(t *testing.T, managementApiPort uint16, firstDriverInstance DriverInstanceResponse) {
 	dialValues := []byte(fmt.Sprintf(`{"configuration":{"max_dbsize_mb":3},"driver_instance_id":"%[1]s"}`, firstDriverInstance.Id))
 
-	createDialResp, err := ExecuteHttpCall("POST", fmt.Sprintf("http://localhost:%[1]v/dials", managementApiPort), bytes.NewBuffer(dialValues))
+	createDialResp, err := ExecuteHttpCall("POST", fmt.Sprintf("http://localhost:%[1]v/dials", managementApiPort), bytes.NewBuffer(dialValues), true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -329,7 +329,7 @@ func executeCreateDialTest(t *testing.T, managementApiPort uint16, firstDriverIn
 }
 
 func executeGetDialsTest(t *testing.T, managementApiPort uint16, firstDriverInstance DriverInstanceResponse) {
-	getDialsResp, err := ExecuteHttpCall("GET", fmt.Sprintf("http://localhost:%[1]v/dials?driver_instance_id=%[2]s", managementApiPort, firstDriverInstance.Id), nil)
+	getDialsResp, err := ExecuteHttpCall("GET", fmt.Sprintf("http://localhost:%[1]v/dials?driver_instance_id=%[2]s", managementApiPort, firstDriverInstance.Id), nil, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -356,7 +356,7 @@ func executeGetDialsTest(t *testing.T, managementApiPort uint16, firstDriverInst
 }
 
 func executeGetPlansTest(t *testing.T, managementApiPort uint16, firstDriverInstance DriverInstanceResponse) {
-	getPlansResp, err := ExecuteHttpCall("GET", fmt.Sprintf("http://localhost:%[1]v/plans?driver_instance_id=%[2]s", managementApiPort, firstDriverInstance.Id), nil)
+	getPlansResp, err := ExecuteHttpCall("GET", fmt.Sprintf("http://localhost:%[1]v/plans?driver_instance_id=%[2]s", managementApiPort, firstDriverInstance.Id), nil, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -390,7 +390,7 @@ func executeGetPlansTest(t *testing.T, managementApiPort uint16, firstDriverInst
 }
 
 func executeGetDialTest(t *testing.T, managementApiPort uint16, firstDriverInstance DriverInstanceResponse) DialResponse {
-	getDialResp, err := ExecuteHttpCall("GET", fmt.Sprintf("http://localhost:%[1]v/dials/%[2]s", managementApiPort, firstDriverInstance.Dials[0]), nil)
+	getDialResp, err := ExecuteHttpCall("GET", fmt.Sprintf("http://localhost:%[1]v/dials/%[2]s", managementApiPort, firstDriverInstance.Dials[0]), nil, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -418,7 +418,7 @@ func executeGetDialTest(t *testing.T, managementApiPort uint16, firstDriverInsta
 func executeUpdateDialTest(t *testing.T, managementApiPort uint16, dial DialResponse, driverType string) {
 	dialValues := []byte(fmt.Sprintf(`{"configuration":{"min_dbsize_mb":1},"driver_instance_id":"%[1]s"}`, dial.DriverInstanceId))
 
-	updateDialResp, err := ExecuteHttpCall("PUT", fmt.Sprintf("http://localhost:%[1]v/dials/%[2]s", managementApiPort, dial.Id), bytes.NewBuffer(dialValues))
+	updateDialResp, err := ExecuteHttpCall("PUT", fmt.Sprintf("http://localhost:%[1]v/dials/%[2]s", managementApiPort, dial.Id), bytes.NewBuffer(dialValues), true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -444,7 +444,7 @@ func executeUpdateDialTest(t *testing.T, managementApiPort uint16, dial DialResp
 }
 
 func executeGetPlanTest(t *testing.T, managementApiPort uint16, dial DialResponse) PlanResponse {
-	getPlanResp, err := ExecuteHttpCall("GET", fmt.Sprintf("http://localhost:%[1]v/plans/%[2]s", managementApiPort, dial.Plan), nil)
+	getPlanResp, err := ExecuteHttpCall("GET", fmt.Sprintf("http://localhost:%[1]v/plans/%[2]s", managementApiPort, dial.Plan), nil, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -479,7 +479,7 @@ func executeUpdatePlanTest(t *testing.T, managementApiPort uint16, plan PlanResp
 		dial.Id,
 		updatePlanName))
 
-	updatePlanResp, err := ExecuteHttpCall("PUT", fmt.Sprintf("http://localhost:%[1]v/plans/%[2]s", managementApiPort, dial.Plan), bytes.NewBuffer(planValues))
+	updatePlanResp, err := ExecuteHttpCall("PUT", fmt.Sprintf("http://localhost:%[1]v/plans/%[2]s", managementApiPort, dial.Plan), bytes.NewBuffer(planValues), true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -497,7 +497,7 @@ func executeUpdatePlanTest(t *testing.T, managementApiPort uint16, plan PlanResp
 }
 
 func executeDeleteDialTest(t *testing.T, managementApiPort uint16, dial DialResponse) {
-	deleteDialResp, err := ExecuteHttpCall("DELETE", fmt.Sprintf("http://localhost:%[1]v/dials/%[2]s", managementApiPort, dial.Id), nil)
+	deleteDialResp, err := ExecuteHttpCall("DELETE", fmt.Sprintf("http://localhost:%[1]v/dials/%[2]s", managementApiPort, dial.Id), nil, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -512,7 +512,7 @@ func executeDeleteDialTest(t *testing.T, managementApiPort uint16, dial DialResp
 
 	Expect(string(deleteDialContent)).To(Equal(""))
 
-	getDialDeletedResp, err := ExecuteHttpCall("GET", fmt.Sprintf("http://localhost:%[1]v/dials/%[2]s", managementApiPort, dial.Id), nil)
+	getDialDeletedResp, err := ExecuteHttpCall("GET", fmt.Sprintf("http://localhost:%[1]v/dials/%[2]s", managementApiPort, dial.Id), nil, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -522,7 +522,7 @@ func executeDeleteDialTest(t *testing.T, managementApiPort uint16, dial DialResp
 }
 
 func executeCheckPlanIsDeletedTest(t *testing.T, managementApiPort uint16, dial DialResponse) {
-	getPlanResp, err := ExecuteHttpCall("GET", fmt.Sprintf("http://localhost:%[1]v/plans/%[2]s", managementApiPort, dial.Plan), nil)
+	getPlanResp, err := ExecuteHttpCall("GET", fmt.Sprintf("http://localhost:%[1]v/plans/%[2]s", managementApiPort, dial.Plan), nil, true)
 	if err != nil {
 		t.Fatal(err)
 	}

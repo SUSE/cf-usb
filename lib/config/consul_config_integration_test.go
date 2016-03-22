@@ -2,14 +2,22 @@ package config
 
 import (
 	"encoding/json"
-	"github.com/stretchr/testify/assert"
-	"testing"
-
-	"github.com/hpcloud/cf-usb/lib/config/consul"
-
 	"github.com/frodenas/brokerapi"
+	_ "github.com/golang/protobuf/proto" //workaround for godep + gomega
+
 	"github.com/hashicorp/consul/api"
+	"github.com/hpcloud/cf-usb/lib/config/consul"
+	. "github.com/onsi/gomega"
+	"github.com/stretchr/testify/assert"
+	"github.com/tedsuo/ifrit"
+	"github.com/tedsuo/ifrit/ginkgomon"
+	"io/ioutil"
+	"net/http"
 	"os"
+	"os/exec"
+	"path"
+	"testing"
+	"time"
 )
 
 var IntegrationConfig = struct {
@@ -22,6 +30,8 @@ var IntegrationConfig = struct {
 	consulToken      string
 }{}
 
+var DefaultConsulPath string = "consul"
+
 func init() {
 	IntegrationConfig.consulAddress = os.Getenv("CONSUL_ADDRESS")
 	IntegrationConfig.consulDatacenter = os.Getenv("CONSUL_DATACENTER")
@@ -31,10 +41,10 @@ func init() {
 	IntegrationConfig.consulToken = os.Getenv("CONSUL_TOKEN")
 }
 
-func initProvider() (bool, error) {
+func initProvider() (bool, error, ifrit.Process) {
 	var consulConfig api.Config
 	if IntegrationConfig.consulAddress == "" {
-		return false, nil
+		return false, nil, nil
 	}
 	consulConfig.Address = IntegrationConfig.consulAddress
 	consulConfig.Datacenter = IntegrationConfig.consulPassword
@@ -47,19 +57,35 @@ func initProvider() (bool, error) {
 	consulConfig.Scheme = IntegrationConfig.consulSchema
 
 	consulConfig.Token = IntegrationConfig.consulToken
+	getConsulReq, _ := http.NewRequest("GET", "http://localhost:8500", nil)
+	getConsulResp, _ := http.DefaultClient.Do(getConsulReq)
+	consulIsRunning := false
+	if getConsulResp != nil && getConsulResp.StatusCode == 200 {
+		consulIsRunning = true
+	}
+
+	var process ifrit.Process
+	var err error
+	if consulIsRunning == false {
+		process, err = startConsulProcess()
+		if err != nil {
+			return false, err, nil
+		}
+	}
 
 	provisioner, err := consul.New(&consulConfig)
 	if err != nil {
-		return false, err
+		return false, err, nil
 	}
 
 	IntegrationConfig.Provider = NewConsulConfig(provisioner)
-	return true, nil
+	return true, nil, process
 }
 
-func Test_IntConsulSetDriver(t *testing.T) {
-	initialized, err := initProvider()
+func Test_IntConsulDriver(t *testing.T) {
+	RegisterTestingT(t)
 
+	initialized, err, process := initProvider()
 	if initialized == false {
 		t.Skip("Skipping Consul Set Driver test, environment variables not set: CONSUL_ADDRESS(host:port), CONSUL_DATACENTER, CONSUL_TOKEN / CONSUL_USER + CONSUL_PASSWORD, CONSUL_SCHEMA")
 		t.Log(err)
@@ -71,27 +97,27 @@ func Test_IntConsulSetDriver(t *testing.T) {
 	driverInfo.DriverType = "testType"
 	driverInfo.DriverName = "testName"
 	err = IntegrationConfig.Provider.SetDriver("testID", driverInfo)
-	assert.NoError(err)
-}
 
-func Test_IntGetDriver(t *testing.T) {
-
-	initialized, err := initProvider()
-	if initialized == false {
-		t.Skip("Skipping Consul Set Driver test, environment variables not set: CONSUL_ADDRESS(host:port), CONSUL_DATACENTER, CONSUL_TOKEN / CONSUL_USER + CONSUL_PASSWORD, CONSUL_SCHEMA")
-		t.Log(err)
+	exist, err := IntegrationConfig.Provider.DriverTypeExists("testType")
+	if err != nil {
+		assert.Error(err, "Unable to check driver type existance")
 	}
-
-	assert := assert.New(t)
+	assert.NoError(err)
+	assert.True(exist)
 
 	driver, err := IntegrationConfig.Provider.GetDriver("testID")
 	assert.Equal("testType", string(driver.DriverType))
 	assert.NoError(err)
+	if process != nil {
+		process.Signal(os.Kill)
+		<-process.Wait()
+	}
 }
 
-func Test_IntSetDriverInstance(t *testing.T) {
+func Test_IntDriverInstance(t *testing.T) {
+	RegisterTestingT(t)
 
-	initialized, err := initProvider()
+	initialized, err, process := initProvider()
 	if initialized == false {
 		t.Skip("Skipping Consul Set Driver test, environment variables not set: CONSUL_ADDRESS(host:port), CONSUL_DATACENTER, CONSUL_TOKEN / CONSUL_USER + CONSUL_PASSWORD, CONSUL_SCHEMA")
 		t.Log(err)
@@ -105,45 +131,37 @@ func Test_IntSetDriverInstance(t *testing.T) {
 	instance.Configuration = &raw
 	err = IntegrationConfig.Provider.SetDriverInstance("testID", "testInstanceID", instance)
 	assert.NoError(err)
-}
 
-func Test_IntGetDriverInstance(t *testing.T) {
+	instanceInfo, _, err := IntegrationConfig.Provider.GetDriverInstance("testInstanceID")
 
-	initialized, err := initProvider()
-	if initialized == false {
-		t.Skip("Skipping Consul Set Driver test, environment variables not set: CONSUL_ADDRESS(host:port), CONSUL_DATACENTER, CONSUL_TOKEN / CONSUL_USER + CONSUL_PASSWORD, CONSUL_SCHEMA")
-		t.Log(err)
-	}
-
-	assert := assert.New(t)
-
-	instance, _, err := IntegrationConfig.Provider.GetDriverInstance("testInstanceID")
-
-	assert.Equal("testInstance", instance.Name)
+	assert.Equal("testInstance", instanceInfo.Name)
 	assert.NoError(err)
-}
 
-func Test_IntLoadDriverInstance(t *testing.T) {
-	initialized, err := initProvider()
-	if initialized == false {
-		t.Skip("Skipping Consul Set Driver test, environment variables not set: CONSUL_ADDRESS(host:port), CONSUL_DATACENTER, CONSUL_TOKEN / CONSUL_USER + CONSUL_PASSWORD, CONSUL_SCHEMA")
-		t.Log(err)
+	exist, err := IntegrationConfig.Provider.DriverInstanceNameExists("testInstance")
+	if err != nil {
+		assert.Error(err, "Unable to check driver instance name existance")
 	}
+	assert.NoError(err)
+	assert.True(exist)
 
-	assert := assert.New(t)
-
-	instance, err := IntegrationConfig.Provider.LoadDriverInstance("testInstanceID")
+	instanceDetails, err := IntegrationConfig.Provider.LoadDriverInstance("testInstanceID")
 	t.Log("Load driver instance results:")
-	t.Log(instance.Configuration)
-	t.Log(instance.Dials)
-	t.Log(instance.Service)
-	assert.Equal("testInstance", instance.Name)
+	t.Log(instanceDetails.Configuration)
+	t.Log(instanceDetails.Dials)
+	t.Log(instanceDetails.Service)
+	assert.Equal("testInstance", instanceDetails.Name)
 	assert.NoError(err)
+
+	if process != nil {
+		process.Signal(os.Kill)
+		<-process.Wait()
+	}
 }
 
-func Test_IntSetService(t *testing.T) {
+func Test_IntDial(t *testing.T) {
+	RegisterTestingT(t)
 
-	initialized, err := initProvider()
+	initialized, err, process := initProvider()
 	if initialized == false {
 		t.Skip("Skipping Consul Set Driver test, environment variables not set: CONSUL_ADDRESS(host:port), CONSUL_DATACENTER, CONSUL_TOKEN / CONSUL_USER + CONSUL_PASSWORD, CONSUL_SCHEMA")
 		t.Log(err)
@@ -151,53 +169,12 @@ func Test_IntSetService(t *testing.T) {
 
 	assert := assert.New(t)
 
-	var serv brokerapi.Service
-	serv.Bindable = true
-	serv.Description = "testService desc"
-	serv.ID = "testServiceID"
-	serv.Metadata = &brokerapi.ServiceMetadata{DisplayName: "test service"}
-	serv.Name = "testService"
-	serv.Tags = []string{"serv1", "serv2"}
-
-	var plan brokerapi.ServicePlan
-	plan.Description = "testPlan desc"
-	plan.ID = "testPlanID"
-	plan.Name = "free"
-	plan.Metadata = &brokerapi.ServicePlanMetadata{DisplayName: "test plan"}
-
-	serv.Plans = []brokerapi.ServicePlan{plan}
-
-	err = IntegrationConfig.Provider.SetService("testInstanceID", serv)
+	var instance DriverInstance
+	instance.Name = "testInstance"
+	rawInstance := json.RawMessage("{\"a1\":\"b1\"}")
+	instance.Configuration = &rawInstance
+	err = IntegrationConfig.Provider.SetDriverInstance("testID", "testInstanceID", instance)
 	assert.NoError(err)
-}
-
-func Test_IntGetService(t *testing.T) {
-
-	initialized, err := initProvider()
-	if initialized == false {
-		t.Skip("Skipping Consul Set Driver test, environment variables not set: CONSUL_ADDRESS(host:port), CONSUL_DATACENTER, CONSUL_TOKEN / CONSUL_USER + CONSUL_PASSWORD, CONSUL_SCHEMA")
-		t.Log(err)
-	}
-
-	assert := assert.New(t)
-
-	service, instanceID, err := IntegrationConfig.Provider.GetService("testServiceID")
-
-	assert.Equal(instanceID, "testInstanceID")
-	assert.Equal(service.Name, "testService")
-	assert.Equal(service.Plans[0].Name, "free")
-	assert.NoError(err)
-}
-
-func Test_IntSetDial(t *testing.T) {
-
-	initialized, err := initProvider()
-	if initialized == false {
-		t.Skip("Skipping Consul Set Driver test, environment variables not set: CONSUL_ADDRESS(host:port), CONSUL_DATACENTER, CONSUL_TOKEN / CONSUL_USER + CONSUL_PASSWORD, CONSUL_SCHEMA")
-		t.Log(err)
-	}
-
-	assert := assert.New(t)
 
 	var dialInfo Dial
 
@@ -214,71 +191,53 @@ func Test_IntSetDial(t *testing.T) {
 
 	err = IntegrationConfig.Provider.SetDial("testInstanceID", "testdialID", dialInfo)
 	assert.NoError(err)
-}
 
-func Test_IntGetDial(t *testing.T) {
-
-	initialized, err := initProvider()
-	if initialized == false {
-		t.Skip("Skipping Consul Set Driver test, environment variables not set: CONSUL_ADDRESS(host:port), CONSUL_DATACENTER, CONSUL_TOKEN / CONSUL_USER + CONSUL_PASSWORD, CONSUL_SCHEMA")
-		t.Log(err)
-	}
-
-	assert := assert.New(t)
-
-	dialInfo, instanceID, err := IntegrationConfig.Provider.GetDial("testdialID")
-	t.Log(dialInfo)
+	dialDetails, instanceID, err := IntegrationConfig.Provider.GetDial("testdialID")
+	t.Log(dialDetails)
 	t.Log(instanceID)
 	assert.NoError(err)
+
+	if process != nil {
+		process.Signal(os.Kill)
+		<-process.Wait()
+	}
+
 }
 
-func Test_IntDriverInstanceNameExists(t *testing.T) {
-	initialized, err := initProvider()
-	if initialized == false {
-		t.Skip("Skipping Consul Set Driver test, environment variables not set: CONSUL_ADDRESS(host:port), CONSUL_DATACENTER, CONSUL_TOKEN / CONSUL_USER + CONSUL_PASSWORD, CONSUL_SCHEMA")
-		t.Log(err)
+func startConsulProcess() (ifrit.Process, error) {
+
+	tmpConsul := path.Join(os.TempDir(), "consul")
+
+	if _, err := os.Stat(tmpConsul); err == nil {
+		err := os.RemoveAll(tmpConsul)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	assert := assert.New(t)
-
-	exist, err := IntegrationConfig.Provider.DriverInstanceNameExists("testInstance")
+	err := os.MkdirAll(tmpConsul, 0755)
 	if err != nil {
-		assert.Error(err, "Unable to check driver instance name existance")
-	}
-	assert.NoError(err)
-	assert.True(exist)
-}
-
-func Test_IntDriverTypeExists(t *testing.T) {
-	initialized, err := initProvider()
-	if initialized == false {
-		t.Skip("Skipping Consul Set Driver test, environment variables not set: CONSUL_ADDRESS(host:port), CONSUL_DATACENTER, CONSUL_TOKEN / CONSUL_USER + CONSUL_PASSWORD, CONSUL_SCHEMA")
-		t.Log(err)
+		return nil, err
 	}
 
-	assert := assert.New(t)
-
-	exist, err := IntegrationConfig.Provider.DriverTypeExists("testType")
+	TempConsulPath, err := ioutil.TempDir(tmpConsul, "")
 	if err != nil {
-		assert.Error(err, "Unable to check driver type existance")
-	}
-	assert.NoError(err)
-	assert.True(exist)
-}
-
-func Test_IntLoadConfiguration(t *testing.T) {
-	initialized, err := initProvider()
-	if initialized == false {
-		t.Skip("Skipping Consul Set Driver test, environment variables not set: CONSUL_ADDRESS(host:port), CONSUL_DATACENTER, CONSUL_TOKEN / CONSUL_USER + CONSUL_PASSWORD, CONSUL_SCHEMA")
-		t.Log(err)
+		return nil, err
 	}
 
-	assert := assert.New(t)
+	consulRunner := ginkgomon.New(ginkgomon.Config{
+		Name:              "consul",
+		Command:           exec.Command(DefaultConsulPath, "agent", "-server", "-bootstrap-expect", "1", "-data-dir", TempConsulPath, "-advertise", "127.0.0.1"),
+		AnsiColorCode:     "",
+		StartCheck:        "New leader elected",
+		StartCheckTimeout: 5 * time.Second,
+		Cleanup:           func() {},
+	})
 
-	configuration, err := IntegrationConfig.Provider.LoadConfiguration()
-	if err != nil {
-		assert.Error(err, "Load configuration failed")
-	}
-	t.Log(configuration.Drivers)
-	assert.NoError(err)
+	consulProcess := ginkgomon.Invoke(consulRunner)
+
+	// wait for the processes to start before returning
+	<-consulProcess.Ready()
+
+	return consulProcess, nil
 }

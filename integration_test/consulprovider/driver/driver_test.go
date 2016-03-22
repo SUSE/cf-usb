@@ -253,7 +253,7 @@ func executeCreateDriverTest(t *testing.T, managementApiPort uint16, driverName 
 }
 
 func executeGetDriverTest(t *testing.T, managementApiPort uint16, driverId string) {
-	getDriverResp, err := ExecuteHttpCall("GET", fmt.Sprintf("http://localhost:%[1]v/drivers/%[2]s", managementApiPort, driverId), nil)
+	getDriverResp, err := ExecuteHttpCall("GET", fmt.Sprintf("http://localhost:%[1]v/drivers/%[2]s", managementApiPort, driverId), nil, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -303,7 +303,7 @@ func executeUpdateDriverTest(t *testing.T, managementApiPort uint16, driver Driv
 		driver.DriverType,
 		updateDriverName))
 
-	updateDriverResp, err := ExecuteHttpCall("PUT", fmt.Sprintf("http://localhost:%[1]v/drivers/%[2]s", managementApiPort, driver.Id), bytes.NewBuffer(driverValues))
+	updateDriverResp, err := ExecuteHttpCall("PUT", fmt.Sprintf("http://localhost:%[1]v/drivers/%[2]s", managementApiPort, driver.Id), bytes.NewBuffer(driverValues), true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -330,7 +330,7 @@ func executeDeleteDriverTest(t *testing.T, managementApiPort uint16, driver Driv
 
 	Expect(string(deleteDriverContent)).To(Equal(""))
 
-	getDriverDeletedResp, err := ExecuteHttpCall("GET", fmt.Sprintf("http://localhost:%[1]v/drivers/%[2]s", managementApiPort, driver.Id), nil)
+	getDriverDeletedResp, err := ExecuteHttpCall("GET", fmt.Sprintf("http://localhost:%[1]v/drivers/%[2]s", managementApiPort, driver.Id), nil, true)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -301,7 +301,7 @@ func GetFileSha(filePath string) (string, error) {
 	return base64.StdEncoding.EncodeToString(sha1.Sum(nil)), nil
 }
 
-func ExecuteHttpCall(verb, path string, body io.Reader) (*http.Response, error) {
+func ExecuteHttpCall(verb, path string, body io.Reader, isManagementCall bool) (*http.Response, error) {
 	token, err := GenerateUaaToken()
 	if err != nil {
 		return nil, err
@@ -310,8 +310,9 @@ func ExecuteHttpCall(verb, path string, body io.Reader) (*http.Response, error) 
 	request, err := http.NewRequest(verb, path, body)
 	request.Header.Add("Content-Type", "application/json")
 	request.Header.Add("Accept", "application/json")
-	request.Header.Add("Authorization", token)
-
+	if isManagementCall {
+		request.Header.Add("Authorization", token)
+	}
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {
 		return nil, err
@@ -391,7 +392,7 @@ func UnmarshalDriverInstancesResponse(body io.ReadCloser) (string, []DriverInsta
 func GetDrivers(managementApiPort uint16) (int, string, []DriverResponse, error) {
 	var drivers []DriverResponse
 
-	getDriversResp, err := ExecuteHttpCall("GET", fmt.Sprintf("http://localhost:%[1]v/drivers", managementApiPort), nil)
+	getDriversResp, err := ExecuteHttpCall("GET", fmt.Sprintf("http://localhost:%[1]v/drivers", managementApiPort), nil, true)
 	if err != nil {
 		return 0, "", drivers, err
 	}
@@ -408,7 +409,7 @@ func GetDrivers(managementApiPort uint16) (int, string, []DriverResponse, error)
 func CreateDriver(managementApiPort uint16, driverName string) (int, string, DriverResponse, error) {
 	var driver DriverResponse
 
-	newDriverResp, err := ExecuteHttpCall("POST", fmt.Sprintf("http://localhost:%[1]v/drivers", managementApiPort), strings.NewReader(fmt.Sprintf(`{"name":"%[1]s", "driver_type":"%[2]s"}`, driverName, driverName)))
+	newDriverResp, err := ExecuteHttpCall("POST", fmt.Sprintf("http://localhost:%[1]v/drivers", managementApiPort), strings.NewReader(fmt.Sprintf(`{"name":"%[1]s", "driver_type":"%[2]s"}`, driverName, driverName)), true)
 	if err != nil {
 		return 0, "", driver, err
 	}
@@ -493,7 +494,7 @@ func UploadDriver(managementApiPort uint16, driverType, driverId string) (int, s
 }
 
 func DeleteDriver(managementApiPort uint16, driverId string) (int, string, error) {
-	deleteDriverResp, err := ExecuteHttpCall("DELETE", fmt.Sprintf("http://localhost:%[1]v/drivers/%[2]s", managementApiPort, driverId), nil)
+	deleteDriverResp, err := ExecuteHttpCall("DELETE", fmt.Sprintf("http://localhost:%[1]v/drivers/%[2]s", managementApiPort, driverId), nil, true)
 	if err != nil {
 		return 0, "", err
 	}
@@ -510,7 +511,7 @@ func DeleteDriver(managementApiPort uint16, driverId string) (int, string, error
 func GetDriverInstances(managementApiPort uint16, driverId string) (int, string, []DriverInstanceResponse, error) {
 	var driverInstances []DriverInstanceResponse
 
-	getDriverInstancesResp, err := ExecuteHttpCall("GET", fmt.Sprintf("http://localhost:%[1]v/driver_instances?driver_id=%[2]s", managementApiPort, driverId), nil)
+	getDriverInstancesResp, err := ExecuteHttpCall("GET", fmt.Sprintf("http://localhost:%[1]v/driver_instances?driver_id=%[2]s", managementApiPort, driverId), nil, true)
 	if err != nil {
 		return 0, "", driverInstances, err
 	}
@@ -529,7 +530,7 @@ func CreateDriverInstance(managementApiPort uint16, driver DriverResponse, drive
 
 	instanceValues := driverInstanceValues(driver.Name, driver.Id)
 
-	newDriverInstResp, err := ExecuteHttpCall("POST", fmt.Sprintf("http://localhost:%[1]v/driver_instances", managementApiPort), bytes.NewBuffer(instanceValues))
+	newDriverInstResp, err := ExecuteHttpCall("POST", fmt.Sprintf("http://localhost:%[1]v/driver_instances", managementApiPort), bytes.NewBuffer(instanceValues), true)
 	if err != nil {
 		return 0, "", driverInstance, err
 	}
@@ -544,7 +545,7 @@ func CreateDriverInstance(managementApiPort uint16, driver DriverResponse, drive
 }
 
 func DeleteDriverInstance(managementApiPort uint16, driverInstanceId string) (int, string, error) {
-	deleteDriverInstResp, err := ExecuteHttpCall("DELETE", fmt.Sprintf("http://localhost:%[1]v/driver_instances/%[2]s", managementApiPort, driverInstanceId), nil)
+	deleteDriverInstResp, err := ExecuteHttpCall("DELETE", fmt.Sprintf("http://localhost:%[1]v/driver_instances/%[2]s", managementApiPort, driverInstanceId), nil, true)
 	if err != nil {
 		return 0, "", err
 	}
