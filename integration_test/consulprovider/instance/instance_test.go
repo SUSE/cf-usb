@@ -285,7 +285,7 @@ func executeCreateDriverInstanceTest(t *testing.T, managementApiPort uint16, dri
 }
 
 func executePingDriverInstanceTest(t *testing.T, managementApiPort uint16, driverInstanceId string) {
-	pingDriverInstResp, err := ExecuteHttpCall("GET", fmt.Sprintf("http://localhost:%[1]v/driver_instances/%[2]s/ping", managementApiPort, driverInstanceId), nil)
+	pingDriverInstResp, err := ExecuteHttpCall("GET", fmt.Sprintf("http://localhost:%[1]v/driver_instances/%[2]s/ping", managementApiPort, driverInstanceId), nil, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -304,7 +304,7 @@ func executePingDriverInstanceTest(t *testing.T, managementApiPort uint16, drive
 }
 
 func executeCheckServiceCreatedTest(t *testing.T, managementApiPort uint16, driverInstanceId string) {
-	getServiceResp, err := ExecuteHttpCall("GET", fmt.Sprintf("http://localhost:%[1]v/services?driver_instance_id=%[2]s", managementApiPort, driverInstanceId), nil)
+	getServiceResp, err := ExecuteHttpCall("GET", fmt.Sprintf("http://localhost:%[1]v/services?driver_instance_id=%[2]s", managementApiPort, driverInstanceId), nil, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -337,7 +337,7 @@ func executeGetDriverInstancesTest(t *testing.T, managementApiPort uint16, drive
 }
 
 func executeGetDriverDialSchemaTest(t *testing.T, managementApiPort uint16, driverId, driverType string) {
-	getDialSchemaResp, err := ExecuteHttpCall("GET", fmt.Sprintf("http://localhost:%[1]v/drivers/%[2]s/dial_schema", managementApiPort, driverId), nil)
+	getDialSchemaResp, err := ExecuteHttpCall("GET", fmt.Sprintf("http://localhost:%[1]v/drivers/%[2]s/dial_schema", managementApiPort, driverId), nil, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -359,7 +359,7 @@ func executeGetDriverDialSchemaTest(t *testing.T, managementApiPort uint16, driv
 }
 
 func executeGetDriverConfigSchemaTest(t *testing.T, managementApiPort uint16, driverId string, assertDriverSchemaContains func(schemaContent string)) {
-	getConfigSchemaResp, err := ExecuteHttpCall("GET", fmt.Sprintf("http://localhost:%[1]v/drivers/%[2]s/config_schema", managementApiPort, driverId), nil)
+	getConfigSchemaResp, err := ExecuteHttpCall("GET", fmt.Sprintf("http://localhost:%[1]v/drivers/%[2]s/config_schema", managementApiPort, driverId), nil, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -385,7 +385,7 @@ func executeNegativeUpdateDriverInstanceTest(t *testing.T, managementApiPort uin
 
 	updateDriverInstNegResp, err := ExecuteHttpCall("PUT",
 		fmt.Sprintf("http://localhost:%[1]v/driver_instances/%[2]s", managementApiPort, firstDriverInstance.Id),
-		bytes.NewBuffer(instanceValuesNeg))
+		bytes.NewBuffer(instanceValuesNeg), true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -407,7 +407,7 @@ func executeUpdateDriverInstanceTest(t *testing.T, managementApiPort uint16, fir
 
 	updateDriverInstResp, err := ExecuteHttpCall("PUT",
 		fmt.Sprintf("http://localhost:%[1]v/driver_instances/%[2]s", managementApiPort, firstDriverInstance.Id),
-		bytes.NewBuffer(instanceValues))
+		bytes.NewBuffer(instanceValues), true)
 
 	if err != nil {
 		t.Fatal(err)
@@ -435,7 +435,7 @@ func executeDeleteDriverInstanceTest(t *testing.T, managementApiPort uint16, dri
 
 	Expect(string(deleteDriverInstContent)).To(Equal(""))
 
-	getDriverDeletedInstancesResp, err := ExecuteHttpCall("GET", fmt.Sprintf("http://localhost:%[1]v/driver_instances/%[2]s", managementApiPort, driverInstanceId), nil)
+	getDriverDeletedInstancesResp, err := ExecuteHttpCall("GET", fmt.Sprintf("http://localhost:%[1]v/driver_instances/%[2]s", managementApiPort, driverInstanceId), nil, true)
 	if err != nil {
 		t.Fatal(err)
 	}

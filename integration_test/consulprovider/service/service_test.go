@@ -295,7 +295,7 @@ func TestMgmtApiConsulProviderDeleteDriverAndInstance(t *testing.T) {
 }
 
 func executeGetServiceByInstanceIdTest(t *testing.T, managementApiPort uint16, firstDriverInstance DriverInstanceResponse) ServiceResponse {
-	getServiceResp, err := ExecuteHttpCall("GET", fmt.Sprintf("http://localhost:%[1]v/services?driver_instance_id=%[2]s", managementApiPort, firstDriverInstance.Id), nil)
+	getServiceResp, err := ExecuteHttpCall("GET", fmt.Sprintf("http://localhost:%[1]v/services?driver_instance_id=%[2]s", managementApiPort, firstDriverInstance.Id), nil, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -322,7 +322,7 @@ func executeGetServiceByInstanceIdTest(t *testing.T, managementApiPort uint16, f
 }
 
 func executeGetServiceTest(t *testing.T, managementApiPort uint16, firstDriverInstance DriverInstanceResponse) ServiceResponse {
-	getServiceResp, err := ExecuteHttpCall("GET", fmt.Sprintf("http://localhost:%[1]v/services/%[2]s", managementApiPort, firstDriverInstance.Service), nil)
+	getServiceResp, err := ExecuteHttpCall("GET", fmt.Sprintf("http://localhost:%[1]v/services/%[2]s", managementApiPort, firstDriverInstance.Service), nil, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -358,7 +358,7 @@ func executeUpdateServiceTest(t *testing.T, managementApiPort uint16, service Se
 		service.DriverInstanceID,
 		updateServiceName))
 
-	updateServiceResp, err := ExecuteHttpCall("PUT", fmt.Sprintf("http://localhost:%[1]v/services/%[2]s", managementApiPort, service.Id), bytes.NewBuffer(serviceValues))
+	updateServiceResp, err := ExecuteHttpCall("PUT", fmt.Sprintf("http://localhost:%[1]v/services/%[2]s", managementApiPort, service.Id), bytes.NewBuffer(serviceValues), true)
 	if err != nil {
 		t.Fatal(err)
 	}

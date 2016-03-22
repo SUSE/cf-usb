@@ -571,7 +571,7 @@ func TestBrokerApiConsulProviderDeleteDriverAndInstance(t *testing.T) {
 }
 
 func executeCatalogTest(t *testing.T, brokerApiPort uint16, credentials brokerapi.BrokerCredentials) []brokerapi.Service {
-	catalogResp, err := ExecuteHttpCall("GET", fmt.Sprintf("http://%[1]s:%[2]s@localhost:%[3]v/v2/catalog", credentials.Username, credentials.Password, brokerApiPort), nil)
+	catalogResp, err := ExecuteHttpCall("GET", fmt.Sprintf("http://%[1]s:%[2]s@localhost:%[3]v/v2/catalog", credentials.Username, credentials.Password, brokerApiPort), nil, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -609,7 +609,7 @@ func executeProvisionAsyncTest(t *testing.T, brokerApiPort uint16, credentials b
 		"PUT",
 		fmt.Sprintf("http://%s:%s@localhost:%[3]v/v2/service_instances/%[4]s?accepts_incomplete=true", credentials.Username, credentials.Password, brokerApiPort, serviceGuid),
 		bytes.NewBuffer(serviceValues),
-	)
+		false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -638,7 +638,7 @@ func executeProvisionTest(t *testing.T, brokerApiPort uint16, credentials broker
 		"PUT",
 		fmt.Sprintf("http://%s:%s@localhost:%[3]v/v2/service_instances/%[4]s", credentials.Username, credentials.Password, brokerApiPort, serviceGuid),
 		bytes.NewBuffer(serviceValues),
-	)
+		false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -665,7 +665,7 @@ func executeBindTest(t *testing.T, brokerApiPort uint16, credentials brokerapi.B
 		"PUT",
 		fmt.Sprintf("http://%s:%s@localhost:%[3]v/v2/service_instances/%[4]s/service_bindings/%[5]s", credentials.Username, credentials.Password, brokerApiPort, serviceGuid, serviceBindingGuid),
 		bytes.NewBuffer(bindValues),
-	)
+		false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -694,7 +694,7 @@ func executeUnbindTest(t *testing.T, brokerApiPort uint16, credentials brokerapi
 		"DELETE",
 		fmt.Sprintf("http://%[1]s:%[2]s@localhost:%[3]v/v2/service_instances/%[4]s/service_bindings/%[5]s?service_id=%[6]s&plan_id=%[7]s", credentials.Username, credentials.Password, brokerApiPort, serviceGuid, serviceBindingGuid, service.ID, servicePlanId),
 		nil,
-	)
+		false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -723,7 +723,7 @@ func executeDeprovisionTest(t *testing.T, brokerApiPort uint16, credentials brok
 		"DELETE",
 		fmt.Sprintf("http://%[1]s:%[2]s@localhost:%[3]v/v2/service_instances/%[4]s?service_id=%[5]s&plan_id=%[6]s", credentials.Username, credentials.Password, brokerApiPort, serviceGuid, service.ID, servicePlanId),
 		nil,
-	)
+		false)
 	if err != nil {
 		t.Fatal(err)
 	}

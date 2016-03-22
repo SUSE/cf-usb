@@ -262,7 +262,7 @@ func TestMgmtApiConsulProviderDeleteDriverAndInstance(t *testing.T) {
 }
 
 func executeGetInfoTest(t *testing.T, managementApiPort uint16) {
-	getInfoResp, err := ExecuteHttpCall("GET", fmt.Sprintf("http://localhost:%[1]v/info", managementApiPort), nil)
+	getInfoResp, err := ExecuteHttpCall("GET", fmt.Sprintf("http://localhost:%[1]v/info", managementApiPort), nil, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -279,7 +279,7 @@ func executeGetInfoTest(t *testing.T, managementApiPort uint16) {
 }
 
 func executeUpdateCatalogTest(t *testing.T, managementApiPort uint16) {
-	updateCatalogResp, err := ExecuteHttpCall("POST", fmt.Sprintf("http://localhost:%[1]v/update_catalog", managementApiPort), nil)
+	updateCatalogResp, err := ExecuteHttpCall("POST", fmt.Sprintf("http://localhost:%[1]v/update_catalog", managementApiPort), nil, true)
 	if err != nil {
 		t.Fatal(err)
 	}
