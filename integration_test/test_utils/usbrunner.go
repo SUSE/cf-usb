@@ -69,6 +69,9 @@ func (r *UsbRunner) configure() *ginkgomon.Runner {
 func (r *UsbRunner) Start() ifrit.Process {
 	runner := r.configure()
 	r.Process = ginkgomon.Invoke(runner)
+
+	<-r.Process.Ready()
+
 	return r.Process
 }
 
