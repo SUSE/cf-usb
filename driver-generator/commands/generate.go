@@ -24,13 +24,15 @@ func GenerateCommand(c *cli.Context) {
 
 	di.GeneratedPath = strings.TrimSpace(c.String("path"))
 
+	di.GenerateParameters = c.Bool("accept-user-parameters")
+
 	if di.GeneratedPath == "" {
 		log.Fatalln("Incorrect Usage, Requires --path argument")
 	}
 
 	baseImp, err := baseImport(di.GeneratedPath)
 	if err != nil {
-
+		log.Fatalln(err)
 	}
 
 	di.BaseImport = baseImp
@@ -77,6 +79,16 @@ func GenerateCommand(c *cli.Context) {
 	defer dialsFile.Close()
 
 	dialsFile.WriteString("{}")
+
+	if di.GenerateParameters {
+		paramsFile, err := os.Create(path.Join(schemasPath, "parameters.json"))
+		if err != nil {
+			log.Fatalln("cannot write parameters json file", err)
+		}
+		defer paramsFile.Close()
+
+		paramsFile.WriteString("{}")
+	}
 
 	log.Println("Done!")
 	log.Println("You can build the driver by running make in the generated directory.")
