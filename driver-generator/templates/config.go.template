@@ -1,6 +1,6 @@
 package config
 
-type {{.DriverName}}DriverConfig struct {
+type DriverConfig struct {
 	User               string `json:"userid"`
 	Pass               string `json:"password"`
 	Host               string `json:"host"`

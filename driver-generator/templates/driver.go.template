@@ -52,6 +52,25 @@ func (d {{.DriverName}}Driver) GetConfigSchema(request string, response *string)
 	return nil
 }
 
+func (d {{.DriverName}}Driver) GetParametersSchema(request string, response *string) error {
+	d.logger.Info("get-parameters-schema-request", lager.Data{"request": request})
+	{{if .GenerateParameters}} 
+
+	parametersSchema, err := driverdata.Asset("schemas/parameters.json")
+
+	if err != nil {
+		return err
+	}
+
+	*response = string(parametersSchema)
+
+	{{else}} 
+		//Does not support custom parameters
+	{{end}}	
+
+	return nil
+}
+
 func (d {{.DriverName}}Driver) ProvisionInstance(request driver.ProvisionInstanceRequest, response *driver.Instance) error {
 	d.logger.Info("provision-instance-request", lager.Data{"instance-id": request.InstanceID, "config": string(*request.Config), "dials": string(*request.Dials)})
 
