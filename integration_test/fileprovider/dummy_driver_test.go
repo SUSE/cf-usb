@@ -10,6 +10,7 @@ import (
 	"path"
 	"runtime"
 	"testing"
+	"time"
 
 	. "github.com/hpcloud/cf-usb/integration_test/test_utils"
 	"github.com/hpcloud/cf-usb/lib/config"
@@ -132,7 +133,16 @@ func Test_BrokerWithFileConfigProviderCatalog(t *testing.T) {
 	user := configInfo.BrokerAPI.Credentials.Username
 	pass := configInfo.BrokerAPI.Credentials.Password
 
-	resp, err := http.Get(fmt.Sprintf("http://%s:%s@%s/v2/catalog", user, pass, usb.BrokerAddress()))
+	var err error
+	var resp *http.Response
+	for i := 0; i < 3; i++ {
+		resp, err = http.Get(fmt.Sprintf("http://%s:%s@%s/v2/catalog", user, pass, usb.BrokerAddress()))
+		if err == nil {
+			break
+		}
+		time.Sleep(5 * time.Second)
+	}
+
 	Expect(err).NotTo(HaveOccurred())
 	defer resp.Body.Close()
 
