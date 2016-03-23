@@ -34,7 +34,7 @@ func init_mgmt(provider config.ConfigProvider) error {
 	if err != nil {
 		return err
 	}
-	buildDir := filepath.Join(workDir, "../../build", fmt.Sprintf("%s-%s", runtime.GOOS, runtime.GOARCH))
+	buildDir := filepath.Join(workDir, "../../build", fmt.Sprintf("%s-%s", runtime.GOOS, runtime.GOARCH), "drivers")
 	os.Setenv("USB_DRIVER_PATH", buildDir)
 
 	swaggerJSON, err := data.Asset("swagger-spec/api.json")

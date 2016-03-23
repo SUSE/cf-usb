@@ -139,7 +139,7 @@ func CheckSolutionIsBuild() (string, bool, error) {
 		return "", false, err
 	}
 
-	binpath := path.Join(dir, DefaultBuildDir, architecture, "usb")
+	binpath := path.Join(dir, DefaultBuildDir, architecture, "usb", "usb")
 
 	_, err = os.Stat(binpath)
 	return binpath, os.IsNotExist(err), err
@@ -437,7 +437,7 @@ func UploadDriver(managementApiPort uint16, driverType, driverId string) (int, s
 
 	architecture := fmt.Sprintf("%s-%s", runtime.GOOS, runtime.GOARCH)
 
-	bitsPath := path.Join(dir, DefaultBuildDir, architecture, driverType)
+	bitsPath := path.Join(dir, DefaultBuildDir, architecture, "drivers", driverType)
 	sha, err := GetFileSha(bitsPath)
 	if err != nil {
 		return 0, "", err
