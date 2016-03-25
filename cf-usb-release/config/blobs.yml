@@ -3,10 +3,10 @@ debian_nfs_server/nfs-kernel-server_1%3a1.2.0-4ubuntu4.1_amd64.deb:
   object_id: rest/objects/4e4e78bca41e122204e4e9863d076304f307136db190
   sha: a44b3f8319984bace61f21bb6d15cee1419e5bf3
   size: 169618
-golang/go1.4.3.linux-amd64.tar.gz:
-  object_id: 17b23a63-49af-467c-8893-db57a059d7b3
-  sha: 332b64236d30a8805fc8dd8b3a269915b4c507fe
-  size: 61210288
+golang/go1.6.linux-amd64.tar.gz:
+  object_id: 262cac65-bb94-4c80-a4c8-9bb16495b1fe
+  sha: 01a6a28dbe31a53103b600979bbbbd63a8104456
+  size: 84799480
 consul/consul-template_0.9.0_linux_amd64.tar.gz:
   object_id: e83bcdcd-2f31-4b73-8cf8-516d54e8f59a
   sha: a44e441f9347abe64956e5bb30c4d4b0464d1f73

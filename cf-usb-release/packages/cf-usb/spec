@@ -10,4 +10,4 @@ files:
   - cf-usb/integration_test/**/*
 
 dependencies:
-  - golang_1.4
+  - golang
