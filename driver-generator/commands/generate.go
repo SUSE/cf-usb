@@ -18,6 +18,10 @@ import (
 func GenerateCommand(c *cli.Context) {
 	validateArgsCount(c, 1)
 
+	if strings.Contains(c.Args().First(),"-") {
+		log.Fatalln("Driver name cannot contain dashes","")
+	}
+
 	di := driverInfo{}
 
 	di.DriverName = c.Args().First()
