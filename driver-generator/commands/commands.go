@@ -13,7 +13,7 @@ var Commands []cli.Command = []cli.Command{
 	{
 		Name:        "generate",
 		Description: "Generate a new drivers",
-		Usage:       "driver-generator generate my-driver --path generated-driver --accept-user-parameters",
+		Usage:       "driver-generator generate {my-driver} {--path generated-driver} [--accept-user-parameters]",
 		Action:      GenerateCommand,
 		Flags: []cli.Flag{
 			cli.StringFlag{
