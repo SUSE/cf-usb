@@ -14,6 +14,7 @@ import (
 type ServicePlanInterface interface {
 	Update(serviceGuid string) error
 	GetServiceGuidByLabel(string, string) (string, error)
+	GetServicePlans(string, string) (*PlanResources, error)
 }
 
 type ServicePlan struct {
@@ -75,7 +76,7 @@ func (sp *ServicePlan) Update(serviceName string) error {
 		return err
 	}
 
-	servicePlans, err := sp.getServicePlans(serviceGuid, token)
+	servicePlans, err := sp.GetServicePlans(serviceGuid, token)
 	if err != nil {
 		return err
 	}
@@ -150,7 +151,7 @@ func (sp *ServicePlan) GetServiceGuidByLabel(serviceLabel, token string) (string
 	return guid, nil
 }
 
-func (sp *ServicePlan) getServicePlans(serviceGuid, token string) (*PlanResources, error) {
+func (sp *ServicePlan) GetServicePlans(serviceGuid, token string) (*PlanResources, error) {
 	log := sp.logger.Session("get-service-plans", lager.Data{"service-guid": serviceGuid})
 	log.Debug("starting")
 
