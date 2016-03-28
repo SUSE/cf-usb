@@ -45,7 +45,6 @@ build-drivers : build-dummy-async-driver build-dummy-driver build-mongo-driver b
 build-drivers : build-mssql-driver build-postgres-driver build-rabbitmq-driver build-redis-driver
 
 build-usb:
-	@godep restore
 	$(call buildme,./cmd/usb,usb)
 
 
@@ -138,12 +137,6 @@ tools:
 	#Tools for integration tests
 	go get github.com/nats-io/gnatsd
 	#Fix for consul
-	if [ ! -d "$(GOPATH)/src/github.com/hashicorp/consul" ]; then \
-	git clone https://github.com/hashicorp/consul.git $(GOPATH)/src/github.com/hashicorp/consul; \
-	cd $(GOPATH)/src/github.com/hashicorp/consul; \
-	git checkout tags/v0.6.3; \
-	cd -; \
-	fi
 	go get github.com/hashicorp/consul
 
 clean: cleangeneratedfiles
