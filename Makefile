@@ -161,12 +161,12 @@ genswagger:
 	go-bindata -pkg="data" -o lib/data/swagger.go swagger-spec/
 
 dist: build
-ifeq ("$(ARCH)","") 
+ifeq ("$(PLATFORM)","") 
 	@echo "$(OK_COLOR)==> Disting all$(NO_COLOR)"; \
 	for OS in $(OSES); do \
-		tar czf cf-plugin-usb-$(APP_VERSION)-$$OS-amd64.tgz build/$$OS-amd64/*; \
+		tar czf cf-usb-$(APP_VERSION)-$$OS-amd64.tgz build/$$OS-amd64/*; \
 	done; 
 else 
-	@echo "$(OK_COLOR)==> Disting $(ARCH)$(NO_COLOR)"; \
-	tar czf cf-plugin-usb-$(APP_VERSION)-$(ARCH)-amd64.tgz build/$(ARCH)-amd64/*; 
+	@echo "$(OK_COLOR)==> Disting $(PLATFORM)$(NO_COLOR)"; \
+	tar czf cf-usb-$(APP_VERSION)-$(PLATFORM)-amd64.tgz build/$(PLATFORM)-amd64/*; 
 endif
