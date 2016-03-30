@@ -8,7 +8,8 @@ OSES=linux darwin
 
 include version.mk
 
-APP_VERSION=$(VERSION)-$(BUILD_NUMBER)
+COMMIT_HASH=$(shell git log --pretty=format:'%h' -n 1)
+APP_VERSION=$(VERSION)-$(COMMIT_HASH)
 DIST_FIND_BUILDS=find * -type d -not -path "forpatches" -exec
 
 .PHONY: all dist format lint vet build test tools bench clean generate cleangeneratedfiles
@@ -158,3 +159,14 @@ genswagger:
 	swagger generate server -f swagger-spec/api.json -m genmodel -s "" -A usb-mgmt -t lib
 	rm -rf lib/cmd
 	go-bindata -pkg="data" -o lib/data/swagger.go swagger-spec/
+
+dist: build
+ifeq ("$(ARCH)","") 
+	@echo "$(OK_COLOR)==> Disting all$(NO_COLOR)"; \
+	for OS in $(OSES); do \
+		tar czf cf-plugin-usb-$(APP_VERSION)-$$OS-amd64.tgz build/$$OS-amd64/*; \
+	done; 
+else 
+	@echo "$(OK_COLOR)==> Disting $(ARCH)$(NO_COLOR)"; \
+	tar czf cf-plugin-usb-$(APP_VERSION)-$(ARCH)-amd64.tgz build/$(ARCH)-amd64/*; 
+endif
