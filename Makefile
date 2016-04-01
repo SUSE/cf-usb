@@ -107,7 +107,7 @@ cleangeneratedfiles:
 test:
 	@echo "$(OK_COLOR)==> Testing$(NO_COLOR)"
 	export GOPATH=$(shell godep path):$(shell echo $$GOPATH) &&\
-	gocov test ./... -v | gocov-xml > coverage.xml
+	gocov test ./... -v -timeout 60m | gocov-xml > coverage.xml
 	@echo "$(NO_COLOR)\c"
 
 tools:
