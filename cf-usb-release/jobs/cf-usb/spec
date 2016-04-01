@@ -3,7 +3,7 @@ name: cf-usb
 templates:
   cf-usb.ctl.erb:                       bin/cf-usb.ctl
 packages:
-  - golang_1.4
+  - golang
   - cf-usb
 
 properties:

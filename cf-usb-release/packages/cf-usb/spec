@@ -8,6 +8,8 @@ files:
   - cf-usb/cmd/**/*
   - cf-usb/driver/**/*
   - cf-usb/integration_test/**/*
+  - cf-usb/driver-generator/**/*
+  - cf-usb/version.mk
 
 dependencies:
-  - golang_1.4
+  - golang

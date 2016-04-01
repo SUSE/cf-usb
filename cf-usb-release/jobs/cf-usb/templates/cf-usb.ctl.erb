@@ -42,9 +42,9 @@ function start()
     do
       driver_index=$(( $driver_index + 1 ))
 
-	    curl -X PUT -d "`basename $driver`" http://<%= p("cf-usb.configconnectionstring") %>/v1/kv/usb/drivers/00000000-0000-0000-0000-`printf "%012d" $driver_index`/Name
+	    curl -s -S -X PUT -d "`basename $driver`" http://<%= p("cf-usb.configconnectionstring") %>/v1/kv/usb/drivers/00000000-0000-0000-0000-`printf "%012d" $driver_index`/Name
 
-      curl -X PUT -d "`basename $driver`" http://<%= p("cf-usb.configconnectionstring") %>/v1/kv/usb/drivers/00000000-0000-0000-0000-`printf "%012d" $driver_index`/Type
+      curl -s -S -X PUT -d "`basename $driver`" http://<%= p("cf-usb.configconnectionstring") %>/v1/kv/usb/drivers/00000000-0000-0000-0000-`printf "%012d" $driver_index`/Type
     done
     <% end %>
 
@@ -54,10 +54,10 @@ function start()
 
     management_api='{"broker_name":"<%= p("cf-usb.management.broker_name") %>","listen":":<%= p("cf-usb.management.port") %>","dev_mode":<%= p("cf-usb.management.dev_mode") %>,"uaa_secret":"<%= p("cf-usb.management.uaa.secret") %>","uaa_client":"<%= p("cf-usb.management.uaa.client") %>","authentication":{"uaa":{"adminscope":"usb.management.admin","public_key":"<%= p("cf-usb.management.public_key").gsub("\n","\\n").gsub("        ","") %>"}},"cloud_controller":{"api":"<%= p("cc.srv_api_uri") %>","skip_tls_validation":<%= p("cf-usb.skip_tls_validation") %>}}'
 
-    curl -X PUT -d "$broker_api" http://<%= p("cf-usb.configconnectionstring") %>/v1/kv/usb/broker_api
-    curl -X PUT -d "$management_api" http://<%= p("cf-usb.configconnectionstring") %>/v1/kv/usb/management_api
+    curl -s -S -X PUT -d "$broker_api" http://<%= p("cf-usb.configconnectionstring") %>/v1/kv/usb/broker_api
+    curl -s -S -X PUT -d "$management_api" http://<%= p("cf-usb.configconnectionstring") %>/v1/kv/usb/management_api
     # TODO: the 2.6 constant here is a hack
-    curl -X PUT -d "2.6" http://<%= p("cf-usb.configconnectionstring") %>/v1/kv/usb/api_version
+    curl -s -S -X PUT -d "2.6" http://<%= p("cf-usb.configconnectionstring") %>/v1/kv/usb/api_version
     <% end %>
 
     # TODO: This will leave old drivers behind in consul
@@ -68,7 +68,7 @@ function start()
     # <% if p("cf-usb.configprovider") == "consulConfigProvider" %>
     # for driver in $USB_DRIVER_PATH/*;
     # do
-	  #   curl -X PUT -d "`basename $driver`" http://<%= p("cf-usb.configconnectionstring") %>/v1/kv/usb/drivers/`random_uuid`
+	  #   curl -s -S -X PUT -d "`basename $driver`" http://<%= p("cf-usb.configconnectionstring") %>/v1/kv/usb/drivers/`random_uuid`
     # done
     # <% end %>
     # <% end %>

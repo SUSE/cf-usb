@@ -2,6 +2,7 @@
 # abort script on any command that exit with a non zero value
 set -x -e
 
+
 REPO_NAME=github.com/hpcloud/cf-usb
 REPO_DIR=${BOSH_INSTALL_TARGET}/src/${REPO_NAME}
 DRIVERS_DIR=/var/vcap/nfs/shared/drivers
@@ -13,26 +14,21 @@ cd cf-usb
 cp -R * $REPO_DIR
 
 export GOPATH=$BOSH_INSTALL_TARGET:${REPO_DIR}/Godeps/_workspace
-export GOROOT=$(readlink -nf /var/vcap/packages/golang_1.4)
+export GOROOT=$(readlink -nf /var/vcap/packages/golang)
 export PATH=$GOROOT/bin:$PATH
 
-cd ${REPO_DIR}/cmd/usb
+cd ${REPO_DIR}
 
-go build -a
+make build
 
 [ ! -d ${BOSH_INSTALL_TARGET}/bin/drivers ] && mkdir -p ${BOSH_INSTALL_TARGET}/bin/drivers
 
-cp usb ${BOSH_INSTALL_TARGET}/bin/
+cp build/linux-amd64/usb/usb ${BOSH_INSTALL_TARGET}/bin/
 
 [ ! -d $DRIVERS_DIR ] && mkdir -p $DRIVERS_DIR
 
-for i in ${REPO_DIR}/cmd/driver/* ;
-do 
-  cd $i
-  go build -a
-  cp `basename $i` $DRIVERS_DIR
-  cp `basename $i` ${BOSH_INSTALL_TARGET}/bin/drivers
-  cd -
-done
+cp build/linux-amd64/drivers/* $DRIVERS_DIR
+
+cp build/linux-amd64/drivers/* ${BOSH_INSTALL_TARGET}/bin/drivers
 
 rm -rf ${BOSH_INSTALL_TARGET}/src
