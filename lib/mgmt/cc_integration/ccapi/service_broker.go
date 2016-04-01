@@ -250,35 +250,18 @@ func (sb *ServiceBroker) CheckServiceInstancesExist(serviceName string) bool {
 		return false
 	}
 
-	path := fmt.Sprintf("/v2/service_plans?q=service_guid:%s", serviceGuid)
-
+	servicePlans, err := sp.GetServicePlans(serviceGuid, token)
+	if err != nil {
+		log.Error("check-service-instance-exists-get-service-plans", err)
+		return false
+	}
+	
 	headers := make(map[string]string)
 	headers["Authorization"] = token
 	headers["Content-Type"] = "application/x-www-form-urlencoded; charset=UTF-8"
 	headers["Accept"] = "application/json; charset=utf-8"
 
-	log.Debug("preparing-request-service_plans", lager.Data{"path": path, "headers": headers})
-
-	findRequest := httpclient.Request{Verb: "GET", Endpoint: sb.ccApi, ApiUrl: path, Headers: headers, StatusCode: 200}
-
-	log.Info("starting-cc-request-service_plans", lager.Data{"path": path})
-
-	response, err := sb.client.Request(findRequest)
-	if err != nil {
-		log.Error("client-request-error-service_plans", err)
-		return false
-	}
-
-	log.Debug("cc-response-service_plans", lager.Data{"response": string(response)})
-
-	resources := &PlanResources{}
-	err = json.Unmarshal(response, &resources)
-	if err != nil {
-		log.Error("unmarshal-service-plans-resources", err)
-		return false
-	}
-
-	for _, plan := range resources.Resources {
+	for _, plan := range servicePlans.Resources {
 		path := fmt.Sprintf("/v2/service_plans/%s/service_instances", plan.Values.Guid)
 
 		log.Debug("preparing-request-service_instances", lager.Data{"path": path, "headers": headers})
