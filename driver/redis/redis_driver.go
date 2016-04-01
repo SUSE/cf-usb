@@ -68,6 +68,8 @@ func (d *RedisDriver) Ping(request *json.RawMessage, response *bool) error {
 func (d *RedisDriver) ProvisionInstance(request driver.ProvisionInstanceRequest, response *driver.Instance) error {
 	d.logger.Info("provision-instance-request", lager.Data{"instance-id": request.InstanceID, "config": string(*request.Config), "dials": string(*request.Dials)})
 
+	response.Description = "Error creating instance"
+
 	err := d.init(request.Config)
 	if err != nil {
 		return err
@@ -79,12 +81,16 @@ func (d *RedisDriver) ProvisionInstance(request driver.ProvisionInstanceRequest,
 	}
 
 	response.Status = status.Created
+	response.InstanceID = request.InstanceID
+	response.Description = "Instance created"
 
 	return nil
 }
 
 func (d *RedisDriver) DeprovisionInstance(request driver.DeprovisionInstanceRequest, response *driver.Instance) error {
 	d.logger.Info("deprovision-request", lager.Data{"instance-id": request})
+
+	response.Description = "Error deleting instance"
 
 	err := d.init(request.Config)
 	if err != nil {
@@ -97,6 +103,8 @@ func (d *RedisDriver) DeprovisionInstance(request driver.DeprovisionInstanceRequ
 	}
 
 	response.Status = status.Deleted
+	response.InstanceID = request.InstanceID
+	response.Description = "Instance deleted"
 
 	return nil
 }

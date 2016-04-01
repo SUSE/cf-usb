@@ -98,6 +98,8 @@ func (d *RabbitmqDriver) GetParametersSchema(request string, response *string) e
 func (d *RabbitmqDriver) ProvisionInstance(request driver.ProvisionInstanceRequest, response *driver.Instance) error {
 	d.logger.Info("provision-instance-request", lager.Data{"instance-id": request.InstanceID, "config": string(*request.Config), "dials": string(*request.Dials)})
 
+	response.Description = "Error creating instance"
+
 	err := d.init(request.Config)
 	if err != nil {
 		return err
@@ -110,6 +112,8 @@ func (d *RabbitmqDriver) ProvisionInstance(request driver.ProvisionInstanceReque
 	}
 
 	response.Status = status.Created
+	response.InstanceID = request.InstanceID
+	response.Description = "Instance created"
 
 	return nil
 }
@@ -210,6 +214,8 @@ func (d *RabbitmqDriver) RevokeCredentials(request driver.RevokeCredentialsReque
 func (d *RabbitmqDriver) DeprovisionInstance(request driver.DeprovisionInstanceRequest, response *driver.Instance) error {
 	d.logger.Info("deprovision-request", lager.Data{"instance-id": request})
 
+	response.Description = "Error deleting instance"
+
 	err := d.init(request.Config)
 	if err != nil {
 		return err
@@ -222,6 +228,8 @@ func (d *RabbitmqDriver) DeprovisionInstance(request driver.DeprovisionInstanceR
 	}
 
 	response.Status = status.Deleted
+	response.InstanceID = request.InstanceID
+	response.Description = "Instance deleted"
 
 	return nil
 }
