@@ -98,6 +98,8 @@ func (d dummyDriver) ProvisionInstance(request driver.ProvisionInstanceRequest, 
 	d.logger.Info("provision-instance-request", lager.Data{"instance-id": request.InstanceID, "config": string(*request.Config), "dials": string(*request.Dials)})
 
 	response.Status = status.Created
+	response.InstanceID = request.InstanceID
+	response.Description = "Instance created"
 
 	return nil
 }
@@ -148,6 +150,8 @@ func (d dummyDriver) DeprovisionInstance(request driver.DeprovisionInstanceReque
 	d.logger.Info("deprovision-request", lager.Data{"instance-id": request})
 
 	response.Status = status.Deleted
+	response.InstanceID = request.InstanceID
+	response.Description = "Instance deleted"
 
 	return nil
 }

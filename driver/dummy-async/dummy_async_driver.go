@@ -92,6 +92,7 @@ func (d dummyAsyncDriver) GetParametersSchema(request string, response *string) 
 func (d dummyAsyncDriver) ProvisionInstance(request driver.ProvisionInstanceRequest, response *driver.Instance) error {
 	d.logger.Info("provision-instance-request", lager.Data{"instance-id": request.InstanceID, "config": string(*request.Config), "dials": string(*request.Dials)})
 
+	response.Description = "Error creating instance"
 	config, err := d.init(request.Config)
 	if err != nil {
 		return err
@@ -106,6 +107,8 @@ func (d dummyAsyncDriver) ProvisionInstance(request driver.ProvisionInstanceRequ
 
 	ioutil.WriteFile(serviceFilePath, []byte(config.SucceedCout), 0644)
 	response.Status = status.InProgress
+	response.InstanceID = request.InstanceID
+	response.Description = "Instance created"
 
 	return nil
 }
@@ -176,6 +179,8 @@ func (d dummyAsyncDriver) RevokeCredentials(request driver.RevokeCredentialsRequ
 func (d dummyAsyncDriver) DeprovisionInstance(request driver.DeprovisionInstanceRequest, response *driver.Instance) error {
 	d.logger.Info("deprovision-request", lager.Data{"instance-id": request})
 
+	response.Description = "Error deleting instance"
+
 	wd, err := os.Getwd()
 	if err != nil {
 		return err
@@ -185,6 +190,8 @@ func (d dummyAsyncDriver) DeprovisionInstance(request driver.DeprovisionInstance
 
 	os.Remove(serviceFilePath)
 	response.Status = status.Deleted
+	response.InstanceID = request.InstanceID
+	response.Description = "Instance deleted"
 
 	return nil
 }

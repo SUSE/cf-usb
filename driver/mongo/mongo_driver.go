@@ -97,6 +97,8 @@ func (d *MongoDriver) GetParametersSchema(request string, response *string) erro
 func (e *MongoDriver) ProvisionInstance(request driver.ProvisionInstanceRequest, response *driver.Instance) error {
 	e.logger.Info("provision-instance-request", lager.Data{"instance-id": request.InstanceID, "config": string(*request.Config), "dials": string(*request.Dials)})
 
+	response.Description = "Error creating instance"
+
 	err := e.init(request.Config)
 	if err != nil {
 		return err
@@ -108,6 +110,8 @@ func (e *MongoDriver) ProvisionInstance(request driver.ProvisionInstanceRequest,
 	}
 
 	response.Status = status.Created
+	response.InstanceID = request.InstanceID
+	response.Description = "Instance created"
 
 	return nil
 }
@@ -207,6 +211,8 @@ func (e *MongoDriver) RevokeCredentials(request driver.RevokeCredentialsRequest,
 func (e *MongoDriver) DeprovisionInstance(request driver.DeprovisionInstanceRequest, response *driver.Instance) error {
 	e.logger.Info("deprovision-request", lager.Data{"instance-id": request})
 
+	response.Description = "Error deleting instance"
+
 	err := e.init(request.Config)
 	if err != nil {
 		return err
@@ -218,6 +224,8 @@ func (e *MongoDriver) DeprovisionInstance(request driver.DeprovisionInstanceRequ
 	}
 
 	response.Status = status.Deleted
+	response.InstanceID = request.InstanceID
+	response.Description = "Instance deleted"
 
 	return nil
 }

@@ -93,6 +93,8 @@ func (d *PostgresDriver) GetParametersSchema(request string, response *string) e
 func (d *PostgresDriver) ProvisionInstance(request driver.ProvisionInstanceRequest, response *driver.Instance) error {
 	d.logger.Info("provision-instance-request", lager.Data{"instance-id": request.InstanceID, "config": string(*request.Config), "dials": string(*request.Dials)})
 
+	response.Description = "Error creating instance"
+
 	err := d.init(request.Config)
 	if err != nil {
 		return err
@@ -111,6 +113,8 @@ func (d *PostgresDriver) ProvisionInstance(request driver.ProvisionInstanceReque
 	}
 
 	response.Status = status.Created
+	response.InstanceID = request.InstanceID
+	response.Description = "Instance created"
 
 	return nil
 }
@@ -247,6 +251,8 @@ func (d *PostgresDriver) RevokeCredentials(request driver.RevokeCredentialsReque
 func (d *PostgresDriver) DeprovisionInstance(request driver.DeprovisionInstanceRequest, response *driver.Instance) error {
 	d.logger.Info("deprovision-request", lager.Data{"instance-id": request})
 
+	response.Description = "Error deleting instance"
+
 	err := d.init(request.Config)
 	if err != nil {
 		return err
@@ -265,6 +271,8 @@ func (d *PostgresDriver) DeprovisionInstance(request driver.DeprovisionInstanceR
 	}
 
 	response.Status = status.Deleted
+	response.InstanceID = request.InstanceID
+	response.Description = "Instance deleted"
 
 	return nil
 }
