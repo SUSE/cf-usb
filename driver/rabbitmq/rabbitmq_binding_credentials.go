@@ -9,4 +9,7 @@ type RabbitmqBindingCredentials struct {
 	Password     string `json:"password"`
 	Uri          string `json:"uri"`
 	DashboardUrl string `json:"dashboard_url"`
+	Name         string `json:"name"`
+	User         string `json:"user"`
+	Pass         string `json:"pass"`
 }

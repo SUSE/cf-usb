@@ -31,7 +31,7 @@ func (e *MysqlDriver) secureRandomString(bytesOfEntpry int) string {
 		e.logger.Fatal("rng-failure", err)
 	}
 
-	return base64.URLEncoding.EncodeToString(rb)
+	return base64.RawURLEncoding.EncodeToString(rb)
 }
 
 func (e *MysqlDriver) getMD5Hash(text string) (string, error) {
@@ -184,10 +184,16 @@ func (e *MysqlDriver) GenerateCredentials(request driver.GenerateCredentialsRequ
 		Host:     e.conf.Host,
 		Port:     e.conf.Port,
 		Username: username,
+		User:     username,
 		Password: password,
 		Database: "d" + strings.Replace(request.InstanceID, "-", "", -1),
-		ConnectionString: generateConnectionString(e.conf.Host, e.conf.Port,
+		ConnectionString: generateConnections(ConnectionStringTemplate, e.conf.Host, e.conf.Port,
 			"d"+strings.Replace(request.InstanceID, "-", "", -1), username, password),
+		JdbcUrl: generateConnections(JdbcUrlTemplate, e.conf.Host, e.conf.Port,
+			"d"+strings.Replace(request.InstanceID, "-", "", -1), username, password),
+		Uri: generateConnections(UriTemplate, e.conf.Host, e.conf.Port,
+			"d"+strings.Replace(request.InstanceID, "-", "", -1), username, password),
+		Name: "d" + strings.Replace(request.InstanceID, "-", "", -1),
 	}
 
 	*response = data

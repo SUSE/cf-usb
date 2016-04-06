@@ -24,7 +24,7 @@ func secureRandomString(bytesOfEntpry int) (string, error) {
 		return "", err
 	}
 
-	return base64.URLEncoding.EncodeToString(rb), nil
+	return base64.RawURLEncoding.EncodeToString(rb), nil
 }
 
 type MssqlDriver struct {

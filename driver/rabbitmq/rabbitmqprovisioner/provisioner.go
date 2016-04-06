@@ -8,13 +8,14 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/hpcloud/cf-usb/driver/rabbitmq/config"
-	"github.com/michaelklishin/rabbit-hole"
-	"github.com/pivotal-golang/lager"
 	"net"
 	"net/url"
 	"regexp"
 	"strings"
+
+	"github.com/hpcloud/cf-usb/driver/rabbitmq/config"
+	"github.com/michaelklishin/rabbit-hole"
+	"github.com/pivotal-golang/lager"
 
 	dockerclient "github.com/fsouza/go-dockerclient"
 )
@@ -276,14 +277,21 @@ func (provisioner *RabbitmqProvisioner) UserExists(containerName, credentialId s
 	if err != nil {
 		return false, err
 	}
-	u, err := rmqc.GetUser(user)
+	users, err := rmqc.ListUsers()
 	if err != nil {
 		return false, err
 	}
-	if u == nil {
+	if users == nil {
 		return false, err
 	}
-	return true, nil
+	
+	for _, u := range users {
+		if u.Name == user{
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
 
 func (provisioner *RabbitmqProvisioner) getContainerState(containerName string) (dockerclient.State, error) {
@@ -374,7 +382,7 @@ func secureRandomString(bytesOfEntpry int) (string, error) {
 		return "", err
 	}
 
-	return base64.URLEncoding.EncodeToString(rb), nil
+	return base64.RawURLEncoding.EncodeToString(rb), nil
 }
 
 func getMD5Hash(text string) (string, error) {
