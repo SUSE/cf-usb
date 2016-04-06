@@ -153,13 +153,13 @@ genswagger:
 	rm -rf lib/cmd
 	go-bindata -pkg="data" -o lib/data/swagger.go swagger-spec/
 
-dist: build
+dist: build 
 ifeq ("$(PLATFORM)","") 
 	@echo "$(OK_COLOR)==> Disting all$(NO_COLOR)"; \
 	for OS in $(OSES); do \
-		tar czf cf-usb-$(APP_VERSION)-$$OS-amd64.tgz build/$$OS-amd64/*; \
+		cd build/$$OS-amd64/ 1> /dev/null; tar czf ../../cf-usb-$(APP_VERSION)-$$OS-amd64.tgz ./; cd - 1> /dev/null; \
 	done; 
 else 
 	@echo "$(OK_COLOR)==> Disting $(PLATFORM)$(NO_COLOR)"; \
-	tar czf cf-usb-$(APP_VERSION)-$(PLATFORM)-amd64.tgz build/$(PLATFORM)-amd64/*; 
+	cd build/$(PLATFORM)-amd64/ 1> /dev/null; tar czf ../../cf-usb-$(APP_VERSION)-$(PLATFORM)-amd64.tgz ./; cd - 1> /dev/null; 
 endif
