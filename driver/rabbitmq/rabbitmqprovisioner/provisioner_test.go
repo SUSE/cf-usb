@@ -105,7 +105,7 @@ func TestUserNotExists(t *testing.T) {
 	credentialId := "someCred"
 
 	exists, err := testRabbitmqProv.rabbitmqProvisioner.UserExists(name, credentialId)
-	assert.Error(err)
+	assert.NoError(err)
 	assert.False(exists)
 }
 

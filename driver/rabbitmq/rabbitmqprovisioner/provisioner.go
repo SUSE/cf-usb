@@ -277,14 +277,21 @@ func (provisioner *RabbitmqProvisioner) UserExists(containerName, credentialId s
 	if err != nil {
 		return false, err
 	}
-	u, err := rmqc.GetUser(user)
+	users, err := rmqc.ListUsers()
 	if err != nil {
 		return false, err
 	}
-	if u == nil {
+	if users == nil {
 		return false, err
 	}
-	return true, nil
+	
+	for _, u := range users {
+		if u.Name == user{
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
 
 func (provisioner *RabbitmqProvisioner) getContainerState(containerName string) (dockerclient.State, error) {
