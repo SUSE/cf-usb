@@ -184,7 +184,11 @@ func (d *PostgresDriver) GenerateCredentials(request driver.GenerateCredentialsR
 		Password:         password,
 		Port:             d.conf.Port,
 		Username:         username,
-		ConnectionString: generateConnectionString(d.conf.Host, d.conf.Port, dbName, username, password),
+		ConnectionString: generateConnectionString(connectionStringTemplate, d.conf.Host, d.conf.Port, dbName, username, password),
+		Name:             dbName,
+		User:             username,
+		Uri:              generateConnectionString(uriTemplate, d.conf.Host, d.conf.Port, dbName, username, password),
+		JdbcUrl:          generateConnectionString(jdbcUrilTemplate, d.conf.Host, d.conf.Port, dbName, username, password),
 	}
 
 	*response = data
@@ -296,5 +300,5 @@ func secureRandomString(bytesOfEntpry int) (string, error) {
 		return "", err
 	}
 
-	return base64.URLEncoding.EncodeToString(rb), nil
+	return base64.RawURLEncoding.EncodeToString(rb), nil
 }

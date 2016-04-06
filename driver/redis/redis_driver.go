@@ -141,6 +141,7 @@ func (d *RedisDriver) GenerateCredentials(request driver.GenerateCredentialsRequ
 		Port:     cred["port"],
 		Host:     host,
 		Hostname: host,
+		Uri:      fmt.Sprintf("redis://:%s@%s:%s/", cred["password"], host, cred["port"]),
 	}
 
 	*response = data

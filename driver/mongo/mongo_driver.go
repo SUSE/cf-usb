@@ -27,7 +27,7 @@ func (e *MongoDriver) secureRandomString(bytesOfEntpry int) string {
 		e.logger.Fatal("rng-failure", err)
 	}
 
-	return base64.URLEncoding.EncodeToString(rb)
+	return base64.RawURLEncoding.EncodeToString(rb)
 }
 
 func NewMongoDriver(logger lager.Logger, db mongoprovisioner.MongoProvisionerInterface) driver.Driver {
@@ -153,12 +153,14 @@ func (e *MongoDriver) GenerateCredentials(request driver.GenerateCredentialsRequ
 		return err
 	}
 	data := MongoBindingCredentials{
-		Hostname:         e.conf.Host,
-		Host:             e.conf.Host,
-		Port:             e.conf.Port,
-		Username:         username,
-		Password:         password,
-		ConnectionString: generateConnectionString(e.conf.Host, e.conf.Port, request.InstanceID, username, password),
+		Hostname: e.conf.Host,
+		Host:     e.conf.Host,
+		Port:     e.conf.Port,
+		Username: username,
+		Password: password,
+		Uri:      generateConnectionString(e.conf.Host, e.conf.Port, request.InstanceID, username, password),
+		Name:     request.InstanceID,
+		Db:       request.InstanceID,
 	}
 
 	*response = data

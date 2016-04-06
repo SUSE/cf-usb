@@ -8,13 +8,14 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/hpcloud/cf-usb/driver/rabbitmq/config"
-	"github.com/michaelklishin/rabbit-hole"
-	"github.com/pivotal-golang/lager"
 	"net"
 	"net/url"
 	"regexp"
 	"strings"
+
+	"github.com/hpcloud/cf-usb/driver/rabbitmq/config"
+	"github.com/michaelklishin/rabbit-hole"
+	"github.com/pivotal-golang/lager"
 
 	dockerclient "github.com/fsouza/go-dockerclient"
 )
@@ -374,7 +375,7 @@ func secureRandomString(bytesOfEntpry int) (string, error) {
 		return "", err
 	}
 
-	return base64.URLEncoding.EncodeToString(rb), nil
+	return base64.RawURLEncoding.EncodeToString(rb), nil
 }
 
 func getMD5Hash(text string) (string, error) {
