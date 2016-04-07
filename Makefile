@@ -114,7 +114,6 @@ tools:
 	@echo "$(OK_COLOR)==> Installing tools$(NO_COLOR)"
 	#Great tools to have, and used in the build file
 	go get -u golang.org/x/tools/cmd/goimports
-	go get -u golang.org/x/tools/cmd/vet
 	go get -u golang.org/x/tools/cmd/cover
 	go get -u github.com/golang/lint/golint
 	#Tools for the project
