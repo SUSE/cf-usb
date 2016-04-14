@@ -184,8 +184,13 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface,
 		driver := &genmodel.Driver{
 			DriverType:      &d.DriverType,
 			DriverInstances: instances,
+<<<<<<< HEAD
 			ID:              params.DriverID,
 			Name:            &d.DriverName,
+=======
+			ID:              &params.DriverID,
+			Name:            d.DriverName,
+>>>>>>> f998b3c... [HCFRO-193] Use rest for calling drivers
 		}
 
 		return &GetDriverOK{Payload: driver}
@@ -497,7 +502,11 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface,
 							return &UpdateDialInternalServerError{Payload: err.Error()}
 						}
 		*/
+<<<<<<< HEAD
 		err = configProvider.SetDial(*params.Dial.DriverInstanceID, dialID, *dial)
+=======
+		err = configProvider.SetDial(params.Dial.DriverInstanceID, dialID, *dial)
+>>>>>>> f998b3c... [HCFRO-193] Use rest for calling drivers
 		if err != nil {
 			return &UpdateDialInternalServerError{Payload: err.Error()}
 		}
@@ -602,7 +611,11 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface,
 							return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
 						}
 		*/
+<<<<<<< HEAD
 		err = configProvider.SetDriverInstance(*params.DriverInstance.DriverID, instanceID, instance)
+=======
+		err = configProvider.SetDriverInstance(params.DriverInstance.DriverID, instanceID, instance)
+>>>>>>> f998b3c... [HCFRO-193] Use rest for calling drivers
 		if err != nil {
 			log.Error("set-driver-instance-failed", err)
 			return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
@@ -740,7 +753,11 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface,
 							return &UpdateDriverInstanceInternalServerError{Payload: err.Error()}
 						}
 		*/
+<<<<<<< HEAD
 		err = configProvider.SetDriverInstance(*params.DriverConfig.DriverID, params.DriverInstanceID, instance)
+=======
+		err = configProvider.SetDriverInstance(params.DriverConfig.DriverID, params.DriverInstanceID, instance)
+>>>>>>> f998b3c... [HCFRO-193] Use rest for calling drivers
 		if err != nil {
 			return &UpdateDriverInstanceInternalServerError{Payload: err.Error()}
 		}
@@ -774,11 +791,17 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface,
 			driverPath = driverPath + ".exe"
 		}
 
+<<<<<<< HEAD
 		if _, err := os.Stat(driverPath); err == nil {
 			err = os.Remove(driverPath)
 			if err != nil {
 				return &DeleteDriverInternalServerError{Payload: err.Error()}
 			}
+=======
+		err = os.Remove(driverPath)
+		if err != nil {
+			return &DeleteDriverInternalServerError{Payload: err.Error()}
+>>>>>>> f998b3c... [HCFRO-193] Use rest for calling drivers
 		}
 
 		err = configProvider.DeleteDriver(params.DriverID)

@@ -1,9 +1,15 @@
 package servicemgr
 
 import (
+<<<<<<< HEAD
 	"github.com/go-openapi/runtime"
 
 	strfmt "github.com/go-openapi/strfmt"
+=======
+	swaggerclient "github.com/go-swagger/go-swagger/client"
+
+	strfmt "github.com/go-swagger/go-swagger/strfmt"
+>>>>>>> f998b3c... [HCFRO-193] Use rest for calling drivers
 
 	client "github.com/hpcloud/cf-usb/lib/servicemgr/client"
 	connection "github.com/hpcloud/cf-usb/lib/servicemgr/client/connection"
@@ -19,7 +25,11 @@ type ServiceManager struct {
 	logger  lager.Logger
 }
 
+<<<<<<< HEAD
 func NewServiceManager(transport runtime.ClientTransport, format strfmt.Registry, logger lager.Logger) ServiceManagerInterface {
+=======
+func NewServiceManager(transport swaggerclient.Transport, format strfmt.Registry, logger lager.Logger) ServiceManagerInterface {
+>>>>>>> f998b3c... [HCFRO-193] Use rest for calling drivers
 	mgr := ServiceManager{}
 	mgr.manager = client.New(transport, format)
 	mgr.logger = logger
@@ -65,8 +75,11 @@ func (s *ServiceManager) GetWorkspace(workspace_id string) (models.ServiceManage
 }
 
 func (s *ServiceManager) DeleteWorkspace(workspace_id string) models.Error {
+<<<<<<< HEAD
 	s.logger.Info("delete workspace", lager.Data{"workspace_id": workspace_id})
 
+=======
+>>>>>>> f998b3c... [HCFRO-193] Use rest for calling drivers
 	params := workspace.NewDeleteWorkspaceParams()
 	params.WorkspaceID = workspace_id
 	errorObj := models.Error{}
@@ -80,8 +93,11 @@ func (s *ServiceManager) DeleteWorkspace(workspace_id string) models.Error {
 }
 
 func (s *ServiceManager) CreateWorkspaceConnection(workspace_id string, request models.ServiceManagerConnectionCreateRequest) (models.ServiceManagerConnectionResponse, models.Error) {
+<<<<<<< HEAD
 	s.logger.Info("create connection", lager.Data{"workspace_id": workspace_id})
 
+=======
+>>>>>>> f998b3c... [HCFRO-193] Use rest for calling drivers
 	response := models.ServiceManagerConnectionResponse{}
 	error := models.Error{}
 	params := connection.CreateConnectionParams{}
@@ -100,8 +116,11 @@ func (s *ServiceManager) CreateWorkspaceConnection(workspace_id string, request 
 }
 
 func (s *ServiceManager) GetWorkspaceConnection(workspace_id string, connection_id string) (models.ServiceManagerConnectionResponse, models.Error) {
+<<<<<<< HEAD
 	s.logger.Info("get connection", lager.Data{"workspace_id": workspace_id, "connection_id": connection_id})
 
+=======
+>>>>>>> f998b3c... [HCFRO-193] Use rest for calling drivers
 	response := models.ServiceManagerConnectionResponse{}
 	error := models.Error{}
 

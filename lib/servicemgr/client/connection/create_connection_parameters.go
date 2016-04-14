@@ -4,10 +4,17 @@ package connection
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+<<<<<<< HEAD
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime"
 
 	strfmt "github.com/go-openapi/strfmt"
+=======
+	"github.com/go-swagger/go-swagger/client"
+	"github.com/go-swagger/go-swagger/errors"
+
+	strfmt "github.com/go-swagger/go-swagger/strfmt"
+>>>>>>> f998b3c... [HCFRO-193] Use rest for calling drivers
 
 	"github.com/hpcloud/cf-usb/lib/servicemgr/models"
 )
@@ -49,7 +56,11 @@ func (o *CreateConnectionParams) WithWorkspaceID(workspaceId string) *CreateConn
 }
 
 // WriteToRequest writes these params to a swagger request
+<<<<<<< HEAD
 func (o *CreateConnectionParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
+=======
+func (o *CreateConnectionParams) WriteToRequest(r client.Request, reg strfmt.Registry) error {
+>>>>>>> f998b3c... [HCFRO-193] Use rest for calling drivers
 
 	var res []error
 

@@ -4,6 +4,7 @@ package workspace
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+<<<<<<< HEAD
 	"github.com/go-openapi/runtime"
 
 	strfmt "github.com/go-openapi/strfmt"
@@ -11,6 +12,15 @@ import (
 
 // New creates a new workspace API client.
 func New(transport runtime.ClientTransport, formats strfmt.Registry) *Client {
+=======
+	"github.com/go-swagger/go-swagger/client"
+
+	strfmt "github.com/go-swagger/go-swagger/strfmt"
+)
+
+// New creates a new workspace API client.
+func New(transport client.Transport, formats strfmt.Registry) *Client {
+>>>>>>> f998b3c... [HCFRO-193] Use rest for calling drivers
 	return &Client{transport: transport, formats: formats}
 }
 
@@ -18,7 +28,11 @@ func New(transport runtime.ClientTransport, formats strfmt.Registry) *Client {
 Client for workspace API
 */
 type Client struct {
+<<<<<<< HEAD
 	transport runtime.ClientTransport
+=======
+	transport client.Transport
+>>>>>>> f998b3c... [HCFRO-193] Use rest for calling drivers
 	formats   strfmt.Registry
 }
 
@@ -31,7 +45,11 @@ func (a *Client) CreateWorkspace(params *CreateWorkspaceParams) (*CreateWorkspac
 		params = NewCreateWorkspaceParams()
 	}
 
+<<<<<<< HEAD
 	result, err := a.transport.Submit(&runtime.ClientOperation{
+=======
+	result, err := a.transport.Submit(&client.Operation{
+>>>>>>> f998b3c... [HCFRO-193] Use rest for calling drivers
 		ID:                 "createWorkspace",
 		Method:             "POST",
 		PathPattern:        "/workspaces",
@@ -56,7 +74,11 @@ func (a *Client) DeleteWorkspace(params *DeleteWorkspaceParams) (*DeleteWorkspac
 		params = NewDeleteWorkspaceParams()
 	}
 
+<<<<<<< HEAD
 	result, err := a.transport.Submit(&runtime.ClientOperation{
+=======
+	result, err := a.transport.Submit(&client.Operation{
+>>>>>>> f998b3c... [HCFRO-193] Use rest for calling drivers
 		ID:                 "deleteWorkspace",
 		Method:             "DELETE",
 		PathPattern:        "/workspaces/{workspace_id}",
@@ -81,7 +103,11 @@ func (a *Client) GetWorkspace(params *GetWorkspaceParams) (*GetWorkspaceOK, erro
 		params = NewGetWorkspaceParams()
 	}
 
+<<<<<<< HEAD
 	result, err := a.transport.Submit(&runtime.ClientOperation{
+=======
+	result, err := a.transport.Submit(&client.Operation{
+>>>>>>> f998b3c... [HCFRO-193] Use rest for calling drivers
 		ID:                 "getWorkspace",
 		Method:             "GET",
 		PathPattern:        "/workspaces/{workspace_id}",
@@ -98,6 +124,10 @@ func (a *Client) GetWorkspace(params *GetWorkspaceParams) (*GetWorkspaceOK, erro
 }
 
 // SetTransport changes the transport on the client
+<<<<<<< HEAD
 func (a *Client) SetTransport(transport runtime.ClientTransport) {
+=======
+func (a *Client) SetTransport(transport client.Transport) {
+>>>>>>> f998b3c... [HCFRO-193] Use rest for calling drivers
 	a.transport = transport
 }

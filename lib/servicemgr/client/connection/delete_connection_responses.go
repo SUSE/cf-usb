@@ -7,9 +7,16 @@ import (
 	"fmt"
 	"io"
 
+<<<<<<< HEAD
 	"github.com/go-openapi/runtime"
 
 	strfmt "github.com/go-openapi/strfmt"
+=======
+	"github.com/go-swagger/go-swagger/client"
+	"github.com/go-swagger/go-swagger/httpkit"
+
+	strfmt "github.com/go-swagger/go-swagger/strfmt"
+>>>>>>> f998b3c... [HCFRO-193] Use rest for calling drivers
 
 	"github.com/hpcloud/cf-usb/lib/servicemgr/models"
 )
@@ -20,7 +27,11 @@ type DeleteConnectionReader struct {
 }
 
 // ReadResponse reads a server response into the recieved o.
+<<<<<<< HEAD
 func (o *DeleteConnectionReader) ReadResponse(response runtime.ClientResponse, consumer runtime.Consumer) (interface{}, error) {
+=======
+func (o *DeleteConnectionReader) ReadResponse(response client.Response, consumer httpkit.Consumer) (interface{}, error) {
+>>>>>>> f998b3c... [HCFRO-193] Use rest for calling drivers
 	switch response.Code() {
 
 	case 200:
@@ -55,7 +66,11 @@ func (o *DeleteConnectionOK) Error() string {
 	return fmt.Sprintf("[DELETE /workspaces/{workspace_id}/connections/{connection_id}][%d] deleteConnectionOK ", 200)
 }
 
+<<<<<<< HEAD
 func (o *DeleteConnectionOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+=======
+func (o *DeleteConnectionOK) readResponse(response client.Response, consumer httpkit.Consumer, formats strfmt.Registry) error {
+>>>>>>> f998b3c... [HCFRO-193] Use rest for calling drivers
 
 	return nil
 }
@@ -86,7 +101,11 @@ func (o *DeleteConnectionDefault) Error() string {
 	return fmt.Sprintf("[DELETE /workspaces/{workspace_id}/connections/{connection_id}][%d] deleteConnection default  %+v", o._statusCode, o.Payload)
 }
 
+<<<<<<< HEAD
 func (o *DeleteConnectionDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+=======
+func (o *DeleteConnectionDefault) readResponse(response client.Response, consumer httpkit.Consumer, formats strfmt.Registry) error {
+>>>>>>> f998b3c... [HCFRO-193] Use rest for calling drivers
 
 	o.Payload = new(models.Error)
 
