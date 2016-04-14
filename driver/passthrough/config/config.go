@@ -10,7 +10,7 @@ type ServiceInstance struct {
 }
 
 type ServiceCredential struct {
-	ID string `"json:"id"`
+	ID string `json:"id"`
 }
 
 type CredentialsConfig struct {
