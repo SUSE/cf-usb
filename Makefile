@@ -3,7 +3,7 @@ OK_COLOR=\033[32;01m
 ERROR_COLOR=\033[31;01m
 WARN_COLOR=\033[33;01m
 DEPS=$(shell go list -f '{{range .TestImports}}{{.}} {{end}}' ./...)
-GOPKGS=$(shell go list -f '{{.Dir}}' ./...)
+GOPKGS=$(shell go list -f '{{.Dir}}' ./... | grep -v /vendor/)
 OSES=linux darwin
 
 include version.mk
@@ -85,20 +85,6 @@ buildme =  @(DIRNAME=$$(basename $(1));\
 		 -ldflags="-X main.version=$(APP_VERSION)" \
 		 -o build/$$OS-amd64/$(2)/$$DIRNAME $(1); \
 	done)
-
-patch: cleangeneratedfiles
-	@echo "$(OK_COLOR)==> Generating Update Patches$(NO_COLOR)"
-	export CGOENABLED=1 && \
-	export GOPATH=$(shell godep path):$(shell echo $$GOPATH) &&\
-	gox -verbose \
-	-ldflags="-X main.version $(APP_VERSION) -X main.updateserver $(PATCH_SERVER) -X main.branch $(PATCH_CHANNEL)" \
-	-os="windows linux darwin " \
-	-arch="amd64" \
-	-output="build/forpatches/{{.OS}}-{{.Arch}}" ./...
-	mv build/forpatches/windows-amd64.exe build/forpatches/windows-amd64
-
-	go-selfupdate "build/forpatches" $(APP_VERSION)
-	ln -s public cf-mgmt_$(MAJOR_MINOR)_$(PATCH_CHANNEL)
 
 cleangeneratedfiles:
 	rm -rf build/forpatches
