@@ -38,12 +38,8 @@ driversbindata:
 	find driver/ -maxdepth 1 -type d \( ! -name driver \) -exec \
 	bash -c "(cd '{}' && go-bindata -pkg="driverdata" -o driverdata/schemas.go schemas/ )" \;
 
-build: generate build-usb build-drivers build-driver-generator
+build: generate build-usb build-driver-generator
 	#       calls all the other necessary builds
-
-build-drivers : build-dummy-async-driver build-dummy-driver build-mongo-driver build-mysql-driver
-
-build-drivers : build-mssql-driver build-postgres-driver build-rabbitmq-driver build-redis-driver build-passthrough-driver
 
 build-usb:
 	$(call buildme,./cmd/usb,usb)
@@ -51,34 +47,6 @@ build-usb:
 
 build-driver-generator:
 	$(call buildme,./driver-generator/cmd/driver-generator,driver-generator)
-
-build-dummy-async-driver:
-	$(call buildme,./cmd/driver/dummy-async,drivers)
-
-build-dummy-driver:
-	$(call buildme,./cmd/driver/dummy,drivers)
-
-build-mongo-driver:
-	$(call buildme,./cmd/driver/mongo,drivers)
-
-build-mssql-driver:
-	$(call buildme,./cmd/driver/mssql,drivers)
-
-build-postgres-driver:
-	$(call buildme,./cmd/driver/postgres,drivers)
-
-build-rabbitmq-driver:
-	$(call buildme,./cmd/driver/rabbitmq,drivers)
-
-build-redis-driver:
-	$(call buildme,./cmd/driver/redis,drivers)
-
-build-mysql-driver:
-	$(call buildme,./cmd/driver/mysql,drivers)
-
-build-passthrough-driver:
-	$(call buildme,./cmd/driver/passthrough,drivers)
-
 
 buildme =  @(DIRNAME=$$(basename $(1));\
 	echo "$(OK_COLOR)==> Building$(NO_COLOR) $$DIRNAME"; \

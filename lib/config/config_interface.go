@@ -43,6 +43,7 @@ type Dial struct {
 }
 
 type DriverInstance struct {
+	TargetURL     string            `json:"target"`
 	Name          string            `json:"name"`
 	Configuration *json.RawMessage  `json:"configuration"`
 	Dials         map[string]Dial   `json:"dials"`

@@ -1,0 +1,357 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "v1",
+    "title": "Catalog Service Manager API",
+    "description": "The first version of the Catalog Service Manager API. \nThis API will be available on the Catalog Service Manager container which\nruns along side your service and serves some of the service management \ncapabilities.\n"
+  },
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "schemes": [
+    "http"
+  ],
+  "paths": {
+    "/workspaces": {
+      "post": {
+        "tags": [
+          "workspace"
+        ],
+        "operationId": "createWorkspace",
+        "description": "Create new workspace",
+        "parameters": [
+          {
+            "name": "create_workspace_request",
+            "in": "body",
+            "description": "The service JSON you want to post",
+            "schema": {
+              "$ref": "#/definitions/ServiceManagerWorkspaceCreateRequest"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "create workspace",
+            "schema": {
+              "$ref": "#/definitions/ServiceManagerWorkspaceResponse"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/workspaces/{workspace_id}": {
+      "get": {
+        "tags": [
+          "workspace"
+        ],
+        "operationId": "getWorkspace",
+        "description": "Get the details for the specified",
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "description": "Workspace ID",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "details of specified Workspace",
+            "schema": {
+              "$ref": "#/definitions/ServiceManagerWorkspaceResponse"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "workspace"
+        ],
+        "operationId": "deleteWorkspace",
+        "description": "Delete specified workspace",
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "description": "Workspace ID",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "delete workspace"
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/workspaces/{workspace_id}/connections": {
+      "post": {
+        "tags": [
+          "connection"
+        ],
+        "operationId": "createConnection",
+        "description": "Create new connection",
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "description": "Workspace ID",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "connection_create_request",
+            "in": "body",
+            "description": "The service JSON you want to post",
+            "schema": {
+              "$ref": "#/definitions/ServiceManagerConnectionCreateRequest"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "create connection",
+            "schema": {
+              "$ref": "#/definitions/ServiceManagerConnectionResponse"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/workspaces/{workspace_id}/connections/{connection_id}": {
+      "get": {
+        "tags": [
+          "connection"
+        ],
+        "operationId": "getConnection",
+        "description": "Get the details for the specified",
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "description": "Workspace ID",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "connection_id",
+            "in": "path",
+            "description": "connection ID",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "details of specified connection",
+            "schema": {
+              "$ref": "#/definitions/ServiceManagerConnectionResponse"
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "connection"
+        ],
+        "operationId": "deleteConnection",
+        "description": "Delete specified connection",
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "description": "Workspace ID",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "connection_id",
+            "in": "path",
+            "description": "connection ID",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "delete connection"
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "ServiceManagerWorkspaceResponse": {
+      "type": "object",
+      "required": [
+        "processing_type",
+        "status"
+      ],
+      "properties": {
+        "processing_type": {
+          "type": "string",
+          "enum": [
+            "None",
+            "Default",
+            "Extension"
+          ],
+          "description": "Processing type"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "none",
+            "unknown",
+            "successful",
+            "failed"
+          ]
+        },
+        "details": {
+          "type": "object",
+          "description": "key value map with connection details (Service manager won't interpret the details of the map it will send this back to the requester as is)",
+          "additionalProperties": {
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "ServiceManagerWorkspaceCreateRequest": {
+      "type": "object",
+      "required": [
+        "workspace_id"
+      ],
+      "properties": {
+        "workspace_id": {
+          "type": "string",
+          "description": "Workspace id"
+        },
+        "details": {
+          "type": "object",
+          "description": "key value map with connection details (Service manager won't interpret the details of the map it will send this back to the requester as is)",
+          "additionalProperties": {
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "ServiceManagerConnectionResponse": {
+      "type": "object",
+      "required": [
+        "processing_type",
+        "status"
+      ],
+      "properties": {
+        "processing_type": {
+          "type": "string",
+          "enum": [
+            "None",
+            "Default",
+            "Extension"
+          ],
+          "description": "Processing type"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "none",
+            "unknown",
+            "successful",
+            "failed"
+          ]
+        },
+        "details": {
+          "type": "object",
+          "description": "key value map with connection details (Service manager won't interpret the details of the map it will send this back to the requester as is)",
+          "additionalProperties": {
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "ServiceManagerConnectionCreateRequest": {
+      "type": "object",
+      "required": [
+        "connection_id"
+      ],
+      "properties": {
+        "connection_id": {
+          "type": "string",
+          "description": "Connection id"
+        },
+        "details": {
+          "type": "object",
+          "description": "key value map with connection details (Service manager won't interpret the details of the map it will send this back to the requester as is)",
+          "additionalProperties": {
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "Error": {
+      "type": "object",
+      "required": [
+        "message"
+      ],
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

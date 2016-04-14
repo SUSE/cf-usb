@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/fatih/structs"
-	"github.com/hpcloud/cf-usb/lib"
+	//	"github.com/hpcloud/cf-usb/lib"
 
 	"bufio"
 	"crypto/sha1"
@@ -27,7 +27,7 @@ import (
 	"github.com/hpcloud/cf-usb/lib/mgmt/cc_integration/ccapi"
 	. "github.com/hpcloud/cf-usb/lib/operations"
 	"github.com/pivotal-golang/lager"
-	"github.com/xeipuuv/gojsonschema"
+	//	"github.com/xeipuuv/gojsonschema"
 
 	uuid "github.com/satori/go.uuid"
 )
@@ -144,7 +144,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface,
 	})
 
 	api.GetDriverSchemaHandler = GetDriverSchemaHandlerFunc(func(params GetDriverSchemaParams, principal interface{}) middleware.Responder {
-		log := log.Session("get-driver-schema")
+		/*log := log.Session("get-driver-schema")
 		log.Info("request", lager.Data{"driver-id": params.DriverID})
 
 		path, err := configProvider.GetDriversPath()
@@ -159,8 +159,8 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface,
 		if err != nil {
 			return &GetDriverSchemaInternalServerError{Payload: err.Error()}
 		}
-
-		return &GetDriverSchemaOK{Payload: genmodel.DriverSchema(schema)}
+		*/
+		return &GetDriverSchemaOK{}
 	})
 
 	api.GetDriverHandler = GetDriverHandlerFunc(func(params GetDriverParams, principal interface{}) middleware.Responder {
@@ -184,7 +184,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface,
 			DriverType:      d.DriverType,
 			DriverInstances: instances,
 			ID:              &params.DriverID,
-			Name:			d.DriverName,
+			Name:            d.DriverName,
 		}
 
 		return &GetDriverOK{Payload: driver}
@@ -282,6 +282,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface,
 
 			driverInstance := &genmodel.DriverInstance{
 				Configuration: di.Configuration,
+				TargetURL:     di.TargetURL,
 				Dials:         dials,
 				DriverID:      params.DriverID,
 				ID:            &driverInstanceID,
@@ -298,30 +299,31 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface,
 	})
 
 	api.PingDriverInstanceHandler = PingDriverInstanceHandlerFunc(func(params PingDriverInstanceParams, principal interface{}) middleware.Responder {
-		log := log.Session("ping-driver-instance")
-		log.Info("request", lager.Data{"driver-instance-id": params.DriverInstanceID})
+		/*	log := log.Session("ping-driver-instance")
+			log.Info("request", lager.Data{"driver-instance-id": params.DriverInstanceID})
 
-		configuration, err := configProvider.LoadConfiguration()
-		if err != nil {
-			return &PingDriverInstanceInternalServerError{Payload: err.Error()}
-		}
+			configuration, err := configProvider.LoadConfiguration()
+			if err != nil {
+				return &PingDriverInstanceInternalServerError{Payload: err.Error()}
+			}
 
-		for _, driver := range configuration.Drivers {
-			for instanceID, instance := range driver.DriverInstances {
-				if instanceID == params.DriverInstanceID {
-					result, err := lib.Ping(instance.Configuration, configuration.DriversPath, driver.DriverType)
-					if err != nil {
-						return &PingDriverInstanceInternalServerError{Payload: err.Error()}
-					}
-					if result == true {
-						return &PingDriverInstanceOK{}
-					} else {
-						return &PingDriverInstanceNotFound{}
+			for _, driver := range configuration.Drivers {
+				for instanceID, instance := range driver.DriverInstances {
+					if instanceID == params.DriverInstanceID {
+						result, err := lib.Ping(instance.Configuration, configuration.DriversPath, driver.DriverType)
+						if err != nil {
+							return &PingDriverInstanceInternalServerError{Payload: err.Error()}
+						}
+						if result == true {
+							return &PingDriverInstanceOK{}
+						} else {
+							return &PingDriverInstanceNotFound{}
+						}
 					}
 				}
 			}
-		}
-		return &PingDriverInstanceNotFound{}
+			return &PingDriverInstanceNotFound{}*/
+		return &PingDriverInstanceOK{}
 	})
 
 	api.GetServicePlanHandler = GetServicePlanHandlerFunc(func(params GetServicePlanParams, principal interface{}) middleware.Responder {
@@ -376,27 +378,27 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface,
 			return &GetDriverNotFound{}
 		}
 
-		path, err := configProvider.GetDriversPath()
-		if err != nil {
-			return &CreateDialInternalServerError{Payload: err.Error()}
-		}
-
-		schema, err := lib.GetDailsSchema(path, driver.DriverType, logger)
-		if err != nil {
-			return &CreateDialInternalServerError{Payload: err.Error()}
-		}
-		dialsSchemaLoader := gojsonschema.NewStringLoader(schema)
-		dialLoader := gojsonschema.NewGoLoader(dial.Configuration)
-		result, err := gojsonschema.Validate(dialsSchemaLoader, dialLoader)
-		if err != nil {
-			return &CreateDialInternalServerError{Payload: err.Error()}
-		}
-		if !result.Valid() {
-			err = goerrors.New("Invalid dial configuration")
-			logger.Error("update-dial-validate-schema", err, lager.Data{"Errors": result.Errors()})
-			return &CreateDialInternalServerError{Payload: err.Error()}
-		}
-
+		/*		path, err := configProvider.GetDriversPath()
+				if err != nil {
+					return &CreateDialInternalServerError{Payload: err.Error()}
+				}
+		*/
+		/*		schema, err := lib.GetDailsSchema(path, driver.DriverType, logger)
+				if err != nil {
+					return &CreateDialInternalServerError{Payload: err.Error()}
+				}
+				dialsSchemaLoader := gojsonschema.NewStringLoader(schema)
+				dialLoader := gojsonschema.NewGoLoader(dial.Configuration)
+				result, err := gojsonschema.Validate(dialsSchemaLoader, dialLoader)
+				if err != nil {
+					return &CreateDialInternalServerError{Payload: err.Error()}
+				}
+				if !result.Valid() {
+					err = goerrors.New("Invalid dial configuration")
+					logger.Error("update-dial-validate-schema", err, lager.Data{"Errors": result.Errors()})
+					return &CreateDialInternalServerError{Payload: err.Error()}
+				}
+		*/
 		var defaultPlan brokerapi.ServicePlan
 		var defaultMeta brokerapi.ServicePlanMetadata
 
@@ -469,27 +471,27 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface,
 			return &GetDriverNotFound{}
 		}
 
-		path, err := configProvider.GetDriversPath()
-		if err != nil {
-			return &UpdateDialInternalServerError{Payload: err.Error()}
-		}
+		/*		path, err := configProvider.GetDriversPath()
+				if err != nil {
+					return &UpdateDialInternalServerError{Payload: err.Error()}
+				}
 
-		schema, err := lib.GetDailsSchema(path, driver.DriverType, logger)
-		if err != nil {
-			return &UpdateDialInternalServerError{Payload: err.Error()}
-		}
-		dialsSchemaLoader := gojsonschema.NewStringLoader(schema)
-		dialLoader := gojsonschema.NewGoLoader(dial.Configuration)
-		result, err := gojsonschema.Validate(dialsSchemaLoader, dialLoader)
-		if err != nil {
-			return &UpdateDialInternalServerError{Payload: err.Error()}
-		}
-		if !result.Valid() {
-			err = goerrors.New("Invalid dial configuration")
-			logger.Error("update-dial-validate-schema", err, lager.Data{"Errors": result.Errors()})
-			return &UpdateDialInternalServerError{Payload: err.Error()}
-		}
-
+						schema, err := lib.GetDailsSchema(path, driver.DriverType, logger)
+						if err != nil {
+							return &UpdateDialInternalServerError{Payload: err.Error()}
+						}
+						dialsSchemaLoader := gojsonschema.NewStringLoader(schema)
+						dialLoader := gojsonschema.NewGoLoader(dial.Configuration)
+						result, err := gojsonschema.Validate(dialsSchemaLoader, dialLoader)
+						if err != nil {
+							return &UpdateDialInternalServerError{Payload: err.Error()}
+						}
+						if !result.Valid() {
+							err = goerrors.New("Invalid dial configuration")
+							logger.Error("update-dial-validate-schema", err, lager.Data{"Errors": result.Errors()})
+							return &UpdateDialInternalServerError{Payload: err.Error()}
+						}
+		*/
 		err = configProvider.SetDial(params.Dial.DriverInstanceID, dialID, *dial)
 		if err != nil {
 			return &UpdateDialInternalServerError{Payload: err.Error()}
@@ -499,22 +501,22 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface,
 	})
 
 	api.GetDialSchemaHandler = GetDialSchemaHandlerFunc(func(params GetDialSchemaParams, principal interface{}) middleware.Responder {
-		log := log.Session("get-dial-schema")
-		log.Info("request", lager.Data{"driver-id": params.DriverID})
+		/*	log := log.Session("get-dial-schema")
+			log.Info("request", lager.Data{"driver-id": params.DriverID})
 
-		path, err := configProvider.GetDriversPath()
-		if err != nil {
-			return &GetDialSchemaInternalServerError{Payload: err.Error()}
-		}
-		driver, err := configProvider.GetDriver(params.DriverID)
-		if err != nil {
-			return &GetDialSchemaNotFound{}
-		}
-		schema, err := lib.GetDailsSchema(path, driver.DriverType, logger)
-		if err != nil {
-			return &GetDialSchemaInternalServerError{Payload: err.Error()}
-		}
-		return &GetDialSchemaOK{Payload: genmodel.DialSchema(schema)}
+			path, err := configProvider.GetDriversPath()
+			if err != nil {
+				return &GetDialSchemaInternalServerError{Payload: err.Error()}
+			}
+			driver, err := configProvider.GetDriver(params.DriverID)
+			if err != nil {
+				return &GetDialSchemaNotFound{}
+			}
+			schema, err := lib.GetDailsSchema(path, driver.DriverType, logger)
+			if err != nil {
+				return &GetDialSchemaInternalServerError{Payload: err.Error()}
+			}*/
+		return &GetDialSchemaOK{}
 	})
 
 	api.GetServiceByInstanceIDHandler = GetServiceByInstanceIDHandlerFunc(func(params GetServiceByInstanceIDParams, principal interface{}) middleware.Responder {
@@ -569,6 +571,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface,
 
 		configuration := json.RawMessage(instanceConfig)
 		instance.Configuration = &configuration
+		instance.TargetURL = params.DriverInstance.TargetURL
 
 		driverInstanceNameExist, err := configProvider.DriverInstanceNameExists(params.DriverInstance.Name)
 		if err != nil {
@@ -583,17 +586,17 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface,
 		}
 		instance.Name = params.DriverInstance.Name
 
-		driversPath, err := configProvider.GetDriversPath()
-		if err != nil {
-			return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
-		}
+		/*		driversPath, err := configProvider.GetDriversPath()
+				if err != nil {
+					return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
+				}
 
-		err = lib.Validate(instance, driversPath, existingDriver.DriverType, logger)
-		if err != nil {
-			log.Error("validation-failed", err)
-			return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
-		}
-
+						err = lib.Validate(instance, driversPath, existingDriver.DriverType, logger)
+						if err != nil {
+							log.Error("validation-failed", err)
+							return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
+						}
+		*/
 		err = configProvider.SetDriverInstance(params.DriverInstance.DriverID, instanceID, instance)
 		if err != nil {
 			log.Error("set-driver-instance-failed", err)
@@ -716,22 +719,22 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface,
 		}
 		instance.Name = params.DriverConfig.Name
 
-		existingDriver, err := configProvider.GetDriver(params.DriverConfig.DriverID)
-		if err != nil {
-			return &UpdateDriverInstanceInternalServerError{Payload: err.Error()}
-		}
+		/*		existingDriver, err := configProvider.GetDriver(params.DriverConfig.DriverID)
+				if err != nil {
+					return &UpdateDriverInstanceInternalServerError{Payload: err.Error()}
+				}
 
-		driversPath, err := configProvider.GetDriversPath()
-		if err != nil {
-			return &UpdateDriverInstanceInternalServerError{Payload: err.Error()}
-		}
+				driversPath, err := configProvider.GetDriversPath()
+				if err != nil {
+					return &UpdateDriverInstanceInternalServerError{Payload: err.Error()}
+				}
 
-		err = lib.Validate(instance, driversPath, existingDriver.DriverType, logger)
-		if err != nil {
-			log.Error("validation-failed", err)
-			return &UpdateDriverInstanceInternalServerError{Payload: err.Error()}
-		}
-
+						err = lib.Validate(instance, driversPath, existingDriver.DriverType, logger)
+						if err != nil {
+							log.Error("validation-failed", err)
+							return &UpdateDriverInstanceInternalServerError{Payload: err.Error()}
+						}
+		*/
 		err = configProvider.SetDriverInstance(params.DriverConfig.DriverID, params.DriverInstanceID, instance)
 		if err != nil {
 			return &UpdateDriverInstanceInternalServerError{Payload: err.Error()}
@@ -765,6 +768,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface,
 		if runtime.GOOS == "windows" {
 			driverPath = driverPath + ".exe"
 		}
+
 		err = os.Remove(driverPath)
 		if err != nil {
 			return &DeleteDriverInternalServerError{Payload: err.Error()}

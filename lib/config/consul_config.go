@@ -224,7 +224,14 @@ func (c *consulConfig) GetDriverInstance(instanceID string) (*DriverInstance, st
 	if err != nil {
 		return nil, "", err
 	}
+
 	instance.Name = string(val)
+
+	target, err := c.provisioner.GetValue(key + "/TargetURL")
+	if err != nil {
+		return nil, "", err
+	}
+	instance.TargetURL = string(target)
 
 	instanceConfig, err := c.provisioner.GetValue(key + "/Configuration")
 	if err != nil {
@@ -308,6 +315,11 @@ func (c *consulConfig) SetDriver(driverID string, driver Driver) error {
 func (c *consulConfig) SetDriverInstance(driverID string, instanceID string, instance DriverInstance) error {
 
 	err := c.provisioner.AddKV("usb/drivers/"+driverID+"/instances/"+instanceID+"/Name", []byte(instance.Name), nil)
+	if err != nil {
+		return err
+	}
+
+	err = c.provisioner.AddKV("usb/drivers/"+driverID+"/instances/"+instanceID+"/TargetURL", []byte(instance.TargetURL), nil)
 	if err != nil {
 		return err
 	}

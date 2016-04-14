@@ -3,11 +3,21 @@ package lib
 import (
 	"errors"
 	"fmt"
+	"net/url"
+	"os"
+	"strconv"
 
+	"github.com/fatih/structs"
 	"github.com/frodenas/brokerapi"
-	"github.com/hpcloud/cf-usb/driver/status"
 	"github.com/hpcloud/cf-usb/lib/config"
 	"github.com/pivotal-golang/lager"
+
+	httptransport "github.com/go-swagger/go-swagger/httpkit/client"
+
+	strfmt "github.com/go-swagger/go-swagger/strfmt"
+
+	"github.com/hpcloud/cf-usb/lib/servicemgr"
+	models "github.com/hpcloud/cf-usb/lib/servicemgr/models"
 )
 
 var usbBroker UsbBroker
@@ -59,32 +69,39 @@ func (broker *UsbBroker) Provision(instanceID string, serviceDetails brokerapi.P
 		return brokerapi.ProvisioningResponse{}, false, errors.New(fmt.Sprintf("Cannot find driver for %s", serviceDetails.ServiceID))
 	}
 
-	instance, err := driver.GetInstance(instanceID)
-	if err != nil {
-		return brokerapi.ProvisioningResponse{}, false, err
-	}
-	if instance.Status == status.Exists {
-		return brokerapi.ProvisioningResponse{}, false, brokerapi.ErrInstanceAlreadyExists
-	}
-
-	instance, err = driver.ProvisionInstance(instanceID, serviceDetails.PlanID, serviceDetails.Parameters)
-	if err != nil {
-		return brokerapi.ProvisioningResponse{}, false, err
-	}
-
-	broker.logger.Info("provision-instance-request-completed", lager.Data{"instance-id": instance.InstanceID, "status": instance.Status, "description": instance.Description})
-
-	if instance.Status == status.Created {
-		return brokerapi.ProvisioningResponse{}, false, nil
-	}
-	if instance.Status == status.InProgress {
-		if !acceptsIncomplete {
-			// TODO: clean up instance
-			// driver.DeprovisionInstance(instanceID)
-			return brokerapi.ProvisioningResponse{}, false, brokerapi.ErrAsyncRequired
+	instance, _ := driver.GetWorkspace(instanceID)
+	if instance.Status != nil {
+		statusInfo := instance.Status
+		if *statusInfo == "failed" {
+			return brokerapi.ProvisioningResponse{}, false, brokerapi.ErrInstanceAlreadyExists
 		}
+	}
+	request := models.ServiceManagerWorkspaceCreateRequest{}
+	request.WorkspaceID = &instanceID
+	request.Details = serviceDetails.Parameters
+	instance, errorDetails := driver.CreateWorkspace(request)
+	if errorDetails.Message != nil {
+		return brokerapi.ProvisioningResponse{}, false, errors.New(*errorDetails.Message)
+	}
 
-		return brokerapi.ProvisioningResponse{}, true, nil
+	broker.logger.Info("provision-instance-request-completed", lager.Data{"instance-id": instanceID, "status": instance.Status, "details": instance.Details})
+	if instance.Status != nil {
+		statusInfo := *instance.Status
+		if statusInfo == "successful" {
+			return brokerapi.ProvisioningResponse{}, false, nil
+		}
+	}
+	if instance.Status != nil {
+		statusInfo := *instance.Status
+		if statusInfo == "unknown" {
+			if !acceptsIncomplete {
+				// TODO: clean up instance
+				// driver.DeprovisionInstance(instanceID)
+				return brokerapi.ProvisioningResponse{}, false, brokerapi.ErrAsyncRequired
+			}
+
+			return brokerapi.ProvisioningResponse{}, true, nil
+		}
 	}
 
 	return brokerapi.ProvisioningResponse{}, false, errors.New("Unknown instance state")
@@ -105,30 +122,31 @@ func (broker *UsbBroker) Deprovision(instanceID string, deprovisionDetails broke
 		return false, errors.New(fmt.Sprintf("Cannot find driver for %s", deprovisionDetails.ServiceID))
 	}
 
-	instance, err := driver.GetInstance(instanceID)
-	if err != nil {
-		return false, err
-	}
-	if instance.Status == status.DoesNotExist {
-		return false, brokerapi.ErrInstanceDoesNotExist
-	}
-
-	instance, err = driver.DeprovisionInstance(instanceID)
-	if err != nil {
-		return false, err
+	instance, _ := driver.GetWorkspace(instanceID)
+	if instance.Status != nil {
+		statusInfo := instance.Status
+		if *statusInfo == "none" {
+			return false, brokerapi.ErrInstanceDoesNotExist
+		}
 	}
 
-	broker.logger.Info("deprovision-instance-request-completed", lager.Data{"instance-id": instance.InstanceID, "status": instance.Status, "description": instance.Description})
-
-	if instance.Status == status.Deleted {
+	errorDetails := driver.DeleteWorkspace(instanceID)
+	if errorDetails.Message != nil {
+		return false, errors.New(*errorDetails.Message)
+	} else {
 		return false, nil
 	}
+
+	broker.logger.Info("deprovision-instance-request-completed", lager.Data{"instance-id": instanceID, "status": instance.Status, "details": instance.Details})
 
 	//  TODO:
 	//  Is InProgress applicabale to deprovision?
 	//  Should there be another state, e.g. status.DeprovisionInProgress vs status.ProvisionInProgrss
-	if instance.Status == status.InProgress {
-		return true, nil
+	if instance.Status != nil {
+		statusInfo := *instance.Status
+		if statusInfo == "unknown" {
+			return true, nil
+		}
 	}
 
 	return false, errors.New("Unknown instance state")
@@ -143,19 +161,18 @@ func (broker *UsbBroker) Bind(instanceID, bindingID string, details brokerapi.Bi
 	if err != nil {
 		return response, err
 	}
-
-	credentials, err := driver.GetCredentials(instanceID, bindingID)
-	if err != nil {
-		return response, err
+	request := models.ServiceManagerConnectionCreateRequest{}
+	request.ConnectionID = &bindingID
+	request.Details = structs.Map(details)
+	credentials, errorDetails := driver.CreateWorkspaceConnection(instanceID, request)
+	if errorDetails.Message != nil {
+		return response, errors.New(*errorDetails.Message)
 	}
-	if credentials.Status == status.Exists {
+	if *credentials.Status == "failed" {
 		return response, brokerapi.ErrBindingAlreadyExists
 	}
 
-	response.Credentials, err = driver.GenerateCredentials(instanceID, bindingID)
-	if err != nil {
-		return response, err
-	}
+	response.Credentials = credentials.Details
 
 	broker.logger.Info("generate-credentials-request-completed", lager.Data{"instance-id": instanceID})
 
@@ -170,20 +187,12 @@ func (broker *UsbBroker) Unbind(instanceID, bindingID string, details brokerapi.
 		return err
 	}
 
-	credentials, err := driver.GetCredentials(instanceID, bindingID)
-	if err != nil {
-		return err
-	}
-	if credentials.Status == status.DoesNotExist {
-		return brokerapi.ErrBindingDoesNotExist
+	errorDetails := driver.DeleteWorkspaceConnection(instanceID, bindingID)
+	if errorDetails.Message != nil {
+		return errors.New(*errorDetails.Message)
 	}
 
-	credentials, err = driver.RevokeCredentials(instanceID, bindingID)
-	if err != nil {
-		return err
-	}
-
-	broker.logger.Info("revoke-credentials-request-completed", lager.Data{"driver-response": credentials.Status})
+	broker.logger.Info("revoke-credentials-request-completed", lager.Data{"driver-response": errorDetails.Message})
 
 	return nil
 }
@@ -201,42 +210,62 @@ func (broker *UsbBroker) LastOperation(instanceID string) (brokerapi.LastOperati
 		return brokerapi.LastOperationResponse{}, brokerapi.ErrInstanceDoesNotExist
 	}
 
-	instance, err := driver.GetInstance(instanceID)
-	if err != nil {
-		return brokerapi.LastOperationResponse{}, err
+	instance, errorDetails := driver.GetWorkspace(instanceID)
+	if errorDetails.Message != nil {
+		return brokerapi.LastOperationResponse{}, errors.New(*errorDetails.Message)
 	}
-	if instance.Status == status.DoesNotExist {
-		return brokerapi.LastOperationResponse{}, brokerapi.ErrInstanceDoesNotExist
+	if instance.Status != nil {
+		statusInfo := *instance.Status
+		if statusInfo == "none" {
+			return brokerapi.LastOperationResponse{}, brokerapi.ErrInstanceDoesNotExist
+		}
 	}
-
-	if instance.Status == status.Created || instance.Status == status.Exists {
-		return brokerapi.LastOperationResponse{State: brokerapi.LastOperationSucceeded}, nil
+	if instance.Status != nil {
+		statusInfo := *instance.Status
+		if statusInfo == "successful" {
+			return brokerapi.LastOperationResponse{State: brokerapi.LastOperationSucceeded}, nil
+		}
 	}
-
-	if instance.Status == status.InProgress {
-		return brokerapi.LastOperationResponse{State: brokerapi.LastOperationInProgress}, nil
+	if instance.Status != nil {
+		statusInfo := *instance.Status
+		if statusInfo == "unknown" {
+			return brokerapi.LastOperationResponse{State: brokerapi.LastOperationInProgress}, nil
+		}
 	}
-
-	if instance.Status == status.Error {
-		return brokerapi.LastOperationResponse{State: brokerapi.LastOperationFailed}, nil
+	if instance.Status != nil {
+		statusInfo := *instance.Status
+		if statusInfo == "failed" {
+			return brokerapi.LastOperationResponse{State: brokerapi.LastOperationFailed}, nil
+		}
 	}
-
 	// TODO: what about instance.Status == status.Deleted ?
 	return brokerapi.LastOperationResponse{}, errors.New("Unknown instance state")
 }
 
-func (broker *UsbBroker) getDriver(serviceID string) (*DriverProvider, error) {
+func (broker *UsbBroker) getDriver(serviceID string) (servicemgr.ServiceManagerInterface, error) {
 	config, err := broker.configProvider.LoadConfiguration()
 	if err != nil {
 		return nil, err
 	}
 
 	for _, driver := range config.Drivers {
-		for driverInstanceID, driverInstance := range driver.DriverInstances {
+		for _, driverInstance := range driver.DriverInstances {
 			if driverInstance.Service.ID == serviceID {
-				driverProvider := NewDriverProvider(config.DriversPath, driver.DriverType,
-					broker.configProvider, driverInstanceID, broker.logger)
-				return driverProvider, nil
+				if driverInstance.TargetURL != "" {
+					u, err := url.Parse(driverInstance.TargetURL)
+					if err != nil {
+						return nil, err
+					}
+
+					transport := httptransport.New(u.Host, "/", []string{u.Scheme})
+
+					debug, _ := strconv.ParseBool(os.Getenv("CF_TRACE"))
+
+					transport.Debug = debug
+
+					serviceManager := servicemgr.NewServiceManager(transport, strfmt.Default, broker.logger)
+					return serviceManager, nil
+				}
 			}
 		}
 	}
@@ -244,26 +273,39 @@ func (broker *UsbBroker) getDriver(serviceID string) (*DriverProvider, error) {
 	return nil, errors.New("Driver not found")
 }
 
-func (broker *UsbBroker) getDriverForServiceInstanceId(instanceID string) (*DriverProvider, bool, error) {
+func (broker *UsbBroker) getDriverForServiceInstanceId(instanceID string) (servicemgr.ServiceManagerInterface, bool, error) {
 	config, err := broker.configProvider.LoadConfiguration()
 	if err != nil {
 		return nil, false, err
 	}
 
 	for _, driver := range config.Drivers {
-		for driverInstanceID, _ := range driver.DriverInstances {
-			driverProvider := NewDriverProvider(config.DriversPath, driver.DriverType,
-				broker.configProvider, driverInstanceID, broker.logger)
-
-			instance, err := driverProvider.GetInstance(instanceID)
+		for _, driverInstance := range driver.DriverInstances {
+			u, err := url.Parse(driverInstance.TargetURL)
 			if err != nil {
 				return nil, false, err
 			}
-			if instance.Status == status.DoesNotExist {
-				continue
+
+			transport := httptransport.New(u.Host, "/", []string{u.Scheme})
+
+			debug, _ := strconv.ParseBool(os.Getenv("CF_TRACE"))
+
+			transport.Debug = debug
+
+			serviceManager := servicemgr.NewServiceManager(transport, strfmt.Default, broker.logger)
+
+			instance, errorDetails := serviceManager.GetWorkspace(instanceID)
+			if errorDetails.Message != nil {
+				return nil, false, errors.New(*errorDetails.Message)
+			}
+			if instance.Status != nil {
+				statusInfo := *instance.Status
+				if statusInfo == "none" {
+					continue
+				}
 			}
 
-			return driverProvider, true, nil
+			return serviceManager, true, nil
 		}
 	}
 

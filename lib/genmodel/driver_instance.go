@@ -47,6 +47,8 @@ type DriverInstance struct {
 	/* Service service
 	 */
 	Service *string `json:"service,omitempty"`
+
+	TargetURL string `json:"target,omitempty"`
 }
 
 // Validate validates this driver instance
