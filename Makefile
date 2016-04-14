@@ -43,7 +43,7 @@ build: generate build-usb build-drivers build-driver-generator
 
 build-drivers : build-dummy-async-driver build-dummy-driver build-mongo-driver build-mysql-driver
 
-build-drivers : build-mssql-driver build-postgres-driver build-rabbitmq-driver build-redis-driver
+build-drivers : build-mssql-driver build-postgres-driver build-rabbitmq-driver build-redis-driver build-passthrough-driver
 
 build-usb:
 	$(call buildme,./cmd/usb,usb)
@@ -75,6 +75,9 @@ build-redis-driver:
 
 build-mysql-driver:
 	$(call buildme,./cmd/driver/mysql,drivers)
+
+build-passthrough-driver:
+	$(call buildme,./cmd/driver/passthrough,drivers)
 
 
 buildme =  @(DIRNAME=$$(basename $(1));\
