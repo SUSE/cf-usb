@@ -8,10 +8,10 @@ import (
 	"math/rand"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 
-	"github.com/hpcloud/cf-usb/sidecar/clients/mysql/config"
-	"github.com/hpcloud/cf-usb/sidecar/clients/mysql/mysqlprovisioner"
+	"github.com/hpcloud/cf-usb/sidecar/clients/mssql/mssqlprovisioner"
 	"github.com/hpcloud/cf-usb/sidecar/clients/util"
 	"github.com/pivotal-golang/lager"
 )
@@ -47,38 +47,38 @@ func secureRandomString(bytesOfEntpry int) (string, error) {
 	return base64.RawURLEncoding.EncodeToString(rb), nil
 }
 
-type MysqlDriver struct {
-	logger lager.Logger
-	conf   config.MysqlDriverConfig
-	db     mysqlprovisioner.MysqlProvisionerInterface
-}
-
 func main() {
 	if len(os.Args) < 2 {
 		util.WriteError(fmt.Sprintf("No username provided -d %d", len(os.Args)), 1, 500)
 		os.Exit(1)
 
 	}
-	mhost := os.Getenv("MYSQL_HOST")
-	mport := os.Getenv("MYSQL_PORT")
-	muser := os.Getenv("MYSQL_USER")
-	mpass := os.Getenv("MYSQL_PASS")
+	mhost := os.Getenv("MSSQL_HOST")
+	mport := os.Getenv("MSSQL_PORT")
+	muser := os.Getenv("MSSQL_USER")
+	mpass := os.Getenv("MSSQL_PASS")
 
 	if mhost == "" || mport == "" || muser == "" || mpass == "" {
-		util.WriteError("MYSQL_HOST, MYSQL_PORT, MYSQL_USER and MYSQL_PASS env vars not set!", 2, 500)
+		util.WriteError("MSSQL_HOST, MSSQL_PORT, MSSQL_USER and MSSQL_PASS env vars not set!", 2, 500)
 		os.Exit(2)
 	}
+	port, err := strconv.Atoi(os.Getenv("MSSQL_PORT"))
+	if err != nil {
+		os.Exit(1)
+	}
 
-	mysqlconfig := config.MysqlDriverConfig{}
-	mysqlconfig.Host = os.Getenv("MYSQL_HOST")
-	mysqlconfig.Pass = os.Getenv("MYSQL_PASS")
-	mysqlconfig.Port = os.Getenv("MYSQL_PORT")
-	mysqlconfig.User = os.Getenv("MYSQL_USER")
+	var mssqlConConfig = map[string]string{}
+	mssqlConConfig["server"] = mhost
+	mssqlConConfig["port"] = strconv.Itoa(port)
+	mssqlConConfig["user id"] = muser
+	mssqlConConfig["password"] = mpass
 
 	loger := lager.NewLogger("stdout")
 
-	provisioner := mysqlprovisioner.New(loger)
-	provisioner.Connect(mysqlconfig)
+	provisioner := mssqlprovisioner.NewMssqlProvisioner(loger)
+	provisioner.Connect("mssql", mssqlConConfig)
+
+	dbName := "d" + strings.Replace(os.Args[1], "-", "", -1)
 
 	username, err := getMD5Hash(os.Args[2])
 	if err != nil {
@@ -89,7 +89,7 @@ func main() {
 		username = username[:16]
 	}
 
-	err = provisioner.DeleteUser(username)
+	err = provisioner.DeleteUser(dbName, username)
 
 	if err != nil {
 		util.WriteError(err.Error(), 3, 500)

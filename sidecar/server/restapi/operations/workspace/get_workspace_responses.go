@@ -6,7 +6,7 @@ package workspace
 import (
 	"net/http"
 
-	"github.com/go-swagger/go-swagger/httpkit"
+	"github.com/go-openapi/runtime"
 
 	"github.com/hpcloud/cf-usb/sidecar/server/models"
 )
@@ -38,7 +38,7 @@ func (o *GetWorkspaceOK) SetPayload(payload *models.ServiceManagerWorkspaceRespo
 }
 
 // WriteResponse to the client
-func (o *GetWorkspaceOK) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *GetWorkspaceOK) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(200)
 	if o.Payload != nil {
@@ -93,7 +93,7 @@ func (o *GetWorkspaceDefault) SetPayload(payload *models.Error) {
 }
 
 // WriteResponse to the client
-func (o *GetWorkspaceDefault) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *GetWorkspaceDefault) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(o._statusCode)
 	if o.Payload != nil {

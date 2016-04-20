@@ -124,11 +124,11 @@ func (caller DefaultCaller) GetDeleteConnectionExecutable() string {
 	return "./DeleteConnection"
 }
 
-func (caller DefaultCaller) DeleteConnectionCaller(arg1 string) (string, int) {
+func (caller DefaultCaller) DeleteConnectionCaller(arg1 string, arg2 string) (string, int) {
 	var out bytes.Buffer
 	var errOut bytes.Buffer
 
-	exitStatus, _ := ReadOutput(caller.GetDeleteConnectionExecutable(), &out, &errOut, arg1)
+	exitStatus, _ := ReadOutput(caller.GetDeleteConnectionExecutable(), &out, &errOut, arg1, arg2)
 
 	if exitStatus == -1 {
 

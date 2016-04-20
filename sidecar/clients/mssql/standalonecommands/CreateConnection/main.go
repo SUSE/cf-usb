@@ -2,16 +2,17 @@ package main
 
 import (
 	"crypto/md5"
-	"crypto/rand"
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"math/rand"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 
-	"github.com/hpcloud/cf-usb/sidecar/clients/mysql/config"
-	"github.com/hpcloud/cf-usb/sidecar/clients/mysql/mysqlprovisioner"
+	"github.com/hpcloud/cf-usb/sidecar/clients/mssql/config"
+	"github.com/hpcloud/cf-usb/sidecar/clients/mssql/mssqlprovisioner"
 	"github.com/hpcloud/cf-usb/sidecar/clients/util"
 	"github.com/pivotal-golang/lager"
 )
@@ -43,22 +44,6 @@ func secureRandomString(bytesOfEntpry int) (string, error) {
 	return base64.RawURLEncoding.EncodeToString(rb), nil
 }
 
-type MysqlDriver struct {
-	logger lager.Logger
-	conf   config.MysqlDriverConfig
-	db     mysqlprovisioner.MysqlProvisionerInterface
-}
-
-type MysqlConfigResp struct {
-	Host     string `json:"host"`
-	Hostname string `json:"hostname"`
-	Port     string `json:"port"`
-	Username string `json:"username"`
-	User     string `json:"user"`
-	Password string `json:"password"`
-	Database string `json:"database"`
-}
-
 func WriteInternalError() {
 	os.Stdout.WriteString("{\"code\":500,\"message\":\"unknown error\" ")
 }
@@ -69,26 +54,31 @@ func main() {
 		os.Exit(1)
 
 	}
-	mhost := os.Getenv("MYSQL_HOST")
-	mport := os.Getenv("MYSQL_PORT")
-	muser := os.Getenv("MYSQL_USER")
-	mpass := os.Getenv("MYSQL_PASS")
+	mhost := os.Getenv("MSSQL_HOST")
+	mport := os.Getenv("MSSQL_PORT")
+	muser := os.Getenv("MSSQL_USER")
+	mpass := os.Getenv("MSSQL_PASS")
 
 	if mhost == "" || mport == "" || muser == "" || mpass == "" {
-		util.WriteError("MYSQL_HOST, MYSQL_PORT, MYSQL_USER and MYSQL_PASS env vars not set!", 2, 417) //expectation failed
+		util.WriteError("MSSQL_HOST, MSSQL_PORT, MSSQL_USER and MSSQL_PASS env vars not set!", 2, 417) //expectation failed
 		os.Exit(2)
 	}
 
-	mysqlconfig := config.MysqlDriverConfig{}
-	mysqlconfig.Host = os.Getenv("MYSQL_HOST")
-	mysqlconfig.Pass = os.Getenv("MYSQL_PASS")
-	mysqlconfig.Port = os.Getenv("MYSQL_PORT")
-	mysqlconfig.User = os.Getenv("MYSQL_USER")
+	port, err := strconv.Atoi(os.Getenv("MSSQL_PORT"))
+	if err != nil {
+		os.Exit(1)
+	}
+
+	var mssqlConConfig = map[string]string{}
+	mssqlConConfig["server"] = mhost
+	mssqlConConfig["port"] = strconv.Itoa(port)
+	mssqlConConfig["user id"] = muser
+	mssqlConConfig["password"] = mpass
 
 	loger := lager.NewLogger("stdout")
 
-	provisioner := mysqlprovisioner.New(loger)
-	provisioner.Connect(mysqlconfig)
+	provisioner := mssqlprovisioner.NewMssqlProvisioner(loger)
+	provisioner.Connect("mssql", mssqlConConfig)
 
 	username, err := getMD5Hash(os.Args[2])
 	if err != nil {
@@ -108,9 +98,15 @@ func main() {
 		os.Exit(4)
 	}
 
-	mysqlConfigResp := MysqlConfigResp{Hostname: mysqlconfig.Host, Host: mysqlconfig.Host,
-		Port: mysqlconfig.Port, Username: username, User: username,
-		Password: password, Database: dbName}
-	util.WriteSuccess(mysqlConfigResp, 200)
+	mssqlResp := config.MssqlBindingCredentials{
+		Host:     mhost,
+		Port:     port,
+		Username: username,
+		Password: password,
+		ConnectionString: config.GenerateConnectionString(mhost, port,
+			dbName, username, password),
+	}
+
+	util.WriteSuccess(mssqlResp, 200)
 
 }

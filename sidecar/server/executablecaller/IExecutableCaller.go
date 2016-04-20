@@ -10,7 +10,7 @@ type IExecutableCaller interface {
 	DeleteWorkspaceCaller(arg1 string) (string, int)
 	GetDeleteConnectionExecutable() string
 
-	DeleteConnectionCaller(arg1 string) (string, int)
+	DeleteConnectionCaller(arg1 string, arg2 string) (string, int)
 
 	GetGetConnectionExecutable() string
 	GetConnectionCaller(arg1 string, arg2 string) (string, int)

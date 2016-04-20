@@ -6,7 +6,7 @@ package workspace
 import (
 	"net/http"
 
-	"github.com/go-swagger/go-swagger/httpkit"
+	"github.com/go-openapi/runtime"
 
 	"github.com/hpcloud/cf-usb/sidecar/server/models"
 )
@@ -24,7 +24,7 @@ func NewDeleteWorkspaceOK() *DeleteWorkspaceOK {
 }
 
 // WriteResponse to the client
-func (o *DeleteWorkspaceOK) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *DeleteWorkspaceOK) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(200)
 }
@@ -74,7 +74,7 @@ func (o *DeleteWorkspaceDefault) SetPayload(payload *models.Error) {
 }
 
 // WriteResponse to the client
-func (o *DeleteWorkspaceDefault) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *DeleteWorkspaceDefault) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(o._statusCode)
 	if o.Payload != nil {

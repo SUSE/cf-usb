@@ -6,7 +6,7 @@ package connection
 import (
 	"net/http"
 
-	"github.com/go-swagger/go-swagger/httpkit"
+	"github.com/go-openapi/runtime"
 
 	"github.com/hpcloud/cf-usb/sidecar/server/models"
 )
@@ -38,7 +38,7 @@ func (o *GetConnectionOK) SetPayload(payload *models.ServiceManagerConnectionRes
 }
 
 // WriteResponse to the client
-func (o *GetConnectionOK) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *GetConnectionOK) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(200)
 	if o.Payload != nil {
@@ -93,7 +93,7 @@ func (o *GetConnectionDefault) SetPayload(payload *models.Error) {
 }
 
 // WriteResponse to the client
-func (o *GetConnectionDefault) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *GetConnectionDefault) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(o._statusCode)
 	if o.Payload != nil {

@@ -4,11 +4,11 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-	strfmt "github.com/go-swagger/go-swagger/strfmt"
-	"github.com/go-swagger/go-swagger/swag"
+	strfmt "github.com/go-openapi/strfmt"
+	"github.com/go-openapi/swag"
 
-	"github.com/go-swagger/go-swagger/errors"
-	"github.com/go-swagger/go-swagger/httpkit/validate"
+	"github.com/go-openapi/errors"
+	"github.com/go-openapi/validate"
 )
 
 /*ServiceManagerWorkspaceCreateRequest service manager workspace create request
@@ -25,7 +25,7 @@ type ServiceManagerWorkspaceCreateRequest struct {
 
 	Required: true
 	*/
-	WorkspaceID string `json:"workspace_id"`
+	WorkspaceID *string `json:"workspace_id"`
 }
 
 // Validate validates this service manager workspace create request
@@ -63,7 +63,7 @@ func (m *ServiceManagerWorkspaceCreateRequest) validateDetails(formats strfmt.Re
 
 func (m *ServiceManagerWorkspaceCreateRequest) validateWorkspaceID(formats strfmt.Registry) error {
 
-	if err := validate.RequiredString("workspace_id", "body", string(m.WorkspaceID)); err != nil {
+	if err := validate.Required("workspace_id", "body", m.WorkspaceID); err != nil {
 		return err
 	}
 

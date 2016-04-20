@@ -4,11 +4,11 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-	strfmt "github.com/go-swagger/go-swagger/strfmt"
-	"github.com/go-swagger/go-swagger/swag"
+	strfmt "github.com/go-openapi/strfmt"
+	"github.com/go-openapi/swag"
 
-	"github.com/go-swagger/go-swagger/errors"
-	"github.com/go-swagger/go-swagger/httpkit/validate"
+	"github.com/go-openapi/errors"
+	"github.com/go-openapi/validate"
 )
 
 /*ServiceManagerConnectionCreateRequest service manager connection create request
@@ -21,7 +21,7 @@ type ServiceManagerConnectionCreateRequest struct {
 
 	Required: true
 	*/
-	ConnectionID string `json:"connection_id"`
+	ConnectionID *string `json:"connection_id"`
 
 	/* key value map with connection details (Service manager won't interpret the details of the map it will send this back to the requester as is)
 	 */
@@ -50,7 +50,7 @@ func (m *ServiceManagerConnectionCreateRequest) Validate(formats strfmt.Registry
 
 func (m *ServiceManagerConnectionCreateRequest) validateConnectionID(formats strfmt.Registry) error {
 
-	if err := validate.RequiredString("connection_id", "body", string(m.ConnectionID)); err != nil {
+	if err := validate.Required("connection_id", "body", m.ConnectionID); err != nil {
 		return err
 	}
 

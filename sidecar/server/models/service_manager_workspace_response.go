@@ -6,11 +6,11 @@ package models
 import (
 	"encoding/json"
 
-	strfmt "github.com/go-swagger/go-swagger/strfmt"
-	"github.com/go-swagger/go-swagger/swag"
+	strfmt "github.com/go-openapi/strfmt"
+	"github.com/go-openapi/swag"
 
-	"github.com/go-swagger/go-swagger/errors"
-	"github.com/go-swagger/go-swagger/httpkit/validate"
+	"github.com/go-openapi/errors"
+	"github.com/go-openapi/validate"
 )
 
 /*ServiceManagerWorkspaceResponse service manager workspace response
@@ -27,13 +27,13 @@ type ServiceManagerWorkspaceResponse struct {
 
 	Required: true
 	*/
-	ProcessingType string `json:"processing_type"`
+	ProcessingType *string `json:"processing_type"`
 
 	/* status
 
 	Required: true
 	*/
-	Status string `json:"status"`
+	Status *string `json:"status"`
 }
 
 // Validate validates this service manager workspace response
@@ -76,6 +76,7 @@ func (m *ServiceManagerWorkspaceResponse) validateDetails(formats strfmt.Registr
 
 var serviceManagerWorkspaceResponseTypeProcessingTypePropEnum []interface{}
 
+// prop value enum
 func (m *ServiceManagerWorkspaceResponse) validateProcessingTypeEnum(path, location string, value string) error {
 	if serviceManagerWorkspaceResponseTypeProcessingTypePropEnum == nil {
 		var res []string
@@ -94,11 +95,12 @@ func (m *ServiceManagerWorkspaceResponse) validateProcessingTypeEnum(path, locat
 
 func (m *ServiceManagerWorkspaceResponse) validateProcessingType(formats strfmt.Registry) error {
 
-	if err := validate.RequiredString("processing_type", "body", string(m.ProcessingType)); err != nil {
+	if err := validate.Required("processing_type", "body", m.ProcessingType); err != nil {
 		return err
 	}
 
-	if err := m.validateProcessingTypeEnum("processing_type", "body", m.ProcessingType); err != nil {
+	// value enum
+	if err := m.validateProcessingTypeEnum("processing_type", "body", *m.ProcessingType); err != nil {
 		return err
 	}
 
@@ -107,6 +109,7 @@ func (m *ServiceManagerWorkspaceResponse) validateProcessingType(formats strfmt.
 
 var serviceManagerWorkspaceResponseTypeStatusPropEnum []interface{}
 
+// prop value enum
 func (m *ServiceManagerWorkspaceResponse) validateStatusEnum(path, location string, value string) error {
 	if serviceManagerWorkspaceResponseTypeStatusPropEnum == nil {
 		var res []string
@@ -125,11 +128,12 @@ func (m *ServiceManagerWorkspaceResponse) validateStatusEnum(path, location stri
 
 func (m *ServiceManagerWorkspaceResponse) validateStatus(formats strfmt.Registry) error {
 
-	if err := validate.RequiredString("status", "body", string(m.Status)); err != nil {
+	if err := validate.Required("status", "body", m.Status); err != nil {
 		return err
 	}
 
-	if err := m.validateStatusEnum("status", "body", m.Status); err != nil {
+	// value enum
+	if err := m.validateStatusEnum("status", "body", *m.Status); err != nil {
 		return err
 	}
 

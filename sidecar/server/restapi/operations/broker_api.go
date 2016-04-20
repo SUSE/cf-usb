@@ -8,18 +8,19 @@ import (
 	"net/http"
 	"strings"
 
-	httpkit "github.com/go-swagger/go-swagger/httpkit"
-	middleware "github.com/go-swagger/go-swagger/httpkit/middleware"
-	spec "github.com/go-swagger/go-swagger/spec"
-	strfmt "github.com/go-swagger/go-swagger/strfmt"
-	"github.com/go-swagger/go-swagger/swag"
+	loads "github.com/go-openapi/loads"
+	runtime "github.com/go-openapi/runtime"
+	middleware "github.com/go-openapi/runtime/middleware"
+	spec "github.com/go-openapi/spec"
+	strfmt "github.com/go-openapi/strfmt"
+	"github.com/go-openapi/swag"
 
 	"github.com/hpcloud/cf-usb/sidecar/server/restapi/operations/connection"
 	"github.com/hpcloud/cf-usb/sidecar/server/restapi/operations/workspace"
 )
 
 // NewBrokerAPI creates a new Broker instance
-func NewBrokerAPI(spec *spec.Document) *BrokerAPI {
+func NewBrokerAPI(spec *loads.Document) *BrokerAPI {
 	o := &BrokerAPI{
 		spec:            spec,
 		handlers:        make(map[string]map[string]http.Handler),
@@ -38,18 +39,20 @@ runs along side your service and serves some of the service management
 capabilities.
 */
 type BrokerAPI struct {
-	spec            *spec.Document
+	spec            *loads.Document
 	context         *middleware.Context
 	handlers        map[string]map[string]http.Handler
 	formats         strfmt.Registry
 	defaultConsumes string
 	defaultProduces string
 	// JSONConsumer registers a consumer for a "application/json" mime type
-	JSONConsumer httpkit.Consumer
+	JSONConsumer runtime.Consumer
 
 	// JSONProducer registers a producer for a "application/json" mime type
-	JSONProducer httpkit.Producer
+	JSONProducer runtime.Producer
 
+	// AdvertiseCatalogHandler sets the operation handler for the advertise catalog operation
+	AdvertiseCatalogHandler AdvertiseCatalogHandler
 	// ConnectionCreateConnectionHandler sets the operation handler for the create connection operation
 	ConnectionCreateConnectionHandler connection.CreateConnectionHandler
 	// WorkspaceCreateWorkspaceHandler sets the operation handler for the create workspace operation
@@ -117,6 +120,10 @@ func (o *BrokerAPI) Validate() error {
 		unregistered = append(unregistered, "JSONProducer")
 	}
 
+	if o.AdvertiseCatalogHandler == nil {
+		unregistered = append(unregistered, "AdvertiseCatalogHandler")
+	}
+
 	if o.ConnectionCreateConnectionHandler == nil {
 		unregistered = append(unregistered, "connection.CreateConnectionHandler")
 	}
@@ -154,16 +161,16 @@ func (o *BrokerAPI) ServeErrorFor(operationID string) func(http.ResponseWriter, 
 }
 
 // AuthenticatorsFor gets the authenticators for the specified security schemes
-func (o *BrokerAPI) AuthenticatorsFor(schemes map[string]spec.SecurityScheme) map[string]httpkit.Authenticator {
+func (o *BrokerAPI) AuthenticatorsFor(schemes map[string]spec.SecurityScheme) map[string]runtime.Authenticator {
 
 	return nil
 
 }
 
 // ConsumersFor gets the consumers for the specified media types
-func (o *BrokerAPI) ConsumersFor(mediaTypes []string) map[string]httpkit.Consumer {
+func (o *BrokerAPI) ConsumersFor(mediaTypes []string) map[string]runtime.Consumer {
 
-	result := make(map[string]httpkit.Consumer)
+	result := make(map[string]runtime.Consumer)
 	for _, mt := range mediaTypes {
 		switch mt {
 
@@ -177,9 +184,9 @@ func (o *BrokerAPI) ConsumersFor(mediaTypes []string) map[string]httpkit.Consume
 }
 
 // ProducersFor gets the producers for the specified media types
-func (o *BrokerAPI) ProducersFor(mediaTypes []string) map[string]httpkit.Producer {
+func (o *BrokerAPI) ProducersFor(mediaTypes []string) map[string]runtime.Producer {
 
-	result := make(map[string]httpkit.Producer)
+	result := make(map[string]runtime.Producer)
 	for _, mt := range mediaTypes {
 		switch mt {
 
@@ -213,6 +220,11 @@ func (o *BrokerAPI) initHandlerCache() {
 	if o.handlers == nil {
 		o.handlers = make(map[string]map[string]http.Handler)
 	}
+
+	if o.handlers["POST"] == nil {
+		o.handlers[strings.ToUpper("POST")] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/advertise"] = NewAdvertiseCatalog(o.context, o.AdvertiseCatalogHandler)
 
 	if o.handlers["POST"] == nil {
 		o.handlers[strings.ToUpper("POST")] = make(map[string]http.Handler)
