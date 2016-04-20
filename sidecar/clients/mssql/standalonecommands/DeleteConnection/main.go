@@ -2,10 +2,8 @@ package main
 
 import (
 	"crypto/md5"
-	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	"math/rand"
 	"os"
 	"regexp"
 	"strconv"
@@ -34,17 +32,6 @@ func getMD5Hash(text string) (string, error) {
 	reg := regexp.MustCompile("[^A-Za-z0-9]+")
 
 	return reg.ReplaceAllString(generated, ""), nil
-}
-
-func secureRandomString(bytesOfEntpry int) (string, error) {
-	rb := make([]byte, bytesOfEntpry)
-	_, err := rand.Read(rb)
-
-	if err != nil {
-		return "", err
-	}
-
-	return base64.RawURLEncoding.EncodeToString(rb), nil
 }
 
 func main() {

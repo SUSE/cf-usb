@@ -29,6 +29,13 @@ func configureAPI(api *operations.BrokerAPI) http.Handler {
 	// configure the api here
 	api.ServeError = errors.ServeError
 
+	statusSuccessfull := "successful"
+	statusFailed := "failed"
+	unknownErrorMessage := "Unknown error, timeout error or executable not present?"
+	processingType := "Default"
+	jsonError := "Json error"
+	status := "none"
+
 	var caller executablecaller.IExecutableCaller
 	caller = executablecaller.DefaultCaller{}
 
@@ -42,18 +49,16 @@ func configureAPI(api *operations.BrokerAPI) http.Handler {
 	api.ConnectionCreateConnectionHandler = connection.CreateConnectionHandlerFunc(func(params connection.CreateConnectionParams) middleware.Responder {
 		r := models.ServiceManagerConnectionResponse{
 			Details:        params.ConnectionCreateRequest.Details,
-			Status:         nil,
-			ProcessingType: nil,
+			Status:         &status,
+			ProcessingType: &processingType,
 		}
 
 		clientResponse, err := caller.CreateConnectionCaller(params.WorkspaceID, *params.ConnectionCreateRequest.ConnectionID)
 
 		if err == -1 {
-			status := "failed"
-			r.Status = &status
+			r.Status = &statusFailed
 			var codeErr int64 = -1
-			message := fmt.Sprintf("Unknown error, timeout error or executable not present?")
-			return connection.NewCreateConnectionDefault(500).WithPayload(&models.Error{Code: codeErr, Message: &message})
+			return connection.NewCreateConnectionDefault(500).WithPayload(&models.Error{Code: codeErr, Message: &unknownErrorMessage})
 		}
 
 		jsonResp := util.JsonResp{}
@@ -61,13 +66,11 @@ func configureAPI(api *operations.BrokerAPI) http.Handler {
 
 		var codeJson int64 = 500
 		if errJson != nil {
-			message := "Json error"
-			return connection.NewCreateConnectionDefault(500).WithPayload(&models.Error{Code: codeJson, Message: &message})
+			return connection.NewCreateConnectionDefault(500).WithPayload(&models.Error{Code: codeJson, Message: &jsonError})
 		}
 
 		if err != 0 {
-			status := "failed"
-			r.Status = &status
+			r.Status = &statusFailed
 
 			errModel := util.ErrorMsg{}
 			errModel.Code = int(jsonResp.Payload.(map[string]interface{})["code"].(float64))
@@ -78,8 +81,7 @@ func configureAPI(api *operations.BrokerAPI) http.Handler {
 			return connection.NewCreateConnectionDefault(jsonResp.HttpCode).WithPayload(&models.Error{Code: codeJson, Message: &errModel.Message})
 
 		}
-		status := "successful"
-		r.Status = &status
+		r.Status = &statusSuccessfull
 		details := jsonResp.Payload.(map[string]interface{})
 
 		r.Details = details
@@ -90,18 +92,16 @@ func configureAPI(api *operations.BrokerAPI) http.Handler {
 
 		r := models.ServiceManagerWorkspaceResponse{
 			Details:        params.CreateWorkspaceRequest.Details,
-			Status:         nil,
-			ProcessingType: nil,
+			Status:         &status,
+			ProcessingType: &processingType,
 		}
 
 		clientResponse, err := caller.CreateWorkspaceCaller(*params.CreateWorkspaceRequest.WorkspaceID)
 
 		if err == -1 {
-			status := "failed"
-			r.Status = &status
+			r.Status = &statusFailed
 			var codeErr int64 = -1
-			message := fmt.Sprintf("Unknown error, timeout error or executable not present?")
-			return workspace.NewCreateWorkspaceDefault(500).WithPayload(&models.Error{Code: codeErr, Message: &message})
+			return workspace.NewCreateWorkspaceDefault(500).WithPayload(&models.Error{Code: codeErr, Message: &unknownErrorMessage})
 		}
 
 		jsonResp := util.JsonResp{}
@@ -109,12 +109,10 @@ func configureAPI(api *operations.BrokerAPI) http.Handler {
 
 		var codeJson int64 = 500
 		if errJson != nil {
-			message := "Json error"
-			return workspace.NewCreateWorkspaceDefault(500).WithPayload(&models.Error{Code: codeJson, Message: &message})
+			return workspace.NewCreateWorkspaceDefault(500).WithPayload(&models.Error{Code: codeJson, Message: &jsonError})
 		}
 		if err != 0 {
-			status := "failed"
-			r.Status = &status
+			r.Status = &statusFailed
 			errModel := util.ErrorMsg{}
 			errModel.Code = int(jsonResp.Payload.(map[string]interface{})["code"].(float64))
 			if errModel.Code < 200 || errModel.Code > 500 {
@@ -124,8 +122,7 @@ func configureAPI(api *operations.BrokerAPI) http.Handler {
 			return workspace.NewCreateWorkspaceDefault(jsonResp.HttpCode).WithPayload(&models.Error{Code: codeJson, Message: &errModel.Message})
 		}
 
-		status := "successful"
-		r.Status = &status
+		r.Status = &statusSuccessfull
 		details := jsonResp.Payload.(map[string]interface{})
 
 		r.Details = details
@@ -137,16 +134,14 @@ func configureAPI(api *operations.BrokerAPI) http.Handler {
 
 		if err == -1 {
 			var codeErr int64 = -1
-			message := fmt.Sprintf("Unknown error, timeout error or executable not present?")
-			return connection.NewDeleteConnectionDefault(500).WithPayload(&models.Error{Code: codeErr, Message: &message})
+			return connection.NewDeleteConnectionDefault(500).WithPayload(&models.Error{Code: codeErr, Message: &unknownErrorMessage})
 		}
 		jsonResp := util.JsonResp{}
 		errJson := json.Unmarshal([]byte(clientResponse), &jsonResp)
 
 		var codeJson int64 = 500
 		if errJson != nil {
-			message := "Json error"
-			return connection.NewDeleteConnectionDefault(500).WithPayload(&models.Error{Code: codeJson, Message: &message})
+			return connection.NewDeleteConnectionDefault(500).WithPayload(&models.Error{Code: codeJson, Message: &jsonError})
 		}
 
 		if err != 0 {
@@ -168,16 +163,14 @@ func configureAPI(api *operations.BrokerAPI) http.Handler {
 
 		if err == -1 {
 			var codeErr int64 = -1
-			message := fmt.Sprintf("Unknown error, timeout error or executable not present?")
-			return workspace.NewDeleteWorkspaceDefault(500).WithPayload(&models.Error{Code: codeErr, Message: &message})
+			return workspace.NewDeleteWorkspaceDefault(500).WithPayload(&models.Error{Code: codeErr, Message: &unknownErrorMessage})
 		}
 		jsonResp := util.JsonResp{}
 		errJson := json.Unmarshal([]byte(clientResponse), &jsonResp)
 
 		var codeJson int64 = 500
 		if errJson != nil {
-			message := "Json error"
-			return workspace.NewDeleteWorkspaceDefault(500).WithPayload(&models.Error{Code: codeJson, Message: &message})
+			return workspace.NewDeleteWorkspaceDefault(500).WithPayload(&models.Error{Code: codeJson, Message: &jsonError})
 		}
 
 		if err != 0 {
@@ -195,31 +188,27 @@ func configureAPI(api *operations.BrokerAPI) http.Handler {
 	})
 	api.ConnectionGetConnectionHandler = connection.GetConnectionHandlerFunc(func(params connection.GetConnectionParams) middleware.Responder {
 		r := models.ServiceManagerConnectionResponse{
-			Status:         nil,
-			ProcessingType: nil,
+			Status:         &status,
+			ProcessingType: &processingType,
 		}
 
 		clientResponse, err := caller.GetConnectionCaller(params.WorkspaceID, params.ConnectionID)
 
 		if err == -1 {
-			status := "failed"
-			r.Status = &status
+			r.Status = &statusFailed
 			var codeErr int64 = -1
-			message := fmt.Sprintf("Unknown error, timeout error or executable not present?")
-			return connection.NewGetConnectionDefault(500).WithPayload(&models.Error{Code: codeErr, Message: &message})
+			return connection.NewGetConnectionDefault(500).WithPayload(&models.Error{Code: codeErr, Message: &unknownErrorMessage})
 		}
 		jsonResp := util.JsonResp{}
 		errJson := json.Unmarshal([]byte(clientResponse), &jsonResp)
 
 		var codeJson int64 = 500
 		if errJson != nil {
-			message := "Json error"
-			return connection.NewGetConnectionDefault(500).WithPayload(&models.Error{Code: codeJson, Message: &message})
+			return connection.NewGetConnectionDefault(500).WithPayload(&models.Error{Code: codeJson, Message: &jsonError})
 		}
 
 		if err != 0 {
-			status := "failed"
-			r.Status = &status
+			r.Status = &statusFailed
 			errModel := util.ErrorMsg{}
 			errModel.Code = int(jsonResp.Payload.(map[string]interface{})["code"].(float64))
 			if errModel.Code < 200 || errModel.Code > 500 {
@@ -230,8 +219,7 @@ func configureAPI(api *operations.BrokerAPI) http.Handler {
 
 		}
 
-		status := "successful"
-		r.Status = &status
+		r.Status = &statusSuccessfull
 		details := jsonResp.Payload.(map[string]interface{})
 
 		r.Details = details
@@ -239,8 +227,8 @@ func configureAPI(api *operations.BrokerAPI) http.Handler {
 	})
 	api.WorkspaceGetWorkspaceHandler = workspace.GetWorkspaceHandlerFunc(func(params workspace.GetWorkspaceParams) middleware.Responder {
 		r := models.ServiceManagerWorkspaceResponse{
-			Status:         nil,
-			ProcessingType: nil,
+			Status:         &status,
+			ProcessingType: &processingType,
 		}
 
 		clientResponse, err := caller.GetWorkspaceCaller(params.WorkspaceID)
@@ -248,11 +236,9 @@ func configureAPI(api *operations.BrokerAPI) http.Handler {
 		fmt.Println(clientResponse)
 
 		if err == -1 {
-			status := "failed"
-			r.Status = &status
+			r.Status = &statusFailed
 			var codeErr int64 = -1
-			message := fmt.Sprintf("Unknown error, timeout error or executable not present?")
-			return workspace.NewGetWorkspaceDefault(500).WithPayload(&models.Error{Code: codeErr, Message: &message})
+			return workspace.NewGetWorkspaceDefault(500).WithPayload(&models.Error{Code: codeErr, Message: &unknownErrorMessage})
 		}
 
 		jsonResp := util.JsonResp{}
@@ -260,12 +246,10 @@ func configureAPI(api *operations.BrokerAPI) http.Handler {
 
 		var codeJson int64 = 500
 		if errJson != nil {
-			message := "Json error"
-			return workspace.NewGetWorkspaceDefault(500).WithPayload(&models.Error{Code: codeJson, Message: &message})
+			return workspace.NewGetWorkspaceDefault(500).WithPayload(&models.Error{Code: codeJson, Message: &jsonError})
 		}
 		if err != 0 {
-			status := "failed"
-			r.Status = &status
+			r.Status = &statusFailed
 			errModel := util.ErrorMsg{}
 			errModel.Code = int(jsonResp.Payload.(map[string]interface{})["code"].(float64))
 			if errModel.Code < 200 || errModel.Code > 500 {
@@ -275,8 +259,7 @@ func configureAPI(api *operations.BrokerAPI) http.Handler {
 			return workspace.NewGetWorkspaceDefault(jsonResp.HttpCode).WithPayload(&models.Error{Code: codeJson, Message: &errModel.Message})
 		}
 
-		status := "successful"
-		r.Status = &status
+		r.Status = &statusSuccessfull
 		details := jsonResp.Payload.(map[string]interface{})
 
 		r.Details = details
