@@ -4,19 +4,21 @@ import (
 	"crypto/md5"
 	"encoding/base64"
 	"encoding/hex"
-	"encoding/json"
-	"errors"
 	"fmt"
 	"math/rand"
 	"os"
 	"regexp"
-	"strconv"
 	"strings"
 
 	"github.com/hpcloud/cf-usb/sidecar/clients/mysql/config"
 	"github.com/hpcloud/cf-usb/sidecar/clients/mysql/mysqlprovisioner"
+	"github.com/hpcloud/cf-usb/sidecar/clients/util"
 	"github.com/pivotal-golang/lager"
 )
+
+type DeletedOK struct {
+	Message string `json:"message"`
+}
 
 func getDBNameFromId(id string) string {
 	dbName := "d" + strings.Replace(id, "-", "", -1)
@@ -45,42 +47,15 @@ func secureRandomString(bytesOfEntpry int) (string, error) {
 	return base64.RawURLEncoding.EncodeToString(rb), nil
 }
 
-type ErrorResp struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
-}
-
 type MysqlDriver struct {
 	logger lager.Logger
 	conf   config.MysqlDriverConfig
 	db     mysqlprovisioner.MysqlProvisionerInterface
 }
 
-//this with ErrorResp will transform an error in a json for server use
-func WriteError(err error) {
-	var errResp = ErrorResp{}
-
-	if strings.HasPrefix(err.Error(), "Error") && strings.Contains(err.Error(), ":") {
-		rez, errConv := strconv.Atoi(strings.TrimPrefix(strings.Split(err.Error(), ":")[0], "Error "))
-		if errConv != nil {
-			errResp.Code = 500
-			errResp.Message = err.Error()
-		} else {
-			errResp.Code = rez
-			errResp.Message = strings.Split(err.Error(), ":")[1]
-		}
-	} else {
-		errResp.Code = 500
-		errResp.Message = err.Error()
-	}
-	strResp, _ := json.Marshal(errResp)
-	os.Stdout.WriteString("500\r\n") //error code
-	os.Stdout.WriteString(string(strResp))
-}
-
 func main() {
 	if len(os.Args) < 2 {
-		WriteError(errors.New(fmt.Sprintf("No username provided -d %d", len(os.Args))))
+		util.WriteError(fmt.Sprintf("No username provided -d %d", len(os.Args)), 1, 500)
 		os.Exit(1)
 
 	}
@@ -90,7 +65,7 @@ func main() {
 	mpass := os.Getenv("MYSQL_PASS")
 
 	if mhost == "" || mport == "" || muser == "" || mpass == "" {
-		WriteError(errors.New("MYSQL_HOST, MYSQL_PORT, MYSQL_USER and MYSQL_PASS env vars not set!"))
+		util.WriteError("MYSQL_HOST, MYSQL_PORT, MYSQL_USER and MYSQL_PASS env vars not set!", 2, 500)
 		os.Exit(2)
 	}
 
@@ -107,7 +82,7 @@ func main() {
 
 	username, err := getMD5Hash(os.Args[1])
 	if err != nil {
-		WriteError(err)
+		util.WriteError(err.Error(), 4, 500)
 		os.Exit(4)
 	}
 	if len(username) > 16 {
@@ -117,9 +92,11 @@ func main() {
 	err = provisioner.DeleteUser(username)
 
 	if err != nil {
-		WriteError(err)
+		util.WriteError(err.Error(), 3, 500)
 		os.Exit(3)
 	}
+
+	util.WriteSuccess(DeletedOK{Message: "User deleted"}, 200)
 
 	//if everything is ok exit status will be 0
 }

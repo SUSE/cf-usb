@@ -4,17 +4,15 @@ import (
 	"crypto/md5"
 	"encoding/base64"
 	"encoding/hex"
-	"encoding/json"
-	"errors"
 	"fmt"
 	"math/rand"
 	"os"
 	"regexp"
-	"strconv"
 	"strings"
 
 	"github.com/hpcloud/cf-usb/sidecar/clients/mysql/config"
 	"github.com/hpcloud/cf-usb/sidecar/clients/mysql/mysqlprovisioner"
+	"github.com/hpcloud/cf-usb/sidecar/clients/util"
 	"github.com/pivotal-golang/lager"
 )
 
@@ -45,11 +43,6 @@ func secureRandomString(bytesOfEntpry int) (string, error) {
 	return base64.RawURLEncoding.EncodeToString(rb), nil
 }
 
-type ErrorResp struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
-}
-
 type MysqlDriver struct {
 	logger lager.Logger
 	conf   config.MysqlDriverConfig
@@ -70,30 +63,9 @@ func WriteInternalError() {
 	os.Stdout.WriteString("{\"code\":500,\"message\":\"unknown error\" ")
 }
 
-func WriteError(err error) {
-	var errResp = ErrorResp{}
-
-	if strings.HasPrefix(err.Error(), "Error") && strings.Contains(err.Error(), ":") {
-		rez, errConv := strconv.Atoi(strings.TrimPrefix(strings.Split(err.Error(), ":")[0], "Error "))
-		if errConv != nil {
-			errResp.Code = 500
-			errResp.Message = err.Error()
-		} else {
-			errResp.Code = rez
-			errResp.Message = strings.Split(err.Error(), ":")[1]
-		}
-	} else {
-		errResp.Code = 500
-		errResp.Message = err.Error()
-	}
-	strResp, _ := json.Marshal(errResp)
-	os.Stdout.WriteString("500\r\n") //error code
-	os.Stdout.WriteString(string(strResp))
-}
-
 func main() {
 	if len(os.Args) < 3 {
-		WriteError(errors.New(fmt.Sprintf("Error 500: No database name or username provided -d %d\n", len(os.Args))))
+		util.WriteError(fmt.Sprintf("No database name or username provided -d %d\n", len(os.Args)), 1, 500)
 		os.Exit(1)
 
 	}
@@ -103,7 +75,7 @@ func main() {
 	mpass := os.Getenv("MYSQL_PASS")
 
 	if mhost == "" || mport == "" || muser == "" || mpass == "" {
-		WriteError(errors.New("Error 500: MYSQL_HOST, MYSQL_PORT, MYSQL_USER and MYSQL_PASS env vars not set!"))
+		util.WriteError("MYSQL_HOST, MYSQL_PORT, MYSQL_USER and MYSQL_PASS env vars not set!", 2, 417) //expectation failed
 		os.Exit(2)
 	}
 
@@ -120,8 +92,8 @@ func main() {
 
 	username, err := getMD5Hash(os.Args[2])
 	if err != nil {
-		WriteError(err)
-		os.Exit(4)
+		util.WriteError(err.Error(), 3, 500)
+		os.Exit(3)
 	}
 	if len(username) > 16 {
 		username = username[:16]
@@ -132,19 +104,13 @@ func main() {
 	err = provisioner.CreateUser(dbName, username, password)
 
 	if err != nil {
-		WriteError(err)
-		os.Exit(3)
+		util.WriteError(err.Error(), 4, 410)
+		os.Exit(4)
 	}
 
 	mysqlConfigResp := MysqlConfigResp{Hostname: mysqlconfig.Host, Host: mysqlconfig.Host,
 		Port: mysqlconfig.Port, Username: username, User: username,
 		Password: password, Database: dbName}
-	bRezOk, errRez := json.Marshal(mysqlConfigResp)
-	if errRez != nil {
-		WriteError(errors.New("Error 500:Unknown error"))
-		os.Exit(4)
-	} else {
+	util.WriteSuccess(mysqlConfigResp, 200)
 
-		os.Stdout.WriteString(string(bRezOk))
-	}
 }

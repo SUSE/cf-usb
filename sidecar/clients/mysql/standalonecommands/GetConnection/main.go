@@ -4,17 +4,15 @@ import (
 	"crypto/md5"
 	"encoding/base64"
 	"encoding/hex"
-	"encoding/json"
-	"errors"
 	"fmt"
 	"math/rand"
 	"os"
 	"regexp"
-	"strconv"
 	"strings"
 
 	"github.com/hpcloud/cf-usb/sidecar/clients/mysql/config"
 	"github.com/hpcloud/cf-usb/sidecar/clients/mysql/mysqlprovisioner"
+	"github.com/hpcloud/cf-usb/sidecar/clients/util"
 	"github.com/pivotal-golang/lager"
 )
 
@@ -45,11 +43,6 @@ func secureRandomString(bytesOfEntpry int) (string, error) {
 	return base64.RawURLEncoding.EncodeToString(rb), nil
 }
 
-type ErrorResp struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
-}
-
 type MysqlDriver struct {
 	logger lager.Logger
 	conf   config.MysqlDriverConfig
@@ -65,31 +58,9 @@ type MysqlConfigResp struct {
 	Database string `json:"database"`
 }
 
-//this with ErrorResp will transform an error in a json for server use
-func WriteError(err error) {
-	var errResp = ErrorResp{}
-
-	if strings.HasPrefix(err.Error(), "Error") && strings.Contains(err.Error(), ":") {
-		rez, errConv := strconv.Atoi(strings.TrimPrefix(strings.Split(err.Error(), ":")[0], "Error "))
-		if errConv != nil {
-			errResp.Code = 500
-			errResp.Message = err.Error()
-		} else {
-			errResp.Code = rez
-			errResp.Message = strings.Split(err.Error(), ":")[1]
-		}
-	} else {
-		errResp.Code = 500
-		errResp.Message = err.Error()
-	}
-	strResp, _ := json.Marshal(errResp)
-	os.Stdout.WriteString("500\r\n") //error code
-	os.Stdout.WriteString(string(strResp))
-}
-
 func main() {
 	if len(os.Args) < 3 {
-		WriteError(errors.New(fmt.Sprintf("No database name or username provided -d %d\n", len(os.Args))))
+		util.WriteError(fmt.Sprintf("No database name or username provided -d %d\n", len(os.Args)), 1, 500)
 		os.Exit(1)
 	}
 	mhost := os.Getenv("MYSQL_HOST")
@@ -98,7 +69,7 @@ func main() {
 	mpass := os.Getenv("MYSQL_PASS")
 
 	if mhost == "" || mport == "" || muser == "" || mpass == "" {
-		WriteError(errors.New("MYSQL_HOST, MYSQL_PORT, MYSQL_USER and MYSQL_PASS env vars not set!"))
+		util.WriteError("MYSQL_HOST, MYSQL_PORT, MYSQL_USER and MYSQL_PASS env vars not set!", 2, 500)
 		os.Exit(2)
 	}
 
@@ -115,7 +86,7 @@ func main() {
 
 	username, err := getMD5Hash(os.Args[2])
 	if err != nil {
-		WriteError(err)
+		util.WriteError(err.Error(), 4, 500)
 		os.Exit(4)
 	}
 	if len(username) > 16 {
@@ -127,12 +98,12 @@ func main() {
 	userCreated, err := provisioner.IsUserCreated(username)
 
 	if err != nil {
-		WriteError(err)
+		util.WriteError(err.Error(), 3, 500)
 		os.Exit(3)
 	}
 
 	if !userCreated {
-		WriteError(errors.New("Error 5: User not created"))
+		util.WriteError("Error 5: User not created", 5, 500)
 		os.Exit(5)
 	}
 
@@ -140,10 +111,6 @@ func main() {
 		Port: mysqlconfig.Port, User: username, Username: username,
 		Database: dbName,
 	}
-	bRez, err := json.Marshal(mysqlConfigResp)
-	if err != nil {
-		WriteError(errors.New("Error 500: Unknown error"))
-		os.Exit(4)
-	}
-	fmt.Println(string(bRez))
+
+	util.WriteSuccess(mysqlConfigResp, 200)
 }

@@ -12,6 +12,7 @@ import (
 	httpkit "github.com/go-swagger/go-swagger/httpkit"
 	middleware "github.com/go-swagger/go-swagger/httpkit/middleware"
 
+	"github.com/hpcloud/cf-usb/sidecar/clients/util"
 	"github.com/hpcloud/cf-usb/sidecar/server/executablecaller"
 	"github.com/hpcloud/cf-usb/sidecar/server/models"
 	"github.com/hpcloud/cf-usb/sidecar/server/restapi/operations"
@@ -65,28 +66,31 @@ func configureAPI(api *operations.BrokerAPI) http.Handler {
 			var codeErr int64 = -1
 			return connection.NewCreateConnectionDefault(500).WithPayload(&models.Error{Code: &codeErr, Message: fmt.Sprintf("Unknown error, timeout error or executable not present?")})
 		}
-		code := int64(GetCodeFromClientResponse(clientResponse))
 
-		strJson := strings.TrimPrefix(clientResponse, strconv.Itoa(int(code)))
+		jsonResp := util.JsonResp{}
+		errJson := json.Unmarshal([]byte(clientResponse), &jsonResp)
+
+		var codeJson int64 = 500
+		if errJson != nil {
+			return connection.NewCreateConnectionDefault(500).WithPayload(&models.Error{Code: &codeJson, Message: "Json error"})
+		}
 
 		if err != 0 {
 			r.Status = "failed"
-			errModel := models.Error{}
-			err := json.Unmarshal([]byte(strJson), &errModel)
-			if err != nil {
-				return connection.NewCreateConnectionDefault(500).WithPayload(&models.Error{Code: &code, Message: "Json error"})
+
+			errModel := util.ErrorMsg{}
+			errModel.Code = int(jsonResp.Payload.(map[string]interface{})["code"].(float64))
+			if errModel.Code < 200 || errModel.Code > 500 {
+				errModel.Code = 500
 			}
-			details := make(map[string]interface{})
-			details["code"] = errModel.Code
-			details["message"] = errModel.Message
-			r.Details = details
-			return connection.NewCreateConnectionCreated().WithPayload(&r)
+			errModel.Message = jsonResp.Payload.(map[string]interface{})["message"].(string)
+			return connection.NewCreateConnectionDefault(jsonResp.HttpCode).WithPayload(&models.Error{Code: &codeJson, Message: errModel.Message})
+
 		}
 
 		r.Status = "successful"
-		details := make(map[string]interface{})
+		details := jsonResp.Payload.(map[string]interface{})
 
-		_ = json.Unmarshal([]byte(clientResponse), &details)
 		r.Details = details
 		return connection.NewCreateConnectionCreated().WithPayload(&r)
 	})
@@ -104,28 +108,29 @@ func configureAPI(api *operations.BrokerAPI) http.Handler {
 			var codeErr int64 = -1
 			return workspace.NewCreateWorkspaceDefault(500).WithPayload(&models.Error{Code: &codeErr, Message: fmt.Sprintf("Unknown error, timeout error or executable not present?")})
 		}
-		code := int64(GetCodeFromClientResponse(clientResponse))
 
-		strJson := strings.TrimPrefix(clientResponse, strconv.Itoa(int(code)))
+		jsonResp := util.JsonResp{}
+		errJson := json.Unmarshal([]byte(clientResponse), &jsonResp)
 
+		var codeJson int64 = 500
+		if errJson != nil {
+			return workspace.NewCreateWorkspaceDefault(500).WithPayload(&models.Error{Code: &codeJson, Message: "Json error"})
+		}
 		if err != 0 {
 			r.Status = "failed"
-			errModel := models.Error{}
-			err := json.Unmarshal([]byte(strJson), &errModel)
-			if err != nil {
-				return workspace.NewCreateWorkspaceDefault(500).WithPayload(&models.Error{Code: &code, Message: "Json error"})
+
+			errModel := util.ErrorMsg{}
+			errModel.Code = int(jsonResp.Payload.(map[string]interface{})["code"].(float64))
+			if errModel.Code < 200 || errModel.Code > 500 {
+				errModel.Code = 500
 			}
-			details := make(map[string]interface{})
-			details["code"] = errModel.Code
-			details["message"] = errModel.Message
-			r.Details = details
-			return workspace.NewCreateWorkspaceCreated().WithPayload(&r)
+			errModel.Message = jsonResp.Payload.(map[string]interface{})["message"].(string)
+			return workspace.NewCreateWorkspaceDefault(jsonResp.HttpCode).WithPayload(&models.Error{Code: &codeJson, Message: errModel.Message})
 		}
 
 		r.Status = "successful"
-		details := make(map[string]interface{})
+		details := jsonResp.Payload.(map[string]interface{})
 
-		_ = json.Unmarshal([]byte(clientResponse), &details)
 		r.Details = details
 		return workspace.NewCreateWorkspaceCreated().WithPayload(&r)
 	})
@@ -137,17 +142,22 @@ func configureAPI(api *operations.BrokerAPI) http.Handler {
 			var codeErr int64 = -1
 			return connection.NewDeleteConnectionDefault(500).WithPayload(&models.Error{Code: &codeErr, Message: fmt.Sprintf("Unknown error, timeout error or executable not present?")})
 		}
-		code := int64(GetCodeFromClientResponse(clientResponse))
+		jsonResp := util.JsonResp{}
+		errJson := json.Unmarshal([]byte(clientResponse), &jsonResp)
 
-		strJson := strings.TrimPrefix(clientResponse, strconv.Itoa(int(code)))
+		var codeJson int64 = 500
+		if errJson != nil {
+			return connection.NewDeleteConnectionDefault(500).WithPayload(&models.Error{Code: &codeJson, Message: "Json error"})
+		}
 
 		if err != 0 {
-			errModel := models.Error{}
-			err := json.Unmarshal([]byte(strJson), &errModel)
-			if err != nil {
-				return connection.NewDeleteConnectionDefault(500).WithPayload(&models.Error{Code: &code, Message: "Json error"})
+			errModel := util.ErrorMsg{}
+			errModel.Code = int(jsonResp.Payload.(map[string]interface{})["code"].(float64))
+			if errModel.Code < 200 || errModel.Code > 500 {
+				errModel.Code = 500
 			}
-			return connection.NewDeleteConnectionDefault(500).WithPayload(&models.Error{Code: &code, Message: errModel.Message})
+			errModel.Message = jsonResp.Payload.(map[string]interface{})["message"].(string)
+			return connection.NewDeleteConnectionDefault(jsonResp.HttpCode).WithPayload(&models.Error{Code: &codeJson, Message: errModel.Message})
 
 		}
 
@@ -161,18 +171,23 @@ func configureAPI(api *operations.BrokerAPI) http.Handler {
 			var codeErr int64 = -1
 			return workspace.NewDeleteWorkspaceDefault(500).WithPayload(&models.Error{Code: &codeErr, Message: fmt.Sprintf("Unknown error, timeout error or executable not present?")})
 		}
-		code := int64(GetCodeFromClientResponse(clientResponse))
+		jsonResp := util.JsonResp{}
+		errJson := json.Unmarshal([]byte(clientResponse), &jsonResp)
 
-		strJson := strings.TrimPrefix(clientResponse, strconv.Itoa(int(code)))
+		var codeJson int64 = 500
+		if errJson != nil {
+			return workspace.NewDeleteWorkspaceDefault(500).WithPayload(&models.Error{Code: &codeJson, Message: "Json error"})
+		}
 
 		if err != 0 {
-			errModel := models.Error{}
-			err := json.Unmarshal([]byte(strJson), &errModel)
-			if err != nil {
-				return workspace.NewDeleteWorkspaceDefault(500).WithPayload(&models.Error{Code: &code, Message: "Json error"})
+			errModel := util.ErrorMsg{}
+			errModel.Code = int(jsonResp.Payload.(map[string]interface{})["code"].(float64))
+			if errModel.Code < 200 || errModel.Code > 500 {
+				errModel.Code = 500
 			}
+			errModel.Message = jsonResp.Payload.(map[string]interface{})["message"].(string)
+			return workspace.NewDeleteWorkspaceDefault(jsonResp.HttpCode).WithPayload(&models.Error{Code: &codeJson, Message: errModel.Message})
 
-			return workspace.NewDeleteWorkspaceDefault(500).WithPayload(&models.Error{Code: &code, Message: errModel.Message})
 		}
 
 		return workspace.NewDeleteWorkspaceOK()
@@ -190,24 +205,30 @@ func configureAPI(api *operations.BrokerAPI) http.Handler {
 			var codeErr int64 = -1
 			return connection.NewGetConnectionDefault(500).WithPayload(&models.Error{Code: &codeErr, Message: fmt.Sprintf("Unknown error, timeout error or executable not present?")})
 		}
-		code := int64(GetCodeFromClientResponse(clientResponse))
+		jsonResp := util.JsonResp{}
+		errJson := json.Unmarshal([]byte(clientResponse), &jsonResp)
 
-		strJson := strings.TrimPrefix(clientResponse, strconv.Itoa(int(code)))
+		var codeJson int64 = 500
+		if errJson != nil {
+			return connection.NewGetConnectionDefault(500).WithPayload(&models.Error{Code: &codeJson, Message: "Json error"})
+		}
 
 		if err != 0 {
 			r.Status = "failed"
-			errModel := models.Error{}
-			err := json.Unmarshal([]byte(strJson), &errModel)
-			if err != nil {
-				return connection.NewGetConnectionDefault(500).WithPayload(&models.Error{Code: &code, Message: "Json error"})
+
+			errModel := util.ErrorMsg{}
+			errModel.Code = int(jsonResp.Payload.(map[string]interface{})["code"].(float64))
+			if errModel.Code < 200 || errModel.Code > 500 {
+				errModel.Code = 500
 			}
-			return connection.NewGetConnectionDefault(500).WithPayload(&models.Error{Code: &code, Message: errModel.Message})
+			errModel.Message = jsonResp.Payload.(map[string]interface{})["message"].(string)
+			return connection.NewGetConnectionDefault(jsonResp.HttpCode).WithPayload(&models.Error{Code: &codeJson, Message: errModel.Message})
+
 		}
 
 		r.Status = "successful"
-		details := make(map[string]interface{})
+		details := jsonResp.Payload.(map[string]interface{})
 
-		_ = json.Unmarshal([]byte(clientResponse), &details)
 		r.Details = details
 		return connection.NewGetConnectionOK().WithPayload(&r)
 	})
@@ -227,29 +248,28 @@ func configureAPI(api *operations.BrokerAPI) http.Handler {
 			return workspace.NewGetWorkspaceDefault(500).WithPayload(&models.Error{Code: &codeErr, Message: fmt.Sprintf("Unknown error, timeout error or executable not present?")})
 		}
 
-		code := int64(GetCodeFromClientResponse(clientResponse))
+		jsonResp := util.JsonResp{}
+		errJson := json.Unmarshal([]byte(clientResponse), &jsonResp)
 
-		fmt.Println(code, "asta este codul")
-
-		strJson := strings.TrimPrefix(clientResponse, strconv.Itoa(int(code)))
-
-		fmt.Println(strJson, " ", err)
-
+		var codeJson int64 = 500
+		if errJson != nil {
+			return workspace.NewGetWorkspaceDefault(500).WithPayload(&models.Error{Code: &codeJson, Message: "Json error"})
+		}
 		if err != 0 {
 			r.Status = "failed"
-			errModel := models.Error{}
-			err := json.Unmarshal([]byte(strJson), &errModel)
-			if err != nil {
-				return workspace.NewGetWorkspaceDefault(500).WithPayload(&models.Error{Code: &code, Message: "Json error"})
-			}
 
-			return workspace.NewGetWorkspaceDefault(500).WithPayload(&models.Error{Code: &code, Message: errModel.Message})
+			errModel := util.ErrorMsg{}
+			errModel.Code = int(jsonResp.Payload.(map[string]interface{})["code"].(float64))
+			if errModel.Code < 200 || errModel.Code > 500 {
+				errModel.Code = 500
+			}
+			errModel.Message = jsonResp.Payload.(map[string]interface{})["message"].(string)
+			return workspace.NewGetWorkspaceDefault(jsonResp.HttpCode).WithPayload(&models.Error{Code: &codeJson, Message: errModel.Message})
 		}
 
 		r.Status = "successful"
-		details := make(map[string]interface{})
-		fmt.Println(clientResponse)
-		_ = json.Unmarshal([]byte(clientResponse), &details)
+		details := jsonResp.Payload.(map[string]interface{})
+
 		r.Details = details
 		return workspace.NewGetWorkspaceOK().WithPayload(&r)
 	})

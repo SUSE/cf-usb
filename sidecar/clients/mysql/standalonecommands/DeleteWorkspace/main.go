@@ -1,14 +1,12 @@
 package main
 
 import (
-	"encoding/json"
-	"errors"
 	"os"
-	"strconv"
 	"strings"
 
 	"github.com/hpcloud/cf-usb/sidecar/clients/mysql/config"
 	"github.com/hpcloud/cf-usb/sidecar/clients/mysql/mysqlprovisioner"
+	"github.com/hpcloud/cf-usb/sidecar/clients/util"
 	"github.com/pivotal-golang/lager"
 )
 
@@ -19,8 +17,7 @@ func getDBNameFromId(id string) string {
 	return dbName
 }
 
-type ErrorResp struct {
-	Code    int    `json:"code"`
+type DeletedOk struct {
 	Message string `json:"message"`
 }
 
@@ -30,31 +27,9 @@ type MysqlDriver struct {
 	db     mysqlprovisioner.MysqlProvisionerInterface
 }
 
-//this with ErrorResp will transform an error in a json for server use
-func WriteError(err error) {
-	var errResp = ErrorResp{}
-
-	if strings.HasPrefix(err.Error(), "Error") && strings.Contains(err.Error(), ":") {
-		rez, errConv := strconv.Atoi(strings.TrimPrefix(strings.Split(err.Error(), ":")[0], "Error "))
-		if errConv != nil {
-			errResp.Code = 500
-			errResp.Message = err.Error()
-		} else {
-			errResp.Code = rez
-			errResp.Message = strings.Split(err.Error(), ":")[1]
-		}
-	} else {
-		errResp.Code = 500
-		errResp.Message = err.Error()
-	}
-	strResp, _ := json.Marshal(errResp)
-	os.Stdout.WriteString("500\r\n") //error code
-	os.Stdout.WriteString(string(strResp))
-}
-
 func main() {
 	if len(os.Args) < 2 {
-		WriteError(errors.New("No database name provided"))
+		util.WriteError("No database name provided", 1, 500)
 		os.Exit(1)
 
 	}
@@ -64,7 +39,7 @@ func main() {
 	mpass := os.Getenv("MYSQL_PASS")
 
 	if mhost == "" || mport == "" || muser == "" || mpass == "" {
-		WriteError(errors.New("MYSQL_HOST, MYSQL_PORT, MYSQL_USER and MYSQL_PASS env vars not set!"))
+		util.WriteError("MYSQL_HOST, MYSQL_PORT, MYSQL_USER and MYSQL_PASS env vars not set!", 2, 500)
 		os.Exit(2)
 	}
 
@@ -82,9 +57,10 @@ func main() {
 	err := provisioner.DeleteDatabase(getDBNameFromId(os.Args[1]))
 
 	if err != nil {
-		WriteError(err)
+		util.WriteError(err.Error(), 3, 500)
 		os.Exit(3)
 	}
 
+	util.WriteSuccess(DeletedOk{Message: "Database deleted"}, 200)
 	//if everything is ok exit status will be 0
 }
