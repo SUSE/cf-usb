@@ -4,7 +4,6 @@ import (
 	"crypto/md5"
 	"encoding/base64"
 	"encoding/hex"
-	"fmt"
 	"math/rand"
 	"os"
 	"regexp"
@@ -48,9 +47,10 @@ type WorkspaceOk struct {
 }
 
 func main() {
-	if len(os.Args) < 3 {
-		util.WriteError(fmt.Sprintf("No database name or username provided -d %d\n", len(os.Args)), 1, 500)
+	if len(os.Args) < 2 {
+		util.WriteError("No database name provided", 1, 500)
 		os.Exit(1)
+
 	}
 	mhost := os.Getenv("MSSQL_HOST")
 	mport := os.Getenv("MSSQL_PORT")

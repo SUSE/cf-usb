@@ -6,10 +6,11 @@ package operations
 import (
 	"net/http"
 
-	"github.com/go-swagger/go-swagger/errors"
-	"github.com/go-swagger/go-swagger/httpkit"
-	"github.com/go-swagger/go-swagger/httpkit/middleware"
-	"github.com/go-swagger/go-swagger/strfmt"
+	"github.com/go-openapi/errors"
+	"github.com/go-openapi/runtime"
+	"github.com/go-openapi/runtime/middleware"
+
+	strfmt "github.com/go-openapi/strfmt"
 )
 
 // NewGetServicePlansParams creates a new GetServicePlansParams object
@@ -24,6 +25,10 @@ func NewGetServicePlansParams() GetServicePlansParams {
 //
 // swagger:parameters getServicePlans
 type GetServicePlansParams struct {
+
+	// HTTP Request Object
+	HTTPRequest *http.Request
+
 	/*Driver Instance ID
 	  In: query
 	*/
@@ -34,7 +39,9 @@ type GetServicePlansParams struct {
 // for simple values it will use straight method calls
 func (o *GetServicePlansParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
-	qs := httpkit.Values(r.URL.Query())
+	o.HTTPRequest = r
+
+	qs := runtime.Values(r.URL.Query())
 
 	qDriverInstanceID, qhkDriverInstanceID, _ := qs.GetOK("driver_instance_id")
 	if err := o.bindDriverInstanceID(qDriverInstanceID, qhkDriverInstanceID, route.Formats); err != nil {

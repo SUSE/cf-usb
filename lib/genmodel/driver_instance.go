@@ -4,51 +4,52 @@ package genmodel
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-	"strconv"
+	strfmt "github.com/go-openapi/strfmt"
+	"github.com/go-openapi/swag"
 
-	"github.com/go-swagger/go-swagger/errors"
-	"github.com/go-swagger/go-swagger/httpkit/validate"
-	"github.com/go-swagger/go-swagger/strfmt"
-	"github.com/go-swagger/go-swagger/swag"
+	"github.com/go-openapi/errors"
+	"github.com/go-openapi/validate"
 )
 
-/*driver_instance DriverInstance driver instance
+/*DriverInstance driver instance
 
 swagger:model driver_instance
 */
 type DriverInstance struct {
 
-	/* Configuration configuration
+	/* configuration
 	 */
 	Configuration interface{} `json:"configuration,omitempty"`
 
-	/* Dials dials
+	/* dials
 	 */
 	Dials []string `json:"dials,omitempty"`
 
-	/* DriverID driver id
+	/* driver id
 
 	Required: true
 	Max Length: 36
 	Min Length: 36
 	*/
-	DriverID string `json:"driver_id,omitempty"`
+	DriverID *string `json:"driver_id"`
 
-	/* ID id
+	/* id
 	 */
-	ID *string `json:"id,omitempty"`
+	ID string `json:"id,omitempty"`
 
-	/* Name name
+	/* name
 
 	Required: true
 	*/
-	Name string `json:"name,omitempty"`
+	Name *string `json:"name"`
 
-	/* Service service
+	/* service
 	 */
-	Service *string `json:"service,omitempty"`
+	Service string `json:"service,omitempty"`
 
-	TargetURL string `json:"target,omitempty"`
+	/* target URL
+	 */
+	TargetURL string `json:"targetURL,omitempty"`
 }
 
 // Validate validates this driver instance
@@ -82,28 +83,20 @@ func (m *DriverInstance) validateDials(formats strfmt.Registry) error {
 		return nil
 	}
 
-	for i := 0; i < len(m.Dials); i++ {
-
-		if err := validate.Required("dials"+"."+strconv.Itoa(i), "body", string(m.Dials[i])); err != nil {
-			return err
-		}
-
-	}
-
 	return nil
 }
 
 func (m *DriverInstance) validateDriverID(formats strfmt.Registry) error {
 
-	if err := validate.Required("driver_id", "body", string(m.DriverID)); err != nil {
+	if err := validate.Required("driver_id", "body", m.DriverID); err != nil {
 		return err
 	}
 
-	if err := validate.MinLength("driver_id", "body", string(m.DriverID), 36); err != nil {
+	if err := validate.MinLength("driver_id", "body", string(*m.DriverID), 36); err != nil {
 		return err
 	}
 
-	if err := validate.MaxLength("driver_id", "body", string(m.DriverID), 36); err != nil {
+	if err := validate.MaxLength("driver_id", "body", string(*m.DriverID), 36); err != nil {
 		return err
 	}
 
@@ -112,7 +105,7 @@ func (m *DriverInstance) validateDriverID(formats strfmt.Registry) error {
 
 func (m *DriverInstance) validateName(formats strfmt.Registry) error {
 
-	if err := validate.Required("name", "body", string(m.Name)); err != nil {
+	if err := validate.Required("name", "body", m.Name); err != nil {
 		return err
 	}
 

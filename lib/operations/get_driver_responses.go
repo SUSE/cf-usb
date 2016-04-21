@@ -6,7 +6,7 @@ package operations
 import (
 	"net/http"
 
-	"github.com/go-swagger/go-swagger/httpkit"
+	"github.com/go-openapi/runtime"
 
 	"github.com/hpcloud/cf-usb/lib/genmodel"
 )
@@ -32,8 +32,13 @@ func (o *GetDriverOK) WithPayload(payload *genmodel.Driver) *GetDriverOK {
 	return o
 }
 
+// SetPayload sets the payload to the get driver o k response
+func (o *GetDriverOK) SetPayload(payload *genmodel.Driver) {
+	o.Payload = payload
+}
+
 // WriteResponse to the client
-func (o *GetDriverOK) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *GetDriverOK) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(200)
 	if o.Payload != nil {
@@ -56,7 +61,7 @@ func NewGetDriverNotFound() *GetDriverNotFound {
 }
 
 // WriteResponse to the client
-func (o *GetDriverNotFound) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *GetDriverNotFound) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(404)
 }
@@ -82,8 +87,13 @@ func (o *GetDriverInternalServerError) WithPayload(payload string) *GetDriverInt
 	return o
 }
 
+// SetPayload sets the payload to the get driver internal server error response
+func (o *GetDriverInternalServerError) SetPayload(payload string) {
+	o.Payload = payload
+}
+
 // WriteResponse to the client
-func (o *GetDriverInternalServerError) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *GetDriverInternalServerError) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(500)
 	if err := producer.Produce(rw, o.Payload); err != nil {

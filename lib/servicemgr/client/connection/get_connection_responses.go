@@ -7,10 +7,9 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/go-swagger/go-swagger/client"
-	"github.com/go-swagger/go-swagger/httpkit"
+	"github.com/go-openapi/runtime"
 
-	strfmt "github.com/go-swagger/go-swagger/strfmt"
+	strfmt "github.com/go-openapi/strfmt"
 
 	"github.com/hpcloud/cf-usb/lib/servicemgr/models"
 )
@@ -21,7 +20,7 @@ type GetConnectionReader struct {
 }
 
 // ReadResponse reads a server response into the recieved o.
-func (o *GetConnectionReader) ReadResponse(response client.Response, consumer httpkit.Consumer) (interface{}, error) {
+func (o *GetConnectionReader) ReadResponse(response runtime.ClientResponse, consumer runtime.Consumer) (interface{}, error) {
 	switch response.Code() {
 
 	case 200:
@@ -57,7 +56,7 @@ func (o *GetConnectionOK) Error() string {
 	return fmt.Sprintf("[GET /workspaces/{workspace_id}/connections/{connection_id}][%d] getConnectionOK  %+v", 200, o.Payload)
 }
 
-func (o *GetConnectionOK) readResponse(response client.Response, consumer httpkit.Consumer, formats strfmt.Registry) error {
+func (o *GetConnectionOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	o.Payload = new(models.ServiceManagerConnectionResponse)
 
@@ -95,7 +94,7 @@ func (o *GetConnectionDefault) Error() string {
 	return fmt.Sprintf("[GET /workspaces/{workspace_id}/connections/{connection_id}][%d] getConnection default  %+v", o._statusCode, o.Payload)
 }
 
-func (o *GetConnectionDefault) readResponse(response client.Response, consumer httpkit.Consumer, formats strfmt.Registry) error {
+func (o *GetConnectionDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	o.Payload = new(models.Error)
 

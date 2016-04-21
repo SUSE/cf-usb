@@ -4,12 +4,13 @@ package client
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-	"github.com/go-swagger/go-swagger/client"
-	httptransport "github.com/go-swagger/go-swagger/httpkit/client"
+	"github.com/go-openapi/runtime"
+	httptransport "github.com/go-openapi/runtime/client"
 
-	strfmt "github.com/go-swagger/go-swagger/strfmt"
+	strfmt "github.com/go-openapi/strfmt"
 
 	"github.com/hpcloud/cf-usb/lib/servicemgr/client/connection"
+	"github.com/hpcloud/cf-usb/lib/servicemgr/client/operations"
 	"github.com/hpcloud/cf-usb/lib/servicemgr/client/workspace"
 )
 
@@ -26,11 +27,13 @@ func NewHTTPClient(formats strfmt.Registry) *Servicemgr {
 }
 
 // New creates a new servicemgr client
-func New(transport client.Transport, formats strfmt.Registry) *Servicemgr {
+func New(transport runtime.ClientTransport, formats strfmt.Registry) *Servicemgr {
 	cli := new(Servicemgr)
 	cli.Transport = transport
 
 	cli.Connection = connection.New(transport, formats)
+
+	cli.Operations = operations.New(transport, formats)
 
 	cli.Workspace = workspace.New(transport, formats)
 
@@ -41,16 +44,20 @@ func New(transport client.Transport, formats strfmt.Registry) *Servicemgr {
 type Servicemgr struct {
 	Connection *connection.Client
 
+	Operations *operations.Client
+
 	Workspace *workspace.Client
 
-	Transport client.Transport
+	Transport runtime.ClientTransport
 }
 
 // SetTransport changes the transport on the client and all its subresources
-func (c *Servicemgr) SetTransport(transport client.Transport) {
+func (c *Servicemgr) SetTransport(transport runtime.ClientTransport) {
 	c.Transport = transport
 
 	c.Connection.SetTransport(transport)
+
+	c.Operations.SetTransport(transport)
 
 	c.Workspace.SetTransport(transport)
 

@@ -6,7 +6,7 @@ package operations
 import (
 	"net/http"
 
-	"github.com/go-swagger/go-swagger/httpkit/middleware"
+	middleware "github.com/go-openapi/runtime/middleware"
 )
 
 // UpdateDriverHandlerFunc turns a function with the right signature into a update driver handler
@@ -34,13 +34,12 @@ Update driver
 */
 type UpdateDriver struct {
 	Context *middleware.Context
-	Params  UpdateDriverParams
 	Handler UpdateDriverHandler
 }
 
 func (o *UpdateDriver) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
-	o.Params = NewUpdateDriverParams()
+	var Params = NewUpdateDriverParams()
 
 	uprinc, err := o.Context.Authorize(r, route)
 	if err != nil {
@@ -52,12 +51,12 @@ func (o *UpdateDriver) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		principal = uprinc
 	}
 
-	if err := o.Context.BindValidRequest(r, route, &o.Params); err != nil { // bind params
+	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(o.Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params, principal) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

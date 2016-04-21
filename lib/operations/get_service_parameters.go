@@ -6,9 +6,10 @@ package operations
 import (
 	"net/http"
 
-	"github.com/go-swagger/go-swagger/errors"
-	"github.com/go-swagger/go-swagger/httpkit/middleware"
-	"github.com/go-swagger/go-swagger/strfmt"
+	"github.com/go-openapi/errors"
+	"github.com/go-openapi/runtime/middleware"
+
+	strfmt "github.com/go-openapi/strfmt"
 )
 
 // NewGetServiceParams creates a new GetServiceParams object
@@ -23,6 +24,10 @@ func NewGetServiceParams() GetServiceParams {
 //
 // swagger:parameters getService
 type GetServiceParams struct {
+
+	// HTTP Request Object
+	HTTPRequest *http.Request
+
 	/*ID of the service
 	  Required: true
 	  In: path
@@ -34,6 +39,7 @@ type GetServiceParams struct {
 // for simple values it will use straight method calls
 func (o *GetServiceParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
+	o.HTTPRequest = r
 
 	rServiceID, rhkServiceID, _ := route.Params.GetOK("service_id")
 	if err := o.bindServiceID(rServiceID, rhkServiceID, route.Formats); err != nil {

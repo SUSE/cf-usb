@@ -6,7 +6,7 @@ package operations
 import (
 	"net/http"
 
-	"github.com/go-swagger/go-swagger/httpkit"
+	"github.com/go-openapi/runtime"
 
 	"github.com/hpcloud/cf-usb/lib/genmodel"
 )
@@ -32,8 +32,13 @@ func (o *GetDialSchemaOK) WithPayload(payload genmodel.DialSchema) *GetDialSchem
 	return o
 }
 
+// SetPayload sets the payload to the get dial schema o k response
+func (o *GetDialSchemaOK) SetPayload(payload genmodel.DialSchema) {
+	o.Payload = payload
+}
+
 // WriteResponse to the client
-func (o *GetDialSchemaOK) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *GetDialSchemaOK) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(200)
 	if err := producer.Produce(rw, o.Payload); err != nil {
@@ -55,7 +60,7 @@ func NewGetDialSchemaNotFound() *GetDialSchemaNotFound {
 }
 
 // WriteResponse to the client
-func (o *GetDialSchemaNotFound) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *GetDialSchemaNotFound) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(404)
 }
@@ -81,8 +86,13 @@ func (o *GetDialSchemaInternalServerError) WithPayload(payload string) *GetDialS
 	return o
 }
 
+// SetPayload sets the payload to the get dial schema internal server error response
+func (o *GetDialSchemaInternalServerError) SetPayload(payload string) {
+	o.Payload = payload
+}
+
 // WriteResponse to the client
-func (o *GetDialSchemaInternalServerError) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *GetDialSchemaInternalServerError) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(500)
 	if err := producer.Produce(rw, o.Payload); err != nil {

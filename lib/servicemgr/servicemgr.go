@@ -1,9 +1,9 @@
 package servicemgr
 
 import (
-	swaggerclient "github.com/go-swagger/go-swagger/client"
+	"github.com/go-openapi/runtime"
 
-	strfmt "github.com/go-swagger/go-swagger/strfmt"
+	strfmt "github.com/go-openapi/strfmt"
 
 	client "github.com/hpcloud/cf-usb/lib/servicemgr/client"
 	connection "github.com/hpcloud/cf-usb/lib/servicemgr/client/connection"
@@ -19,7 +19,7 @@ type ServiceManager struct {
 	logger  lager.Logger
 }
 
-func NewServiceManager(transport swaggerclient.Transport, format strfmt.Registry, logger lager.Logger) ServiceManagerInterface {
+func NewServiceManager(transport runtime.ClientTransport, format strfmt.Registry, logger lager.Logger) ServiceManagerInterface {
 	mgr := ServiceManager{}
 	mgr.manager = client.New(transport, format)
 	mgr.logger = logger
@@ -65,6 +65,8 @@ func (s *ServiceManager) GetWorkspace(workspace_id string) (models.ServiceManage
 }
 
 func (s *ServiceManager) DeleteWorkspace(workspace_id string) models.Error {
+	s.logger.Info("delete workspace", lager.Data{"workspace_id": workspace_id})
+
 	params := workspace.NewDeleteWorkspaceParams()
 	params.WorkspaceID = workspace_id
 	errorObj := models.Error{}
@@ -78,6 +80,8 @@ func (s *ServiceManager) DeleteWorkspace(workspace_id string) models.Error {
 }
 
 func (s *ServiceManager) CreateWorkspaceConnection(workspace_id string, request models.ServiceManagerConnectionCreateRequest) (models.ServiceManagerConnectionResponse, models.Error) {
+	s.logger.Info("create connection", lager.Data{"workspace_id": workspace_id})
+
 	response := models.ServiceManagerConnectionResponse{}
 	error := models.Error{}
 	params := connection.CreateConnectionParams{}
@@ -96,6 +100,8 @@ func (s *ServiceManager) CreateWorkspaceConnection(workspace_id string, request 
 }
 
 func (s *ServiceManager) GetWorkspaceConnection(workspace_id string, connection_id string) (models.ServiceManagerConnectionResponse, models.Error) {
+	s.logger.Info("get connection", lager.Data{"workspace_id": workspace_id, "connection_id": connection_id})
+
 	response := models.ServiceManagerConnectionResponse{}
 	error := models.Error{}
 

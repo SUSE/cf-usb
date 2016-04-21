@@ -6,7 +6,7 @@ package operations
 import (
 	"net/http"
 
-	"github.com/go-swagger/go-swagger/httpkit"
+	"github.com/go-openapi/runtime"
 
 	"github.com/hpcloud/cf-usb/lib/genmodel"
 )
@@ -32,8 +32,13 @@ func (o *GetServiceOK) WithPayload(payload *genmodel.Service) *GetServiceOK {
 	return o
 }
 
+// SetPayload sets the payload to the get service o k response
+func (o *GetServiceOK) SetPayload(payload *genmodel.Service) {
+	o.Payload = payload
+}
+
 // WriteResponse to the client
-func (o *GetServiceOK) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *GetServiceOK) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(200)
 	if o.Payload != nil {
@@ -56,7 +61,7 @@ func NewGetServiceNotFound() *GetServiceNotFound {
 }
 
 // WriteResponse to the client
-func (o *GetServiceNotFound) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *GetServiceNotFound) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(404)
 }
@@ -82,8 +87,13 @@ func (o *GetServiceInternalServerError) WithPayload(payload string) *GetServiceI
 	return o
 }
 
+// SetPayload sets the payload to the get service internal server error response
+func (o *GetServiceInternalServerError) SetPayload(payload string) {
+	o.Payload = payload
+}
+
 // WriteResponse to the client
-func (o *GetServiceInternalServerError) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *GetServiceInternalServerError) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(500)
 	if err := producer.Produce(rw, o.Payload); err != nil {

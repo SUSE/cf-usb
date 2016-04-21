@@ -27,4 +27,5 @@ endif
 buildme =  @(DIRNAME=$$(basename $(1));\
 	echo "$(OK_COLOR)==> Building$(NO_COLOR) $$DIRNAME"; \
 	DIRNAME=$$(basename $(1)); \
-	go build -o build/$(CLIENT)/$$DIRNAME $(1)) 
+	env GOOS="linux" go build -o build/linux/$(CLIENT)/$$DIRNAME $(1); \
+	env GOOS="darwin" go build -o build/darwin/$(CLIENT)/$$DIRNAME $(1)) 

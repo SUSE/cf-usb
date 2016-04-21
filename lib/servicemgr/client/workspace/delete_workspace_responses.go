@@ -7,10 +7,9 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/go-swagger/go-swagger/client"
-	"github.com/go-swagger/go-swagger/httpkit"
+	"github.com/go-openapi/runtime"
 
-	strfmt "github.com/go-swagger/go-swagger/strfmt"
+	strfmt "github.com/go-openapi/strfmt"
 
 	"github.com/hpcloud/cf-usb/lib/servicemgr/models"
 )
@@ -21,7 +20,7 @@ type DeleteWorkspaceReader struct {
 }
 
 // ReadResponse reads a server response into the recieved o.
-func (o *DeleteWorkspaceReader) ReadResponse(response client.Response, consumer httpkit.Consumer) (interface{}, error) {
+func (o *DeleteWorkspaceReader) ReadResponse(response runtime.ClientResponse, consumer runtime.Consumer) (interface{}, error) {
 	switch response.Code() {
 
 	case 200:
@@ -56,7 +55,7 @@ func (o *DeleteWorkspaceOK) Error() string {
 	return fmt.Sprintf("[DELETE /workspaces/{workspace_id}][%d] deleteWorkspaceOK ", 200)
 }
 
-func (o *DeleteWorkspaceOK) readResponse(response client.Response, consumer httpkit.Consumer, formats strfmt.Registry) error {
+func (o *DeleteWorkspaceOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	return nil
 }
@@ -87,7 +86,7 @@ func (o *DeleteWorkspaceDefault) Error() string {
 	return fmt.Sprintf("[DELETE /workspaces/{workspace_id}][%d] deleteWorkspace default  %+v", o._statusCode, o.Payload)
 }
 
-func (o *DeleteWorkspaceDefault) readResponse(response client.Response, consumer httpkit.Consumer, formats strfmt.Registry) error {
+func (o *DeleteWorkspaceDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	o.Payload = new(models.Error)
 

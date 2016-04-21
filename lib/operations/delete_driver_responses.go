@@ -6,7 +6,7 @@ package operations
 import (
 	"net/http"
 
-	"github.com/go-swagger/go-swagger/httpkit"
+	"github.com/go-openapi/runtime"
 )
 
 /*DeleteDriverNoContent Driver deleted
@@ -22,7 +22,7 @@ func NewDeleteDriverNoContent() *DeleteDriverNoContent {
 }
 
 // WriteResponse to the client
-func (o *DeleteDriverNoContent) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *DeleteDriverNoContent) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(204)
 }
@@ -40,7 +40,7 @@ func NewDeleteDriverNotFound() *DeleteDriverNotFound {
 }
 
 // WriteResponse to the client
-func (o *DeleteDriverNotFound) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *DeleteDriverNotFound) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(404)
 }
@@ -66,8 +66,13 @@ func (o *DeleteDriverInternalServerError) WithPayload(payload string) *DeleteDri
 	return o
 }
 
+// SetPayload sets the payload to the delete driver internal server error response
+func (o *DeleteDriverInternalServerError) SetPayload(payload string) {
+	o.Payload = payload
+}
+
 // WriteResponse to the client
-func (o *DeleteDriverInternalServerError) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *DeleteDriverInternalServerError) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(500)
 	if err := producer.Produce(rw, o.Payload); err != nil {

@@ -6,7 +6,7 @@ package operations
 import (
 	"net/http"
 
-	"github.com/go-swagger/go-swagger/httpkit"
+	"github.com/go-openapi/runtime"
 
 	"github.com/hpcloud/cf-usb/lib/genmodel"
 )
@@ -26,14 +26,19 @@ func NewGetServiceByInstanceIDOK() *GetServiceByInstanceIDOK {
 	return &GetServiceByInstanceIDOK{}
 }
 
-// WithPayload adds the payload to the get service by instance id o k response
+// WithPayload adds the payload to the get service by instance Id o k response
 func (o *GetServiceByInstanceIDOK) WithPayload(payload *genmodel.Service) *GetServiceByInstanceIDOK {
 	o.Payload = payload
 	return o
 }
 
+// SetPayload sets the payload to the get service by instance Id o k response
+func (o *GetServiceByInstanceIDOK) SetPayload(payload *genmodel.Service) {
+	o.Payload = payload
+}
+
 // WriteResponse to the client
-func (o *GetServiceByInstanceIDOK) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *GetServiceByInstanceIDOK) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(200)
 	if o.Payload != nil {
@@ -58,14 +63,19 @@ func NewGetServiceByInstanceIDInternalServerError() *GetServiceByInstanceIDInter
 	return &GetServiceByInstanceIDInternalServerError{}
 }
 
-// WithPayload adds the payload to the get service by instance id internal server error response
+// WithPayload adds the payload to the get service by instance Id internal server error response
 func (o *GetServiceByInstanceIDInternalServerError) WithPayload(payload string) *GetServiceByInstanceIDInternalServerError {
 	o.Payload = payload
 	return o
 }
 
+// SetPayload sets the payload to the get service by instance Id internal server error response
+func (o *GetServiceByInstanceIDInternalServerError) SetPayload(payload string) {
+	o.Payload = payload
+}
+
 // WriteResponse to the client
-func (o *GetServiceByInstanceIDInternalServerError) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *GetServiceByInstanceIDInternalServerError) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(500)
 	if err := producer.Produce(rw, o.Payload); err != nil {

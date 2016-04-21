@@ -6,9 +6,10 @@ package operations
 import (
 	"net/http"
 
-	"github.com/go-swagger/go-swagger/errors"
-	"github.com/go-swagger/go-swagger/httpkit/middleware"
-	"github.com/go-swagger/go-swagger/strfmt"
+	"github.com/go-openapi/errors"
+	"github.com/go-openapi/runtime/middleware"
+
+	strfmt "github.com/go-openapi/strfmt"
 )
 
 // NewDeleteDialParams creates a new DeleteDialParams object
@@ -23,6 +24,10 @@ func NewDeleteDialParams() DeleteDialParams {
 //
 // swagger:parameters deleteDial
 type DeleteDialParams struct {
+
+	// HTTP Request Object
+	HTTPRequest *http.Request
+
 	/*ID of the dial
 	  Required: true
 	  In: path
@@ -34,6 +39,7 @@ type DeleteDialParams struct {
 // for simple values it will use straight method calls
 func (o *DeleteDialParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
+	o.HTTPRequest = r
 
 	rDialID, rhkDialID, _ := route.Params.GetOK("dial_id")
 	if err := o.bindDialID(rDialID, rhkDialID, route.Formats); err != nil {

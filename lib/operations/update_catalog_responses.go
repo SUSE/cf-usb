@@ -6,7 +6,7 @@ package operations
 import (
 	"net/http"
 
-	"github.com/go-swagger/go-swagger/httpkit"
+	"github.com/go-openapi/runtime"
 )
 
 /*UpdateCatalogOK Successful response
@@ -22,7 +22,7 @@ func NewUpdateCatalogOK() *UpdateCatalogOK {
 }
 
 // WriteResponse to the client
-func (o *UpdateCatalogOK) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *UpdateCatalogOK) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(200)
 }
@@ -48,8 +48,13 @@ func (o *UpdateCatalogInternalServerError) WithPayload(payload string) *UpdateCa
 	return o
 }
 
+// SetPayload sets the payload to the update catalog internal server error response
+func (o *UpdateCatalogInternalServerError) SetPayload(payload string) {
+	o.Payload = payload
+}
+
 // WriteResponse to the client
-func (o *UpdateCatalogInternalServerError) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *UpdateCatalogInternalServerError) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(500)
 	if err := producer.Produce(rw, o.Payload); err != nil {

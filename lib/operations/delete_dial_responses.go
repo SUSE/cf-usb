@@ -6,7 +6,7 @@ package operations
 import (
 	"net/http"
 
-	"github.com/go-swagger/go-swagger/httpkit"
+	"github.com/go-openapi/runtime"
 )
 
 /*DeleteDialNoContent Sucessfull response
@@ -22,7 +22,7 @@ func NewDeleteDialNoContent() *DeleteDialNoContent {
 }
 
 // WriteResponse to the client
-func (o *DeleteDialNoContent) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *DeleteDialNoContent) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(204)
 }
@@ -40,7 +40,7 @@ func NewDeleteDialNotFound() *DeleteDialNotFound {
 }
 
 // WriteResponse to the client
-func (o *DeleteDialNotFound) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *DeleteDialNotFound) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(404)
 }
@@ -66,8 +66,13 @@ func (o *DeleteDialInternalServerError) WithPayload(payload string) *DeleteDialI
 	return o
 }
 
+// SetPayload sets the payload to the delete dial internal server error response
+func (o *DeleteDialInternalServerError) SetPayload(payload string) {
+	o.Payload = payload
+}
+
 // WriteResponse to the client
-func (o *DeleteDialInternalServerError) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *DeleteDialInternalServerError) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(500)
 	if err := producer.Produce(rw, o.Payload); err != nil {

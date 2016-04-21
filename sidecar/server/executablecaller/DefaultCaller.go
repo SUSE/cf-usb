@@ -33,7 +33,7 @@ func ReadOutput(cmd string, out *bytes.Buffer, errOut *bytes.Buffer, args ...str
 	if err != nil {
 		return exitStatus, err
 	}
-	timer := time.AfterFunc(5*time.Second, func() {
+	timer := time.AfterFunc(30*time.Second, func() {
 		cmdExec.Process.Kill()
 	})
 

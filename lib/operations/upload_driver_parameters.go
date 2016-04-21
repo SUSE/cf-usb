@@ -6,11 +6,12 @@ package operations
 import (
 	"net/http"
 
-	"github.com/go-swagger/go-swagger/errors"
-	"github.com/go-swagger/go-swagger/httpkit"
-	"github.com/go-swagger/go-swagger/httpkit/middleware"
-	"github.com/go-swagger/go-swagger/httpkit/validate"
-	"github.com/go-swagger/go-swagger/strfmt"
+	"github.com/go-openapi/errors"
+	"github.com/go-openapi/runtime"
+	"github.com/go-openapi/runtime/middleware"
+	"github.com/go-openapi/validate"
+
+	strfmt "github.com/go-openapi/strfmt"
 )
 
 // NewUploadDriverParams creates a new UploadDriverParams object
@@ -25,6 +26,10 @@ func NewUploadDriverParams() UploadDriverParams {
 //
 // swagger:parameters uploadDriver
 type UploadDriverParams struct {
+
+	// HTTP Request Object
+	HTTPRequest *http.Request
+
 	/*Driver ID
 	  Required: true
 	  In: path
@@ -34,7 +39,7 @@ type UploadDriverParams struct {
 	  Required: true
 	  In: formData
 	*/
-	File httpkit.File
+	File runtime.File
 	/*file sha1 base64 encoded
 	  Required: true
 	  In: formData
@@ -46,10 +51,16 @@ type UploadDriverParams struct {
 // for simple values it will use straight method calls
 func (o *UploadDriverParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
+	o.HTTPRequest = r
+
 	if err := r.ParseMultipartForm(32 << 20); err != nil {
-		return err
+		if err != http.ErrNotMultipart {
+			return err
+		} else if err := r.ParseForm(); err != nil {
+			return err
+		}
 	}
-	fds := httpkit.Values(r.Form)
+	fds := runtime.Values(r.Form)
 
 	rDriverID, rhkDriverID, _ := route.Params.GetOK("driver_id")
 	if err := o.bindDriverID(rDriverID, rhkDriverID, route.Formats); err != nil {
@@ -60,7 +71,7 @@ func (o *UploadDriverParams) BindRequest(r *http.Request, route *middleware.Matc
 	if err != nil {
 		res = append(res, errors.New(400, "reading file %q failed: %v", "file", err))
 	} else {
-		o.File = httpkit.File{Data: file, Header: fileHeader}
+		o.File = runtime.File{Data: file, Header: fileHeader}
 	}
 
 	fdSha, fdhkSha, _ := fds.GetOK("sha")

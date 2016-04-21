@@ -6,9 +6,10 @@ package operations
 import (
 	"net/http"
 
-	"github.com/go-swagger/go-swagger/errors"
-	"github.com/go-swagger/go-swagger/httpkit/middleware"
-	"github.com/go-swagger/go-swagger/strfmt"
+	"github.com/go-openapi/errors"
+	"github.com/go-openapi/runtime/middleware"
+
+	strfmt "github.com/go-openapi/strfmt"
 )
 
 // NewGetDialSchemaParams creates a new GetDialSchemaParams object
@@ -23,6 +24,10 @@ func NewGetDialSchemaParams() GetDialSchemaParams {
 //
 // swagger:parameters getDialSchema
 type GetDialSchemaParams struct {
+
+	// HTTP Request Object
+	HTTPRequest *http.Request
+
 	/*Driver ID
 	  Required: true
 	  In: path
@@ -34,6 +39,7 @@ type GetDialSchemaParams struct {
 // for simple values it will use straight method calls
 func (o *GetDialSchemaParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
+	o.HTTPRequest = r
 
 	rDriverID, rhkDriverID, _ := route.Params.GetOK("driver_id")
 	if err := o.bindDriverID(rDriverID, rhkDriverID, route.Formats); err != nil {

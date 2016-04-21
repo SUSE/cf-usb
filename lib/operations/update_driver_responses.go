@@ -6,7 +6,7 @@ package operations
 import (
 	"net/http"
 
-	"github.com/go-swagger/go-swagger/httpkit"
+	"github.com/go-openapi/runtime"
 
 	"github.com/hpcloud/cf-usb/lib/genmodel"
 )
@@ -32,8 +32,13 @@ func (o *UpdateDriverOK) WithPayload(payload *genmodel.Driver) *UpdateDriverOK {
 	return o
 }
 
+// SetPayload sets the payload to the update driver o k response
+func (o *UpdateDriverOK) SetPayload(payload *genmodel.Driver) {
+	o.Payload = payload
+}
+
 // WriteResponse to the client
-func (o *UpdateDriverOK) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *UpdateDriverOK) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(200)
 	if o.Payload != nil {
@@ -56,7 +61,7 @@ func NewUpdateDriverNotFound() *UpdateDriverNotFound {
 }
 
 // WriteResponse to the client
-func (o *UpdateDriverNotFound) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *UpdateDriverNotFound) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(404)
 }
@@ -74,7 +79,7 @@ func NewUpdateDriverConflict() *UpdateDriverConflict {
 }
 
 // WriteResponse to the client
-func (o *UpdateDriverConflict) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *UpdateDriverConflict) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(409)
 }
@@ -100,8 +105,13 @@ func (o *UpdateDriverInternalServerError) WithPayload(payload string) *UpdateDri
 	return o
 }
 
+// SetPayload sets the payload to the update driver internal server error response
+func (o *UpdateDriverInternalServerError) SetPayload(payload string) {
+	o.Payload = payload
+}
+
 // WriteResponse to the client
-func (o *UpdateDriverInternalServerError) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *UpdateDriverInternalServerError) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(500)
 	if err := producer.Produce(rw, o.Payload); err != nil {

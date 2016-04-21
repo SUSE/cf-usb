@@ -4,13 +4,13 @@ package workspace
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-	"github.com/go-swagger/go-swagger/client"
+	"github.com/go-openapi/runtime"
 
-	strfmt "github.com/go-swagger/go-swagger/strfmt"
+	strfmt "github.com/go-openapi/strfmt"
 )
 
 // New creates a new workspace API client.
-func New(transport client.Transport, formats strfmt.Registry) *Client {
+func New(transport runtime.ClientTransport, formats strfmt.Registry) *Client {
 	return &Client{transport: transport, formats: formats}
 }
 
@@ -18,7 +18,7 @@ func New(transport client.Transport, formats strfmt.Registry) *Client {
 Client for workspace API
 */
 type Client struct {
-	transport client.Transport
+	transport runtime.ClientTransport
 	formats   strfmt.Registry
 }
 
@@ -31,7 +31,7 @@ func (a *Client) CreateWorkspace(params *CreateWorkspaceParams) (*CreateWorkspac
 		params = NewCreateWorkspaceParams()
 	}
 
-	result, err := a.transport.Submit(&client.Operation{
+	result, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "createWorkspace",
 		Method:             "POST",
 		PathPattern:        "/workspaces",
@@ -56,7 +56,7 @@ func (a *Client) DeleteWorkspace(params *DeleteWorkspaceParams) (*DeleteWorkspac
 		params = NewDeleteWorkspaceParams()
 	}
 
-	result, err := a.transport.Submit(&client.Operation{
+	result, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "deleteWorkspace",
 		Method:             "DELETE",
 		PathPattern:        "/workspaces/{workspace_id}",
@@ -81,7 +81,7 @@ func (a *Client) GetWorkspace(params *GetWorkspaceParams) (*GetWorkspaceOK, erro
 		params = NewGetWorkspaceParams()
 	}
 
-	result, err := a.transport.Submit(&client.Operation{
+	result, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "getWorkspace",
 		Method:             "GET",
 		PathPattern:        "/workspaces/{workspace_id}",
@@ -98,6 +98,6 @@ func (a *Client) GetWorkspace(params *GetWorkspaceParams) (*GetWorkspaceOK, erro
 }
 
 // SetTransport changes the transport on the client
-func (a *Client) SetTransport(transport client.Transport) {
+func (a *Client) SetTransport(transport runtime.ClientTransport) {
 	a.transport = transport
 }

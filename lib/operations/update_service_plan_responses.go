@@ -6,7 +6,7 @@ package operations
 import (
 	"net/http"
 
-	"github.com/go-swagger/go-swagger/httpkit"
+	"github.com/go-openapi/runtime"
 
 	"github.com/hpcloud/cf-usb/lib/genmodel"
 )
@@ -32,8 +32,13 @@ func (o *UpdateServicePlanOK) WithPayload(payload *genmodel.Plan) *UpdateService
 	return o
 }
 
+// SetPayload sets the payload to the update service plan o k response
+func (o *UpdateServicePlanOK) SetPayload(payload *genmodel.Plan) {
+	o.Payload = payload
+}
+
 // WriteResponse to the client
-func (o *UpdateServicePlanOK) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *UpdateServicePlanOK) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(200)
 	if o.Payload != nil {
@@ -56,7 +61,7 @@ func NewUpdateServicePlanNotFound() *UpdateServicePlanNotFound {
 }
 
 // WriteResponse to the client
-func (o *UpdateServicePlanNotFound) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *UpdateServicePlanNotFound) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(404)
 }
@@ -82,8 +87,13 @@ func (o *UpdateServicePlanInternalServerError) WithPayload(payload string) *Upda
 	return o
 }
 
+// SetPayload sets the payload to the update service plan internal server error response
+func (o *UpdateServicePlanInternalServerError) SetPayload(payload string) {
+	o.Payload = payload
+}
+
 // WriteResponse to the client
-func (o *UpdateServicePlanInternalServerError) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *UpdateServicePlanInternalServerError) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(500)
 	if err := producer.Produce(rw, o.Payload); err != nil {

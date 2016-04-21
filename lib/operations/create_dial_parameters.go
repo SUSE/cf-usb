@@ -4,10 +4,12 @@ package operations
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"io"
 	"net/http"
 
-	"github.com/go-swagger/go-swagger/errors"
-	"github.com/go-swagger/go-swagger/httpkit/middleware"
+	"github.com/go-openapi/errors"
+	"github.com/go-openapi/runtime"
+	"github.com/go-openapi/runtime/middleware"
 
 	"github.com/hpcloud/cf-usb/lib/genmodel"
 )
@@ -24,6 +26,10 @@ func NewCreateDialParams() CreateDialParams {
 //
 // swagger:parameters createDial
 type CreateDialParams struct {
+
+	// HTTP Request Object
+	HTTPRequest *http.Request
+
 	/*New dial
 	  Required: true
 	  In: body
@@ -35,18 +41,30 @@ type CreateDialParams struct {
 // for simple values it will use straight method calls
 func (o *CreateDialParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
+	o.HTTPRequest = r
 
-	var body genmodel.Dial
-	if err := route.Consumer.Consume(r.Body, &body); err != nil {
-		res = append(res, errors.NewParseError("dial", "body", "", err))
+	if runtime.HasBody(r) {
+		defer r.Body.Close()
+		var body genmodel.Dial
+		if err := route.Consumer.Consume(r.Body, &body); err != nil {
+			if err == io.EOF {
+				res = append(res, errors.Required("dial", "body"))
+			} else {
+				res = append(res, errors.NewParseError("dial", "body", "", err))
+			}
+
+		} else {
+			if err := body.Validate(route.Formats); err != nil {
+				res = append(res, err)
+			}
+
+			if len(res) == 0 {
+				o.Dial = &body
+			}
+		}
+
 	} else {
-		if err := body.Validate(route.Formats); err != nil {
-			res = append(res, err)
-		}
-
-		if len(res) == 0 {
-			o.Dial = &body
-		}
+		res = append(res, errors.Required("dial", "body"))
 	}
 
 	if len(res) > 0 {

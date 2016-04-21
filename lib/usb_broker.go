@@ -12,9 +12,9 @@ import (
 	"github.com/hpcloud/cf-usb/lib/config"
 	"github.com/pivotal-golang/lager"
 
-	httptransport "github.com/go-swagger/go-swagger/httpkit/client"
+	httptransport "github.com/go-openapi/runtime/client"
 
-	strfmt "github.com/go-swagger/go-swagger/strfmt"
+	strfmt "github.com/go-openapi/strfmt"
 
 	"github.com/hpcloud/cf-usb/lib/servicemgr"
 	models "github.com/hpcloud/cf-usb/lib/servicemgr/models"
@@ -81,6 +81,7 @@ func (broker *UsbBroker) Provision(instanceID string, serviceDetails brokerapi.P
 	request.Details = serviceDetails.Parameters
 	instance, errorDetails := driver.CreateWorkspace(request)
 	if errorDetails.Message != nil {
+		broker.logger.Error("provision-instance", nil, lager.Data{"message": errorDetails.Message, "code": errorDetails.Code})
 		return brokerapi.ProvisioningResponse{}, false, errors.New(*errorDetails.Message)
 	}
 
@@ -132,6 +133,8 @@ func (broker *UsbBroker) Deprovision(instanceID string, deprovisionDetails broke
 
 	errorDetails := driver.DeleteWorkspace(instanceID)
 	if errorDetails.Message != nil {
+		broker.logger.Error("deprovision-instance", nil, lager.Data{"message": errorDetails.Message, "code": errorDetails.Code})
+
 		return false, errors.New(*errorDetails.Message)
 	} else {
 		return false, nil
@@ -166,6 +169,8 @@ func (broker *UsbBroker) Bind(instanceID, bindingID string, details brokerapi.Bi
 	request.Details = structs.Map(details)
 	credentials, errorDetails := driver.CreateWorkspaceConnection(instanceID, request)
 	if errorDetails.Message != nil {
+		broker.logger.Error("bind", nil, lager.Data{"message": errorDetails.Message, "code": errorDetails.Code})
+
 		return response, errors.New(*errorDetails.Message)
 	}
 	if *credentials.Status == "failed" {
@@ -189,6 +194,8 @@ func (broker *UsbBroker) Unbind(instanceID, bindingID string, details brokerapi.
 
 	errorDetails := driver.DeleteWorkspaceConnection(instanceID, bindingID)
 	if errorDetails.Message != nil {
+		broker.logger.Error("unbind", nil, lager.Data{"message": errorDetails.Message, "code": errorDetails.Code})
+
 		return errors.New(*errorDetails.Message)
 	}
 
@@ -212,6 +219,8 @@ func (broker *UsbBroker) LastOperation(instanceID string) (brokerapi.LastOperati
 
 	instance, errorDetails := driver.GetWorkspace(instanceID)
 	if errorDetails.Message != nil {
+		broker.logger.Error("last-operation", nil, lager.Data{"message": errorDetails.Message, "code": errorDetails.Code})
+
 		return brokerapi.LastOperationResponse{}, errors.New(*errorDetails.Message)
 	}
 	if instance.Status != nil {

@@ -4,10 +4,10 @@ package workspace
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-	"github.com/go-swagger/go-swagger/client"
-	"github.com/go-swagger/go-swagger/errors"
+	"github.com/go-openapi/errors"
+	"github.com/go-openapi/runtime"
 
-	strfmt "github.com/go-swagger/go-swagger/strfmt"
+	strfmt "github.com/go-openapi/strfmt"
 )
 
 // NewGetWorkspaceParams creates a new GetWorkspaceParams object
@@ -36,7 +36,7 @@ func (o *GetWorkspaceParams) WithWorkspaceID(workspaceId string) *GetWorkspacePa
 }
 
 // WriteToRequest writes these params to a swagger request
-func (o *GetWorkspaceParams) WriteToRequest(r client.Request, reg strfmt.Registry) error {
+func (o *GetWorkspaceParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
 
 	var res []error
 

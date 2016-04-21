@@ -4,44 +4,45 @@ package genmodel
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-	"github.com/go-swagger/go-swagger/errors"
-	"github.com/go-swagger/go-swagger/httpkit/validate"
-	"github.com/go-swagger/go-swagger/strfmt"
+	strfmt "github.com/go-openapi/strfmt"
+
+	"github.com/go-openapi/errors"
+	"github.com/go-openapi/validate"
 )
 
-/*plan Plan plan
+/*Plan plan
 
 swagger:model plan
 */
 type Plan struct {
 
-	/* Description description
+	/* description
 	 */
-	Description *string `json:"description,omitempty"`
+	Description string `json:"description,omitempty"`
 
-	/* DialID dial id
+	/* dial id
 
 	Required: true
 	Max Length: 36
 	Min Length: 36
 	*/
-	DialID string `json:"dial_id,omitempty"`
+	DialID *string `json:"dial_id"`
 
-	/* Free free
+	/* free
 	 */
-	Free *bool `json:"free,omitempty"`
+	Free bool `json:"free,omitempty"`
 
-	/* ID id
+	/* id
 	 */
-	ID *string `json:"id,omitempty"`
+	ID string `json:"id,omitempty"`
 
-	/* Name name
+	/* name
 
 	Required: true
 	Max Length: 50
 	Min Length: 3
 	*/
-	Name string `json:"name,omitempty"`
+	Name *string `json:"name"`
 }
 
 // Validate validates this plan
@@ -66,15 +67,15 @@ func (m *Plan) Validate(formats strfmt.Registry) error {
 
 func (m *Plan) validateDialID(formats strfmt.Registry) error {
 
-	if err := validate.Required("dial_id", "body", string(m.DialID)); err != nil {
+	if err := validate.Required("dial_id", "body", m.DialID); err != nil {
 		return err
 	}
 
-	if err := validate.MinLength("dial_id", "body", string(m.DialID), 36); err != nil {
+	if err := validate.MinLength("dial_id", "body", string(*m.DialID), 36); err != nil {
 		return err
 	}
 
-	if err := validate.MaxLength("dial_id", "body", string(m.DialID), 36); err != nil {
+	if err := validate.MaxLength("dial_id", "body", string(*m.DialID), 36); err != nil {
 		return err
 	}
 
@@ -83,15 +84,15 @@ func (m *Plan) validateDialID(formats strfmt.Registry) error {
 
 func (m *Plan) validateName(formats strfmt.Registry) error {
 
-	if err := validate.Required("name", "body", string(m.Name)); err != nil {
+	if err := validate.Required("name", "body", m.Name); err != nil {
 		return err
 	}
 
-	if err := validate.MinLength("name", "body", string(m.Name), 3); err != nil {
+	if err := validate.MinLength("name", "body", string(*m.Name), 3); err != nil {
 		return err
 	}
 
-	if err := validate.MaxLength("name", "body", string(m.Name), 50); err != nil {
+	if err := validate.MaxLength("name", "body", string(*m.Name), 50); err != nil {
 		return err
 	}
 

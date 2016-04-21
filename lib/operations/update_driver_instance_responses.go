@@ -6,7 +6,7 @@ package operations
 import (
 	"net/http"
 
-	"github.com/go-swagger/go-swagger/httpkit"
+	"github.com/go-openapi/runtime"
 
 	"github.com/hpcloud/cf-usb/lib/genmodel"
 )
@@ -32,8 +32,13 @@ func (o *UpdateDriverInstanceOK) WithPayload(payload *genmodel.DriverInstance) *
 	return o
 }
 
+// SetPayload sets the payload to the update driver instance o k response
+func (o *UpdateDriverInstanceOK) SetPayload(payload *genmodel.DriverInstance) {
+	o.Payload = payload
+}
+
 // WriteResponse to the client
-func (o *UpdateDriverInstanceOK) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *UpdateDriverInstanceOK) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(200)
 	if o.Payload != nil {
@@ -56,7 +61,7 @@ func NewUpdateDriverInstanceNotFound() *UpdateDriverInstanceNotFound {
 }
 
 // WriteResponse to the client
-func (o *UpdateDriverInstanceNotFound) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *UpdateDriverInstanceNotFound) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(404)
 }
@@ -74,7 +79,7 @@ func NewUpdateDriverInstanceConflict() *UpdateDriverInstanceConflict {
 }
 
 // WriteResponse to the client
-func (o *UpdateDriverInstanceConflict) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *UpdateDriverInstanceConflict) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(409)
 }
@@ -100,8 +105,13 @@ func (o *UpdateDriverInstanceInternalServerError) WithPayload(payload string) *U
 	return o
 }
 
+// SetPayload sets the payload to the update driver instance internal server error response
+func (o *UpdateDriverInstanceInternalServerError) SetPayload(payload string) {
+	o.Payload = payload
+}
+
 // WriteResponse to the client
-func (o *UpdateDriverInstanceInternalServerError) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *UpdateDriverInstanceInternalServerError) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(500)
 	if err := producer.Produce(rw, o.Payload); err != nil {

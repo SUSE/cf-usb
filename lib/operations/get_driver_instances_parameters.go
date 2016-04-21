@@ -6,11 +6,12 @@ package operations
 import (
 	"net/http"
 
-	"github.com/go-swagger/go-swagger/errors"
-	"github.com/go-swagger/go-swagger/httpkit"
-	"github.com/go-swagger/go-swagger/httpkit/middleware"
-	"github.com/go-swagger/go-swagger/httpkit/validate"
-	"github.com/go-swagger/go-swagger/strfmt"
+	"github.com/go-openapi/errors"
+	"github.com/go-openapi/runtime"
+	"github.com/go-openapi/runtime/middleware"
+	"github.com/go-openapi/validate"
+
+	strfmt "github.com/go-openapi/strfmt"
 )
 
 // NewGetDriverInstancesParams creates a new GetDriverInstancesParams object
@@ -25,6 +26,10 @@ func NewGetDriverInstancesParams() GetDriverInstancesParams {
 //
 // swagger:parameters getDriverInstances
 type GetDriverInstancesParams struct {
+
+	// HTTP Request Object
+	HTTPRequest *http.Request
+
 	/*Driver ID
 	  Required: true
 	  In: query
@@ -36,7 +41,9 @@ type GetDriverInstancesParams struct {
 // for simple values it will use straight method calls
 func (o *GetDriverInstancesParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
-	qs := httpkit.Values(r.URL.Query())
+	o.HTTPRequest = r
+
+	qs := runtime.Values(r.URL.Query())
 
 	qDriverID, qhkDriverID, _ := qs.GetOK("driver_id")
 	if err := o.bindDriverID(qDriverID, qhkDriverID, route.Formats); err != nil {
