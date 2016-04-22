@@ -3,29 +3,33 @@ OK_COLOR=\033[32;01m
 ERROR_COLOR=\033[31;01m
 WARN_COLOR=\033[33;01m
 
+CLIENTS=mysql mssql
+TARGETS=CreateConnection CreateWorkspace GetConnection GetWorkspace DeleteConnection DeleteWorkspace
+
+ifdef CLIENT
+	CLIENTS=$(CLIENT)
+endif
+
 build: buildserver buildclients
 
+clean: 
+	@(if [ -d "./build" ]; then\
+		rm -r ./build;\
+	fi)
 buildserver:
-ifdef CLIENT
-	$(call buildme,./server/cmd/broker-server)
-else
-	echo "$(ERROR_COLOR)No target clients specified$(NO_COLOR),\r\nPlease use CLIENT=clientname as a parameter"
-endif
+	@(for C in $(CLIENTS); do\
+		$(call buildme,./server/cmd/broker-server,$$C);\
+	done)
 
 buildclients:
-ifdef  CLIENT
-	$(call buildme,./clients/$(CLIENT)/standalonecommands/CreateConnection)
-	$(call buildme,./clients/$(CLIENT)/standalonecommands/CreateWorkspace)
-	$(call buildme,./clients/$(CLIENT)/standalonecommands/DeleteConnection)
-	$(call buildme,./clients/$(CLIENT)/standalonecommands/DeleteWorkspace)
-	$(call buildme,./clients/$(CLIENT)/standalonecommands/GetConnection)
-	$(call buildme,./clients/$(CLIENT)/standalonecommands/GetWorkspace)
-else
-	echo "$(ERROR_COLOR)No target clients specified$(NO_COLOR),\r\nPlease use CLIENT=clientname as a parameter"
-endif
+	@(for C in $(CLIENTS); do\
+		for T in $(TARGETS); do\
+			$(call buildme, ./clients/$$C/standalonecommands/$$T,$$C);\
+		done;\
+	done)
 
-buildme =  @(DIRNAME=$$(basename $(1));\
-	echo "$(OK_COLOR)==> Building$(NO_COLOR) $$DIRNAME"; \
-	DIRNAME=$$(basename $(1)); \
-	env GOOS="linux" go build -o build/linux/$(CLIENT)/$$DIRNAME $(1); \
-	env GOOS="darwin" go build -o build/darwin/$(CLIENT)/$$DIRNAME $(1)) 
+buildme =  (DIRNAME=$$(basename $(1));\
+	echo "$(OK_COLOR)==> Building$(NO_COLOR) $$DIRNAME for $(2)";\
+	DIRNAME=$$(basename $(1));\
+	env GOOS="linux" go build -o build/linux/$(2)/$$DIRNAME $(1);\
+	env GOOS="darwin" go build -o build/darwin/$(2)/$$DIRNAME $(1)) 
