@@ -4,28 +4,29 @@ package genmodel
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-	"github.com/go-swagger/go-swagger/errors"
-	"github.com/go-swagger/go-swagger/httpkit/validate"
-	"github.com/go-swagger/go-swagger/strfmt"
+	strfmt "github.com/go-openapi/strfmt"
+
+	"github.com/go-openapi/errors"
+	"github.com/go-openapi/validate"
 )
 
-/*info Info info
+/*Info info
 
 swagger:model info
 */
 type Info struct {
 
-	/* BrokerAPIVersion broker api version
+	/* broker api version
 
 	Required: true
 	*/
-	BrokerAPIVersion string `json:"broker_api_version,omitempty"`
+	BrokerAPIVersion *string `json:"broker_api_version"`
 
-	/* UsbVersion usb version
+	/* usb version
 
 	Required: true
 	*/
-	UsbVersion string `json:"usb_version,omitempty"`
+	UsbVersion *string `json:"usb_version"`
 }
 
 // Validate validates this info
@@ -50,7 +51,7 @@ func (m *Info) Validate(formats strfmt.Registry) error {
 
 func (m *Info) validateBrokerAPIVersion(formats strfmt.Registry) error {
 
-	if err := validate.Required("broker_api_version", "body", string(m.BrokerAPIVersion)); err != nil {
+	if err := validate.Required("broker_api_version", "body", m.BrokerAPIVersion); err != nil {
 		return err
 	}
 
@@ -59,7 +60,7 @@ func (m *Info) validateBrokerAPIVersion(formats strfmt.Registry) error {
 
 func (m *Info) validateUsbVersion(formats strfmt.Registry) error {
 
-	if err := validate.Required("usb_version", "body", string(m.UsbVersion)); err != nil {
+	if err := validate.Required("usb_version", "body", m.UsbVersion); err != nil {
 		return err
 	}
 

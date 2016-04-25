@@ -6,7 +6,7 @@ package operations
 import (
 	"net/http"
 
-	"github.com/go-swagger/go-swagger/httpkit"
+	"github.com/go-openapi/runtime"
 
 	"github.com/hpcloud/cf-usb/lib/genmodel"
 )
@@ -32,8 +32,13 @@ func (o *GetDriversOK) WithPayload(payload []*genmodel.Driver) *GetDriversOK {
 	return o
 }
 
+// SetPayload sets the payload to the get drivers o k response
+func (o *GetDriversOK) SetPayload(payload []*genmodel.Driver) {
+	o.Payload = payload
+}
+
 // WriteResponse to the client
-func (o *GetDriversOK) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *GetDriversOK) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(200)
 	if err := producer.Produce(rw, o.Payload); err != nil {
@@ -63,8 +68,13 @@ func (o *GetDriversInternalServerError) WithPayload(payload string) *GetDriversI
 	return o
 }
 
+// SetPayload sets the payload to the get drivers internal server error response
+func (o *GetDriversInternalServerError) SetPayload(payload string) {
+	o.Payload = payload
+}
+
 // WriteResponse to the client
-func (o *GetDriversInternalServerError) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *GetDriversInternalServerError) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(500)
 	if err := producer.Produce(rw, o.Payload); err != nil {

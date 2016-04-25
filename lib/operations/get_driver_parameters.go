@@ -6,9 +6,10 @@ package operations
 import (
 	"net/http"
 
-	"github.com/go-swagger/go-swagger/errors"
-	"github.com/go-swagger/go-swagger/httpkit/middleware"
-	"github.com/go-swagger/go-swagger/strfmt"
+	"github.com/go-openapi/errors"
+	"github.com/go-openapi/runtime/middleware"
+
+	strfmt "github.com/go-openapi/strfmt"
 )
 
 // NewGetDriverParams creates a new GetDriverParams object
@@ -23,6 +24,10 @@ func NewGetDriverParams() GetDriverParams {
 //
 // swagger:parameters getDriver
 type GetDriverParams struct {
+
+	// HTTP Request Object
+	HTTPRequest *http.Request
+
 	/*Driver ID
 	  Required: true
 	  In: path
@@ -34,6 +39,7 @@ type GetDriverParams struct {
 // for simple values it will use straight method calls
 func (o *GetDriverParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
+	o.HTTPRequest = r
 
 	rDriverID, rhkDriverID, _ := route.Params.GetOK("driver_id")
 	if err := o.bindDriverID(rDriverID, rhkDriverID, route.Formats); err != nil {

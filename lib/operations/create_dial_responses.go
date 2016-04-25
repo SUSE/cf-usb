@@ -6,7 +6,7 @@ package operations
 import (
 	"net/http"
 
-	"github.com/go-swagger/go-swagger/httpkit"
+	"github.com/go-openapi/runtime"
 
 	"github.com/hpcloud/cf-usb/lib/genmodel"
 )
@@ -32,8 +32,13 @@ func (o *CreateDialCreated) WithPayload(payload *genmodel.Dial) *CreateDialCreat
 	return o
 }
 
+// SetPayload sets the payload to the create dial created response
+func (o *CreateDialCreated) SetPayload(payload *genmodel.Dial) {
+	o.Payload = payload
+}
+
 // WriteResponse to the client
-func (o *CreateDialCreated) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *CreateDialCreated) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(201)
 	if o.Payload != nil {
@@ -64,8 +69,13 @@ func (o *CreateDialInternalServerError) WithPayload(payload string) *CreateDialI
 	return o
 }
 
+// SetPayload sets the payload to the create dial internal server error response
+func (o *CreateDialInternalServerError) SetPayload(payload string) {
+	o.Payload = payload
+}
+
 // WriteResponse to the client
-func (o *CreateDialInternalServerError) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *CreateDialInternalServerError) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(500)
 	if err := producer.Produce(rw, o.Payload); err != nil {

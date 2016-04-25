@@ -4,36 +4,37 @@ package genmodel
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-	"github.com/go-swagger/go-swagger/errors"
-	"github.com/go-swagger/go-swagger/httpkit/validate"
-	"github.com/go-swagger/go-swagger/strfmt"
+	strfmt "github.com/go-openapi/strfmt"
+
+	"github.com/go-openapi/errors"
+	"github.com/go-openapi/validate"
 )
 
-/*dial Dial dial
+/*Dial dial
 
 swagger:model dial
 */
 type Dial struct {
 
-	/* Configuration configuration
+	/* configuration
 	 */
 	Configuration interface{} `json:"configuration,omitempty"`
 
-	/* DriverInstanceID driver instance id
+	/* driver instance id
 
 	Required: true
 	Max Length: 36
 	Min Length: 36
 	*/
-	DriverInstanceID string `json:"driver_instance_id,omitempty"`
+	DriverInstanceID *string `json:"driver_instance_id"`
 
-	/* ID id
+	/* id
 	 */
-	ID *string `json:"id,omitempty"`
+	ID string `json:"id,omitempty"`
 
-	/* Plan plan
+	/* plan
 	 */
-	Plan *string `json:"plan,omitempty"`
+	Plan string `json:"plan,omitempty"`
 }
 
 // Validate validates this dial
@@ -53,15 +54,15 @@ func (m *Dial) Validate(formats strfmt.Registry) error {
 
 func (m *Dial) validateDriverInstanceID(formats strfmt.Registry) error {
 
-	if err := validate.Required("driver_instance_id", "body", string(m.DriverInstanceID)); err != nil {
+	if err := validate.Required("driver_instance_id", "body", m.DriverInstanceID); err != nil {
 		return err
 	}
 
-	if err := validate.MinLength("driver_instance_id", "body", string(m.DriverInstanceID), 36); err != nil {
+	if err := validate.MinLength("driver_instance_id", "body", string(*m.DriverInstanceID), 36); err != nil {
 		return err
 	}
 
-	if err := validate.MaxLength("driver_instance_id", "body", string(m.DriverInstanceID), 36); err != nil {
+	if err := validate.MaxLength("driver_instance_id", "body", string(*m.DriverInstanceID), 36); err != nil {
 		return err
 	}
 

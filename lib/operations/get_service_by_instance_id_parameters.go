@@ -6,11 +6,12 @@ package operations
 import (
 	"net/http"
 
-	"github.com/go-swagger/go-swagger/errors"
-	"github.com/go-swagger/go-swagger/httpkit"
-	"github.com/go-swagger/go-swagger/httpkit/middleware"
-	"github.com/go-swagger/go-swagger/httpkit/validate"
-	"github.com/go-swagger/go-swagger/strfmt"
+	"github.com/go-openapi/errors"
+	"github.com/go-openapi/runtime"
+	"github.com/go-openapi/runtime/middleware"
+	"github.com/go-openapi/validate"
+
+	strfmt "github.com/go-openapi/strfmt"
 )
 
 // NewGetServiceByInstanceIDParams creates a new GetServiceByInstanceIDParams object
@@ -20,11 +21,15 @@ func NewGetServiceByInstanceIDParams() GetServiceByInstanceIDParams {
 	return GetServiceByInstanceIDParams{}
 }
 
-// GetServiceByInstanceIDParams contains all the bound params for the get service by instance id operation
+// GetServiceByInstanceIDParams contains all the bound params for the get service by instance Id operation
 // typically these are obtained from a http.Request
 //
 // swagger:parameters getServiceByInstanceId
 type GetServiceByInstanceIDParams struct {
+
+	// HTTP Request Object
+	HTTPRequest *http.Request
+
 	/*Driver instance ID
 	  Required: true
 	  In: query
@@ -36,7 +41,9 @@ type GetServiceByInstanceIDParams struct {
 // for simple values it will use straight method calls
 func (o *GetServiceByInstanceIDParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
-	qs := httpkit.Values(r.URL.Query())
+	o.HTTPRequest = r
+
+	qs := runtime.Values(r.URL.Query())
 
 	qDriverInstanceID, qhkDriverInstanceID, _ := qs.GetOK("driver_instance_id")
 	if err := o.bindDriverInstanceID(qDriverInstanceID, qhkDriverInstanceID, route.Formats); err != nil {

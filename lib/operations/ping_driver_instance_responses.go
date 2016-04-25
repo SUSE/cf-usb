@@ -6,7 +6,7 @@ package operations
 import (
 	"net/http"
 
-	"github.com/go-swagger/go-swagger/httpkit"
+	"github.com/go-openapi/runtime"
 )
 
 /*PingDriverInstanceOK OK
@@ -22,7 +22,7 @@ func NewPingDriverInstanceOK() *PingDriverInstanceOK {
 }
 
 // WriteResponse to the client
-func (o *PingDriverInstanceOK) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *PingDriverInstanceOK) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(200)
 }
@@ -40,7 +40,7 @@ func NewPingDriverInstanceNotFound() *PingDriverInstanceNotFound {
 }
 
 // WriteResponse to the client
-func (o *PingDriverInstanceNotFound) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *PingDriverInstanceNotFound) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(404)
 }
@@ -66,8 +66,13 @@ func (o *PingDriverInstanceInternalServerError) WithPayload(payload string) *Pin
 	return o
 }
 
+// SetPayload sets the payload to the ping driver instance internal server error response
+func (o *PingDriverInstanceInternalServerError) SetPayload(payload string) {
+	o.Payload = payload
+}
+
 // WriteResponse to the client
-func (o *PingDriverInstanceInternalServerError) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *PingDriverInstanceInternalServerError) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(500)
 	if err := producer.Produce(rw, o.Payload); err != nil {

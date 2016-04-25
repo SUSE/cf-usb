@@ -4,10 +4,12 @@ package operations
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"io"
 	"net/http"
 
-	"github.com/go-swagger/go-swagger/errors"
-	"github.com/go-swagger/go-swagger/httpkit/middleware"
+	"github.com/go-openapi/errors"
+	"github.com/go-openapi/runtime"
+	"github.com/go-openapi/runtime/middleware"
 
 	"github.com/hpcloud/cf-usb/lib/genmodel"
 )
@@ -24,6 +26,10 @@ func NewCreateDriverInstanceParams() CreateDriverInstanceParams {
 //
 // swagger:parameters createDriverInstance
 type CreateDriverInstanceParams struct {
+
+	// HTTP Request Object
+	HTTPRequest *http.Request
+
 	/*driver instance to be created
 	  Required: true
 	  In: body
@@ -35,18 +41,30 @@ type CreateDriverInstanceParams struct {
 // for simple values it will use straight method calls
 func (o *CreateDriverInstanceParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
+	o.HTTPRequest = r
 
-	var body genmodel.DriverInstance
-	if err := route.Consumer.Consume(r.Body, &body); err != nil {
-		res = append(res, errors.NewParseError("driverInstance", "body", "", err))
+	if runtime.HasBody(r) {
+		defer r.Body.Close()
+		var body genmodel.DriverInstance
+		if err := route.Consumer.Consume(r.Body, &body); err != nil {
+			if err == io.EOF {
+				res = append(res, errors.Required("driverInstance", "body"))
+			} else {
+				res = append(res, errors.NewParseError("driverInstance", "body", "", err))
+			}
+
+		} else {
+			if err := body.Validate(route.Formats); err != nil {
+				res = append(res, err)
+			}
+
+			if len(res) == 0 {
+				o.DriverInstance = &body
+			}
+		}
+
 	} else {
-		if err := body.Validate(route.Formats); err != nil {
-			res = append(res, err)
-		}
-
-		if len(res) == 0 {
-			o.DriverInstance = &body
-		}
+		res = append(res, errors.Required("driverInstance", "body"))
 	}
 
 	if len(res) > 0 {

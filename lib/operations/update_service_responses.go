@@ -6,7 +6,7 @@ package operations
 import (
 	"net/http"
 
-	"github.com/go-swagger/go-swagger/httpkit"
+	"github.com/go-openapi/runtime"
 
 	"github.com/hpcloud/cf-usb/lib/genmodel"
 )
@@ -32,8 +32,13 @@ func (o *UpdateServiceOK) WithPayload(payload *genmodel.Service) *UpdateServiceO
 	return o
 }
 
+// SetPayload sets the payload to the update service o k response
+func (o *UpdateServiceOK) SetPayload(payload *genmodel.Service) {
+	o.Payload = payload
+}
+
 // WriteResponse to the client
-func (o *UpdateServiceOK) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *UpdateServiceOK) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(200)
 	if o.Payload != nil {
@@ -56,7 +61,7 @@ func NewUpdateServiceNotFound() *UpdateServiceNotFound {
 }
 
 // WriteResponse to the client
-func (o *UpdateServiceNotFound) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *UpdateServiceNotFound) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(404)
 }
@@ -74,7 +79,7 @@ func NewUpdateServiceConflict() *UpdateServiceConflict {
 }
 
 // WriteResponse to the client
-func (o *UpdateServiceConflict) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *UpdateServiceConflict) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(409)
 }
@@ -100,8 +105,13 @@ func (o *UpdateServiceInternalServerError) WithPayload(payload string) *UpdateSe
 	return o
 }
 
+// SetPayload sets the payload to the update service internal server error response
+func (o *UpdateServiceInternalServerError) SetPayload(payload string) {
+	o.Payload = payload
+}
+
 // WriteResponse to the client
-func (o *UpdateServiceInternalServerError) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *UpdateServiceInternalServerError) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(500)
 	if err := producer.Produce(rw, o.Payload); err != nil {

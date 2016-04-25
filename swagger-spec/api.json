@@ -1017,7 +1017,10 @@
                 "name": {
                     "type": "string"
                 },
-                "configuration": {
+                "targetURL": {
+                    "type": "string"
+                },
+			  "configuration": {
                     "type": "object"
                 },
                 "dials": {

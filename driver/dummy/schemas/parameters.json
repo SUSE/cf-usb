@@ -1,9 +1,0 @@
-{
-	"type" : "object",
-	"properties" : {
-		"param": {
-			"type" : "string"
-		}
-	},
-	"required" : ["param"]
-}

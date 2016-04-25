@@ -6,9 +6,10 @@ package operations
 import (
 	"net/http"
 
-	"github.com/go-swagger/go-swagger/errors"
-	"github.com/go-swagger/go-swagger/httpkit/middleware"
-	"github.com/go-swagger/go-swagger/strfmt"
+	"github.com/go-openapi/errors"
+	"github.com/go-openapi/runtime/middleware"
+
+	strfmt "github.com/go-openapi/strfmt"
 )
 
 // NewPingDriverInstanceParams creates a new PingDriverInstanceParams object
@@ -23,6 +24,10 @@ func NewPingDriverInstanceParams() PingDriverInstanceParams {
 //
 // swagger:parameters pingDriverInstance
 type PingDriverInstanceParams struct {
+
+	// HTTP Request Object
+	HTTPRequest *http.Request
+
 	/*Driver Instance ID
 	  Required: true
 	  In: path
@@ -34,6 +39,7 @@ type PingDriverInstanceParams struct {
 // for simple values it will use straight method calls
 func (o *PingDriverInstanceParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
+	o.HTTPRequest = r
 
 	rDriverInstanceID, rhkDriverInstanceID, _ := route.Params.GetOK("driver_instance_id")
 	if err := o.bindDriverInstanceID(rDriverInstanceID, rhkDriverInstanceID, route.Formats); err != nil {

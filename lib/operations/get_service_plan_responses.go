@@ -6,7 +6,7 @@ package operations
 import (
 	"net/http"
 
-	"github.com/go-swagger/go-swagger/httpkit"
+	"github.com/go-openapi/runtime"
 
 	"github.com/hpcloud/cf-usb/lib/genmodel"
 )
@@ -32,8 +32,13 @@ func (o *GetServicePlanOK) WithPayload(payload *genmodel.Plan) *GetServicePlanOK
 	return o
 }
 
+// SetPayload sets the payload to the get service plan o k response
+func (o *GetServicePlanOK) SetPayload(payload *genmodel.Plan) {
+	o.Payload = payload
+}
+
 // WriteResponse to the client
-func (o *GetServicePlanOK) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *GetServicePlanOK) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(200)
 	if o.Payload != nil {
@@ -56,7 +61,7 @@ func NewGetServicePlanNotFound() *GetServicePlanNotFound {
 }
 
 // WriteResponse to the client
-func (o *GetServicePlanNotFound) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *GetServicePlanNotFound) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(404)
 }
@@ -82,8 +87,13 @@ func (o *GetServicePlanInternalServerError) WithPayload(payload string) *GetServ
 	return o
 }
 
+// SetPayload sets the payload to the get service plan internal server error response
+func (o *GetServicePlanInternalServerError) SetPayload(payload string) {
+	o.Payload = payload
+}
+
 // WriteResponse to the client
-func (o *GetServicePlanInternalServerError) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *GetServicePlanInternalServerError) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(500)
 	if err := producer.Produce(rw, o.Payload); err != nil {

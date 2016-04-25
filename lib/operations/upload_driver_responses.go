@@ -6,7 +6,7 @@ package operations
 import (
 	"net/http"
 
-	"github.com/go-swagger/go-swagger/httpkit"
+	"github.com/go-openapi/runtime"
 )
 
 /*UploadDriverOK Driver uploaded
@@ -22,7 +22,7 @@ func NewUploadDriverOK() *UploadDriverOK {
 }
 
 // WriteResponse to the client
-func (o *UploadDriverOK) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *UploadDriverOK) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(200)
 }
@@ -40,7 +40,7 @@ func NewUploadDriverNotFound() *UploadDriverNotFound {
 }
 
 // WriteResponse to the client
-func (o *UploadDriverNotFound) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *UploadDriverNotFound) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(404)
 }
@@ -66,8 +66,13 @@ func (o *UploadDriverInternalServerError) WithPayload(payload string) *UploadDri
 	return o
 }
 
+// SetPayload sets the payload to the upload driver internal server error response
+func (o *UploadDriverInternalServerError) SetPayload(payload string) {
+	o.Payload = payload
+}
+
 // WriteResponse to the client
-func (o *UploadDriverInternalServerError) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *UploadDriverInternalServerError) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(500)
 	if err := producer.Produce(rw, o.Payload); err != nil {

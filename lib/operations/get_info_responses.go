@@ -6,7 +6,7 @@ package operations
 import (
 	"net/http"
 
-	"github.com/go-swagger/go-swagger/httpkit"
+	"github.com/go-openapi/runtime"
 
 	"github.com/hpcloud/cf-usb/lib/genmodel"
 )
@@ -32,8 +32,13 @@ func (o *GetInfoOK) WithPayload(payload *genmodel.Info) *GetInfoOK {
 	return o
 }
 
+// SetPayload sets the payload to the get info o k response
+func (o *GetInfoOK) SetPayload(payload *genmodel.Info) {
+	o.Payload = payload
+}
+
 // WriteResponse to the client
-func (o *GetInfoOK) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *GetInfoOK) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(200)
 	if o.Payload != nil {
@@ -64,8 +69,13 @@ func (o *GetInfoInternalServerError) WithPayload(payload string) *GetInfoInterna
 	return o
 }
 
+// SetPayload sets the payload to the get info internal server error response
+func (o *GetInfoInternalServerError) SetPayload(payload string) {
+	o.Payload = payload
+}
+
 // WriteResponse to the client
-func (o *GetInfoInternalServerError) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *GetInfoInternalServerError) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(500)
 	if err := producer.Produce(rw, o.Payload); err != nil {

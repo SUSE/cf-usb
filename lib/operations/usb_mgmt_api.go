@@ -8,15 +8,17 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/go-swagger/go-swagger/httpkit"
-	"github.com/go-swagger/go-swagger/httpkit/middleware"
-	"github.com/go-swagger/go-swagger/httpkit/security"
-	"github.com/go-swagger/go-swagger/spec"
-	"github.com/go-swagger/go-swagger/strfmt"
+	loads "github.com/go-openapi/loads"
+	runtime "github.com/go-openapi/runtime"
+	middleware "github.com/go-openapi/runtime/middleware"
+	security "github.com/go-openapi/runtime/security"
+	spec "github.com/go-openapi/spec"
+	strfmt "github.com/go-openapi/strfmt"
+	"github.com/go-openapi/swag"
 )
 
 // NewUsbMgmtAPI creates a new UsbMgmt instance
-func NewUsbMgmtAPI(spec *spec.Document) *UsbMgmtAPI {
+func NewUsbMgmtAPI(spec *loads.Document) *UsbMgmtAPI {
 	o := &UsbMgmtAPI{
 		spec:            spec,
 		handlers:        make(map[string]map[string]http.Handler),
@@ -31,17 +33,19 @@ func NewUsbMgmtAPI(spec *spec.Document) *UsbMgmtAPI {
 
 /*UsbMgmtAPI Universal service broker management API */
 type UsbMgmtAPI struct {
-	spec            *spec.Document
+	spec            *loads.Document
 	context         *middleware.Context
 	handlers        map[string]map[string]http.Handler
 	formats         strfmt.Registry
 	defaultConsumes string
 	defaultProduces string
 	// JSONConsumer registers a consumer for a "application/json" mime type
-	JSONConsumer httpkit.Consumer
+	JSONConsumer runtime.Consumer
+	// MulitpartformConsumer registers a consumer for a "multipart/form-data" mime type
+	MulitpartformConsumer runtime.Consumer
 
 	// JSONProducer registers a producer for a "application/json" mime type
-	JSONProducer httpkit.Producer
+	JSONProducer runtime.Producer
 
 	// AuthorizationAuth registers a function that takes a token and returns a principal
 	// it performs authentication based on an api key Authorization provided in the header
@@ -79,7 +83,7 @@ type UsbMgmtAPI struct {
 	GetInfoHandler GetInfoHandler
 	// GetServiceHandler sets the operation handler for the get service operation
 	GetServiceHandler GetServiceHandler
-	// GetServiceByInstanceIDHandler sets the operation handler for the get service by instance id operation
+	// GetServiceByInstanceIDHandler sets the operation handler for the get service by instance Id operation
 	GetServiceByInstanceIDHandler GetServiceByInstanceIDHandler
 	// GetServicePlanHandler sets the operation handler for the get service plan operation
 	GetServicePlanHandler GetServicePlanHandler
@@ -109,6 +113,9 @@ type UsbMgmtAPI struct {
 	// ServerShutdown is called when the HTTP(S) server is shut down and done
 	// handling all active connections and does not accept connections any more
 	ServerShutdown func()
+
+	// Custom command line argument groups with their descriptions
+	CommandLineOptionsGroups []swag.CommandLineOptionsGroup
 }
 
 // SetDefaultProduces sets the default produces media type
@@ -147,6 +154,10 @@ func (o *UsbMgmtAPI) Validate() error {
 
 	if o.JSONConsumer == nil {
 		unregistered = append(unregistered, "JSONConsumer")
+	}
+
+	if o.MulitpartformConsumer == nil {
+		unregistered = append(unregistered, "MulitpartformConsumer")
 	}
 
 	if o.JSONProducer == nil {
@@ -278,9 +289,9 @@ func (o *UsbMgmtAPI) ServeErrorFor(operationID string) func(http.ResponseWriter,
 }
 
 // AuthenticatorsFor gets the authenticators for the specified security schemes
-func (o *UsbMgmtAPI) AuthenticatorsFor(schemes map[string]spec.SecurityScheme) map[string]httpkit.Authenticator {
+func (o *UsbMgmtAPI) AuthenticatorsFor(schemes map[string]spec.SecurityScheme) map[string]runtime.Authenticator {
 
-	result := make(map[string]httpkit.Authenticator)
+	result := make(map[string]runtime.Authenticator)
 	for name, scheme := range schemes {
 		switch name {
 
@@ -295,14 +306,17 @@ func (o *UsbMgmtAPI) AuthenticatorsFor(schemes map[string]spec.SecurityScheme) m
 }
 
 // ConsumersFor gets the consumers for the specified media types
-func (o *UsbMgmtAPI) ConsumersFor(mediaTypes []string) map[string]httpkit.Consumer {
+func (o *UsbMgmtAPI) ConsumersFor(mediaTypes []string) map[string]runtime.Consumer {
 
-	result := make(map[string]httpkit.Consumer)
+	result := make(map[string]runtime.Consumer)
 	for _, mt := range mediaTypes {
 		switch mt {
 
 		case "application/json":
 			result["application/json"] = o.JSONConsumer
+
+		case "multipart/form-data":
+			result["multipart/form-data"] = o.MulitpartformConsumer
 
 		}
 	}
@@ -311,9 +325,9 @@ func (o *UsbMgmtAPI) ConsumersFor(mediaTypes []string) map[string]httpkit.Consum
 }
 
 // ProducersFor gets the producers for the specified media types
-func (o *UsbMgmtAPI) ProducersFor(mediaTypes []string) map[string]httpkit.Producer {
+func (o *UsbMgmtAPI) ProducersFor(mediaTypes []string) map[string]runtime.Producer {
 
-	result := make(map[string]httpkit.Producer)
+	result := make(map[string]runtime.Producer)
 	for _, mt := range mediaTypes {
 		switch mt {
 

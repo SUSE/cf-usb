@@ -6,7 +6,7 @@ package operations
 import (
 	"net/http"
 
-	"github.com/go-swagger/go-swagger/httpkit"
+	"github.com/go-openapi/runtime"
 
 	"github.com/hpcloud/cf-usb/lib/genmodel"
 )
@@ -32,8 +32,13 @@ func (o *CreateDriverCreated) WithPayload(payload *genmodel.Driver) *CreateDrive
 	return o
 }
 
+// SetPayload sets the payload to the create driver created response
+func (o *CreateDriverCreated) SetPayload(payload *genmodel.Driver) {
+	o.Payload = payload
+}
+
 // WriteResponse to the client
-func (o *CreateDriverCreated) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *CreateDriverCreated) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(201)
 	if o.Payload != nil {
@@ -56,7 +61,7 @@ func NewCreateDriverConflict() *CreateDriverConflict {
 }
 
 // WriteResponse to the client
-func (o *CreateDriverConflict) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *CreateDriverConflict) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(409)
 }
@@ -82,8 +87,13 @@ func (o *CreateDriverInternalServerError) WithPayload(payload string) *CreateDri
 	return o
 }
 
+// SetPayload sets the payload to the create driver internal server error response
+func (o *CreateDriverInternalServerError) SetPayload(payload string) {
+	o.Payload = payload
+}
+
 // WriteResponse to the client
-func (o *CreateDriverInternalServerError) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *CreateDriverInternalServerError) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(500)
 	if err := producer.Produce(rw, o.Payload); err != nil {

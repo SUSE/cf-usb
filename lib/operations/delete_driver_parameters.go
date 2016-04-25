@@ -6,9 +6,10 @@ package operations
 import (
 	"net/http"
 
-	"github.com/go-swagger/go-swagger/errors"
-	"github.com/go-swagger/go-swagger/httpkit/middleware"
-	"github.com/go-swagger/go-swagger/strfmt"
+	"github.com/go-openapi/errors"
+	"github.com/go-openapi/runtime/middleware"
+
+	strfmt "github.com/go-openapi/strfmt"
 )
 
 // NewDeleteDriverParams creates a new DeleteDriverParams object
@@ -23,6 +24,10 @@ func NewDeleteDriverParams() DeleteDriverParams {
 //
 // swagger:parameters deleteDriver
 type DeleteDriverParams struct {
+
+	// HTTP Request Object
+	HTTPRequest *http.Request
+
 	/*Driver ID
 	  Required: true
 	  In: path
@@ -34,6 +39,7 @@ type DeleteDriverParams struct {
 // for simple values it will use straight method calls
 func (o *DeleteDriverParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
+	o.HTTPRequest = r
 
 	rDriverID, rhkDriverID, _ := route.Params.GetOK("driver_id")
 	if err := o.bindDriverID(rDriverID, rhkDriverID, route.Formats); err != nil {

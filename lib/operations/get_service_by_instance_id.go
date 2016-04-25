@@ -6,10 +6,10 @@ package operations
 import (
 	"net/http"
 
-	"github.com/go-swagger/go-swagger/httpkit/middleware"
+	middleware "github.com/go-openapi/runtime/middleware"
 )
 
-// GetServiceByInstanceIDHandlerFunc turns a function with the right signature into a get service by instance id handler
+// GetServiceByInstanceIDHandlerFunc turns a function with the right signature into a get service by instance Id handler
 type GetServiceByInstanceIDHandlerFunc func(GetServiceByInstanceIDParams, interface{}) middleware.Responder
 
 // Handle executing the request and returning a response
@@ -17,12 +17,12 @@ func (fn GetServiceByInstanceIDHandlerFunc) Handle(params GetServiceByInstanceID
 	return fn(params, principal)
 }
 
-// GetServiceByInstanceIDHandler interface for that can handle valid get service by instance id params
+// GetServiceByInstanceIDHandler interface for that can handle valid get service by instance Id params
 type GetServiceByInstanceIDHandler interface {
 	Handle(GetServiceByInstanceIDParams, interface{}) middleware.Responder
 }
 
-// NewGetServiceByInstanceID creates a new http.Handler for the get service by instance id operation
+// NewGetServiceByInstanceID creates a new http.Handler for the get service by instance Id operation
 func NewGetServiceByInstanceID(ctx *middleware.Context, handler GetServiceByInstanceIDHandler) *GetServiceByInstanceID {
 	return &GetServiceByInstanceID{Context: ctx, Handler: handler}
 }
@@ -35,13 +35,12 @@ Gets the existing `service`
 */
 type GetServiceByInstanceID struct {
 	Context *middleware.Context
-	Params  GetServiceByInstanceIDParams
 	Handler GetServiceByInstanceIDHandler
 }
 
 func (o *GetServiceByInstanceID) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, _ := o.Context.RouteInfo(r)
-	o.Params = NewGetServiceByInstanceIDParams()
+	var Params = NewGetServiceByInstanceIDParams()
 
 	uprinc, err := o.Context.Authorize(r, route)
 	if err != nil {
@@ -53,12 +52,12 @@ func (o *GetServiceByInstanceID) ServeHTTP(rw http.ResponseWriter, r *http.Reque
 		principal = uprinc
 	}
 
-	if err := o.Context.BindValidRequest(r, route, &o.Params); err != nil { // bind params
+	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(o.Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params, principal) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

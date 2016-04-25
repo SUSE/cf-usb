@@ -4,53 +4,52 @@ package genmodel
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-	"strconv"
+	strfmt "github.com/go-openapi/strfmt"
+	"github.com/go-openapi/swag"
 
-	"github.com/go-swagger/go-swagger/errors"
-	"github.com/go-swagger/go-swagger/httpkit/validate"
-	"github.com/go-swagger/go-swagger/strfmt"
-	"github.com/go-swagger/go-swagger/swag"
+	"github.com/go-openapi/errors"
+	"github.com/go-openapi/validate"
 )
 
-/*service Service service
+/*Service service
 
 swagger:model service
 */
 type Service struct {
 
-	/* Bindable bindable
+	/* bindable
 	 */
-	Bindable *bool `json:"bindable,omitempty"`
+	Bindable bool `json:"bindable,omitempty"`
 
-	/* Description description
+	/* description
 	 */
-	Description *string `json:"description,omitempty"`
+	Description string `json:"description,omitempty"`
 
-	/* DriverInstanceID driver instance id
+	/* driver instance id
 
 	Required: true
 	Max Length: 36
 	Min Length: 36
 	*/
-	DriverInstanceID string `json:"driver_instance_id,omitempty"`
+	DriverInstanceID *string `json:"driver_instance_id"`
 
-	/* ID id
+	/* id
 	 */
-	ID *string `json:"id,omitempty"`
+	ID string `json:"id,omitempty"`
 
-	/* Metadata metadata
+	/* metadata
 	 */
 	Metadata interface{} `json:"metadata,omitempty"`
 
-	/* Name name
+	/* name
 
 	Required: true
 	Max Length: 50
 	Min Length: 3
 	*/
-	Name string `json:"name,omitempty"`
+	Name *string `json:"name"`
 
-	/* Tags tags
+	/* tags
 	 */
 	Tags []string `json:"tags,omitempty"`
 }
@@ -82,15 +81,15 @@ func (m *Service) Validate(formats strfmt.Registry) error {
 
 func (m *Service) validateDriverInstanceID(formats strfmt.Registry) error {
 
-	if err := validate.Required("driver_instance_id", "body", string(m.DriverInstanceID)); err != nil {
+	if err := validate.Required("driver_instance_id", "body", m.DriverInstanceID); err != nil {
 		return err
 	}
 
-	if err := validate.MinLength("driver_instance_id", "body", string(m.DriverInstanceID), 36); err != nil {
+	if err := validate.MinLength("driver_instance_id", "body", string(*m.DriverInstanceID), 36); err != nil {
 		return err
 	}
 
-	if err := validate.MaxLength("driver_instance_id", "body", string(m.DriverInstanceID), 36); err != nil {
+	if err := validate.MaxLength("driver_instance_id", "body", string(*m.DriverInstanceID), 36); err != nil {
 		return err
 	}
 
@@ -99,15 +98,15 @@ func (m *Service) validateDriverInstanceID(formats strfmt.Registry) error {
 
 func (m *Service) validateName(formats strfmt.Registry) error {
 
-	if err := validate.Required("name", "body", string(m.Name)); err != nil {
+	if err := validate.Required("name", "body", m.Name); err != nil {
 		return err
 	}
 
-	if err := validate.MinLength("name", "body", string(m.Name), 3); err != nil {
+	if err := validate.MinLength("name", "body", string(*m.Name), 3); err != nil {
 		return err
 	}
 
-	if err := validate.MaxLength("name", "body", string(m.Name), 50); err != nil {
+	if err := validate.MaxLength("name", "body", string(*m.Name), 50); err != nil {
 		return err
 	}
 
@@ -118,14 +117,6 @@ func (m *Service) validateTags(formats strfmt.Registry) error {
 
 	if swag.IsZero(m.Tags) { // not required
 		return nil
-	}
-
-	for i := 0; i < len(m.Tags); i++ {
-
-		if err := validate.Required("tags"+"."+strconv.Itoa(i), "body", string(m.Tags[i])); err != nil {
-			return err
-		}
-
 	}
 
 	return nil

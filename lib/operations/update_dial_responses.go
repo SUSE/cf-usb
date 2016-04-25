@@ -6,7 +6,7 @@ package operations
 import (
 	"net/http"
 
-	"github.com/go-swagger/go-swagger/httpkit"
+	"github.com/go-openapi/runtime"
 
 	"github.com/hpcloud/cf-usb/lib/genmodel"
 )
@@ -32,8 +32,13 @@ func (o *UpdateDialOK) WithPayload(payload *genmodel.Dial) *UpdateDialOK {
 	return o
 }
 
+// SetPayload sets the payload to the update dial o k response
+func (o *UpdateDialOK) SetPayload(payload *genmodel.Dial) {
+	o.Payload = payload
+}
+
 // WriteResponse to the client
-func (o *UpdateDialOK) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *UpdateDialOK) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(200)
 	if o.Payload != nil {
@@ -56,7 +61,7 @@ func NewUpdateDialNotFound() *UpdateDialNotFound {
 }
 
 // WriteResponse to the client
-func (o *UpdateDialNotFound) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *UpdateDialNotFound) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(404)
 }
@@ -82,8 +87,13 @@ func (o *UpdateDialInternalServerError) WithPayload(payload string) *UpdateDialI
 	return o
 }
 
+// SetPayload sets the payload to the update dial internal server error response
+func (o *UpdateDialInternalServerError) SetPayload(payload string) {
+	o.Payload = payload
+}
+
 // WriteResponse to the client
-func (o *UpdateDialInternalServerError) WriteResponse(rw http.ResponseWriter, producer httpkit.Producer) {
+func (o *UpdateDialInternalServerError) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(500)
 	if err := producer.Produce(rw, o.Payload); err != nil {

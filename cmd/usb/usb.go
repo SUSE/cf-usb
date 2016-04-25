@@ -6,7 +6,8 @@ import (
 	"os"
 
 	"github.com/frodenas/brokerapi"
-	"github.com/go-swagger/go-swagger/spec"
+	loads "github.com/go-openapi/loads"
+
 	"github.com/hpcloud/cf-usb/lib"
 	"github.com/hpcloud/cf-usb/lib/config"
 	"github.com/hpcloud/cf-usb/lib/data"
@@ -72,7 +73,7 @@ func (usb *UsbApp) Run(configProvider config.ConfigProvider, logger lager.Logger
 				logger.Fatal("loading-swagger-asset-failed", err)
 			}
 
-			swaggerSpec, err := spec.New(swaggerJSON, "")
+			swaggerSpec, err := loads.Analyzed(swaggerJSON, "")
 			if err != nil {
 				logger.Fatal("initializing-swagger-failed", err)
 			}
