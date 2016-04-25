@@ -3,7 +3,6 @@ package restapi
 import (
 	"crypto/tls"
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	errors "github.com/go-openapi/errors"
@@ -233,7 +232,7 @@ func configureAPI(api *operations.BrokerAPI) http.Handler {
 
 		clientResponse, err := caller.GetWorkspaceCaller(params.WorkspaceID)
 
-		fmt.Println(clientResponse)
+		//fmt.Println(clientResponse)
 
 		if err == -1 {
 			r.Status = &statusFailed

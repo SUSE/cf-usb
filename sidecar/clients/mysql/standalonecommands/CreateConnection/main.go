@@ -1,13 +1,8 @@
 package main
 
 import (
-	"crypto/md5"
-	"crypto/rand"
-	"encoding/base64"
-	"encoding/hex"
 	"fmt"
 	"os"
-	"regexp"
 	"strings"
 
 	"github.com/hpcloud/cf-usb/sidecar/clients/mysql/config"
@@ -15,33 +10,6 @@ import (
 	"github.com/hpcloud/cf-usb/sidecar/clients/util"
 	"github.com/pivotal-golang/lager"
 )
-
-func getDBNameFromId(id string) string {
-	dbName := "d" + strings.Replace(id, "-", "", -1)
-	dbName = strings.Replace(dbName, ";", "", -1)
-
-	return dbName
-}
-func getMD5Hash(text string) (string, error) {
-	hasher := md5.New()
-	hasher.Write([]byte(text))
-	generated := hex.EncodeToString(hasher.Sum(nil))
-
-	reg := regexp.MustCompile("[^A-Za-z0-9]+")
-
-	return reg.ReplaceAllString(generated, ""), nil
-}
-
-func secureRandomString(bytesOfEntpry int) (string, error) {
-	rb := make([]byte, bytesOfEntpry)
-	_, err := rand.Read(rb)
-
-	if err != nil {
-		return "", err
-	}
-
-	return base64.RawURLEncoding.EncodeToString(rb), nil
-}
 
 type MysqlDriver struct {
 	logger lager.Logger
@@ -90,7 +58,7 @@ func main() {
 	provisioner := mysqlprovisioner.New(loger)
 	provisioner.Connect(mysqlconfig)
 
-	username, err := getMD5Hash(os.Args[2])
+	username, err := util.GetMD5Hash(os.Args[2])
 	if err != nil {
 		util.WriteError(err.Error(), 3, 500)
 		os.Exit(3)
@@ -98,7 +66,7 @@ func main() {
 	if len(username) > 16 {
 		username = username[:16]
 	}
-	password, _ := secureRandomString(32)
+	password, _ := util.SecureRandomString(32)
 	dbName := "d" + strings.Replace(os.Args[1], "-", "", -1)
 
 	err = provisioner.CreateUser(dbName, username, password)
