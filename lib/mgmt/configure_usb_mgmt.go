@@ -39,8 +39,6 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface,
 		return true, nil
 	}
 
-	ConfigureDriverAPI(api, auth, configProvider, ccServiceBroker, logger)
-
 	ConfigureInstanceAPI(api, auth, configProvider, ccServiceBroker, logger)
 
 	ConfigureDialAPI(api, auth, configProvider, ccServiceBroker, logger)
@@ -99,13 +97,11 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface,
 			}
 		}
 
-		for _, driver := range config.Drivers {
-			for _, instance := range driver.DriverInstances {
-				err = ccServiceBroker.EnableServiceAccess(instance.Service.Name)
-				if err != nil {
-					log.Error("enable-service-access-failed", err)
-					return &UpdateCatalogInternalServerError{Payload: err.Error()}
-				}
+		for _, instance := range config.DriverInstances {
+			err = ccServiceBroker.EnableServiceAccess(instance.Service.Name)
+			if err != nil {
+				log.Error("enable-service-access-failed", err)
+				return &UpdateCatalogInternalServerError{Payload: err.Error()}
 			}
 		}
 

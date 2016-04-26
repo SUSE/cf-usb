@@ -47,16 +47,14 @@ func (broker *UsbBroker) Services() brokerapi.CatalogResponse {
 		broker.logger.Fatal("retrive-configuration-failed", err)
 	}
 
-	for _, driver := range config.Drivers {
-		for _, instance := range driver.DriverInstances {
-			service := instance.Service
+	for _, instance := range config.DriverInstances {
+		service := instance.Service
 
-			for _, dial := range instance.Dials {
-				service.Plans = append(service.Plans, dial.Plan)
-			}
-
-			catalog = append(catalog, service)
+		for _, dial := range instance.Dials {
+			service.Plans = append(service.Plans, dial.Plan)
 		}
+
+		catalog = append(catalog, service)
 	}
 
 	broker.logger.Info("get-catalog-request-completed", lager.Data{"services-found": len(catalog)})
@@ -278,26 +276,25 @@ func (broker *UsbBroker) getDriver(serviceID string) (servicemgr.ServiceManagerI
 		return nil, err
 	}
 
-	for _, driver := range config.Drivers {
-		for _, driverInstance := range driver.DriverInstances {
-			if driverInstance.Service.ID == serviceID {
-				if driverInstance.TargetURL != "" {
-					u, err := url.Parse(driverInstance.TargetURL)
-					if err != nil {
-						return nil, err
-					}
-
-					transport := httptransport.New(u.Host, "/", []string{u.Scheme})
-
-					debug, _ := strconv.ParseBool(os.Getenv("CF_TRACE"))
-
-					transport.Debug = debug
-
-					serviceManager := servicemgr.NewServiceManager(transport, strfmt.Default, broker.logger)
-					return serviceManager, nil
+	for _, driverInstance := range config.DriverInstances {
+		if driverInstance.Service.ID == serviceID {
+			if driverInstance.TargetURL != "" {
+				u, err := url.Parse(driverInstance.TargetURL)
+				if err != nil {
+					return nil, err
 				}
+
+				transport := httptransport.New(u.Host, "/", []string{u.Scheme})
+
+				debug, _ := strconv.ParseBool(os.Getenv("CF_TRACE"))
+
+				transport.Debug = debug
+
+				serviceManager := servicemgr.NewServiceManager(transport, strfmt.Default, broker.logger)
+				return serviceManager, nil
 			}
 		}
+
 	}
 
 	return nil, errors.New("Driver not found")
@@ -309,34 +306,32 @@ func (broker *UsbBroker) getDriverForServiceInstanceId(instanceID string) (servi
 		return nil, false, err
 	}
 
-	for _, driver := range config.Drivers {
-		for _, driverInstance := range driver.DriverInstances {
-			u, err := url.Parse(driverInstance.TargetURL)
-			if err != nil {
-				return nil, false, err
-			}
-
-			transport := httptransport.New(u.Host, "/", []string{u.Scheme})
-
-			debug, _ := strconv.ParseBool(os.Getenv("CF_TRACE"))
-
-			transport.Debug = debug
-
-			serviceManager := servicemgr.NewServiceManager(transport, strfmt.Default, broker.logger)
-
-			instance, errorDetails := serviceManager.GetWorkspace(instanceID)
-			if errorDetails.Message != nil {
-				return nil, false, errors.New(*errorDetails.Message)
-			}
-			if instance.Status != nil {
-				statusInfo := *instance.Status
-				if statusInfo == "none" {
-					continue
-				}
-			}
-
-			return serviceManager, true, nil
+	for _, driverInstance := range config.DriverInstances {
+		u, err := url.Parse(driverInstance.TargetURL)
+		if err != nil {
+			return nil, false, err
 		}
+
+		transport := httptransport.New(u.Host, "/", []string{u.Scheme})
+
+		debug, _ := strconv.ParseBool(os.Getenv("CF_TRACE"))
+
+		transport.Debug = debug
+
+		serviceManager := servicemgr.NewServiceManager(transport, strfmt.Default, broker.logger)
+
+		instance, errorDetails := serviceManager.GetWorkspace(instanceID)
+		if errorDetails.Message != nil {
+			return nil, false, errors.New(*errorDetails.Message)
+		}
+		if instance.Status != nil {
+			statusInfo := *instance.Status
+			if statusInfo == "none" {
+				continue
+			}
+		}
+
+		return serviceManager, true, nil
 	}
 
 	return nil, false, nil

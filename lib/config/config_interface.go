@@ -50,12 +50,6 @@ type DriverInstance struct {
 	Service       brokerapi.Service `json:"service"`
 }
 
-type Driver struct {
-	DriverType      string                    `json:"driver_type"`
-	DriverInstances map[string]DriverInstance `json:"driver_instances,omitempty"`
-	DriverName      string                    `json:"driver_name"`
-}
-
 type RoutesRegister struct {
 	NatsMembers      []string `json:"nats_members"`
 	BrokerAPIHost    string   `json:"broker_api_host,omitempty"`
@@ -63,22 +57,19 @@ type RoutesRegister struct {
 }
 
 type Config struct {
-	APIVersion     string            `json:"api_version"`
-	DriversPath    string            `json:"drivers_path"`
-	BrokerAPI      BrokerAPI         `json:"broker_api"`
-	ManagementAPI  *ManagementAPI    `json:"management_api,omitempty"`
-	Drivers        map[string]Driver `json:"drivers"`
-	RoutesRegister *RoutesRegister   `json:"routes_register"`
+	APIVersion      string                    `json:"api_version"`
+	DriversPath     string                    `json:"drivers_path"`
+	BrokerAPI       BrokerAPI                 `json:"broker_api"`
+	ManagementAPI   *ManagementAPI            `json:"management_api,omitempty"`
+	DriverInstances map[string]DriverInstance `json:"driver_instances"`
+	RoutesRegister  *RoutesRegister           `json:"routes_register"`
 }
 
 type ConfigProvider interface {
 	LoadConfiguration() (*Config, error)
 	LoadDriverInstance(driverInstanceID string) (*DriverInstance, error)
 	GetUaaAuthConfig() (*UaaAuth, error)
-	SetDriver(driverid string, driver Driver) error
-	GetDriver(driverid string) (*Driver, error)
-	DeleteDriver(driverid string) error
-	SetDriverInstance(driverid string, instanceid string, driverInstance DriverInstance) error
+	SetDriverInstance(instanceid string, driverInstance DriverInstance) error
 	GetDriverInstance(instanceid string) (instance *DriverInstance, driverId string, err error)
 	DeleteDriverInstance(instanceid string) error
 	SetService(instanceid string, service brokerapi.Service) error
@@ -88,8 +79,6 @@ type ConfigProvider interface {
 	GetDial(dialid string) (dial *Dial, instanceID string, err error)
 	DeleteDial(dialid string) error
 	DriverInstanceNameExists(driverInstanceName string) (bool, error)
-	DriverTypeExists(driverType string) (bool, error)
-	DriverExists(driverID string) (bool, error)
 	GetPlan(plandid string) (plan *brokerapi.ServicePlan, dialid string, instanceid string, err error)
 	GetDriversPath() (string, error)
 }

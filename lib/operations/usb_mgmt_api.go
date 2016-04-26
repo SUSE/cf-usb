@@ -41,8 +41,6 @@ type UsbMgmtAPI struct {
 	defaultProduces string
 	// JSONConsumer registers a consumer for a "application/json" mime type
 	JSONConsumer runtime.Consumer
-	// MulitpartformConsumer registers a consumer for a "multipart/form-data" mime type
-	MulitpartformConsumer runtime.Consumer
 
 	// JSONProducer registers a producer for a "application/json" mime type
 	JSONProducer runtime.Producer
@@ -53,32 +51,20 @@ type UsbMgmtAPI struct {
 
 	// CreateDialHandler sets the operation handler for the create dial operation
 	CreateDialHandler CreateDialHandler
-	// CreateDriverHandler sets the operation handler for the create driver operation
-	CreateDriverHandler CreateDriverHandler
 	// CreateDriverInstanceHandler sets the operation handler for the create driver instance operation
 	CreateDriverInstanceHandler CreateDriverInstanceHandler
 	// DeleteDialHandler sets the operation handler for the delete dial operation
 	DeleteDialHandler DeleteDialHandler
-	// DeleteDriverHandler sets the operation handler for the delete driver operation
-	DeleteDriverHandler DeleteDriverHandler
 	// DeleteDriverInstanceHandler sets the operation handler for the delete driver instance operation
 	DeleteDriverInstanceHandler DeleteDriverInstanceHandler
 	// GetAllDialsHandler sets the operation handler for the get all dials operation
 	GetAllDialsHandler GetAllDialsHandler
 	// GetDialHandler sets the operation handler for the get dial operation
 	GetDialHandler GetDialHandler
-	// GetDialSchemaHandler sets the operation handler for the get dial schema operation
-	GetDialSchemaHandler GetDialSchemaHandler
-	// GetDriverHandler sets the operation handler for the get driver operation
-	GetDriverHandler GetDriverHandler
 	// GetDriverInstanceHandler sets the operation handler for the get driver instance operation
 	GetDriverInstanceHandler GetDriverInstanceHandler
 	// GetDriverInstancesHandler sets the operation handler for the get driver instances operation
 	GetDriverInstancesHandler GetDriverInstancesHandler
-	// GetDriverSchemaHandler sets the operation handler for the get driver schema operation
-	GetDriverSchemaHandler GetDriverSchemaHandler
-	// GetDriversHandler sets the operation handler for the get drivers operation
-	GetDriversHandler GetDriversHandler
 	// GetInfoHandler sets the operation handler for the get info operation
 	GetInfoHandler GetInfoHandler
 	// GetServiceHandler sets the operation handler for the get service operation
@@ -95,16 +81,12 @@ type UsbMgmtAPI struct {
 	UpdateCatalogHandler UpdateCatalogHandler
 	// UpdateDialHandler sets the operation handler for the update dial operation
 	UpdateDialHandler UpdateDialHandler
-	// UpdateDriverHandler sets the operation handler for the update driver operation
-	UpdateDriverHandler UpdateDriverHandler
 	// UpdateDriverInstanceHandler sets the operation handler for the update driver instance operation
 	UpdateDriverInstanceHandler UpdateDriverInstanceHandler
 	// UpdateServiceHandler sets the operation handler for the update service operation
 	UpdateServiceHandler UpdateServiceHandler
 	// UpdateServicePlanHandler sets the operation handler for the update service plan operation
 	UpdateServicePlanHandler UpdateServicePlanHandler
-	// UploadDriverHandler sets the operation handler for the upload driver operation
-	UploadDriverHandler UploadDriverHandler
 
 	// ServeError is called when an error is received, there is a default handler
 	// but you can set your own with this
@@ -156,10 +138,6 @@ func (o *UsbMgmtAPI) Validate() error {
 		unregistered = append(unregistered, "JSONConsumer")
 	}
 
-	if o.MulitpartformConsumer == nil {
-		unregistered = append(unregistered, "MulitpartformConsumer")
-	}
-
 	if o.JSONProducer == nil {
 		unregistered = append(unregistered, "JSONProducer")
 	}
@@ -172,20 +150,12 @@ func (o *UsbMgmtAPI) Validate() error {
 		unregistered = append(unregistered, "CreateDialHandler")
 	}
 
-	if o.CreateDriverHandler == nil {
-		unregistered = append(unregistered, "CreateDriverHandler")
-	}
-
 	if o.CreateDriverInstanceHandler == nil {
 		unregistered = append(unregistered, "CreateDriverInstanceHandler")
 	}
 
 	if o.DeleteDialHandler == nil {
 		unregistered = append(unregistered, "DeleteDialHandler")
-	}
-
-	if o.DeleteDriverHandler == nil {
-		unregistered = append(unregistered, "DeleteDriverHandler")
 	}
 
 	if o.DeleteDriverInstanceHandler == nil {
@@ -200,28 +170,12 @@ func (o *UsbMgmtAPI) Validate() error {
 		unregistered = append(unregistered, "GetDialHandler")
 	}
 
-	if o.GetDialSchemaHandler == nil {
-		unregistered = append(unregistered, "GetDialSchemaHandler")
-	}
-
-	if o.GetDriverHandler == nil {
-		unregistered = append(unregistered, "GetDriverHandler")
-	}
-
 	if o.GetDriverInstanceHandler == nil {
 		unregistered = append(unregistered, "GetDriverInstanceHandler")
 	}
 
 	if o.GetDriverInstancesHandler == nil {
 		unregistered = append(unregistered, "GetDriverInstancesHandler")
-	}
-
-	if o.GetDriverSchemaHandler == nil {
-		unregistered = append(unregistered, "GetDriverSchemaHandler")
-	}
-
-	if o.GetDriversHandler == nil {
-		unregistered = append(unregistered, "GetDriversHandler")
 	}
 
 	if o.GetInfoHandler == nil {
@@ -256,10 +210,6 @@ func (o *UsbMgmtAPI) Validate() error {
 		unregistered = append(unregistered, "UpdateDialHandler")
 	}
 
-	if o.UpdateDriverHandler == nil {
-		unregistered = append(unregistered, "UpdateDriverHandler")
-	}
-
 	if o.UpdateDriverInstanceHandler == nil {
 		unregistered = append(unregistered, "UpdateDriverInstanceHandler")
 	}
@@ -270,10 +220,6 @@ func (o *UsbMgmtAPI) Validate() error {
 
 	if o.UpdateServicePlanHandler == nil {
 		unregistered = append(unregistered, "UpdateServicePlanHandler")
-	}
-
-	if o.UploadDriverHandler == nil {
-		unregistered = append(unregistered, "UploadDriverHandler")
 	}
 
 	if len(unregistered) > 0 {
@@ -314,9 +260,6 @@ func (o *UsbMgmtAPI) ConsumersFor(mediaTypes []string) map[string]runtime.Consum
 
 		case "application/json":
 			result["application/json"] = o.JSONConsumer
-
-		case "multipart/form-data":
-			result["multipart/form-data"] = o.MulitpartformConsumer
 
 		}
 	}
@@ -370,22 +313,12 @@ func (o *UsbMgmtAPI) initHandlerCache() {
 	if o.handlers["POST"] == nil {
 		o.handlers[strings.ToUpper("POST")] = make(map[string]http.Handler)
 	}
-	o.handlers["POST"]["/drivers"] = NewCreateDriver(o.context, o.CreateDriverHandler)
-
-	if o.handlers["POST"] == nil {
-		o.handlers[strings.ToUpper("POST")] = make(map[string]http.Handler)
-	}
 	o.handlers["POST"]["/driver_instances"] = NewCreateDriverInstance(o.context, o.CreateDriverInstanceHandler)
 
 	if o.handlers["DELETE"] == nil {
 		o.handlers[strings.ToUpper("DELETE")] = make(map[string]http.Handler)
 	}
 	o.handlers["DELETE"]["/dials/{dial_id}"] = NewDeleteDial(o.context, o.DeleteDialHandler)
-
-	if o.handlers["DELETE"] == nil {
-		o.handlers[strings.ToUpper("DELETE")] = make(map[string]http.Handler)
-	}
-	o.handlers["DELETE"]["/drivers/{driver_id}"] = NewDeleteDriver(o.context, o.DeleteDriverHandler)
 
 	if o.handlers["DELETE"] == nil {
 		o.handlers[strings.ToUpper("DELETE")] = make(map[string]http.Handler)
@@ -405,32 +338,12 @@ func (o *UsbMgmtAPI) initHandlerCache() {
 	if o.handlers["GET"] == nil {
 		o.handlers[strings.ToUpper("GET")] = make(map[string]http.Handler)
 	}
-	o.handlers["GET"]["/drivers/{driver_id}/dial_schema"] = NewGetDialSchema(o.context, o.GetDialSchemaHandler)
-
-	if o.handlers["GET"] == nil {
-		o.handlers[strings.ToUpper("GET")] = make(map[string]http.Handler)
-	}
-	o.handlers["GET"]["/drivers/{driver_id}"] = NewGetDriver(o.context, o.GetDriverHandler)
-
-	if o.handlers["GET"] == nil {
-		o.handlers[strings.ToUpper("GET")] = make(map[string]http.Handler)
-	}
 	o.handlers["GET"]["/driver_instances/{driver_instance_id}"] = NewGetDriverInstance(o.context, o.GetDriverInstanceHandler)
 
 	if o.handlers["GET"] == nil {
 		o.handlers[strings.ToUpper("GET")] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/driver_instances"] = NewGetDriverInstances(o.context, o.GetDriverInstancesHandler)
-
-	if o.handlers["GET"] == nil {
-		o.handlers[strings.ToUpper("GET")] = make(map[string]http.Handler)
-	}
-	o.handlers["GET"]["/drivers/{driver_id}/config_schema"] = NewGetDriverSchema(o.context, o.GetDriverSchemaHandler)
-
-	if o.handlers["GET"] == nil {
-		o.handlers[strings.ToUpper("GET")] = make(map[string]http.Handler)
-	}
-	o.handlers["GET"]["/drivers"] = NewGetDrivers(o.context, o.GetDriversHandler)
 
 	if o.handlers["GET"] == nil {
 		o.handlers[strings.ToUpper("GET")] = make(map[string]http.Handler)
@@ -475,11 +388,6 @@ func (o *UsbMgmtAPI) initHandlerCache() {
 	if o.handlers["PUT"] == nil {
 		o.handlers[strings.ToUpper("PUT")] = make(map[string]http.Handler)
 	}
-	o.handlers["PUT"]["/drivers/{driver_id}"] = NewUpdateDriver(o.context, o.UpdateDriverHandler)
-
-	if o.handlers["PUT"] == nil {
-		o.handlers[strings.ToUpper("PUT")] = make(map[string]http.Handler)
-	}
 	o.handlers["PUT"]["/driver_instances/{driver_instance_id}"] = NewUpdateDriverInstance(o.context, o.UpdateDriverInstanceHandler)
 
 	if o.handlers["PUT"] == nil {
@@ -491,11 +399,6 @@ func (o *UsbMgmtAPI) initHandlerCache() {
 		o.handlers[strings.ToUpper("PUT")] = make(map[string]http.Handler)
 	}
 	o.handlers["PUT"]["/plans/{plan_id}"] = NewUpdateServicePlan(o.context, o.UpdateServicePlanHandler)
-
-	if o.handlers["PUT"] == nil {
-		o.handlers[strings.ToUpper("PUT")] = make(map[string]http.Handler)
-	}
-	o.handlers["PUT"]["/drivers/{driver_id}/bits"] = NewUploadDriver(o.context, o.UploadDriverHandler)
 
 }
 

@@ -49,26 +49,6 @@ func Test_Redis_LoadConfiguration(t *testing.T) {
 
 }
 
-func Test_Redis_GetDriver(t *testing.T) {
-	assert := assert.New(t)
-	provisioner := new(redisMock.RedisProvisionerInterface)
-
-	configSring, err := getRedisConfigString()
-	if err != nil {
-		t.Error(err)
-	}
-
-	provisioner.On("GetValue", "usb").Return(configSring, nil)
-	RedisTestConfig.Provider = NewRedisConfig(provisioner)
-	driver, err := RedisTestConfig.Provider.GetDriver("00000000-0000-0000-0000-000000000001")
-	if err != nil {
-		t.Error(err)
-	}
-	assert.Equal("dummy", driver.DriverType)
-
-	assert.NoError(err)
-}
-
 func Test_Redis_GetDriverInstance(t *testing.T) {
 	assert := assert.New(t)
 	provisioner := new(redisMock.RedisProvisionerInterface)
@@ -80,10 +60,10 @@ func Test_Redis_GetDriverInstance(t *testing.T) {
 	provisioner.On("GetValue", "usb").Return(configSring, nil)
 
 	RedisTestConfig.Provider = NewRedisConfig(provisioner)
-	instance, _, err := RedisTestConfig.Provider.GetDriverInstance("A0000000-0000-0000-0000-000000000004")
+	instance, _, err := RedisTestConfig.Provider.GetDriverInstance("A0000000-0000-0000-0000-000000000002")
 	assert.NoError(err)
 
-	assert.Equal("local-mssql", instance.Name)
+	assert.Equal("dummy1", instance.Name)
 }
 
 func Test_Redis_GetDial(t *testing.T) {
@@ -97,12 +77,12 @@ func Test_Redis_GetDial(t *testing.T) {
 	provisioner.On("GetValue", "usb").Return(configSring, nil)
 
 	RedisTestConfig.Provider = NewRedisConfig(provisioner)
-	dial, instanceID, err := RedisTestConfig.Provider.GetDial("C0000000-0000-0000-0000-000000000001")
+	dial, instanceID, err := RedisTestConfig.Provider.GetDial("B0000000-0000-0000-0000-000000000001")
 	t.Log(instanceID)
 	assert.NoError(err)
 
-	assert.Equal("planmssql", dial.Plan.Name)
-	assert.Equal("888B59E0-C2A2-4AB6-9335-2E90114A8F01", dial.Plan.ID)
+	assert.Equal("free", dial.Plan.Name)
+	assert.Equal("53425178-F731-49E7-9E53-5CF4BE9D807A", dial.Plan.ID)
 }
 
 func Test_Redis_GetService(t *testing.T) {
@@ -124,28 +104,6 @@ func Test_Redis_GetService(t *testing.T) {
 	assert.Equal(true, service.Bindable)
 	assert.Equal("echo Service", service.Description)
 	assert.Equal("A0000000-0000-0000-0000-000000000002", instanceID)
-}
-
-func Test_Redis_SetDriver(t *testing.T) {
-	assert := assert.New(t)
-	provisioner := new(redisMock.RedisProvisionerInterface)
-
-	configSring, err := getRedisConfigString()
-	if err != nil {
-		t.Error(err)
-	}
-
-	provisioner.On("GetValue", "usb").Return(configSring, nil)
-
-	provisioner.On("SetKV", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-
-	RedisTestConfig.Provider = NewRedisConfig(provisioner)
-
-	var driver Driver
-	driver.DriverType = "testDriver"
-
-	err = RedisTestConfig.Provider.SetDriver("testDriverID", driver)
-	assert.NoError(err)
 }
 
 /*
@@ -215,24 +173,6 @@ func Test_Redis_SetService(t *testing.T) {
 	assert.NoError(err)
 }
 
-func Test_Redis_DeleteDriver(t *testing.T) {
-	assert := assert.New(t)
-	provisioner := new(redisMock.RedisProvisionerInterface)
-
-	configSring, err := getRedisConfigString()
-	if err != nil {
-		t.Error(err)
-	}
-
-	provisioner.On("GetValue", "usb").Return(configSring, nil)
-	provisioner.On("SetKV", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-
-	RedisTestConfig.Provider = NewRedisConfig(provisioner)
-
-	err = RedisTestConfig.Provider.DeleteDriver("00000000-0000-0000-0000-000000000001")
-	assert.NoError(err)
-}
-
 func Test_Redis_DeleteDriverInstance(t *testing.T) {
 	assert := assert.New(t)
 	provisioner := new(redisMock.RedisProvisionerInterface)
@@ -282,23 +222,5 @@ func Test_Redis_DeleteService(t *testing.T) {
 	RedisTestConfig.Provider = NewRedisConfig(provisioner)
 
 	err = RedisTestConfig.Provider.DeleteService("A0000000-0000-0000-0000-000000000002")
-	assert.NoError(err)
-}
-
-func Test_Redis_DriverExists(t *testing.T) {
-	assert := assert.New(t)
-	provisioner := new(redisMock.RedisProvisionerInterface)
-
-	configSring, err := getRedisConfigString()
-	if err != nil {
-		t.Error(err)
-	}
-
-	provisioner.On("GetValue", "usb").Return(configSring, nil)
-
-	RedisTestConfig.Provider = NewRedisConfig(provisioner)
-
-	exists, err := RedisTestConfig.Provider.DriverExists("00000000-0000-0000-0000-000000000001")
-	assert.True(exists)
 	assert.NoError(err)
 }

@@ -2,8 +2,6 @@ package config
 
 import (
 	"encoding/json"
-	"errors"
-	"fmt"
 	"os"
 
 	"github.com/frodenas/brokerapi"
@@ -80,79 +78,8 @@ func (c *redisConfig) GetUaaAuthConfig() (*UaaAuth, error) {
 	}
 	return &uaa.UaaAuth, nil
 }
-func (c *redisConfig) SetDriver(driverID string, driver Driver) error {
 
-	config, err := c.LoadConfiguration()
-	if err != nil {
-		return err
-	}
-	updated := false
-	for dId, _ := range config.Drivers {
-		if dId == driverID {
-			config.Drivers[dId] = driver
-			updated = true
-			break
-		}
-	}
-	if config.Drivers == nil {
-		config.Drivers = make(map[string]Driver)
-	}
-	if !updated {
-		config.Drivers[driverID] = driver
-	}
-
-	data, err := json.Marshal(config)
-	if err != nil {
-		return err
-	}
-
-	err = c.provider.SetKV(usbKey, string(data), 0)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (c *redisConfig) GetDriver(driverID string) (*Driver, error) {
-	config, err := c.LoadConfiguration()
-	if err != nil {
-		return nil, err
-	}
-
-	for dID, d := range config.Drivers {
-		if dID == driverID {
-			return &d, nil
-		}
-	}
-
-	return nil, nil
-}
-
-func (c *redisConfig) DeleteDriver(driverID string) error {
-	config, err := c.LoadConfiguration()
-	if err != nil {
-		return err
-	}
-
-	for dID, _ := range config.Drivers {
-		if dID == driverID {
-			delete(config.Drivers, driverID)
-			break
-		}
-	}
-	data, err := json.Marshal(config)
-	if err != nil {
-		return err
-	}
-
-	err = c.provider.SetKV(usbKey, string(data), 0)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (c *redisConfig) SetDriverInstance(driverID string, instanceID string, instance DriverInstance) error {
+func (c *redisConfig) SetDriverInstance(instanceID string, instance DriverInstance) error {
 	config, err := c.LoadConfiguration()
 	if err != nil {
 		return err
@@ -160,29 +87,22 @@ func (c *redisConfig) SetDriverInstance(driverID string, instanceID string, inst
 	if config != nil {
 		configuration := *config
 		instanceInfo := &instance
-		if driverInfo, ok := configuration.Drivers[driverID]; ok {
-			if _, ok := driverInfo.DriverInstances[instanceID]; ok {
-				driverInfo.DriverInstances[instanceID] = *instanceInfo
-				configuration.Drivers[driverID] = driverInfo
-			} else {
-				if driverInfo.DriverInstances == nil {
-					driverInfo.DriverInstances = make(map[string]DriverInstance)
-				}
-				driverInfo.DriverInstances[instanceID] = *instanceInfo
-				configuration.Drivers[driverID] = driverInfo
-			}
-			data, err := json.Marshal(configuration)
-			if err != nil {
-				return err
-			}
-
-			err = c.provider.SetKV(usbKey, string(data), 0)
-			if err != nil {
-				return err
-			}
-
+		if _, ok := configuration.DriverInstances[instanceID]; ok {
+			configuration.DriverInstances[instanceID] = *instanceInfo
 		} else {
-			return errors.New(fmt.Sprintf("Driver id %s not found", driverID))
+			if configuration.DriverInstances == nil {
+				configuration.DriverInstances = make(map[string]DriverInstance)
+			}
+			configuration.DriverInstances[instanceID] = *instanceInfo
+		}
+		data, err := json.Marshal(configuration)
+		if err != nil {
+			return err
+		}
+
+		err = c.provider.SetKV(usbKey, string(data), 0)
+		if err != nil {
+			return err
 		}
 	}
 
@@ -195,11 +115,9 @@ func (c *redisConfig) GetDriverInstance(instanceID string) (*DriverInstance, str
 		return nil, "", err
 	}
 
-	for parentId, d := range config.Drivers {
-		for diKey, i := range d.DriverInstances {
-			if diKey == instanceID {
-				return &i, parentId, nil
-			}
+	for diKey, i := range config.DriverInstances {
+		if diKey == instanceID {
+			return &i, diKey, nil
 		}
 	}
 	return nil, "", nil
@@ -212,11 +130,8 @@ func (c *redisConfig) DeleteDriverInstance(instanceID string) error {
 		return err
 	}
 
-	for _, d := range config.Drivers {
-		if _, ok := d.DriverInstances[instanceID]; ok {
-			delete(d.DriverInstances, instanceID)
-			break
-		}
+	if _, ok := config.DriverInstances[instanceID]; ok {
+		delete(config.DriverInstances, instanceID)
 	}
 
 	data, err := json.Marshal(config)
@@ -240,15 +155,12 @@ func (c *redisConfig) SetService(instanceID string, service brokerapi.Service) e
 	}
 	if config != nil {
 		configuration := *config
-		for driverKey, driverInfo := range configuration.Drivers {
-			if _, ok := driverInfo.DriverInstances[instanceID]; ok {
-				instance := driverInfo.DriverInstances[instanceID]
-				instance.Service = service
-				configuration.Drivers[driverKey].DriverInstances[instanceID] = instance
-				break
-			}
-
+		if _, ok := configuration.DriverInstances[instanceID]; ok {
+			instance := configuration.DriverInstances[instanceID]
+			instance.Service = service
+			configuration.DriverInstances[instanceID] = instance
 		}
+
 		data, err := json.Marshal(configuration)
 		if err != nil {
 			return err
@@ -269,13 +181,12 @@ func (c *redisConfig) GetService(serviceID string) (*brokerapi.Service, string, 
 		return nil, "", err
 	}
 
-	for _, d := range config.Drivers {
-		for instanceID, instance := range d.DriverInstances {
-			if instance.Service.ID == serviceID {
-				return &instance.Service, instanceID, nil
-			}
+	for instanceID, instance := range config.DriverInstances {
+		if instance.Service.ID == serviceID {
+			return &instance.Service, instanceID, nil
 		}
 	}
+
 	return nil, "", nil
 }
 
@@ -285,12 +196,9 @@ func (c *redisConfig) DeleteService(instanceID string) error {
 		return err
 	}
 
-	for _, d := range config.Drivers {
-		if instance, ok := d.DriverInstances[instanceID]; ok {
-			instance.Service = brokerapi.Service{}
-			d.DriverInstances[instanceID] = instance
-			break
-		}
+	if instance, ok := config.DriverInstances[instanceID]; ok {
+		instance.Service = brokerapi.Service{}
+		config.DriverInstances[instanceID] = instance
 	}
 	data, err := json.Marshal(config)
 	if err != nil {
@@ -312,17 +220,15 @@ func (c *redisConfig) SetDial(instanceID string, dialID string, dial Dial) error
 	if config != nil {
 		configuration := *config
 		dialDetails := &dial
-		for driverKey, driverInfo := range configuration.Drivers {
-			if instance, ok := driverInfo.DriverInstances[instanceID]; ok {
-				if _, ok := instance.Dials[dialID]; ok {
-					instance.Dials[dialID] = *dialDetails
-				} else {
-					if instance.Dials == nil {
-						instance.Dials = make(map[string]Dial)
-					}
-					instance.Dials[dialID] = *dialDetails
-					configuration.Drivers[driverKey].DriverInstances[instanceID] = instance
+		if instance, ok := configuration.DriverInstances[instanceID]; ok {
+			if _, ok := instance.Dials[dialID]; ok {
+				instance.Dials[dialID] = *dialDetails
+			} else {
+				if instance.Dials == nil {
+					instance.Dials = make(map[string]Dial)
 				}
+				instance.Dials[dialID] = *dialDetails
+				configuration.DriverInstances[instanceID] = instance
 			}
 		}
 
@@ -346,11 +252,9 @@ func (c *redisConfig) GetDial(dialID string) (*Dial, string, error) {
 		return nil, "", err
 	}
 
-	for _, d := range config.Drivers {
-		for instanceID, instance := range d.DriverInstances {
-			if dialInfo, ok := instance.Dials[dialID]; ok {
-				return &dialInfo, instanceID, nil
-			}
+	for instanceID, instance := range config.DriverInstances {
+		if dialInfo, ok := instance.Dials[dialID]; ok {
+			return &dialInfo, instanceID, nil
 		}
 	}
 
@@ -363,13 +267,11 @@ func (c *redisConfig) DeleteDial(dialID string) error {
 		return err
 	}
 
-	for _, d := range config.Drivers {
-		for instanceID, instance := range d.DriverInstances {
-			if _, ok := instance.Dials[dialID]; ok {
-				delete(instance.Dials, dialID)
-				d.DriverInstances[instanceID] = instance
-				break
-			}
+	for instanceID, instance := range config.DriverInstances {
+		if _, ok := instance.Dials[dialID]; ok {
+			delete(instance.Dials, dialID)
+			config.DriverInstances[instanceID] = instance
+			break
 		}
 	}
 	data, err := json.Marshal(config)
@@ -390,40 +292,8 @@ func (c *redisConfig) DriverInstanceNameExists(driverInstanceName string) (bool,
 		return false, err
 	}
 
-	for _, d := range config.Drivers {
-		for _, di := range d.DriverInstances {
-			if di.Name == driverInstanceName {
-				return true, nil
-			}
-		}
-	}
-
-	return false, nil
-}
-
-func (c *redisConfig) DriverTypeExists(driverType string) (bool, error) {
-	config, err := c.LoadConfiguration()
-	if err != nil {
-		return false, err
-	}
-
-	for _, d := range config.Drivers {
-		if d.DriverType == driverType {
-			return true, nil
-		}
-	}
-
-	return false, nil
-}
-
-func (c *redisConfig) DriverExists(driverID string) (bool, error) {
-	config, err := c.LoadConfiguration()
-	if err != nil {
-		return false, err
-	}
-
-	for id, _ := range config.Drivers {
-		if id == driverID {
+	for _, di := range config.DriverInstances {
+		if di.Name == driverInstanceName {
 			return true, nil
 		}
 	}
@@ -436,14 +306,13 @@ func (c *redisConfig) GetPlan(planid string) (*brokerapi.ServicePlan, string, st
 	if err != nil {
 		return nil, "", "", err
 	}
-	for _, d := range config.Drivers {
-		for iID, i := range d.DriverInstances {
-			for dialID, di := range i.Dials {
-				if di.Plan.ID == planid {
-					return &di.Plan, dialID, iID, nil
-				}
+	for iID, i := range config.DriverInstances {
+		for dialID, di := range i.Dials {
+			if di.Plan.ID == planid {
+				return &di.Plan, dialID, iID, nil
 			}
 		}
 	}
+
 	return nil, "", "", nil
 }

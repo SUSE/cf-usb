@@ -25,14 +25,6 @@ type DriverInstance struct {
 	 */
 	Dials []string `json:"dials,omitempty"`
 
-	/* driver id
-
-	Required: true
-	Max Length: 36
-	Min Length: 36
-	*/
-	DriverID *string `json:"driver_id"`
-
 	/* id
 	 */
 	ID string `json:"id,omitempty"`
@@ -67,11 +59,6 @@ func (m *DriverInstance) Validate(formats strfmt.Registry) error {
 		res = append(res, err)
 	}
 
-	if err := m.validateDriverID(formats); err != nil {
-		// prop
-		res = append(res, err)
-	}
-
 	if err := m.validateName(formats); err != nil {
 		// prop
 		res = append(res, err)
@@ -87,23 +74,6 @@ func (m *DriverInstance) validateDials(formats strfmt.Registry) error {
 
 	if swag.IsZero(m.Dials) { // not required
 		return nil
-	}
-
-	return nil
-}
-
-func (m *DriverInstance) validateDriverID(formats strfmt.Registry) error {
-
-	if err := validate.Required("driver_id", "body", m.DriverID); err != nil {
-		return err
-	}
-
-	if err := validate.MinLength("driver_id", "body", string(*m.DriverID), 36); err != nil {
-		return err
-	}
-
-	if err := validate.MaxLength("driver_id", "body", string(*m.DriverID), 36); err != nil {
-		return err
 	}
 
 	return nil

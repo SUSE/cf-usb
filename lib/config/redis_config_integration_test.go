@@ -64,22 +64,6 @@ func Test_RedisLoadConfiguration(t *testing.T) {
 	assert.Equal(2, len(config.RoutesRegister.NatsMembers))
 }
 
-func Test_RedisGetDriver(t *testing.T) {
-	assert := assert.New(t)
-	if RedisIntegrationConfig.address == "" {
-		t.Skip("Skipping load configuration test : REDIS_ADDRESS must be set")
-	}
-	err := initRedisProvider()
-	assert.NoError(err)
-	driver, err := RedisIntegrationConfig.Provider.GetDriver("00000000-0000-0000-0000-000000000001")
-	if err != nil {
-		t.Error(err)
-	}
-	assert.Equal("dummy", driver.DriverType)
-
-	assert.NoError(err)
-}
-
 func Test_RedisGetDriverInstance(t *testing.T) {
 	assert := assert.New(t)
 	if RedisIntegrationConfig.address == "" {
@@ -124,20 +108,6 @@ func Test_RedisGetService(t *testing.T) {
 	assert.Equal("A0000000-0000-0000-0000-000000000002", instanceID)
 }
 
-func Test_RedisSetDriver(t *testing.T) {
-	assert := assert.New(t)
-	if RedisIntegrationConfig.address == "" {
-		t.Skip("Skipping load configuration test : REDIS_ADDRESS must be set")
-	}
-	err := initRedisProvider()
-	assert.NoError(err)
-
-	var driver Driver
-	driver.DriverType = "testDriver"
-	err = RedisIntegrationConfig.Provider.SetDriver("00000000-0000-0000-0000-0000000000T1", driver)
-	assert.NoError(err)
-}
-
 func Test_RedisSetDriverInstance(t *testing.T) {
 	assert := assert.New(t)
 	if RedisIntegrationConfig.address == "" {
@@ -153,7 +123,7 @@ func Test_RedisSetDriverInstance(t *testing.T) {
 	instance.Dials = make(map[string]Dial)
 	instance.Service = brokerapi.Service{}
 
-	err = RedisIntegrationConfig.Provider.SetDriverInstance("00000000-0000-0000-0000-000000000001", "I0000000-0000-0000-0000-0000000000T1", instance)
+	err = RedisIntegrationConfig.Provider.SetDriverInstance("I0000000-0000-0000-0000-0000000000T1", instance)
 	assert.NoError(err)
 }
 

@@ -28,18 +28,10 @@ func ConfigureInstanceAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInt
 
 	api.CreateDriverInstanceHandler = CreateDriverInstanceHandlerFunc(func(params CreateDriverInstanceParams, principal interface{}) middleware.Responder {
 		log := log.Session("create-driver-instance")
-		log.Info("request", lager.Data{"driver-id": params.DriverInstance.DriverID, "driver-instance-name": params.DriverInstance.Name})
+		log.Info("request", lager.Data{"id": params.DriverInstance.ID, "driver-instance-name": params.DriverInstance.Name})
 
 		if strings.ContainsAny(*params.DriverInstance.Name, " ") {
 			return &CreateDriverInstanceInternalServerError{Payload: fmt.Sprintf("Driver instance name cannot contain spaces")}
-		}
-
-		existingDriver, err := configProvider.GetDriver(*params.DriverInstance.DriverID)
-		if err != nil {
-			return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
-		}
-		if existingDriver == nil {
-			return &GetDriverNotFound{}
 		}
 
 		var instance config.DriverInstance
@@ -79,7 +71,7 @@ func ConfigureInstanceAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInt
 							return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
 						}
 		*/
-		err = configProvider.SetDriverInstance(*params.DriverInstance.DriverID, instanceID, instance)
+		err = configProvider.SetDriverInstance(instanceID, instance)
 		if err != nil {
 			log.Error("set-driver-instance-failed", err)
 			return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
@@ -217,7 +209,7 @@ func ConfigureInstanceAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInt
 							return &UpdateDriverInstanceInternalServerError{Payload: err.Error()}
 						}
 		*/
-		err = configProvider.SetDriverInstance(*params.DriverConfig.DriverID, params.DriverInstanceID, instance)
+		err = configProvider.SetDriverInstance(params.DriverInstanceID, instance)
 		if err != nil {
 			return &UpdateDriverInstanceInternalServerError{Payload: err.Error()}
 		}
@@ -250,10 +242,8 @@ func ConfigureInstanceAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInt
 		}
 
 		instanceCount := 0
-		for _, driver := range config.Drivers {
-			for _, _ = range driver.DriverInstances {
-				instanceCount++
-			}
+		for _, _ = range config.DriverInstances {
+			instanceCount++
 		}
 
 		brokerName := defaultBrokerName
@@ -288,7 +278,7 @@ func ConfigureInstanceAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInt
 		log := log.Session("get-driver-instance")
 		log.Info("request", lager.Data{"driver-instance-id": params.DriverInstanceID})
 
-		instance, driverID, err := configProvider.GetDriverInstance(params.DriverInstanceID)
+		instance, _, err := configProvider.GetDriverInstance(params.DriverInstanceID)
 		if err != nil {
 			return &GetDriverInstanceInternalServerError{Payload: err.Error()}
 		}
@@ -315,7 +305,6 @@ func ConfigureInstanceAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInt
 			ID:            params.DriverInstanceID,
 			Name:          &instance.Name,
 			Service:       instance.Service.ID,
-			DriverID:      &driverID,
 		}
 
 		return &GetDriverInstanceOK{Payload: driverInstance}
