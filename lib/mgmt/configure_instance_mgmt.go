@@ -26,39 +26,39 @@ func ConfigureInstanceAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInt
 
 	log := logger.Session("usb-mgmt-instance")
 
-	api.CreateDriverInstanceHandler = CreateDriverInstanceHandlerFunc(func(params CreateDriverInstanceParams, principal interface{}) middleware.Responder {
+	api.CreateInstanceHandler = CreateInstanceHandlerFunc(func(params CreateInstanceParams, principal interface{}) middleware.Responder {
 		log := log.Session("create-driver-instance")
-		log.Info("request", lager.Data{"id": params.DriverInstance.ID, "driver-instance-name": params.DriverInstance.Name})
+		log.Info("request", lager.Data{"id": params.Instance.ID, "driver-instance-name": params.Instance.Name})
 
-		if strings.ContainsAny(*params.DriverInstance.Name, " ") {
-			return &CreateDriverInstanceInternalServerError{Payload: fmt.Sprintf("Driver instance name cannot contain spaces")}
+		if strings.ContainsAny(*params.Instance.Name, " ") {
+			return &CreateInstanceInternalServerError{Payload: fmt.Sprintf("Driver instance name cannot contain spaces")}
 		}
 
-		var instance config.DriverInstance
+		var instance config.Instance
 
 		instanceID := uuid.NewV4().String()
 
-		instanceConfig, err := json.Marshal(params.DriverInstance.Configuration)
+		instanceConfig, err := json.Marshal(params.Instance.Configuration)
 		if err != nil {
-			return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
+			return &CreateInstanceInternalServerError{Payload: err.Error()}
 		}
 
 		configuration := json.RawMessage(instanceConfig)
 		instance.Configuration = &configuration
-		instance.TargetURL = params.DriverInstance.TargetURL
+		instance.TargetURL = params.Instance.TargetURL
 
-		driverInstanceNameExist, err := configProvider.DriverInstanceNameExists(*params.DriverInstance.Name)
+		driverInstanceNameExist, err := configProvider.InstanceNameExists(*params.Instance.Name)
 		if err != nil {
-			return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
+			return &CreateInstanceInternalServerError{Payload: err.Error()}
 		}
 
-		serviceNameExist := ccServiceBroker.CheckServiceNameExists(*params.DriverInstance.Name)
+		serviceNameExist := ccServiceBroker.CheckServiceNameExists(*params.Instance.Name)
 		if driverInstanceNameExist || serviceNameExist {
 			err := goerrors.New("A driver instance with the same name already exists")
 			log.Error("check-driver-instance-name-exist", err)
-			return &CreateDriverInstanceConflict{}
+			return &CreateInstanceConflict{}
 		}
-		instance.Name = *params.DriverInstance.Name
+		instance.Name = *params.Instance.Name
 
 		/*		driversPath, err := configProvider.GetDriversPath()
 				if err != nil {
@@ -71,10 +71,10 @@ func ConfigureInstanceAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInt
 							return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
 						}
 		*/
-		err = configProvider.SetDriverInstance(instanceID, instance)
+		err = configProvider.SetInstance(instanceID, instance)
 		if err != nil {
 			log.Error("set-driver-instance-failed", err)
-			return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
+			return &CreateInstanceInternalServerError{Payload: err.Error()}
 		}
 
 		var defaultDial config.Dial
@@ -101,32 +101,32 @@ func ConfigureInstanceAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInt
 		err = configProvider.SetDial(instanceID, defaultDialID, defaultDial)
 		if err != nil {
 			log.Error("set-dial-failed", err)
-			return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
+			return &CreateInstanceInternalServerError{Payload: err.Error()}
 		}
 
-		params.DriverInstance.Dials = append(params.DriverInstance.Dials, defaultDialID)
-		params.DriverInstance.ID = instanceID
+		params.Instance.Dials = append(params.Instance.Dials, defaultDialID)
+		params.Instance.ID = instanceID
 
 		var service brokerapi.Service
 
 		service.ID = uuid.NewV4().String()
-		service.Name = *params.DriverInstance.Name
+		service.Name = *params.Instance.Name
 		service.Description = "Default service"
-		service.Tags = []string{*params.DriverInstance.Name}
+		service.Tags = []string{*params.Instance.Name}
 		service.Bindable = true
 
 		err = configProvider.SetService(instanceID, service)
 		if err != nil {
 			log.Error("set-service-failed", err)
-			return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
+			return &CreateInstanceInternalServerError{Payload: err.Error()}
 		}
 
-		params.DriverInstance.Service = service.ID
+		params.Instance.Service = service.ID
 
 		config, err := configProvider.LoadConfiguration()
 		if err != nil {
 			log.Error("load-configuration-failed", err)
-			return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
+			return &CreateInstanceInternalServerError{Payload: err.Error()}
 		}
 
 		brokerName := defaultBrokerName
@@ -137,7 +137,7 @@ func ConfigureInstanceAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInt
 		guid, err := ccServiceBroker.GetServiceBrokerGuidByName(brokerName)
 		if err != nil {
 			log.Error("get-service-broker-failed", err)
-			return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
+			return &CreateInstanceInternalServerError{Payload: err.Error()}
 		}
 
 		if guid == "" {
@@ -147,51 +147,51 @@ func ConfigureInstanceAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInt
 		}
 		if err != nil {
 			log.Error("create-or-update-service-broker-failed", err)
-			return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
+			return &CreateInstanceInternalServerError{Payload: err.Error()}
 		}
 
 		err = ccServiceBroker.EnableServiceAccess(service.Name)
 		if err != nil {
 			log.Error("enable-service-access-failed", err)
-			return &CreateDriverInstanceInternalServerError{Payload: err.Error()}
+			return &CreateInstanceInternalServerError{Payload: err.Error()}
 		}
 
-		return &CreateDriverInstanceCreated{Payload: params.DriverInstance}
+		return &CreateInstanceCreated{Payload: params.Instance}
 	})
 
-	api.UpdateDriverInstanceHandler = UpdateDriverInstanceHandlerFunc(func(params UpdateDriverInstanceParams, principal interface{}) middleware.Responder {
-		log := log.Session("update-driver-instance")
-		log.Info("request", lager.Data{"driver-instance-id": params.DriverInstanceID})
+	api.UpdateInstanceHandler = UpdateInstanceHandlerFunc(func(params UpdateInstanceParams, principal interface{}) middleware.Responder {
+		log := log.Session("update-instance")
+		log.Info("request", lager.Data{"driver-instance-id": params.InstanceID})
 
-		instanceInfo, _, err := configProvider.GetDriverInstance(params.DriverInstanceID)
+		instanceInfo, _, err := configProvider.GetInstance(params.InstanceID)
 		if err != nil {
-			return &UpdateDriverInstanceInternalServerError{Payload: err.Error()}
+			return &UpdateInstanceInternalServerError{Payload: err.Error()}
 		}
 		if instanceInfo == nil {
-			return &UpdateDriverInstanceNotFound{}
+			return &UpdateInstanceNotFound{}
 		}
 
 		instance := *instanceInfo
-		instanceConfig, err := json.Marshal(params.DriverConfig.Configuration)
+		instanceConfig, err := json.Marshal(params.InstanceConfig.Configuration)
 		if err != nil {
-			return &UpdateDriverInstanceInternalServerError{Payload: err.Error()}
+			return &UpdateInstanceInternalServerError{Payload: err.Error()}
 		}
 
 		configuration := json.RawMessage(instanceConfig)
 		instance.Configuration = &configuration
-		if instanceInfo.Name != *params.DriverConfig.Name {
-			driverInstanceNameExist, err := configProvider.DriverInstanceNameExists(*params.DriverConfig.Name)
+		if instanceInfo.Name != *params.InstanceConfig.Name {
+			driverInstanceNameExist, err := configProvider.InstanceNameExists(*params.InstanceConfig.Name)
 			if err != nil {
-				return &UpdateDriverInstanceInternalServerError{Payload: err.Error()}
+				return &UpdateInstanceInternalServerError{Payload: err.Error()}
 			}
 
 			if driverInstanceNameExist {
 				err := goerrors.New("A driver instance with the same name already exists")
 				log.Error("check-driver-instance-name-exist", err)
-				return &UpdateDriverInstanceConflict{}
+				return &UpdateInstanceConflict{}
 			}
 		}
-		instance.Name = *params.DriverConfig.Name
+		instance.Name = *params.InstanceConfig.Name
 
 		/*		existingDriver, err := configProvider.GetDriver(params.DriverConfig.DriverID)
 				if err != nil {
@@ -209,40 +209,40 @@ func ConfigureInstanceAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInt
 							return &UpdateDriverInstanceInternalServerError{Payload: err.Error()}
 						}
 		*/
-		err = configProvider.SetDriverInstance(params.DriverInstanceID, instance)
+		err = configProvider.SetInstance(params.InstanceID, instance)
 		if err != nil {
-			return &UpdateDriverInstanceInternalServerError{Payload: err.Error()}
+			return &UpdateInstanceInternalServerError{Payload: err.Error()}
 		}
 
-		return &UpdateDriverInstanceOK{Payload: params.DriverConfig}
+		return &UpdateInstanceOK{Payload: params.InstanceConfig}
 	})
 
-	api.DeleteDriverInstanceHandler = DeleteDriverInstanceHandlerFunc(func(params DeleteDriverInstanceParams, principal interface{}) middleware.Responder {
-		log := log.Session("delete-driver-instance")
-		log.Info("request", lager.Data{"driver-instance-id": params.DriverInstanceID})
+	api.DeleteInstanceHandler = DeleteInstanceHandlerFunc(func(params DeleteInstanceParams, principal interface{}) middleware.Responder {
+		log := log.Session("delete-instance")
+		log.Info("request", lager.Data{"driver-instance-id": params.InstanceID})
 
-		instance, _, err := configProvider.GetDriverInstance(params.DriverInstanceID)
+		instance, _, err := configProvider.GetInstance(params.InstanceID)
 		if err != nil {
-			return &DeleteDriverInstanceInternalServerError{Payload: err.Error()}
+			return &DeleteInstanceInternalServerError{Payload: err.Error()}
 		}
 		if instance == nil {
-			return &DeleteDriverInstanceNotFound{}
+			return &DeleteInstanceNotFound{}
 		}
 		if ccServiceBroker.CheckServiceInstancesExist(instance.Service.Name) == true {
-			return &DeleteDriverInstanceInternalServerError{Payload: fmt.Sprintf("Cannot delete instance '%s', it still has provisioned service instances", instance.Name)}
+			return &DeleteInstanceInternalServerError{Payload: fmt.Sprintf("Cannot delete instance '%s', it still has provisioned service instances", instance.Name)}
 		}
-		err = configProvider.DeleteDriverInstance(params.DriverInstanceID)
+		err = configProvider.DeleteInstance(params.InstanceID)
 		if err != nil {
-			return &DeleteDriverInstanceInternalServerError{Payload: err.Error()}
+			return &DeleteInstanceInternalServerError{Payload: err.Error()}
 		}
 
 		config, err := configProvider.LoadConfiguration()
 		if err != nil {
-			return &DeleteDriverInstanceInternalServerError{Payload: err.Error()}
+			return &DeleteInstanceInternalServerError{Payload: err.Error()}
 		}
 
 		instanceCount := 0
-		for _, _ = range config.DriverInstances {
+		for _, _ = range config.Instances {
 			instanceCount++
 		}
 
@@ -255,42 +255,42 @@ func ConfigureInstanceAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInt
 			err := ccServiceBroker.Delete(brokerName)
 			if err != nil {
 				log.Error("delete-service-broker-failed", err)
-				return &DeleteDriverInstanceInternalServerError{Payload: err.Error()}
+				return &DeleteInstanceInternalServerError{Payload: err.Error()}
 			}
 		} else {
 			guid, err := ccServiceBroker.GetServiceBrokerGuidByName(brokerName)
 			if err != nil {
 				log.Error("get-service-broker-failed", err)
-				return &DeleteDriverInstanceInternalServerError{Payload: err.Error()}
+				return &DeleteInstanceInternalServerError{Payload: err.Error()}
 			}
 
 			err = ccServiceBroker.Update(guid, brokerName, config.BrokerAPI.ExternalUrl, config.BrokerAPI.Credentials.Username, config.BrokerAPI.Credentials.Password)
 			if err != nil {
 				log.Error("update-service-broker-failed", err)
-				return &DeleteDriverInstanceInternalServerError{Payload: err.Error()}
+				return &DeleteInstanceInternalServerError{Payload: err.Error()}
 			}
 		}
 
-		return &DeleteDriverInstanceNoContent{}
+		return &DeleteInstanceNoContent{}
 	})
 
-	api.GetDriverInstanceHandler = GetDriverInstanceHandlerFunc(func(params GetDriverInstanceParams, principal interface{}) middleware.Responder {
-		log := log.Session("get-driver-instance")
-		log.Info("request", lager.Data{"driver-instance-id": params.DriverInstanceID})
+	api.GetInstanceHandler = GetInstanceHandlerFunc(func(params GetInstanceParams, principal interface{}) middleware.Responder {
+		log := log.Session("get-instance")
+		log.Info("request", lager.Data{"instance-id": params.InstanceID})
 
-		instance, _, err := configProvider.GetDriverInstance(params.DriverInstanceID)
+		instance, _, err := configProvider.GetInstance(params.InstanceID)
 		if err != nil {
-			return &GetDriverInstanceInternalServerError{Payload: err.Error()}
+			return &GetInstanceInternalServerError{Payload: err.Error()}
 		}
 		if instance == nil {
-			return &GetDriverInstanceNotFound{}
+			return &GetInstanceNotFound{}
 		}
 
 		var conf map[string]interface{}
 
 		err = json.Unmarshal(*instance.Configuration, &conf)
 		if err != nil {
-			return &GetDriverInstanceInternalServerError{Payload: err.Error()}
+			return &GetInstanceInternalServerError{Payload: err.Error()}
 		}
 
 		var dials = make([]string, 0)
@@ -299,15 +299,40 @@ func ConfigureInstanceAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInt
 			dials = append(dials, dialID)
 		}
 
-		driverInstance := &genmodel.DriverInstance{
+		driverInstance := &genmodel.Instance{
 			Configuration: conf,
 			Dials:         dials,
-			ID:            params.DriverInstanceID,
+			ID:            params.InstanceID,
 			Name:          &instance.Name,
 			Service:       instance.Service.ID,
 		}
 
-		return &GetDriverInstanceOK{Payload: driverInstance}
+		return &GetInstanceOK{Payload: driverInstance}
 	})
 
+	api.GetInstancesHandler = GetInstancesHandlerFunc(func(principal interface{}) middleware.Responder {
+		config, err := configProvider.LoadConfiguration()
+		if err != nil {
+			return &GetInstancesInternalServerError{Payload: err.Error()}
+		}
+		var response []*genmodel.Instance
+		for id, instance := range config.Instances {
+
+			var dialIds []string
+			for dialID, _ := range instance.Dials {
+				dialIds = append(dialIds, dialID)
+			}
+
+			driverInstance := &genmodel.Instance{
+				Configuration: instance.Configuration,
+				TargetURL:     instance.TargetURL,
+				Dials:         dialIds,
+				ID:            id,
+				Name:          &instance.Name,
+				Service:       instance.Service.ID,
+			}
+			response = append(response, driverInstance)
+		}
+		return &GetInstancesOK{Payload: response}
+	})
 }

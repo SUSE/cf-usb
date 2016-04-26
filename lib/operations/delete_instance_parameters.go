@@ -12,37 +12,37 @@ import (
 	strfmt "github.com/go-openapi/strfmt"
 )
 
-// NewPingDriverInstanceParams creates a new PingDriverInstanceParams object
+// NewDeleteInstanceParams creates a new DeleteInstanceParams object
 // with the default values initialized.
-func NewPingDriverInstanceParams() PingDriverInstanceParams {
+func NewDeleteInstanceParams() DeleteInstanceParams {
 	var ()
-	return PingDriverInstanceParams{}
+	return DeleteInstanceParams{}
 }
 
-// PingDriverInstanceParams contains all the bound params for the ping driver instance operation
+// DeleteInstanceParams contains all the bound params for the delete instance operation
 // typically these are obtained from a http.Request
 //
-// swagger:parameters pingDriverInstance
-type PingDriverInstanceParams struct {
+// swagger:parameters deleteInstance
+type DeleteInstanceParams struct {
 
 	// HTTP Request Object
 	HTTPRequest *http.Request
 
-	/*Driver Instance ID
+	/*Instance ID
 	  Required: true
 	  In: path
 	*/
-	DriverInstanceID string
+	InstanceID string
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
 // for simple values it will use straight method calls
-func (o *PingDriverInstanceParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
+func (o *DeleteInstanceParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
 	o.HTTPRequest = r
 
-	rDriverInstanceID, rhkDriverInstanceID, _ := route.Params.GetOK("driver_instance_id")
-	if err := o.bindDriverInstanceID(rDriverInstanceID, rhkDriverInstanceID, route.Formats); err != nil {
+	rInstanceID, rhkInstanceID, _ := route.Params.GetOK("instance_id")
+	if err := o.bindInstanceID(rInstanceID, rhkInstanceID, route.Formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -52,13 +52,13 @@ func (o *PingDriverInstanceParams) BindRequest(r *http.Request, route *middlewar
 	return nil
 }
 
-func (o *PingDriverInstanceParams) bindDriverInstanceID(rawData []string, hasKey bool, formats strfmt.Registry) error {
+func (o *DeleteInstanceParams) bindInstanceID(rawData []string, hasKey bool, formats strfmt.Registry) error {
 	var raw string
 	if len(rawData) > 0 {
 		raw = rawData[len(rawData)-1]
 	}
 
-	o.DriverInstanceID = raw
+	o.InstanceID = raw
 
 	return nil
 }

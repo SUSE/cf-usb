@@ -71,7 +71,7 @@ func Test_RedisGetDriverInstance(t *testing.T) {
 	}
 	err := initRedisProvider()
 	assert.NoError(err)
-	instance, _, err := RedisIntegrationConfig.Provider.GetDriverInstance("A0000000-0000-0000-0000-000000000004")
+	instance, _, err := RedisIntegrationConfig.Provider.GetInstance("A0000000-0000-0000-0000-000000000004")
 	assert.NoError(err)
 
 	assert.Equal("local-mssql", instance.Name)
@@ -116,14 +116,14 @@ func Test_RedisSetDriverInstance(t *testing.T) {
 	err := initRedisProvider()
 	assert.NoError(err)
 
-	var instance DriverInstance
+	var instance Instance
 	instance.Name = "testDriverInstance"
 	raw := json.RawMessage("{\"a1\":\"b1\"}")
 	instance.Configuration = &raw
 	instance.Dials = make(map[string]Dial)
 	instance.Service = brokerapi.Service{}
 
-	err = RedisIntegrationConfig.Provider.SetDriverInstance("I0000000-0000-0000-0000-0000000000T1", instance)
+	err = RedisIntegrationConfig.Provider.SetInstance("I0000000-0000-0000-0000-0000000000T1", instance)
 	assert.NoError(err)
 }
 

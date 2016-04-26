@@ -36,8 +36,8 @@ func (c *redisConfig) LoadConfiguration() (*Config, error) {
 	return &configuration, nil
 }
 
-func (c *redisConfig) LoadDriverInstance(driverInstanceID string) (*DriverInstance, error) {
-	driver, _, err := c.GetDriverInstance(driverInstanceID)
+func (c *redisConfig) LoadDriverInstance(driverInstanceID string) (*Instance, error) {
+	driver, _, err := c.GetInstance(driverInstanceID)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +60,7 @@ func (c *redisConfig) GetUaaAuthConfig() (*UaaAuth, error) {
 	return &uaa.UaaAuth, nil
 }
 
-func (c *redisConfig) SetDriverInstance(instanceID string, instance DriverInstance) error {
+func (c *redisConfig) SetInstance(instanceID string, instance Instance) error {
 	config, err := c.LoadConfiguration()
 	if err != nil {
 		return err
@@ -68,13 +68,13 @@ func (c *redisConfig) SetDriverInstance(instanceID string, instance DriverInstan
 	if config != nil {
 		configuration := *config
 		instanceInfo := &instance
-		if _, ok := configuration.DriverInstances[instanceID]; ok {
-			configuration.DriverInstances[instanceID] = *instanceInfo
+		if _, ok := configuration.Instances[instanceID]; ok {
+			configuration.Instances[instanceID] = *instanceInfo
 		} else {
-			if configuration.DriverInstances == nil {
-				configuration.DriverInstances = make(map[string]DriverInstance)
+			if configuration.Instances == nil {
+				configuration.Instances = make(map[string]Instance)
 			}
-			configuration.DriverInstances[instanceID] = *instanceInfo
+			configuration.Instances[instanceID] = *instanceInfo
 		}
 		data, err := json.Marshal(configuration)
 		if err != nil {
@@ -90,13 +90,13 @@ func (c *redisConfig) SetDriverInstance(instanceID string, instance DriverInstan
 	return nil
 }
 
-func (c *redisConfig) GetDriverInstance(instanceID string) (*DriverInstance, string, error) {
+func (c *redisConfig) GetInstance(instanceID string) (*Instance, string, error) {
 	config, err := c.LoadConfiguration()
 	if err != nil {
 		return nil, "", err
 	}
 
-	for diKey, i := range config.DriverInstances {
+	for diKey, i := range config.Instances {
 		if diKey == instanceID {
 			return &i, diKey, nil
 		}
@@ -104,15 +104,15 @@ func (c *redisConfig) GetDriverInstance(instanceID string) (*DriverInstance, str
 	return nil, "", nil
 }
 
-func (c *redisConfig) DeleteDriverInstance(instanceID string) error {
+func (c *redisConfig) DeleteInstance(instanceID string) error {
 
 	config, err := c.LoadConfiguration()
 	if err != nil {
 		return err
 	}
 
-	if _, ok := config.DriverInstances[instanceID]; ok {
-		delete(config.DriverInstances, instanceID)
+	if _, ok := config.Instances[instanceID]; ok {
+		delete(config.Instances, instanceID)
 	}
 
 	data, err := json.Marshal(config)
@@ -136,10 +136,10 @@ func (c *redisConfig) SetService(instanceID string, service brokerapi.Service) e
 	}
 	if config != nil {
 		configuration := *config
-		if _, ok := configuration.DriverInstances[instanceID]; ok {
-			instance := configuration.DriverInstances[instanceID]
+		if _, ok := configuration.Instances[instanceID]; ok {
+			instance := configuration.Instances[instanceID]
 			instance.Service = service
-			configuration.DriverInstances[instanceID] = instance
+			configuration.Instances[instanceID] = instance
 		}
 
 		data, err := json.Marshal(configuration)
@@ -162,7 +162,7 @@ func (c *redisConfig) GetService(serviceID string) (*brokerapi.Service, string, 
 		return nil, "", err
 	}
 
-	for instanceID, instance := range config.DriverInstances {
+	for instanceID, instance := range config.Instances {
 		if instance.Service.ID == serviceID {
 			return &instance.Service, instanceID, nil
 		}
@@ -177,9 +177,9 @@ func (c *redisConfig) DeleteService(instanceID string) error {
 		return err
 	}
 
-	if instance, ok := config.DriverInstances[instanceID]; ok {
+	if instance, ok := config.Instances[instanceID]; ok {
 		instance.Service = brokerapi.Service{}
-		config.DriverInstances[instanceID] = instance
+		config.Instances[instanceID] = instance
 	}
 	data, err := json.Marshal(config)
 	if err != nil {
@@ -201,7 +201,7 @@ func (c *redisConfig) SetDial(instanceID string, dialID string, dial Dial) error
 	if config != nil {
 		configuration := *config
 		dialDetails := &dial
-		if instance, ok := configuration.DriverInstances[instanceID]; ok {
+		if instance, ok := configuration.Instances[instanceID]; ok {
 			if _, ok := instance.Dials[dialID]; ok {
 				instance.Dials[dialID] = *dialDetails
 			} else {
@@ -209,7 +209,7 @@ func (c *redisConfig) SetDial(instanceID string, dialID string, dial Dial) error
 					instance.Dials = make(map[string]Dial)
 				}
 				instance.Dials[dialID] = *dialDetails
-				configuration.DriverInstances[instanceID] = instance
+				configuration.Instances[instanceID] = instance
 			}
 		}
 
@@ -233,7 +233,7 @@ func (c *redisConfig) GetDial(dialID string) (*Dial, string, error) {
 		return nil, "", err
 	}
 
-	for instanceID, instance := range config.DriverInstances {
+	for instanceID, instance := range config.Instances {
 		if dialInfo, ok := instance.Dials[dialID]; ok {
 			return &dialInfo, instanceID, nil
 		}
@@ -248,10 +248,10 @@ func (c *redisConfig) DeleteDial(dialID string) error {
 		return err
 	}
 
-	for instanceID, instance := range config.DriverInstances {
+	for instanceID, instance := range config.Instances {
 		if _, ok := instance.Dials[dialID]; ok {
 			delete(instance.Dials, dialID)
-			config.DriverInstances[instanceID] = instance
+			config.Instances[instanceID] = instance
 			break
 		}
 	}
@@ -267,13 +267,13 @@ func (c *redisConfig) DeleteDial(dialID string) error {
 	return nil
 }
 
-func (c *redisConfig) DriverInstanceNameExists(driverInstanceName string) (bool, error) {
+func (c *redisConfig) InstanceNameExists(driverInstanceName string) (bool, error) {
 	config, err := c.LoadConfiguration()
 	if err != nil {
 		return false, err
 	}
 
-	for _, di := range config.DriverInstances {
+	for _, di := range config.Instances {
 		if di.Name == driverInstanceName {
 			return true, nil
 		}
@@ -287,7 +287,7 @@ func (c *redisConfig) GetPlan(planid string) (*brokerapi.ServicePlan, string, st
 	if err != nil {
 		return nil, "", "", err
 	}
-	for iID, i := range config.DriverInstances {
+	for iID, i := range config.Instances {
 		for dialID, di := range i.Dials {
 			if di.Plan.ID == planid {
 				return &di.Plan, dialID, iID, nil

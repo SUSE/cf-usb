@@ -11,11 +11,11 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-/*DriverInstance driver instance
+/*Instance instance
 
-swagger:model driver_instance
+swagger:model instance
 */
-type DriverInstance struct {
+type Instance struct {
 
 	/* configuration
 	 */
@@ -50,8 +50,8 @@ type DriverInstance struct {
 >>>>>>> f998b3c... [HCFRO-193] Use rest for calling drivers
 }
 
-// Validate validates this driver instance
-func (m *DriverInstance) Validate(formats strfmt.Registry) error {
+// Validate validates this instance
+func (m *Instance) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateDials(formats); err != nil {
@@ -70,7 +70,7 @@ func (m *DriverInstance) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *DriverInstance) validateDials(formats strfmt.Registry) error {
+func (m *Instance) validateDials(formats strfmt.Registry) error {
 
 	if swag.IsZero(m.Dials) { // not required
 		return nil
@@ -79,7 +79,7 @@ func (m *DriverInstance) validateDials(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *DriverInstance) validateName(formats strfmt.Registry) error {
+func (m *Instance) validateName(formats strfmt.Registry) error {
 
 	if err := validate.Required("name", "body", m.Name); err != nil {
 		return err

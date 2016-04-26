@@ -47,7 +47,7 @@ func (broker *UsbBroker) Services() brokerapi.CatalogResponse {
 		broker.logger.Fatal("retrive-configuration-failed", err)
 	}
 
-	for _, instance := range config.DriverInstances {
+	for _, instance := range config.Instances {
 		service := instance.Service
 
 		for _, dial := range instance.Dials {
@@ -276,7 +276,7 @@ func (broker *UsbBroker) getDriver(serviceID string) (servicemgr.ServiceManagerI
 		return nil, err
 	}
 
-	for _, driverInstance := range config.DriverInstances {
+	for _, driverInstance := range config.Instances {
 		if driverInstance.Service.ID == serviceID {
 			if driverInstance.TargetURL != "" {
 				u, err := url.Parse(driverInstance.TargetURL)
@@ -306,7 +306,7 @@ func (broker *UsbBroker) getDriverForServiceInstanceId(instanceID string) (servi
 		return nil, false, err
 	}
 
-	for _, driverInstance := range config.DriverInstances {
+	for _, driverInstance := range config.Instances {
 		u, err := url.Parse(driverInstance.TargetURL)
 		if err != nil {
 			return nil, false, err

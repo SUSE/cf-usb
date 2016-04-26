@@ -93,19 +93,19 @@ func Test_IntDriverInstance(t *testing.T) {
 
 	assert := assert.New(t)
 
-	var instance DriverInstance
+	var instance Instance
 	instance.Name = "testInstance"
 	raw := json.RawMessage("{\"a1\":\"b1\"}")
 	instance.Configuration = &raw
-	err = IntegrationConfig.Provider.SetDriverInstance("testInstanceID", instance)
+	err = IntegrationConfig.Provider.SetInstance("testInstanceID", instance)
 	assert.NoError(err)
 
-	instanceInfo, _, err := IntegrationConfig.Provider.GetDriverInstance("testInstanceID")
+	instanceInfo, _, err := IntegrationConfig.Provider.GetInstance("testInstanceID")
 
 	assert.Equal("testInstance", instanceInfo.Name)
 	assert.NoError(err)
 
-	exist, err := IntegrationConfig.Provider.DriverInstanceNameExists("testInstance")
+	exist, err := IntegrationConfig.Provider.InstanceNameExists("testInstance")
 	if err != nil {
 		assert.Error(err, "Unable to check driver instance name existance")
 	}
@@ -137,11 +137,11 @@ func Test_IntDial(t *testing.T) {
 
 	assert := assert.New(t)
 
-	var instance DriverInstance
+	var instance Instance
 	instance.Name = "testInstance"
 	rawInstance := json.RawMessage("{\"a1\":\"b1\"}")
 	instance.Configuration = &rawInstance
-	err = IntegrationConfig.Provider.SetDriverInstance("testInstanceID", instance)
+	err = IntegrationConfig.Provider.SetInstance("testInstanceID", instance)
 	assert.NoError(err)
 
 	var dialInfo Dial

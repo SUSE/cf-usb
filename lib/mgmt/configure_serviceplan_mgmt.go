@@ -87,12 +87,12 @@ func ConfigureServicePlanAPI(api *UsbMgmtAPI, auth authentication.Authentication
 			return &GetDialNotFound{}
 		}
 
-		instance, _, err := configProvider.GetDriverInstance(instanceID)
+		instance, _, err := configProvider.GetInstance(instanceID)
 		if err != nil {
 			return &UpdateServicePlanInternalServerError{Payload: err.Error()}
 		}
 		if instance == nil {
-			return &GetDriverInstanceNotFound{}
+			return &GetInstanceNotFound{}
 		}
 
 		var meta brokerapi.ServicePlanMetadata
@@ -122,14 +122,14 @@ func ConfigureServicePlanAPI(api *UsbMgmtAPI, auth authentication.Authentication
 	})
 	api.GetServicePlansHandler = GetServicePlansHandlerFunc(func(params GetServicePlansParams, principal interface{}) middleware.Responder {
 		log := log.Session("get-service-plans")
-		log.Info("request", lager.Data{"driver-instance-id": params.DriverInstanceID})
+		log.Info("request", lager.Data{"driver-instance-id": params.InstanceID})
 
-		if *params.DriverInstanceID == "" {
+		if *params.InstanceID == "" {
 			return &GetServicePlansInternalServerError{Payload: "Empty driver instance id in get service plans handler"}
 		}
 		var servicePlans = make([]*genmodel.Plan, 0)
 
-		instanceInfo, err := configProvider.LoadDriverInstance(*params.DriverInstanceID)
+		instanceInfo, err := configProvider.LoadDriverInstance(*params.InstanceID)
 		if err != nil {
 			return &GetServicePlansInternalServerError{Payload: err.Error()}
 		}

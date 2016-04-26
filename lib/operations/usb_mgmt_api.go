@@ -51,22 +51,22 @@ type UsbMgmtAPI struct {
 
 	// CreateDialHandler sets the operation handler for the create dial operation
 	CreateDialHandler CreateDialHandler
-	// CreateDriverInstanceHandler sets the operation handler for the create driver instance operation
-	CreateDriverInstanceHandler CreateDriverInstanceHandler
+	// CreateInstanceHandler sets the operation handler for the create instance operation
+	CreateInstanceHandler CreateInstanceHandler
 	// DeleteDialHandler sets the operation handler for the delete dial operation
 	DeleteDialHandler DeleteDialHandler
-	// DeleteDriverInstanceHandler sets the operation handler for the delete driver instance operation
-	DeleteDriverInstanceHandler DeleteDriverInstanceHandler
+	// DeleteInstanceHandler sets the operation handler for the delete instance operation
+	DeleteInstanceHandler DeleteInstanceHandler
 	// GetAllDialsHandler sets the operation handler for the get all dials operation
 	GetAllDialsHandler GetAllDialsHandler
 	// GetDialHandler sets the operation handler for the get dial operation
 	GetDialHandler GetDialHandler
-	// GetDriverInstanceHandler sets the operation handler for the get driver instance operation
-	GetDriverInstanceHandler GetDriverInstanceHandler
-	// GetDriverInstancesHandler sets the operation handler for the get driver instances operation
-	GetDriverInstancesHandler GetDriverInstancesHandler
 	// GetInfoHandler sets the operation handler for the get info operation
 	GetInfoHandler GetInfoHandler
+	// GetInstanceHandler sets the operation handler for the get instance operation
+	GetInstanceHandler GetInstanceHandler
+	// GetInstancesHandler sets the operation handler for the get instances operation
+	GetInstancesHandler GetInstancesHandler
 	// GetServiceHandler sets the operation handler for the get service operation
 	GetServiceHandler GetServiceHandler
 	// GetServiceByInstanceIDHandler sets the operation handler for the get service by instance Id operation
@@ -75,14 +75,14 @@ type UsbMgmtAPI struct {
 	GetServicePlanHandler GetServicePlanHandler
 	// GetServicePlansHandler sets the operation handler for the get service plans operation
 	GetServicePlansHandler GetServicePlansHandler
-	// PingDriverInstanceHandler sets the operation handler for the ping driver instance operation
-	PingDriverInstanceHandler PingDriverInstanceHandler
+	// PingInstanceHandler sets the operation handler for the ping instance operation
+	PingInstanceHandler PingInstanceHandler
 	// UpdateCatalogHandler sets the operation handler for the update catalog operation
 	UpdateCatalogHandler UpdateCatalogHandler
 	// UpdateDialHandler sets the operation handler for the update dial operation
 	UpdateDialHandler UpdateDialHandler
-	// UpdateDriverInstanceHandler sets the operation handler for the update driver instance operation
-	UpdateDriverInstanceHandler UpdateDriverInstanceHandler
+	// UpdateInstanceHandler sets the operation handler for the update instance operation
+	UpdateInstanceHandler UpdateInstanceHandler
 	// UpdateServiceHandler sets the operation handler for the update service operation
 	UpdateServiceHandler UpdateServiceHandler
 	// UpdateServicePlanHandler sets the operation handler for the update service plan operation
@@ -150,16 +150,16 @@ func (o *UsbMgmtAPI) Validate() error {
 		unregistered = append(unregistered, "CreateDialHandler")
 	}
 
-	if o.CreateDriverInstanceHandler == nil {
-		unregistered = append(unregistered, "CreateDriverInstanceHandler")
+	if o.CreateInstanceHandler == nil {
+		unregistered = append(unregistered, "CreateInstanceHandler")
 	}
 
 	if o.DeleteDialHandler == nil {
 		unregistered = append(unregistered, "DeleteDialHandler")
 	}
 
-	if o.DeleteDriverInstanceHandler == nil {
-		unregistered = append(unregistered, "DeleteDriverInstanceHandler")
+	if o.DeleteInstanceHandler == nil {
+		unregistered = append(unregistered, "DeleteInstanceHandler")
 	}
 
 	if o.GetAllDialsHandler == nil {
@@ -170,16 +170,16 @@ func (o *UsbMgmtAPI) Validate() error {
 		unregistered = append(unregistered, "GetDialHandler")
 	}
 
-	if o.GetDriverInstanceHandler == nil {
-		unregistered = append(unregistered, "GetDriverInstanceHandler")
-	}
-
-	if o.GetDriverInstancesHandler == nil {
-		unregistered = append(unregistered, "GetDriverInstancesHandler")
-	}
-
 	if o.GetInfoHandler == nil {
 		unregistered = append(unregistered, "GetInfoHandler")
+	}
+
+	if o.GetInstanceHandler == nil {
+		unregistered = append(unregistered, "GetInstanceHandler")
+	}
+
+	if o.GetInstancesHandler == nil {
+		unregistered = append(unregistered, "GetInstancesHandler")
 	}
 
 	if o.GetServiceHandler == nil {
@@ -198,8 +198,8 @@ func (o *UsbMgmtAPI) Validate() error {
 		unregistered = append(unregistered, "GetServicePlansHandler")
 	}
 
-	if o.PingDriverInstanceHandler == nil {
-		unregistered = append(unregistered, "PingDriverInstanceHandler")
+	if o.PingInstanceHandler == nil {
+		unregistered = append(unregistered, "PingInstanceHandler")
 	}
 
 	if o.UpdateCatalogHandler == nil {
@@ -210,8 +210,8 @@ func (o *UsbMgmtAPI) Validate() error {
 		unregistered = append(unregistered, "UpdateDialHandler")
 	}
 
-	if o.UpdateDriverInstanceHandler == nil {
-		unregistered = append(unregistered, "UpdateDriverInstanceHandler")
+	if o.UpdateInstanceHandler == nil {
+		unregistered = append(unregistered, "UpdateInstanceHandler")
 	}
 
 	if o.UpdateServiceHandler == nil {
@@ -313,7 +313,7 @@ func (o *UsbMgmtAPI) initHandlerCache() {
 	if o.handlers["POST"] == nil {
 		o.handlers[strings.ToUpper("POST")] = make(map[string]http.Handler)
 	}
-	o.handlers["POST"]["/driver_instances"] = NewCreateDriverInstance(o.context, o.CreateDriverInstanceHandler)
+	o.handlers["POST"]["/instances"] = NewCreateInstance(o.context, o.CreateInstanceHandler)
 
 	if o.handlers["DELETE"] == nil {
 		o.handlers[strings.ToUpper("DELETE")] = make(map[string]http.Handler)
@@ -323,7 +323,7 @@ func (o *UsbMgmtAPI) initHandlerCache() {
 	if o.handlers["DELETE"] == nil {
 		o.handlers[strings.ToUpper("DELETE")] = make(map[string]http.Handler)
 	}
-	o.handlers["DELETE"]["/driver_instances/{driver_instance_id}"] = NewDeleteDriverInstance(o.context, o.DeleteDriverInstanceHandler)
+	o.handlers["DELETE"]["/instances/{instance_id}"] = NewDeleteInstance(o.context, o.DeleteInstanceHandler)
 
 	if o.handlers["GET"] == nil {
 		o.handlers[strings.ToUpper("GET")] = make(map[string]http.Handler)
@@ -338,17 +338,17 @@ func (o *UsbMgmtAPI) initHandlerCache() {
 	if o.handlers["GET"] == nil {
 		o.handlers[strings.ToUpper("GET")] = make(map[string]http.Handler)
 	}
-	o.handlers["GET"]["/driver_instances/{driver_instance_id}"] = NewGetDriverInstance(o.context, o.GetDriverInstanceHandler)
-
-	if o.handlers["GET"] == nil {
-		o.handlers[strings.ToUpper("GET")] = make(map[string]http.Handler)
-	}
-	o.handlers["GET"]["/driver_instances"] = NewGetDriverInstances(o.context, o.GetDriverInstancesHandler)
-
-	if o.handlers["GET"] == nil {
-		o.handlers[strings.ToUpper("GET")] = make(map[string]http.Handler)
-	}
 	o.handlers["GET"]["/info"] = NewGetInfo(o.context, o.GetInfoHandler)
+
+	if o.handlers["GET"] == nil {
+		o.handlers[strings.ToUpper("GET")] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/instances/{instance_id}"] = NewGetInstance(o.context, o.GetInstanceHandler)
+
+	if o.handlers["GET"] == nil {
+		o.handlers[strings.ToUpper("GET")] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/instances"] = NewGetInstances(o.context, o.GetInstancesHandler)
 
 	if o.handlers["GET"] == nil {
 		o.handlers[strings.ToUpper("GET")] = make(map[string]http.Handler)
@@ -373,7 +373,7 @@ func (o *UsbMgmtAPI) initHandlerCache() {
 	if o.handlers["GET"] == nil {
 		o.handlers[strings.ToUpper("GET")] = make(map[string]http.Handler)
 	}
-	o.handlers["GET"]["/driver_instances/{driver_instance_id}/ping"] = NewPingDriverInstance(o.context, o.PingDriverInstanceHandler)
+	o.handlers["GET"]["/instances/{instance_id}/ping"] = NewPingInstance(o.context, o.PingInstanceHandler)
 
 	if o.handlers["POST"] == nil {
 		o.handlers[strings.ToUpper("POST")] = make(map[string]http.Handler)
@@ -388,7 +388,7 @@ func (o *UsbMgmtAPI) initHandlerCache() {
 	if o.handlers["PUT"] == nil {
 		o.handlers[strings.ToUpper("PUT")] = make(map[string]http.Handler)
 	}
-	o.handlers["PUT"]["/driver_instances/{driver_instance_id}"] = NewUpdateDriverInstance(o.context, o.UpdateDriverInstanceHandler)
+	o.handlers["PUT"]["/instances/{instance_id}"] = NewUpdateInstance(o.context, o.UpdateInstanceHandler)
 
 	if o.handlers["PUT"] == nil {
 		o.handlers[strings.ToUpper("PUT")] = make(map[string]http.Handler)

@@ -31,7 +31,7 @@
 			"skip_tls_validation": true
 		}
 	},
-		"driver_instances": {
+		"instances": {
 			"A0000000-0000-0000-0000-000000000002": {
 				"name": "dummy1",
 				"configuration": {
@@ -82,7 +82,7 @@
 					"property_two": "twonew"
 				},
 				"dials": {
-					"B0000000-0000-0000-0000-000000000001": {
+					"B0000000-0000-0000-0000-000000000011": {
 						"plan": {
 							"name": "plandummy2",
 							"id": "888B59E0-C2A1-4AB6-9335-2E90114A8F01",

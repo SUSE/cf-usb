@@ -64,7 +64,7 @@ func TestLoadServiceConfig(t *testing.T) {
 		assert.Error(err, "Unable to load config file")
 	}
 
-	for _, d := range config.DriverInstances {
+	for _, d := range config.Instances {
 		dsp := DummyServiceProperties{}
 		diConf := (*json.RawMessage)(d.Configuration)
 		err := json.Unmarshal(*diConf, &dsp)
@@ -166,7 +166,7 @@ func TestDriverInstanceNameExists(t *testing.T) {
 		assert.Error(err, "Unable to load from temp config file")
 	}
 
-	exist, err := configuration.DriverInstanceNameExists("dummy1")
+	exist, err := configuration.InstanceNameExists("dummy1")
 	if err != nil {
 		assert.Error(err, "Unable to check driver instance name existance")
 	}

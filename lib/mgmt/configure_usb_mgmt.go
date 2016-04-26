@@ -97,7 +97,7 @@ func ConfigureAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterface,
 			}
 		}
 
-		for _, instance := range config.DriverInstances {
+		for _, instance := range config.Instances {
 			err = ccServiceBroker.EnableServiceAccess(instance.Service.Name)
 			if err != nil {
 				log.Error("enable-service-access-failed", err)

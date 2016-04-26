@@ -21,20 +21,20 @@ func ConfigureServiceAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInte
 
 	api.GetServiceByInstanceIDHandler = GetServiceByInstanceIDHandlerFunc(func(params GetServiceByInstanceIDParams, principal interface{}) middleware.Responder {
 		log := log.Session("get-services")
-		log.Info("request", lager.Data{"driver-instance-id": params.DriverInstanceID})
+		log.Info("request", lager.Data{"instance-id": params.InstanceID})
 
-		di, _, err := configProvider.GetDriverInstance(params.DriverInstanceID)
+		di, _, err := configProvider.GetInstance(params.InstanceID)
 		if err != nil {
 			return &GetServiceByInstanceIDInternalServerError{Payload: err.Error()}
 		}
 
 		service := &genmodel.Service{
-			ID:               di.Service.ID,
-			DriverInstanceID: &params.DriverInstanceID,
-			Bindable:         di.Service.Bindable,
-			Description:      di.Service.Description,
-			Name:             &di.Service.Name,
-			Tags:             di.Service.Tags,
+			ID:          di.Service.ID,
+			InstanceID:  &params.InstanceID,
+			Bindable:    di.Service.Bindable,
+			Description: di.Service.Description,
+			Name:        &di.Service.Name,
+			Tags:        di.Service.Tags,
 		}
 
 		if di.Service.Metadata != nil {
@@ -57,12 +57,12 @@ func ConfigureServiceAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInte
 		}
 
 		svc := &genmodel.Service{
-			Bindable:         serviceInfo.Bindable,
-			DriverInstanceID: &instanceID,
-			ID:               serviceInfo.ID,
-			Name:             &serviceInfo.Name,
-			Description:      serviceInfo.Description,
-			Tags:             serviceInfo.Tags,
+			Bindable:    serviceInfo.Bindable,
+			InstanceID:  &instanceID,
+			ID:          serviceInfo.ID,
+			Name:        &serviceInfo.Name,
+			Description: serviceInfo.Description,
+			Tags:        serviceInfo.Tags,
 		}
 
 		if serviceInfo.Metadata != nil {

@@ -14,43 +14,43 @@ import (
 	"github.com/hpcloud/cf-usb/lib/genmodel"
 )
 
-// NewCreateDriverInstanceParams creates a new CreateDriverInstanceParams object
+// NewCreateInstanceParams creates a new CreateInstanceParams object
 // with the default values initialized.
-func NewCreateDriverInstanceParams() CreateDriverInstanceParams {
+func NewCreateInstanceParams() CreateInstanceParams {
 	var ()
-	return CreateDriverInstanceParams{}
+	return CreateInstanceParams{}
 }
 
-// CreateDriverInstanceParams contains all the bound params for the create driver instance operation
+// CreateInstanceParams contains all the bound params for the create instance operation
 // typically these are obtained from a http.Request
 //
-// swagger:parameters createDriverInstance
-type CreateDriverInstanceParams struct {
+// swagger:parameters createInstance
+type CreateInstanceParams struct {
 
 	// HTTP Request Object
 	HTTPRequest *http.Request
 
-	/*driver instance to be created
+	/*Instance to be created
 	  Required: true
 	  In: body
 	*/
-	DriverInstance *genmodel.DriverInstance
+	Instance *genmodel.Instance
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
 // for simple values it will use straight method calls
-func (o *CreateDriverInstanceParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
+func (o *CreateInstanceParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
 	o.HTTPRequest = r
 
 	if runtime.HasBody(r) {
 		defer r.Body.Close()
-		var body genmodel.DriverInstance
+		var body genmodel.Instance
 		if err := route.Consumer.Consume(r.Body, &body); err != nil {
 			if err == io.EOF {
-				res = append(res, errors.Required("driverInstance", "body"))
+				res = append(res, errors.Required("instance", "body"))
 			} else {
-				res = append(res, errors.NewParseError("driverInstance", "body", "", err))
+				res = append(res, errors.NewParseError("instance", "body", "", err))
 			}
 
 		} else {
@@ -59,12 +59,12 @@ func (o *CreateDriverInstanceParams) BindRequest(r *http.Request, route *middlew
 			}
 
 			if len(res) == 0 {
-				o.DriverInstance = &body
+				o.Instance = &body
 			}
 		}
 
 	} else {
-		res = append(res, errors.Required("driverInstance", "body"))
+		res = append(res, errors.Required("instance", "body"))
 	}
 
 	if len(res) > 0 {

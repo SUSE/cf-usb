@@ -30,11 +30,11 @@ type GetServiceByInstanceIDParams struct {
 	// HTTP Request Object
 	HTTPRequest *http.Request
 
-	/*Driver instance ID
+	/*Instance ID
 	  Required: true
 	  In: query
 	*/
-	DriverInstanceID string
+	InstanceID string
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
@@ -45,8 +45,8 @@ func (o *GetServiceByInstanceIDParams) BindRequest(r *http.Request, route *middl
 
 	qs := runtime.Values(r.URL.Query())
 
-	qDriverInstanceID, qhkDriverInstanceID, _ := qs.GetOK("driver_instance_id")
-	if err := o.bindDriverInstanceID(qDriverInstanceID, qhkDriverInstanceID, route.Formats); err != nil {
+	qInstanceID, qhkInstanceID, _ := qs.GetOK("instance_id")
+	if err := o.bindInstanceID(qInstanceID, qhkInstanceID, route.Formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -56,19 +56,19 @@ func (o *GetServiceByInstanceIDParams) BindRequest(r *http.Request, route *middl
 	return nil
 }
 
-func (o *GetServiceByInstanceIDParams) bindDriverInstanceID(rawData []string, hasKey bool, formats strfmt.Registry) error {
+func (o *GetServiceByInstanceIDParams) bindInstanceID(rawData []string, hasKey bool, formats strfmt.Registry) error {
 	if !hasKey {
-		return errors.Required("driver_instance_id", "query")
+		return errors.Required("instance_id", "query")
 	}
 	var raw string
 	if len(rawData) > 0 {
 		raw = rawData[len(rawData)-1]
 	}
-	if err := validate.RequiredString("driver_instance_id", "query", raw); err != nil {
+	if err := validate.RequiredString("instance_id", "query", raw); err != nil {
 		return err
 	}
 
-	o.DriverInstanceID = raw
+	o.InstanceID = raw
 
 	return nil
 }

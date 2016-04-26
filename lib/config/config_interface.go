@@ -42,7 +42,7 @@ type Dial struct {
 	Plan          brokerapi.ServicePlan `json:"plan"`
 }
 
-type DriverInstance struct {
+type Instance struct {
 	TargetURL     string            `json:"target"`
 	Name          string            `json:"name"`
 	Configuration *json.RawMessage  `json:"configuration"`
@@ -57,26 +57,26 @@ type RoutesRegister struct {
 }
 
 type Config struct {
-	APIVersion      string                    `json:"api_version"`
-	BrokerAPI       BrokerAPI                 `json:"broker_api"`
-	ManagementAPI   *ManagementAPI            `json:"management_api,omitempty"`
-	DriverInstances map[string]DriverInstance `json:"driver_instances"`
-	RoutesRegister  *RoutesRegister           `json:"routes_register"`
+	APIVersion     string              `json:"api_version"`
+	BrokerAPI      BrokerAPI           `json:"broker_api"`
+	ManagementAPI  *ManagementAPI      `json:"management_api,omitempty"`
+	Instances      map[string]Instance `json:"instances"`
+	RoutesRegister *RoutesRegister     `json:"routes_register"`
 }
 
 type ConfigProvider interface {
 	LoadConfiguration() (*Config, error)
-	LoadDriverInstance(driverInstanceID string) (*DriverInstance, error)
+	LoadDriverInstance(driverInstanceID string) (*Instance, error)
 	GetUaaAuthConfig() (*UaaAuth, error)
-	SetDriverInstance(instanceid string, driverInstance DriverInstance) error
-	GetDriverInstance(instanceid string) (instance *DriverInstance, driverId string, err error)
-	DeleteDriverInstance(instanceid string) error
+	SetInstance(instanceid string, driverInstance Instance) error
+	GetInstance(instanceid string) (instance *Instance, driverId string, err error)
+	DeleteInstance(instanceid string) error
 	SetService(instanceid string, service brokerapi.Service) error
 	GetService(serviceid string) (service *brokerapi.Service, instanceid string, err error)
 	DeleteService(instanceid string) error
 	SetDial(instanceid string, dialid string, dial Dial) error
 	GetDial(dialid string) (dial *Dial, instanceID string, err error)
 	DeleteDial(dialid string) error
-	DriverInstanceNameExists(driverInstanceName string) (bool, error)
+	InstanceNameExists(driverInstanceName string) (bool, error)
 	GetPlan(plandid string) (plan *brokerapi.ServicePlan, dialid string, instanceid string, err error)
 }

@@ -23,17 +23,17 @@ func Test_SetDriverInstance(t *testing.T) {
 	var options *api.WriteOptions
 	var qoptions *api.QueryOptions
 	provisioner.On("AddKV", mock.Anything, mock.Anything, options).Return(nil)
-	provisioner.On("GetAllKeys", "usb/driverinstances/", "", qoptions).Return([]string{"/usb/driverinstances/testInstanceID/Name"}, nil)
+	provisioner.On("GetAllKeys", "usb/instances/", "", qoptions).Return([]string{"/usb/instances/testInstanceID/Name"}, nil)
 
 	TestConfig.Provider = NewConsulConfig(provisioner)
 
 	assert := assert.New(t)
 
-	var instance DriverInstance
+	var instance Instance
 	instance.Name = "testInstance"
 	raw := json.RawMessage("{\"a1\":\"b1\"}")
 	instance.Configuration = &raw
-	err := TestConfig.Provider.SetDriverInstance("testInstanceID", instance)
+	err := TestConfig.Provider.SetInstance("testInstanceID", instance)
 	assert.NoError(err)
 }
 
@@ -41,19 +41,19 @@ func Test_GetDriverInstance(t *testing.T) {
 	provisioner := new(consulMock.ConsulProvisionerInterface)
 
 	var qoptions *api.QueryOptions
-	provisioner.On("GetValue", "/usb/driverinstances/testInstanceID/TargetURL").Return([]byte("http://testurl.com:1234"), nil)
+	provisioner.On("GetValue", "/usb/instances/testInstanceID/TargetURL").Return([]byte("http://testurl.com:1234"), nil)
 
-	provisioner.On("GetValue", "/usb/driverinstances/testInstanceID/Name").Return([]byte("MockedTestInstanceData"), nil)
-	provisioner.On("GetValue", "/usb/driverinstances/testInstanceID/Configuration").Return([]byte("{\"test\":\"a\"}"), nil)
-	provisioner.On("GetValue", "/usb/driverinstances/testInstanceID/service").Return([]byte("{\"id\":\"a\",\"Name\":\"test\"}"), nil)
+	provisioner.On("GetValue", "/usb/instances/testInstanceID/Name").Return([]byte("MockedTestInstanceData"), nil)
+	provisioner.On("GetValue", "/usb/instances/testInstanceID/Configuration").Return([]byte("{\"test\":\"a\"}"), nil)
+	provisioner.On("GetValue", "/usb/instances/testInstanceID/service").Return([]byte("{\"id\":\"a\",\"Name\":\"test\"}"), nil)
 
-	provisioner.On("GetAllKeys", "usb/driverinstances/", "", qoptions).Return([]string{"/usb/driverinstances/testInstanceID/Name"}, nil)
+	provisioner.On("GetAllKeys", "usb/instances/", "", qoptions).Return([]string{"/usb/instances/testInstanceID/Name"}, nil)
 
 	TestConfig.Provider = NewConsulConfig(provisioner)
 
 	assert := assert.New(t)
 
-	instance, parent, err := TestConfig.Provider.GetDriverInstance("testInstanceID")
+	instance, parent, err := TestConfig.Provider.GetInstance("testInstanceID")
 	t.Log(parent)
 	assert.Equal("MockedTestInstanceData", instance.Name)
 	assert.NoError(err)
@@ -63,12 +63,12 @@ func Test_DeleteDriverInstance(t *testing.T) {
 	var qoptions *api.QueryOptions
 	var options *api.WriteOptions
 	provisioner := new(consulMock.ConsulProvisionerInterface)
-	provisioner.On("GetAllKeys", "usb/driverinstances/", "", qoptions).Return([]string{"/usb/driverinstances/testInstanceID/Name"}, nil)
-	provisioner.On("DeleteKVs", "/usb/driverinstances/testInstanceID", options).Return(nil)
+	provisioner.On("GetAllKeys", "usb/instances/", "", qoptions).Return([]string{"/usb/instances/testInstanceID/Name"}, nil)
+	provisioner.On("DeleteKVs", "/usb/instances/testInstanceID", options).Return(nil)
 	assert := assert.New(t)
 
 	TestConfig.Provider = NewConsulConfig(provisioner)
-	err := TestConfig.Provider.DeleteDriverInstance("testInstance")
+	err := TestConfig.Provider.DeleteInstance("testInstance")
 	assert.NoError(err)
 }
 
@@ -78,7 +78,7 @@ func Test_SetService(t *testing.T) {
 	var options *api.WriteOptions
 	var qoptions *api.QueryOptions
 	provisioner.On("AddKV", mock.Anything, mock.Anything, options).Return(nil)
-	provisioner.On("GetAllKeys", "usb/driverinstances/", "", qoptions).Return([]string{"/usb/driverinstances/testInstanceID/Name"}, nil)
+	provisioner.On("GetAllKeys", "usb/instances/", "", qoptions).Return([]string{"/usb/instances/testInstanceID/Name"}, nil)
 
 	TestConfig.Provider = NewConsulConfig(provisioner)
 
@@ -115,17 +115,17 @@ func Test_GetService(t *testing.T) {
 
 	provisioner.On("GetValue", "usb/management_api").Return([]byte("{\"listen\":\":54053\",\"uaa_secret\":\"myuaasecret\",\"uaa_client\":\"myuaaclient\",\"authentication\":{\"uaa\":{\"adminscope\":\"usb.management.admin\",\"public_key\":\"\"}}}"), nil)
 
-	provisioner.On("GetValue", "usb/driverinstances/testInstanceID/TargetURL").Return([]byte("http://testurl.com:1234"), nil)
+	provisioner.On("GetValue", "usb/instances/testInstanceID/TargetURL").Return([]byte("http://testurl.com:1234"), nil)
 
-	provisioner.On("GetValue", "usb/driverinstances/testInstanceID/Name").Return([]byte("testInstance"), nil)
+	provisioner.On("GetValue", "usb/instances/testInstanceID/Name").Return([]byte("testInstance"), nil)
 
-	provisioner.On("GetValue", "usb/driverinstances/testInstanceID/Configuration").Return([]byte("{\"a1\":\"b1\"}"), nil)
-	provisioner.On("GetValue", "usb/driverinstances/testInstanceID/service").Return([]byte("{\"Name\":\"testService\",\"id\":\"testServiceID\"}"), nil)
-	provisioner.On("GetAllKeys", "usb/driverinstances/", "", qoptions).Return([]string{
-		"usb/driverinstances/testInstanceID/Name"}, nil)
-	provisioner.On("GetAllKeys", "usb/driverinstances/", "/", qoptions).Return([]string{
-		"usb/driverinstances/testInstanceID/"}, nil)
-	provisioner.On("GetAllKeys", "usb/driverinstances/testInstanceID/dials/", "/", qoptions).Return([]string{}, nil)
+	provisioner.On("GetValue", "usb/instances/testInstanceID/Configuration").Return([]byte("{\"a1\":\"b1\"}"), nil)
+	provisioner.On("GetValue", "usb/instances/testInstanceID/service").Return([]byte("{\"Name\":\"testService\",\"id\":\"testServiceID\"}"), nil)
+	provisioner.On("GetAllKeys", "usb/instances/", "", qoptions).Return([]string{
+		"usb/instances/testInstanceID/Name"}, nil)
+	provisioner.On("GetAllKeys", "usb/instances/", "/", qoptions).Return([]string{
+		"usb/instances/testInstanceID/"}, nil)
+	provisioner.On("GetAllKeys", "usb/instances/testInstanceID/dials/", "/", qoptions).Return([]string{}, nil)
 
 	TestConfig.Provider = NewConsulConfig(provisioner)
 
@@ -142,8 +142,8 @@ func Test_DeleteService(t *testing.T) {
 
 	var qoptions *api.QueryOptions
 	var options *api.WriteOptions
-	provisioner.On("GetAllKeys", "usb/driverinstances/", "", qoptions).Return([]string{"/usb/driverinstances/testInstanceID/Name"}, nil)
-	provisioner.On("DeleteKV", "/usb/driverinstances/testInstanceID/service", options).Return(nil)
+	provisioner.On("GetAllKeys", "usb/instances/", "", qoptions).Return([]string{"/usb/instances/testInstanceID/Name"}, nil)
+	provisioner.On("DeleteKV", "/usb/instances/testInstanceID/service", options).Return(nil)
 	TestConfig.Provider = NewConsulConfig(provisioner)
 
 	assert := assert.New(t)
@@ -160,7 +160,7 @@ func Test_SetDial(t *testing.T) {
 	var options *api.WriteOptions
 	var qoptions *api.QueryOptions
 	provisioner.On("AddKV", mock.Anything, mock.Anything, options).Return(nil)
-	provisioner.On("GetAllKeys", "usb/driverinstances/", "", qoptions).Return([]string{"/usb/driverinstances/testInstanceID/Name"}, nil)
+	provisioner.On("GetAllKeys", "usb/instances/", "", qoptions).Return([]string{"/usb/instances/testInstanceID/Name"}, nil)
 
 	TestConfig.Provider = NewConsulConfig(provisioner)
 
@@ -188,7 +188,7 @@ func Test_GetDial(t *testing.T) {
 
 	var qoptions *api.QueryOptions
 	provisioner.On("GetValue", mock.Anything).Return([]byte("{\"test\":\"dial\"}"), nil)
-	provisioner.On("GetAllKeys", mock.Anything, mock.Anything, qoptions).Return([]string{"/usb/driverinstances/testInstanceID/dials/dialID"}, nil)
+	provisioner.On("GetAllKeys", mock.Anything, mock.Anything, qoptions).Return([]string{"/usb/instances/testInstanceID/dials/dialID"}, nil)
 
 	TestConfig.Provider = NewConsulConfig(provisioner)
 
@@ -205,8 +205,8 @@ func Test_DeleteDial(t *testing.T) {
 
 	var qoptions *api.QueryOptions
 	var options *api.WriteOptions
-	provisioner.On("GetAllKeys", mock.Anything, mock.Anything, qoptions).Return([]string{"/usb/driverinstances/testInstanceID/dials/dialID"}, nil)
-	provisioner.On("DeleteKV", "/usb/driverinstances/testInstanceID/dials/dialID", options).Return(nil)
+	provisioner.On("GetAllKeys", mock.Anything, mock.Anything, qoptions).Return([]string{"/usb/instances/testInstanceID/dials/dialID"}, nil)
+	provisioner.On("DeleteKV", "/usb/instances/testInstanceID/dials/dialID", options).Return(nil)
 
 	TestConfig.Provider = NewConsulConfig(provisioner)
 
@@ -229,17 +229,17 @@ func Test_ConsulLoadConfig(t *testing.T) {
 
 	provisioner.On("GetValue", "usb/management_api").Return([]byte("{\"listen\":\":54053\",\"uaa_secret\":\"myuaasecret\",\"uaa_client\":\"myuaaclient\",\"authentication\":{\"uaa\":{\"adminscope\":\"usb.management.admin\",\"public_key\":\"\"}}}"), nil)
 
-	provisioner.On("GetValue", "usb/driverinstances/testInstanceID/Name").Return([]byte("testInstance"), nil)
-	provisioner.On("GetValue", "usb/driverinstances/testInstanceID/TargetURL").Return([]byte("http://testurl.com:1234"), nil)
+	provisioner.On("GetValue", "usb/instances/testInstanceID/Name").Return([]byte("testInstance"), nil)
+	provisioner.On("GetValue", "usb/instances/testInstanceID/TargetURL").Return([]byte("http://testurl.com:1234"), nil)
 
-	provisioner.On("GetValue", "usb/driverinstances/testInstanceID/Configuration").Return([]byte("{\"a1\":\"b1\"}"), nil)
-	provisioner.On("GetValue", "usb/driverinstances/testInstanceID/service").Return([]byte("{\"Name\":\"testService\",\"id\":\"testServiceID\"}"), nil)
-	provisioner.On("GetAllKeys", "usb/driverinstances/", "", qoptions).Return([]string{
-		"usb/driverinstances/testInstanceID/Name"}, nil)
-	provisioner.On("GetAllKeys", "usb/driverinstances/", "/", qoptions).Return([]string{
-		"usb/driverinstances/testInstanceID/"}, nil)
+	provisioner.On("GetValue", "usb/instances/testInstanceID/Configuration").Return([]byte("{\"a1\":\"b1\"}"), nil)
+	provisioner.On("GetValue", "usb/instances/testInstanceID/service").Return([]byte("{\"Name\":\"testService\",\"id\":\"testServiceID\"}"), nil)
+	provisioner.On("GetAllKeys", "usb/instances/", "", qoptions).Return([]string{
+		"usb/instances/testInstanceID/Name"}, nil)
+	provisioner.On("GetAllKeys", "usb/instances/", "/", qoptions).Return([]string{
+		"usb/instances/testInstanceID/"}, nil)
 
-	provisioner.On("GetAllKeys", "usb/driverinstances/testInstanceID/dials/", "/", qoptions).Return([]string{}, nil)
+	provisioner.On("GetAllKeys", "usb/instances/testInstanceID/dials/", "/", qoptions).Return([]string{}, nil)
 
 	TestConfig.Provider = NewConsulConfig(provisioner)
 
@@ -250,7 +250,7 @@ func Test_ConsulLoadConfig(t *testing.T) {
 
 	t.Log(config.BrokerAPI)
 	t.Log(config.ManagementAPI)
-	t.Log(config.DriverInstances)
+	t.Log(config.Instances)
 	t.Log(config.APIVersion)
 	assert.NoError(err)
 }

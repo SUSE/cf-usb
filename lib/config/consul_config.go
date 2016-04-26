@@ -61,29 +61,29 @@ func (c *consulConfig) LoadConfiguration() (*Config, error) {
 		return nil, err
 	}
 
-	driverKeys, err := c.provisioner.GetAllKeys("usb/driverinstances/", "/", nil)
+	instanceKeys, err := c.provisioner.GetAllKeys("usb/instances/", "/", nil)
 	if err != nil {
 		return nil, err
 	}
 
-	drivers := make(map[string]DriverInstance)
-	for _, driverkey := range driverKeys {
-		driverkey = strings.TrimSuffix(driverkey, "/")
-		instanceKey := strings.TrimPrefix(driverkey, "usb/driverinstances/")
+	instances := make(map[string]Instance)
+	for _, instanceKey := range instanceKeys {
+		instanceKey = strings.TrimSuffix(instanceKey, "/")
+		instanceKey := strings.TrimPrefix(instanceKey, "usb/instances/")
 
 		if strings.HasSuffix(instanceKey, "/") == false {
 
-			driverInstanceInfo, _, err := c.GetDriverInstance(instanceKey)
+			driverInstanceInfo, _, err := c.GetInstance(instanceKey)
 
 			if err != nil {
 				return nil, err
 			}
 
-			dialkeys, err := c.provisioner.GetAllKeys("usb/driverinstances/"+instanceKey+"/dials/", "/", nil)
+			dialkeys, err := c.provisioner.GetAllKeys("usb/instances/"+instanceKey+"/dials/", "/", nil)
 
 			for _, dialKey := range dialkeys {
 				dialKey = strings.TrimSuffix(dialKey, "/")
-				dialKey = strings.TrimPrefix(dialKey, "usb/driverinstances/"+instanceKey+"/dials/")
+				dialKey = strings.TrimPrefix(dialKey, "usb/instances/"+instanceKey+"/dials/")
 
 				dialInfo, _, err := c.GetDial(dialKey)
 				if err != nil {
@@ -95,19 +95,19 @@ func (c *consulConfig) LoadConfiguration() (*Config, error) {
 				driverInstanceInfo.Dials[dialKey] = *dialInfo
 			}
 
-			drivers[instanceKey] = *driverInstanceInfo
+			instances[instanceKey] = *driverInstanceInfo
 
 		}
 	}
-	config.DriverInstances = drivers
+	config.Instances = instances
 
 	c.config = &config
 
 	return &config, nil
 }
 
-func (c *consulConfig) GetDriverInstance(instanceID string) (*DriverInstance, string, error) {
-	var instance DriverInstance
+func (c *consulConfig) GetInstance(instanceID string) (*Instance, string, error) {
+	var instance Instance
 	key, err := c.getKey(instanceID)
 
 	if err != nil {
@@ -154,7 +154,7 @@ func (c *consulConfig) GetService(serviceid string) (*brokerapi.Service, string,
 		return nil, "", err
 	}
 
-	for instanceID, instance := range config.DriverInstances {
+	for instanceID, instance := range config.Instances {
 		if instance.Service.ID == serviceid {
 			return &instance.Service, instanceID, nil
 		}
@@ -184,19 +184,19 @@ func (c *consulConfig) GetDial(dialID string) (*Dial, string, error) {
 	return &dialInfo, instanceID, err
 }
 
-func (c *consulConfig) SetDriverInstance(instanceID string, instance DriverInstance) error {
+func (c *consulConfig) SetInstance(instanceID string, instance Instance) error {
 
-	err := c.provisioner.AddKV("usb/driverinstances/"+instanceID+"/Name", []byte(instance.Name), nil)
+	err := c.provisioner.AddKV("usb/instances/"+instanceID+"/Name", []byte(instance.Name), nil)
 	if err != nil {
 		return err
 	}
 
-	err = c.provisioner.AddKV("usb/driverinstances/"+instanceID+"/TargetURL", []byte(instance.TargetURL), nil)
+	err = c.provisioner.AddKV("usb/instances/"+instanceID+"/TargetURL", []byte(instance.TargetURL), nil)
 	if err != nil {
 		return err
 	}
 
-	err = c.provisioner.AddKV("usb/driverinstances/"+instanceID+"/Configuration", *instance.Configuration, nil)
+	err = c.provisioner.AddKV("usb/instances/"+instanceID+"/Configuration", *instance.Configuration, nil)
 	if err != nil {
 		return err
 	}
@@ -256,7 +256,7 @@ func (c *consulConfig) SetDial(instanceID string, dialID string, dial Dial) erro
 }
 
 func (c *consulConfig) getKey(instanceID string) (string, error) {
-	keys, err := c.provisioner.GetAllKeys("usb/driverinstances/", "", nil)
+	keys, err := c.provisioner.GetAllKeys("usb/instances/", "", nil)
 	if err != nil {
 		return "", nil
 	}
@@ -271,7 +271,7 @@ func (c *consulConfig) getKey(instanceID string) (string, error) {
 }
 
 func (c *consulConfig) getDialKey(dialID string) (string, error) {
-	keys, err := c.provisioner.GetAllKeys("usb/driverinstances/", "", nil)
+	keys, err := c.provisioner.GetAllKeys("usb/instances/", "", nil)
 	if err != nil {
 		return "", nil
 	}
@@ -283,7 +283,7 @@ func (c *consulConfig) getDialKey(dialID string) (string, error) {
 	return "", nil
 }
 
-func (c *consulConfig) DeleteDriverInstance(instanceID string) error {
+func (c *consulConfig) DeleteInstance(instanceID string) error {
 	key, err := c.getKey(instanceID)
 	if err != nil {
 		return err
@@ -307,8 +307,8 @@ func (c *consulConfig) DeleteDial(dialID string) error {
 	return c.provisioner.DeleteKV(key, nil)
 }
 
-func (c *consulConfig) LoadDriverInstance(instanceID string) (*DriverInstance, error) {
-	driverInstance, _, err := c.GetDriverInstance(instanceID)
+func (c *consulConfig) LoadDriverInstance(instanceID string) (*Instance, error) {
+	driverInstance, _, err := c.GetInstance(instanceID)
 	if err != nil {
 		return nil, err
 	}
@@ -345,29 +345,20 @@ func (c *consulConfig) GetUaaAuthConfig() (*UaaAuth, error) {
 	return &uaa.UaaAuth, nil
 }
 
-func (c *consulConfig) DriverInstanceNameExists(driverInstanceName string) (bool, error) {
-	drivers, err := c.provisioner.GetAllKeys("usb/drivers/", "/", nil)
+func (c *consulConfig) InstanceNameExists(driverInstanceName string) (bool, error) {
+	instances, err := c.provisioner.GetAllKeys("usb/instances/", "/", nil)
 	if err != nil {
 		return false, err
 	}
+	for _, instance := range instances {
 
-	for _, driver := range drivers {
-
-		instances, err := c.provisioner.GetAllKeys(driver+"/instances/", "/", nil)
+		value, err := c.provisioner.GetValue(instance + "Name")
 		if err != nil {
 			return false, err
 		}
 
-		for _, instance := range instances {
-
-			value, err := c.provisioner.GetValue(instance + "Name")
-			if err != nil {
-				return false, err
-			}
-
-			if string(value) == driverInstanceName {
-				return true, nil
-			}
+		if string(value) == driverInstanceName {
+			return true, nil
 		}
 	}
 
@@ -379,7 +370,7 @@ func (c *consulConfig) GetPlan(planid string) (*brokerapi.ServicePlan, string, s
 	if err != nil {
 		return nil, "", "", err
 	}
-	for instanceID, instance := range config.DriverInstances {
+	for instanceID, instance := range config.Instances {
 		for dialID, dial := range instance.Dials {
 			if dial.Plan.ID == planid {
 				return &dial.Plan, dialID, instanceID, nil

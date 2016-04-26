@@ -25,7 +25,7 @@ func ConfigureDialAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterfa
 
 	api.CreateDialHandler = CreateDialHandlerFunc(func(params CreateDialParams, principal interface{}) middleware.Responder {
 		log := log.Session("create-dial")
-		log.Info("request", lager.Data{"driver-instance-id": params.Dial.DriverInstanceID})
+		log.Info("request", lager.Data{"driver-instance-id": params.Dial.InstanceID})
 
 		var dial config.Dial
 
@@ -38,7 +38,7 @@ func ConfigureDialAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterfa
 		configuration := json.RawMessage(dialconfig)
 		dial.Configuration = &configuration
 
-		_, _, err = configProvider.GetDriverInstance(*params.Dial.DriverInstanceID)
+		_, _, err = configProvider.GetInstance(*params.Dial.InstanceID)
 		if err != nil {
 			return &CreateDialInternalServerError{Payload: err.Error()}
 		}
@@ -56,7 +56,7 @@ func ConfigureDialAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterfa
 		defaultPlan.Metadata = &defaultMeta
 		dial.Plan = defaultPlan
 
-		err = configProvider.SetDial(*params.Dial.DriverInstanceID, dialID, dial)
+		err = configProvider.SetDial(*params.Dial.InstanceID, dialID, dial)
 		if err != nil {
 			return &CreateDialInternalServerError{Payload: err.Error()}
 		}
@@ -64,7 +64,7 @@ func ConfigureDialAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterfa
 		params.Dial.ID = dialID
 		params.Dial.Plan = defaultPlan.ID
 
-		instance, _, err := configProvider.GetDriverInstance(*params.Dial.DriverInstanceID)
+		instance, _, err := configProvider.GetInstance(*params.Dial.InstanceID)
 		if err != nil {
 			return &CreateDialInternalServerError{Payload: err.Error()}
 		}
@@ -80,7 +80,7 @@ func ConfigureDialAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterfa
 
 	api.UpdateDialHandler = UpdateDialHandlerFunc(func(params UpdateDialParams, principal interface{}) middleware.Responder {
 		log := log.Session("update-dial")
-		log.Info("request", lager.Data{"driver-instance-id": params.Dial.DriverInstanceID})
+		log.Info("request", lager.Data{"driver-instance-id": params.Dial.InstanceID})
 
 		dialID := params.DialID
 
@@ -101,12 +101,12 @@ func ConfigureDialAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterfa
 		configuration := json.RawMessage(dialconfig)
 		dial.Configuration = &configuration
 
-		_, _, err = configProvider.GetDriverInstance(*params.Dial.DriverInstanceID)
+		_, _, err = configProvider.GetInstance(*params.Dial.InstanceID)
 		if err != nil {
 			return &UpdateDialInternalServerError{Payload: err.Error()}
 		}
 
-		err = configProvider.SetDial(*params.Dial.DriverInstanceID, dialID, *dial)
+		err = configProvider.SetDial(*params.Dial.InstanceID, dialID, *dial)
 		if err != nil {
 			return &UpdateDialInternalServerError{Payload: err.Error()}
 		}
@@ -116,13 +116,13 @@ func ConfigureDialAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterfa
 
 	api.GetAllDialsHandler = GetAllDialsHandlerFunc(func(params GetAllDialsParams, principal interface{}) middleware.Responder {
 		log := log.Session("get-dials")
-		log.Info("request", lager.Data{"driver-instance-id": params.DriverInstanceID})
+		log.Info("request", lager.Data{"driver-instance-id": params.InstanceID})
 
 		var dials = make([]*genmodel.Dial, 0)
-		if *params.DriverInstanceID == "" {
+		if *params.InstanceID == "" {
 			return &GetAllDialsInternalServerError{Payload: "Empty driver instance id in get all dials"}
 		}
-		instanceInfo, err := configProvider.LoadDriverInstance(*params.DriverInstanceID)
+		instanceInfo, err := configProvider.LoadDriverInstance(*params.InstanceID)
 		if err != nil {
 			return &GetAllDialsInternalServerError{Payload: err.Error()}
 		}
@@ -131,10 +131,10 @@ func ConfigureDialAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterfa
 			dialID := diaID
 			planID := dia.Plan.ID
 			dial := &genmodel.Dial{
-				Configuration:    dia.Configuration,
-				DriverInstanceID: params.DriverInstanceID,
-				ID:               dialID,
-				Plan:             planID,
+				Configuration: dia.Configuration,
+				InstanceID:    params.InstanceID,
+				ID:            dialID,
+				Plan:          planID,
 			}
 
 			dials = append(dials, dial)
@@ -173,7 +173,7 @@ func ConfigureDialAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterfa
 			return &GetDialInternalServerError{Payload: err.Error()}
 		}
 
-		for diID, di := range config.DriverInstances {
+		for diID, di := range config.Instances {
 			for diaID, dia := range di.Dials {
 				if diaID == params.DialID {
 
@@ -184,10 +184,10 @@ func ConfigureDialAPI(api *UsbMgmtAPI, auth authentication.AuthenticationInterfa
 					}
 
 					dial := &genmodel.Dial{
-						Configuration:    conf,
-						DriverInstanceID: &diID,
-						ID:               diaID,
-						Plan:             dia.Plan.ID,
+						Configuration: conf,
+						InstanceID:    &diID,
+						ID:            diaID,
+						Plan:          dia.Plan.ID,
 					}
 
 					return &GetDialOK{Payload: dial}

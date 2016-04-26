@@ -68,10 +68,10 @@
 				}
 			}
 		},
-		"/driver_instances": {
+		"/instances": {
 			"get": {
-				"description": "Gets driver instances for a driver\n",
-				"operationId": "getDriverInstances",
+				"description": "Gets available instances",
+				"operationId": "getInstances",
 				"parameters": [],
 				"responses": {
 					"200": {
@@ -79,7 +79,7 @@
 						"schema": {
 							"type": "array",
 							"items": {
-								"$ref": "#/definitions/driver_instance"
+								"$ref": "#/definitions/instance"
 							}
 						}
 					},
@@ -92,22 +92,22 @@
 				}
 			},
 			"post": {
-				"description": "Create a driver instance",
-				"operationId": "createDriverInstance",
+				"description": "Create an instance",
+				"operationId": "createInstance",
 				"parameters": [{
-					"name": "driver_instance",
-					"description": "driver instance to be created",
+					"name": "instance",
+					"description": "Instance to be created",
 					"in": "body",
 					"required": true,
 					"schema": {
-						"$ref": "#/definitions/driver_instance"
+						"$ref": "#/definitions/instance"
 					}
 				}],
 				"responses": {
 					"201": {
 						"description": "Instance created",
 						"schema": {
-							"$ref": "#/definitions/driver_instance"
+							"$ref": "#/definitions/instance"
 						}
 					},
 					"409": {
@@ -122,14 +122,14 @@
 				}
 			}
 		},
-		"/driver_instances/{driver_instance_id}": {
+		"/instances/{instance_id}": {
 			"get": {
-				"description": "Gets driver configurations\n",
-				"operationId": "getDriverInstance",
+				"description": "Gets instance configurations\n",
+				"operationId": "getInstance",
 				"parameters": [{
-					"name": "driver_instance_id",
+					"name": "instance_id",
 					"in": "path",
-					"description": "Driver Instance ID",
+					"description": "Instance ID",
 					"required": true,
 					"type": "string"
 				}],
@@ -137,7 +137,7 @@
 					"200": {
 						"description": "OK",
 						"schema": {
-							"$ref": "#/definitions/driver_instance"
+							"$ref": "#/definitions/instance"
 						}
 					},
 					"404": {
@@ -152,28 +152,28 @@
 				}
 			},
 			"put": {
-				"description": "Update a driver instance\n",
-				"operationId": "updateDriverInstance",
+				"description": "Update an instance\n",
+				"operationId": "updateInstance",
 				"parameters": [{
-					"name": "driver_instance_id",
+					"name": "instance_id",
 					"in": "path",
-					"description": "Driver Instance ID",
+					"description": "Instance ID",
 					"required": true,
 					"type": "string"
 				}, {
-					"name": "driver_config",
+					"name": "instance_config",
 					"in": "body",
-					"description": "Add driver_config",
+					"description": "Add instance_config",
 					"required": true,
 					"schema": {
-						"$ref": "#/definitions/driver_instance"
+						"$ref": "#/definitions/instance"
 					}
 				}],
 				"responses": {
 					"200": {
 						"description": "Sucessfull response",
 						"schema": {
-							"$ref": "#/definitions/driver_instance"
+							"$ref": "#/definitions/instance"
 						}
 					},
 					"404": {
@@ -191,18 +191,18 @@
 				}
 			},
 			"delete": {
-				"description": "Delete a driver instance",
-				"operationId": "deleteDriverInstance",
+				"description": "Delete an instance",
+				"operationId": "deleteInstance",
 				"parameters": [{
-					"name": "driver_instance_id",
+					"name": "instance_id",
 					"in": "path",
-					"description": "Driver Instance ID",
+					"description": "Instance ID",
 					"required": true,
 					"type": "string"
 				}],
 				"responses": {
 					"204": {
-						"description": "Driver deleted"
+						"description": "Instance deleted"
 					},
 					"404": {
 						"description": "Not Found"
@@ -216,14 +216,14 @@
 				}
 			}
 		},
-		"/driver_instances/{driver_instance_id}/ping": {
+		"/instances/{instance_id}/ping": {
 			"get": {
-				"description": "Pings the driver\n",
-				"operationId": "pingDriverInstance",
+				"description": "Pings the instance\n",
+				"operationId": "pingInstance",
 				"parameters": [{
-					"name": "driver_instance_id",
+					"name": "instance_id",
 					"in": "path",
-					"description": "Driver Instance ID",
+					"description": "Instance ID",
 					"required": true,
 					"type": "string"
 				}],
@@ -248,11 +248,11 @@
 				"description": "Gets the existing `service`\n",
 				"operationId": "getServiceByInstanceId",
 				"parameters": [{
-					"name": "driver_instance_id",
+					"name": "instance_id",
 					"in": "query",
 					"type": "string",
 					"required": true,
-					"description": "Driver instance ID"
+					"description": "Instance ID"
 				}],
 				"responses": {
 					"200": {
@@ -344,11 +344,11 @@
 				"description": "Gets `plans`",
 				"operationId": "getServicePlans",
 				"parameters": [{
-					"name": "driver_instance_id",
+					"name": "instance_id",
 					"in": "query",
 					"type": "string",
 					"required": false,
-					"description": "Driver Instance ID"
+					"description": "Instance ID"
 				}],
 				"responses": {
 					"200": {
@@ -440,11 +440,11 @@
 				"description": "Gets `dials`",
 				"operationId": "getAllDials",
 				"parameters": [{
-					"name": "driver_instance_id",
+					"name": "instance_id",
 					"in": "query",
 					"type": "string",
 					"required": false,
-					"description": "Driver instance ID"
+					"description": "Instance ID"
 				}],
 				"responses": {
 					"200": {
@@ -603,14 +603,14 @@
 		"service": {
 			"type": "object",
 			"required": [
-				"driver_instance_id",
+				"instance_id",
 				"name"
 			],
 			"properties": {
 				"id": {
 					"type": "string"
 				},
-				"driver_instance_id": {
+				"instance_id": {
 					"type": "string",
 					"minLength": 36,
 					"maxLength": 36
@@ -668,13 +668,13 @@
 		"dial": {
 			"type": "object",
 			"required": [
-				"driver_instance_id"
+				"instance_id"
 			],
 			"properties": {
 				"id": {
 					"type": "string"
 				},
-				"driver_instance_id": {
+				"instance_id": {
 					"type": "string",
 					"minLength": 36,
 					"maxLength": 36
@@ -687,7 +687,7 @@
 				}
 			}
 		},
-		"driver_instance": {
+		"instance": {
 			"type": "object",
 			"required": [
 				"name"
@@ -717,9 +717,6 @@
 			}
 		},
 		"dial_schema": {
-			"type": "string"
-		},
-		"driver_schema": {
 			"type": "string"
 		}
 	}

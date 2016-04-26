@@ -60,7 +60,7 @@ func Test_Redis_GetDriverInstance(t *testing.T) {
 	provisioner.On("GetValue", "usb").Return(configSring, nil)
 
 	RedisTestConfig.Provider = NewRedisConfig(provisioner)
-	instance, _, err := RedisTestConfig.Provider.GetDriverInstance("A0000000-0000-0000-0000-000000000002")
+	instance, _, err := RedisTestConfig.Provider.GetInstance("A0000000-0000-0000-0000-000000000002")
 	assert.NoError(err)
 
 	assert.Equal("dummy1", instance.Name)
@@ -77,12 +77,12 @@ func Test_Redis_GetDial(t *testing.T) {
 	provisioner.On("GetValue", "usb").Return(configSring, nil)
 
 	RedisTestConfig.Provider = NewRedisConfig(provisioner)
-	dial, instanceID, err := RedisTestConfig.Provider.GetDial("B0000000-0000-0000-0000-000000000001")
+	dial, instanceID, err := RedisTestConfig.Provider.GetDial("B0000000-0000-0000-0000-000000000011")
 	t.Log(instanceID)
 	assert.NoError(err)
 
-	assert.Equal("free", dial.Plan.Name)
-	assert.Equal("53425178-F731-49E7-9E53-5CF4BE9D807A", dial.Plan.ID)
+	assert.Equal("plandummy2", dial.Plan.Name)
+	assert.Equal("888B59E0-C2A1-4AB6-9335-2E90114A8F01", dial.Plan.ID)
 }
 
 func Test_Redis_GetService(t *testing.T) {
@@ -186,7 +186,7 @@ func Test_Redis_DeleteDriverInstance(t *testing.T) {
 
 	RedisTestConfig.Provider = NewRedisConfig(provisioner)
 
-	err = RedisTestConfig.Provider.DeleteDriverInstance("A0000000-0000-0000-0000-000000000002")
+	err = RedisTestConfig.Provider.DeleteInstance("A0000000-0000-0000-0000-000000000002")
 	assert.NoError(err)
 }
 

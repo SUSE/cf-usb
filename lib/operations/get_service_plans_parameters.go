@@ -29,10 +29,10 @@ type GetServicePlansParams struct {
 	// HTTP Request Object
 	HTTPRequest *http.Request
 
-	/*Driver Instance ID
+	/*Instance ID
 	  In: query
 	*/
-	DriverInstanceID *string
+	InstanceID *string
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
@@ -43,8 +43,8 @@ func (o *GetServicePlansParams) BindRequest(r *http.Request, route *middleware.M
 
 	qs := runtime.Values(r.URL.Query())
 
-	qDriverInstanceID, qhkDriverInstanceID, _ := qs.GetOK("driver_instance_id")
-	if err := o.bindDriverInstanceID(qDriverInstanceID, qhkDriverInstanceID, route.Formats); err != nil {
+	qInstanceID, qhkInstanceID, _ := qs.GetOK("instance_id")
+	if err := o.bindInstanceID(qInstanceID, qhkInstanceID, route.Formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -54,7 +54,7 @@ func (o *GetServicePlansParams) BindRequest(r *http.Request, route *middleware.M
 	return nil
 }
 
-func (o *GetServicePlansParams) bindDriverInstanceID(rawData []string, hasKey bool, formats strfmt.Registry) error {
+func (o *GetServicePlansParams) bindInstanceID(rawData []string, hasKey bool, formats strfmt.Registry) error {
 	var raw string
 	if len(rawData) > 0 {
 		raw = rawData[len(rawData)-1]
@@ -63,7 +63,7 @@ func (o *GetServicePlansParams) bindDriverInstanceID(rawData []string, hasKey bo
 		return nil
 	}
 
-	o.DriverInstanceID = &raw
+	o.InstanceID = &raw
 
 	return nil
 }
