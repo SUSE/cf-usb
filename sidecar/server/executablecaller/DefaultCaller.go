@@ -3,10 +3,8 @@ package executablecaller
 import (
 	"bytes"
 	"errors"
-	_ "os"
+	"os"
 	"os/exec"
-	_ "strconv"
-	_ "strings"
 	"syscall"
 	"time"
 )
@@ -33,7 +31,7 @@ func ReadOutput(cmd string, out *bytes.Buffer, errOut *bytes.Buffer, args ...str
 	if err != nil {
 		return exitStatus, err
 	}
-	timer := time.AfterFunc(30*time.Second, func() {
+	timer := time.AfterFunc(5*time.Second, func() {
 		cmdExec.Process.Kill()
 	})
 
@@ -77,7 +75,13 @@ func (caller DefaultCaller) CreateWorkspaceCaller(arg1 string) (string, int) {
 	var out bytes.Buffer
 	var errOut bytes.Buffer
 
-	exitStatus, err := ReadOutput(caller.GetCreateWorkspaceExecutable(), &out, &errOut, arg1)
+	execFile := caller.GetCreateWorkspaceExecutable()
+
+	if _, err := os.Stat(execFile); os.IsNotExist(err) {
+		return "Executable file does not exist", -1
+	}
+
+	exitStatus, err := ReadOutput(execFile, &out, &errOut, arg1)
 
 	if exitStatus == -1 {
 
@@ -94,7 +98,13 @@ func (caller DefaultCaller) CreateConnectionCaller(arg1 string, arg2 string) (st
 	var out bytes.Buffer
 	var errOut bytes.Buffer
 
-	exitStatus, err := ReadOutput(caller.GetCreateConnectionExecutable(), &out, &errOut, arg1, arg2)
+	execFile := caller.GetCreateConnectionExecutable()
+
+	if _, err := os.Stat(execFile); os.IsNotExist(err) {
+		return "Executable file does not exist", -1
+	}
+
+	exitStatus, err := ReadOutput(execFile, &out, &errOut, arg1, arg2)
 
 	if exitStatus == -1 {
 
@@ -111,7 +121,13 @@ func (caller DefaultCaller) DeleteWorkspaceCaller(arg1 string) (string, int) {
 	var out bytes.Buffer
 	var errOut bytes.Buffer
 
-	exitStatus, _ := ReadOutput(caller.GetDeleteWorkspaceExecutable(), &out, &errOut, arg1)
+	execFile := caller.GetDeleteWorkspaceExecutable()
+
+	if _, err := os.Stat(execFile); os.IsNotExist(err) {
+		return "Executable file does not exist", -1
+	}
+
+	exitStatus, _ := ReadOutput(execFile, &out, &errOut, arg1)
 
 	if exitStatus == -1 {
 
@@ -128,7 +144,13 @@ func (caller DefaultCaller) DeleteConnectionCaller(arg1 string, arg2 string) (st
 	var out bytes.Buffer
 	var errOut bytes.Buffer
 
-	exitStatus, _ := ReadOutput(caller.GetDeleteConnectionExecutable(), &out, &errOut, arg1, arg2)
+	execFile := caller.GetDeleteConnectionExecutable()
+
+	if _, err := os.Stat(execFile); os.IsNotExist(err) {
+		return "Executable file does not exist", -1
+	}
+
+	exitStatus, _ := ReadOutput(execFile, &out, &errOut, arg1, arg2)
 
 	if exitStatus == -1 {
 
@@ -145,7 +167,13 @@ func (caller DefaultCaller) GetConnectionCaller(arg1 string, arg2 string) (strin
 	var out bytes.Buffer
 	var errOut bytes.Buffer
 
-	exitStatus, _ := ReadOutput(caller.GetGetConnectionExecutable(), &out, &errOut, arg1, arg2)
+	execFile := caller.GetGetConnectionExecutable()
+
+	if _, err := os.Stat(execFile); os.IsNotExist(err) {
+		return "Executable file does not exist", -1
+	}
+
+	exitStatus, _ := ReadOutput(execFile, &out, &errOut, arg1, arg2)
 
 	if exitStatus == -1 {
 
@@ -162,7 +190,13 @@ func (caller DefaultCaller) GetWorkspaceCaller(arg1 string) (string, int) {
 	var out bytes.Buffer
 	var errOut bytes.Buffer
 
-	exitStatus, _ := ReadOutput(caller.GetGetWorkspaceExecutable(), &out, &errOut, arg1)
+	execFile := caller.GetGetWorkspaceExecutable()
+
+	if _, err := os.Stat(execFile); os.IsNotExist(err) {
+		return "Executable file does not exist", -1
+	}
+
+	exitStatus, _ := ReadOutput(execFile, &out, &errOut, arg1)
 
 	if exitStatus == -1 {
 

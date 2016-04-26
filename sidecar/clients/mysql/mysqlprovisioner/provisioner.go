@@ -37,7 +37,7 @@ func (e *MysqlProvisioner) Close() error {
 }
 
 func (e *MysqlProvisioner) IsDatabaseCreated(databaseName string) (bool, error) {
-	rows, err := e.Query(fmt.Sprintf("SHOW DATABASES WHERE `database` = '%s'", databaseName))
+	rows, err := e.Query("SHOW DATABASES WHERE `database` = ?", databaseName)
 	if err != nil {
 		return false, err
 	}
@@ -80,7 +80,9 @@ func (e *MysqlProvisioner) IsDatabaseCreated(databaseName string) (bool, error) 
 }
 
 func (e *MysqlProvisioner) IsUserCreated(userName string) (bool, error) {
-	rows, err := e.Query(fmt.Sprintf("SELECT user from mysql.user WHERE user = '%s'", userName))
+
+	rows, err := e.Query("SELECT user from mysql.user WHERE user = ?", userName)
+
 	if err != nil {
 		return false, err
 	}
@@ -133,7 +135,6 @@ func (e *MysqlProvisioner) CreateDatabase(databaseName string) error {
 }
 
 func (e *MysqlProvisioner) DeleteDatabase(databaseName string) error {
-
 	err := e.executeTransaction(e.Connection, fmt.Sprintf("DROP DATABASE %s", databaseName))
 	if err != nil {
 		e.logger.Error("delete database", err)
@@ -142,10 +143,14 @@ func (e *MysqlProvisioner) DeleteDatabase(databaseName string) error {
 	return nil
 }
 
-func (e *MysqlProvisioner) Query(query string) (*sql.Rows, error) {
-
-	result, err := e.Connection.Query(query)
-
+func (e *MysqlProvisioner) Query(query string, args ...interface{}) (*sql.Rows, error) {
+	var err error
+	var result *sql.Rows
+	if len(args) > 0 {
+		result, err = e.Connection.Query(query, args...)
+	} else {
+		result, err = e.Connection.Query(query)
+	}
 	if err != nil {
 		e.logger.Error("query", err)
 		return nil, err
@@ -167,6 +172,7 @@ func (e *MysqlProvisioner) CreateUser(databaseName string, username string, pass
 	}
 
 	return nil
+
 }
 
 func (e *MysqlProvisioner) DeleteUser(username string) error {
@@ -182,7 +188,7 @@ func (e *MysqlProvisioner) DeleteUser(username string) error {
 }
 
 func (e *MysqlProvisioner) openSqlConnection() (*sql.DB, error) {
-	con, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/mysql", e.Conf.User, e.Conf.Pass, e.Conf.Host, e.Conf.Port))
+	con, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/mysql?interpolateParams=true", e.Conf.User, e.Conf.Pass, e.Conf.Host, e.Conf.Port))
 	if err != nil {
 		return nil, err
 	}

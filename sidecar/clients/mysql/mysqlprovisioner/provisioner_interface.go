@@ -12,7 +12,7 @@ type MysqlProvisionerInterface interface {
 	IsUserCreated(string) (bool, error)
 	CreateDatabase(string) error
 	DeleteDatabase(string) error
-	Query(string) (*sql.Rows, error)
+	Query(string, ...interface{}) (*sql.Rows, error)
 	CreateUser(string, string, string) error
 	DeleteUser(string) error
 }

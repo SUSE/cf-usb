@@ -1,12 +1,8 @@
 package main
 
 import (
-	"crypto/md5"
-	"encoding/hex"
 	"fmt"
 	"os"
-	"regexp"
-	"strings"
 
 	"github.com/hpcloud/cf-usb/sidecar/clients/mysql/config"
 	"github.com/hpcloud/cf-usb/sidecar/clients/mysql/mysqlprovisioner"
@@ -16,22 +12,6 @@ import (
 
 type DeletedOK struct {
 	Message string `json:"message"`
-}
-
-func getDBNameFromId(id string) string {
-	dbName := "d" + strings.Replace(id, "-", "", -1)
-	dbName = strings.Replace(dbName, ";", "", -1)
-
-	return dbName
-}
-func getMD5Hash(text string) (string, error) {
-	hasher := md5.New()
-	hasher.Write([]byte(text))
-	generated := hex.EncodeToString(hasher.Sum(nil))
-
-	reg := regexp.MustCompile("[^A-Za-z0-9]+")
-
-	return reg.ReplaceAllString(generated, ""), nil
 }
 
 type MysqlDriver struct {
@@ -67,7 +47,7 @@ func main() {
 	provisioner := mysqlprovisioner.New(loger)
 	provisioner.Connect(mysqlconfig)
 
-	username, err := getMD5Hash(os.Args[2])
+	username, err := util.GetMD5Hash(os.Args[2])
 	if err != nil {
 		util.WriteError(err.Error(), 4, 500)
 		os.Exit(4)

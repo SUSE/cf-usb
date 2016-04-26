@@ -2,20 +2,12 @@ package main
 
 import (
 	"os"
-	"strings"
 
 	"github.com/hpcloud/cf-usb/sidecar/clients/mysql/config"
 	"github.com/hpcloud/cf-usb/sidecar/clients/mysql/mysqlprovisioner"
 	"github.com/hpcloud/cf-usb/sidecar/clients/util"
 	"github.com/pivotal-golang/lager"
 )
-
-func getDBNameFromId(id string) string {
-	dbName := "d" + strings.Replace(id, "-", "", -1)
-	dbName = strings.Replace(dbName, ";", "", -1)
-
-	return dbName
-}
 
 type WorkspaceOk struct {
 	Message string `json:"message"`
@@ -54,7 +46,7 @@ func main() {
 	provisioner := mysqlprovisioner.New(loger)
 	provisioner.Connect(mysqlconfig)
 
-	dbCreated, err := provisioner.IsDatabaseCreated(getDBNameFromId(os.Args[1]))
+	dbCreated, err := provisioner.IsDatabaseCreated(util.GetDBNameFromId(os.Args[1]))
 
 	if err != nil {
 		util.WriteError(err.Error(), 3, 500)
