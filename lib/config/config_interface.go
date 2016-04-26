@@ -58,7 +58,6 @@ type RoutesRegister struct {
 
 type Config struct {
 	APIVersion      string                    `json:"api_version"`
-	DriversPath     string                    `json:"drivers_path"`
 	BrokerAPI       BrokerAPI                 `json:"broker_api"`
 	ManagementAPI   *ManagementAPI            `json:"management_api,omitempty"`
 	DriverInstances map[string]DriverInstance `json:"driver_instances"`
@@ -80,5 +79,4 @@ type ConfigProvider interface {
 	DeleteDial(dialid string) error
 	DriverInstanceNameExists(driverInstanceName string) (bool, error)
 	GetPlan(plandid string) (plan *brokerapi.ServicePlan, dialid string, instanceid string, err error)
-	GetDriversPath() (string, error)
 }

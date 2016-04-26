@@ -34,38 +34,10 @@ func (c *fileConfig) LoadConfiguration() (*Config, error) {
 	c.loaded = true
 	c.config = config
 
-	c.config.DriversPath, err = c.GetDriversPath()
-	if err != nil {
-		return nil, err
-	}
-
 	if os.Getenv("PORT") != "" {
 		c.config.BrokerAPI.Listen = ":" + os.Getenv("PORT")
 	}
 	return config, nil
-}
-
-func (c *fileConfig) GetDriversPath() (string, error) {
-
-	if !c.loaded {
-		_, err := c.LoadConfiguration()
-		if err != nil {
-			return "", err
-		}
-	}
-
-	path := c.config.DriversPath
-
-	if path == "" {
-		if os.Getenv("USB_DRIVER_PATH") != "" {
-			path = os.Getenv("USB_DRIVER_PATH")
-		} else {
-			path = "drivers"
-		}
-	}
-
-	return path, nil
-
 }
 
 func (c *fileConfig) LoadDriverInstance(instanceID string) (*DriverInstance, error) {
