@@ -4,17 +4,10 @@ package workspace
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-<<<<<<< HEAD
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime"
 
 	strfmt "github.com/go-openapi/strfmt"
-=======
-	"github.com/go-swagger/go-swagger/client"
-	"github.com/go-swagger/go-swagger/errors"
-
-	strfmt "github.com/go-swagger/go-swagger/strfmt"
->>>>>>> f998b3c... [HCFRO-193] Use rest for calling drivers
 )
 
 // NewGetWorkspaceParams creates a new GetWorkspaceParams object
@@ -37,17 +30,13 @@ type GetWorkspaceParams struct {
 }
 
 // WithWorkspaceID adds the workspaceId to the get workspace params
-func (o *GetWorkspaceParams) WithWorkspaceID(workspaceId string) *GetWorkspaceParams {
-	o.WorkspaceID = workspaceId
+func (o *GetWorkspaceParams) WithWorkspaceID(WorkspaceID string) *GetWorkspaceParams {
+	o.WorkspaceID = WorkspaceID
 	return o
 }
 
 // WriteToRequest writes these params to a swagger request
-<<<<<<< HEAD
 func (o *GetWorkspaceParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-=======
-func (o *GetWorkspaceParams) WriteToRequest(r client.Request, reg strfmt.Registry) error {
->>>>>>> f998b3c... [HCFRO-193] Use rest for calling drivers
 
 	var res []error
 

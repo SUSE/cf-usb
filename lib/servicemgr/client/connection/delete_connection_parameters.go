@@ -4,17 +4,10 @@ package connection
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-<<<<<<< HEAD
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime"
 
 	strfmt "github.com/go-openapi/strfmt"
-=======
-	"github.com/go-swagger/go-swagger/client"
-	"github.com/go-swagger/go-swagger/errors"
-
-	strfmt "github.com/go-swagger/go-swagger/strfmt"
->>>>>>> f998b3c... [HCFRO-193] Use rest for calling drivers
 )
 
 // NewDeleteConnectionParams creates a new DeleteConnectionParams object
@@ -42,23 +35,19 @@ type DeleteConnectionParams struct {
 }
 
 // WithConnectionID adds the connectionId to the delete connection params
-func (o *DeleteConnectionParams) WithConnectionID(connectionId string) *DeleteConnectionParams {
-	o.ConnectionID = connectionId
+func (o *DeleteConnectionParams) WithConnectionID(ConnectionID string) *DeleteConnectionParams {
+	o.ConnectionID = ConnectionID
 	return o
 }
 
 // WithWorkspaceID adds the workspaceId to the delete connection params
-func (o *DeleteConnectionParams) WithWorkspaceID(workspaceId string) *DeleteConnectionParams {
-	o.WorkspaceID = workspaceId
+func (o *DeleteConnectionParams) WithWorkspaceID(WorkspaceID string) *DeleteConnectionParams {
+	o.WorkspaceID = WorkspaceID
 	return o
 }
 
 // WriteToRequest writes these params to a swagger request
-<<<<<<< HEAD
 func (o *DeleteConnectionParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-=======
-func (o *DeleteConnectionParams) WriteToRequest(r client.Request, reg strfmt.Registry) error {
->>>>>>> f998b3c... [HCFRO-193] Use rest for calling drivers
 
 	var res []error
 

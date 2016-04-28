@@ -37,17 +37,11 @@ type Instance struct {
 
 	/* service
 	 */
-<<<<<<< HEAD
 	Service string `json:"service,omitempty"`
 
 	/* target URL
 	 */
 	TargetURL string `json:"targetURL,omitempty"`
-=======
-	Service *string `json:"service,omitempty"`
-
-	TargetURL string `json:"target,omitempty"`
->>>>>>> f998b3c... [HCFRO-193] Use rest for calling drivers
 }
 
 // Validate validates this instance

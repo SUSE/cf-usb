@@ -4,7 +4,6 @@ package client
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-<<<<<<< HEAD
 	"github.com/go-openapi/runtime"
 	httptransport "github.com/go-openapi/runtime/client"
 
@@ -12,14 +11,6 @@ import (
 
 	"github.com/hpcloud/cf-usb/lib/servicemgr/client/connection"
 	"github.com/hpcloud/cf-usb/lib/servicemgr/client/operations"
-=======
-	"github.com/go-swagger/go-swagger/client"
-	httptransport "github.com/go-swagger/go-swagger/httpkit/client"
-
-	strfmt "github.com/go-swagger/go-swagger/strfmt"
-
-	"github.com/hpcloud/cf-usb/lib/servicemgr/client/connection"
->>>>>>> f998b3c... [HCFRO-193] Use rest for calling drivers
 	"github.com/hpcloud/cf-usb/lib/servicemgr/client/workspace"
 )
 
@@ -36,21 +27,14 @@ func NewHTTPClient(formats strfmt.Registry) *Servicemgr {
 }
 
 // New creates a new servicemgr client
-<<<<<<< HEAD
 func New(transport runtime.ClientTransport, formats strfmt.Registry) *Servicemgr {
-=======
-func New(transport client.Transport, formats strfmt.Registry) *Servicemgr {
->>>>>>> f998b3c... [HCFRO-193] Use rest for calling drivers
 	cli := new(Servicemgr)
 	cli.Transport = transport
 
 	cli.Connection = connection.New(transport, formats)
 
-<<<<<<< HEAD
 	cli.Operations = operations.New(transport, formats)
 
-=======
->>>>>>> f998b3c... [HCFRO-193] Use rest for calling drivers
 	cli.Workspace = workspace.New(transport, formats)
 
 	return cli
@@ -60,7 +44,6 @@ func New(transport client.Transport, formats strfmt.Registry) *Servicemgr {
 type Servicemgr struct {
 	Connection *connection.Client
 
-<<<<<<< HEAD
 	Operations *operations.Client
 
 	Workspace *workspace.Client
@@ -70,24 +53,12 @@ type Servicemgr struct {
 
 // SetTransport changes the transport on the client and all its subresources
 func (c *Servicemgr) SetTransport(transport runtime.ClientTransport) {
-=======
-	Workspace *workspace.Client
-
-	Transport client.Transport
-}
-
-// SetTransport changes the transport on the client and all its subresources
-func (c *Servicemgr) SetTransport(transport client.Transport) {
->>>>>>> f998b3c... [HCFRO-193] Use rest for calling drivers
 	c.Transport = transport
 
 	c.Connection.SetTransport(transport)
 
-<<<<<<< HEAD
 	c.Operations.SetTransport(transport)
 
-=======
->>>>>>> f998b3c... [HCFRO-193] Use rest for calling drivers
 	c.Workspace.SetTransport(transport)
 
 }

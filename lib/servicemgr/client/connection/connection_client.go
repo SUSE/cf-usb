@@ -4,7 +4,6 @@ package connection
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-<<<<<<< HEAD
 	"github.com/go-openapi/runtime"
 
 	strfmt "github.com/go-openapi/strfmt"
@@ -12,15 +11,6 @@ import (
 
 // New creates a new connection API client.
 func New(transport runtime.ClientTransport, formats strfmt.Registry) *Client {
-=======
-	"github.com/go-swagger/go-swagger/client"
-
-	strfmt "github.com/go-swagger/go-swagger/strfmt"
-)
-
-// New creates a new connection API client.
-func New(transport client.Transport, formats strfmt.Registry) *Client {
->>>>>>> f998b3c... [HCFRO-193] Use rest for calling drivers
 	return &Client{transport: transport, formats: formats}
 }
 
@@ -28,11 +18,7 @@ func New(transport client.Transport, formats strfmt.Registry) *Client {
 Client for connection API
 */
 type Client struct {
-<<<<<<< HEAD
 	transport runtime.ClientTransport
-=======
-	transport client.Transport
->>>>>>> f998b3c... [HCFRO-193] Use rest for calling drivers
 	formats   strfmt.Registry
 }
 
@@ -45,11 +31,7 @@ func (a *Client) CreateConnection(params *CreateConnectionParams) (*CreateConnec
 		params = NewCreateConnectionParams()
 	}
 
-<<<<<<< HEAD
 	result, err := a.transport.Submit(&runtime.ClientOperation{
-=======
-	result, err := a.transport.Submit(&client.Operation{
->>>>>>> f998b3c... [HCFRO-193] Use rest for calling drivers
 		ID:                 "createConnection",
 		Method:             "POST",
 		PathPattern:        "/workspaces/{workspace_id}/connections",
@@ -74,11 +56,7 @@ func (a *Client) DeleteConnection(params *DeleteConnectionParams) (*DeleteConnec
 		params = NewDeleteConnectionParams()
 	}
 
-<<<<<<< HEAD
 	result, err := a.transport.Submit(&runtime.ClientOperation{
-=======
-	result, err := a.transport.Submit(&client.Operation{
->>>>>>> f998b3c... [HCFRO-193] Use rest for calling drivers
 		ID:                 "deleteConnection",
 		Method:             "DELETE",
 		PathPattern:        "/workspaces/{workspace_id}/connections/{connection_id}",
@@ -103,11 +81,7 @@ func (a *Client) GetConnection(params *GetConnectionParams) (*GetConnectionOK, e
 		params = NewGetConnectionParams()
 	}
 
-<<<<<<< HEAD
 	result, err := a.transport.Submit(&runtime.ClientOperation{
-=======
-	result, err := a.transport.Submit(&client.Operation{
->>>>>>> f998b3c... [HCFRO-193] Use rest for calling drivers
 		ID:                 "getConnection",
 		Method:             "GET",
 		PathPattern:        "/workspaces/{workspace_id}/connections/{connection_id}",
@@ -124,10 +98,6 @@ func (a *Client) GetConnection(params *GetConnectionParams) (*GetConnectionOK, e
 }
 
 // SetTransport changes the transport on the client
-<<<<<<< HEAD
 func (a *Client) SetTransport(transport runtime.ClientTransport) {
-=======
-func (a *Client) SetTransport(transport client.Transport) {
->>>>>>> f998b3c... [HCFRO-193] Use rest for calling drivers
 	a.transport = transport
 }

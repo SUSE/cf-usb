@@ -7,16 +7,9 @@ import (
 	"fmt"
 	"io"
 
-<<<<<<< HEAD
 	"github.com/go-openapi/runtime"
 
 	strfmt "github.com/go-openapi/strfmt"
-=======
-	"github.com/go-swagger/go-swagger/client"
-	"github.com/go-swagger/go-swagger/httpkit"
-
-	strfmt "github.com/go-swagger/go-swagger/strfmt"
->>>>>>> f998b3c... [HCFRO-193] Use rest for calling drivers
 
 	"github.com/hpcloud/cf-usb/lib/servicemgr/models"
 )
@@ -27,11 +20,7 @@ type CreateWorkspaceReader struct {
 }
 
 // ReadResponse reads a server response into the recieved o.
-<<<<<<< HEAD
 func (o *CreateWorkspaceReader) ReadResponse(response runtime.ClientResponse, consumer runtime.Consumer) (interface{}, error) {
-=======
-func (o *CreateWorkspaceReader) ReadResponse(response client.Response, consumer httpkit.Consumer) (interface{}, error) {
->>>>>>> f998b3c... [HCFRO-193] Use rest for calling drivers
 	switch response.Code() {
 
 	case 201:
@@ -67,11 +56,7 @@ func (o *CreateWorkspaceCreated) Error() string {
 	return fmt.Sprintf("[POST /workspaces][%d] createWorkspaceCreated  %+v", 201, o.Payload)
 }
 
-<<<<<<< HEAD
 func (o *CreateWorkspaceCreated) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
-=======
-func (o *CreateWorkspaceCreated) readResponse(response client.Response, consumer httpkit.Consumer, formats strfmt.Registry) error {
->>>>>>> f998b3c... [HCFRO-193] Use rest for calling drivers
 
 	o.Payload = new(models.ServiceManagerWorkspaceResponse)
 
@@ -109,11 +94,7 @@ func (o *CreateWorkspaceDefault) Error() string {
 	return fmt.Sprintf("[POST /workspaces][%d] createWorkspace default  %+v", o._statusCode, o.Payload)
 }
 
-<<<<<<< HEAD
 func (o *CreateWorkspaceDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
-=======
-func (o *CreateWorkspaceDefault) readResponse(response client.Response, consumer httpkit.Consumer, formats strfmt.Registry) error {
->>>>>>> f998b3c... [HCFRO-193] Use rest for calling drivers
 
 	o.Payload = new(models.Error)
 
