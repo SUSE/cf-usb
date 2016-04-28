@@ -72,51 +72,6 @@ func (_m *ConfigProvider) GetUaaAuthConfig() (*config.UaaAuth, error) {
 
 	return r0, r1
 }
-func (_m *ConfigProvider) SetDriver(driverid string, driver config.Driver) error {
-	ret := _m.Called(driverid, driver)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(string, config.Driver) error); ok {
-		r0 = rf(driverid, driver)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-func (_m *ConfigProvider) GetDriver(driverid string) (*config.Driver, error) {
-	ret := _m.Called(driverid)
-
-	var r0 *config.Driver
-	if rf, ok := ret.Get(0).(func(string) *config.Driver); ok {
-		r0 = rf(driverid)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*config.Driver)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(driverid)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-func (_m *ConfigProvider) DeleteDriver(driverid string) error {
-	ret := _m.Called(driverid)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(string) error); ok {
-		r0 = rf(driverid)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
 func (_m *ConfigProvider) SetDriverInstance(driverid string, instanceid string, driverInstance config.DriverInstance) error {
 	ret := _m.Called(driverid, instanceid, driverInstance)
 

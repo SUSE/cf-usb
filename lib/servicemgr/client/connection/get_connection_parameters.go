@@ -35,14 +35,14 @@ type GetConnectionParams struct {
 }
 
 // WithConnectionID adds the connectionId to the get connection params
-func (o *GetConnectionParams) WithConnectionID(connectionId string) *GetConnectionParams {
-	o.ConnectionID = connectionId
+func (o *GetConnectionParams) WithConnectionID(ConnectionID string) *GetConnectionParams {
+	o.ConnectionID = ConnectionID
 	return o
 }
 
 // WithWorkspaceID adds the workspaceId to the get connection params
-func (o *GetConnectionParams) WithWorkspaceID(workspaceId string) *GetConnectionParams {
-	o.WorkspaceID = workspaceId
+func (o *GetConnectionParams) WithWorkspaceID(WorkspaceID string) *GetConnectionParams {
+	o.WorkspaceID = WorkspaceID
 	return o
 }
 

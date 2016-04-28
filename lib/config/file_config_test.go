@@ -44,7 +44,6 @@ func TestLoadConfig(t *testing.T) {
 	}
 
 	assert.Equal("2.6", config.APIVersion)
-	assert.Equal(2, len(config.Drivers))
 	assert.Equal("http://1.2.3.4:54054", config.BrokerAPI.ExternalUrl)
 	assert.Equal(":54054", config.BrokerAPI.Listen)
 	assert.Equal("username", config.BrokerAPI.Credentials.Username)
@@ -65,25 +64,22 @@ func TestLoadServiceConfig(t *testing.T) {
 		assert.Error(err, "Unable to load config file")
 	}
 
-	for _, d := range config.Drivers {
-		if d.DriverType == "dummy" {
-			for _, di := range d.DriverInstances {
-				dsp := DummyServiceProperties{}
-				diConf := (*json.RawMessage)(di.Configuration)
-				err := json.Unmarshal(*diConf, &dsp)
-				if err != nil {
-					assert.Equal(err, "Error unmarshaling properties")
-				}
-				if di.Name == "dummy1" {
-					assert.Equal("one", dsp.PropOne)
-					assert.Equal("two", dsp.PropTwo)
-				}
-				if di.Name == "dummy2" {
-					assert.Equal("onenew", dsp.PropOne)
-					assert.Equal("twonew", dsp.PropTwo)
-				}
-			}
+	for _, d := range config.Instances {
+		dsp := DummyServiceProperties{}
+		diConf := (*json.RawMessage)(d.Configuration)
+		err := json.Unmarshal(*diConf, &dsp)
+		if err != nil {
+			assert.Equal(err, "Error unmarshaling properties")
 		}
+		if d.Name == "dummy1" {
+			assert.Equal("one", dsp.PropOne)
+			assert.Equal("two", dsp.PropTwo)
+		}
+		if d.Name == "dummy2" {
+			assert.Equal("onenew", dsp.PropOne)
+			assert.Equal("twonew", dsp.PropTwo)
+		}
+
 	}
 
 }
@@ -101,7 +97,7 @@ func TestGetDriverConfig(t *testing.T) {
 	if err != nil {
 		assert.Error(err, "Unable to get driver configuration")
 	}
-
+	t.Log(driverInstance)
 	instance := *driverInstance
 
 	dsp := DummyServiceProperties{}
@@ -170,41 +166,9 @@ func TestDriverInstanceNameExists(t *testing.T) {
 		assert.Error(err, "Unable to load from temp config file")
 	}
 
-	exist, err := configuration.DriverInstanceNameExists("dummy1")
+	exist, err := configuration.InstanceNameExists("dummy1")
 	if err != nil {
 		assert.Error(err, "Unable to check driver instance name existance")
-	}
-
-	assert.True(exist)
-}
-
-func TestDriverTypeExists(t *testing.T) {
-	assert := assert.New(t)
-
-	_, configuration, err := loadConfigAsset()
-	if err != nil {
-		assert.Error(err, "Unable to load from temp config file")
-	}
-
-	exist, err := configuration.DriverTypeExists("dummy")
-	if err != nil {
-		assert.Error(err, "Unable to check driver type existance")
-	}
-
-	assert.True(exist)
-}
-
-func TestDriverExists(t *testing.T) {
-	assert := assert.New(t)
-
-	_, configuration, err := loadConfigAsset()
-	if err != nil {
-		assert.Error(err, "Unable to load from temp config file")
-	}
-
-	exist, err := configuration.DriverExists("00000000-0000-0000-0000-000000000001")
-	if err != nil {
-		assert.Error(err, "Unable to check driver existance")
 	}
 
 	assert.True(exist)

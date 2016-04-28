@@ -82,38 +82,6 @@ func initProvider() (bool, error, ifrit.Process) {
 	return true, nil, process
 }
 
-func Test_IntConsulDriver(t *testing.T) {
-	RegisterTestingT(t)
-
-	initialized, err, process := initProvider()
-	if initialized == false {
-		t.Skip("Skipping Consul Set Driver test, environment variables not set: CONSUL_ADDRESS(host:port), CONSUL_DATACENTER, CONSUL_TOKEN / CONSUL_USER + CONSUL_PASSWORD, CONSUL_SCHEMA")
-		t.Log(err)
-	}
-
-	assert := assert.New(t)
-
-	var driverInfo Driver
-	driverInfo.DriverType = "testType"
-	driverInfo.DriverName = "testName"
-	err = IntegrationConfig.Provider.SetDriver("testID", driverInfo)
-
-	exist, err := IntegrationConfig.Provider.DriverTypeExists("testType")
-	if err != nil {
-		assert.Error(err, "Unable to check driver type existance")
-	}
-	assert.NoError(err)
-	assert.True(exist)
-
-	driver, err := IntegrationConfig.Provider.GetDriver("testID")
-	assert.Equal("testType", string(driver.DriverType))
-	assert.NoError(err)
-	if process != nil {
-		process.Signal(os.Kill)
-		<-process.Wait()
-	}
-}
-
 func Test_IntDriverInstance(t *testing.T) {
 	RegisterTestingT(t)
 
@@ -125,19 +93,19 @@ func Test_IntDriverInstance(t *testing.T) {
 
 	assert := assert.New(t)
 
-	var instance DriverInstance
+	var instance Instance
 	instance.Name = "testInstance"
 	raw := json.RawMessage("{\"a1\":\"b1\"}")
 	instance.Configuration = &raw
-	err = IntegrationConfig.Provider.SetDriverInstance("testID", "testInstanceID", instance)
+	err = IntegrationConfig.Provider.SetInstance("testInstanceID", instance)
 	assert.NoError(err)
 
-	instanceInfo, _, err := IntegrationConfig.Provider.GetDriverInstance("testInstanceID")
+	instanceInfo, _, err := IntegrationConfig.Provider.GetInstance("testInstanceID")
 
 	assert.Equal("testInstance", instanceInfo.Name)
 	assert.NoError(err)
 
-	exist, err := IntegrationConfig.Provider.DriverInstanceNameExists("testInstance")
+	exist, err := IntegrationConfig.Provider.InstanceNameExists("testInstance")
 	if err != nil {
 		assert.Error(err, "Unable to check driver instance name existance")
 	}
@@ -169,11 +137,11 @@ func Test_IntDial(t *testing.T) {
 
 	assert := assert.New(t)
 
-	var instance DriverInstance
+	var instance Instance
 	instance.Name = "testInstance"
 	rawInstance := json.RawMessage("{\"a1\":\"b1\"}")
 	instance.Configuration = &rawInstance
-	err = IntegrationConfig.Provider.SetDriverInstance("testID", "testInstanceID", instance)
+	err = IntegrationConfig.Provider.SetInstance("testInstanceID", instance)
 	assert.NoError(err)
 
 	var dialInfo Dial

@@ -35,14 +35,14 @@ type DeleteConnectionParams struct {
 }
 
 // WithConnectionID adds the connectionId to the delete connection params
-func (o *DeleteConnectionParams) WithConnectionID(connectionId string) *DeleteConnectionParams {
-	o.ConnectionID = connectionId
+func (o *DeleteConnectionParams) WithConnectionID(ConnectionID string) *DeleteConnectionParams {
+	o.ConnectionID = ConnectionID
 	return o
 }
 
 // WithWorkspaceID adds the workspaceId to the delete connection params
-func (o *DeleteConnectionParams) WithWorkspaceID(workspaceId string) *DeleteConnectionParams {
-	o.WorkspaceID = workspaceId
+func (o *DeleteConnectionParams) WithWorkspaceID(WorkspaceID string) *DeleteConnectionParams {
+	o.WorkspaceID = WorkspaceID
 	return o
 }
 

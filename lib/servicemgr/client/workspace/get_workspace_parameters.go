@@ -30,8 +30,8 @@ type GetWorkspaceParams struct {
 }
 
 // WithWorkspaceID adds the workspaceId to the get workspace params
-func (o *GetWorkspaceParams) WithWorkspaceID(workspaceId string) *GetWorkspaceParams {
-	o.WorkspaceID = workspaceId
+func (o *GetWorkspaceParams) WithWorkspaceID(WorkspaceID string) *GetWorkspaceParams {
+	o.WorkspaceID = WorkspaceID
 	return o
 }
 

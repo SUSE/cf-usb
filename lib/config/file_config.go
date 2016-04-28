@@ -34,43 +34,15 @@ func (c *fileConfig) LoadConfiguration() (*Config, error) {
 	c.loaded = true
 	c.config = config
 
-	c.config.DriversPath, err = c.GetDriversPath()
-	if err != nil {
-		return nil, err
-	}
-
 	if os.Getenv("PORT") != "" {
 		c.config.BrokerAPI.Listen = ":" + os.Getenv("PORT")
 	}
 	return config, nil
 }
 
-func (c *fileConfig) GetDriversPath() (string, error) {
+func (c *fileConfig) LoadDriverInstance(instanceID string) (*Instance, error) {
 
-	if !c.loaded {
-		_, err := c.LoadConfiguration()
-		if err != nil {
-			return "", err
-		}
-	}
-
-	path := c.config.DriversPath
-
-	if path == "" {
-		if os.Getenv("USB_DRIVER_PATH") != "" {
-			path = os.Getenv("USB_DRIVER_PATH")
-		} else {
-			path = "drivers"
-		}
-	}
-
-	return path, nil
-
-}
-
-func (c *fileConfig) LoadDriverInstance(instanceID string) (*DriverInstance, error) {
-
-	var instance DriverInstance
+	var instance Instance
 	exists := false
 
 	if !c.loaded {
@@ -80,13 +52,11 @@ func (c *fileConfig) LoadDriverInstance(instanceID string) (*DriverInstance, err
 		}
 	}
 
-	for _, d := range c.config.Drivers {
-		for diKey, di := range d.DriverInstances {
-			if diKey == instanceID {
-				instance = di
-				exists = true
-				break
-			}
+	for diKey, di := range c.config.Instances {
+		if diKey == instanceID {
+			instance = di
+			exists = true
+			break
 		}
 	}
 
@@ -109,21 +79,10 @@ func (c *fileConfig) GetUaaAuthConfig() (*UaaAuth, error) {
 	return &uaa.UaaAuth, nil
 }
 
-func (c *fileConfig) GetDriver(driverID string) (*Driver, error) {
-	for id, d := range c.config.Drivers {
-		if id == driverID {
-			return &d, nil
-		}
-	}
-	return nil, nil
-}
-
-func (c *fileConfig) GetDriverInstance(instanceID string) (*DriverInstance, string, error) {
-	for parentId, d := range c.config.Drivers {
-		for diKey, i := range d.DriverInstances {
-			if diKey == instanceID {
-				return &i, parentId, nil
-			}
+func (c *fileConfig) GetInstance(instanceID string) (*Instance, string, error) {
+	for diKey, i := range c.config.Instances {
+		if diKey == instanceID {
+			return &i, diKey, nil
 		}
 	}
 	return nil, "", nil
@@ -136,11 +95,9 @@ func (c *fileConfig) GetService(serviceID string) (*brokerapi.Service, string, e
 			return nil, "", err
 		}
 	}
-	for _, d := range c.config.Drivers {
-		for diKey, i := range d.DriverInstances {
-			if i.Service.ID == serviceID {
-				return &i.Service, diKey, nil
-			}
+	for diKey, i := range c.config.Instances {
+		if i.Service.ID == serviceID {
+			return &i.Service, diKey, nil
 		}
 	}
 
@@ -148,23 +105,18 @@ func (c *fileConfig) GetService(serviceID string) (*brokerapi.Service, string, e
 }
 
 func (c *fileConfig) GetDial(dialID string) (*Dial, string, error) {
-	for _, d := range c.config.Drivers {
-		for instanceID, instance := range d.DriverInstances {
-			for dialID, dial := range instance.Dials {
-				if dialID == dialID {
-					return &dial, instanceID, nil
-				}
+	for instanceID, instance := range c.config.Instances {
+		for dialID, dial := range instance.Dials {
+			if dialID == dialID {
+				return &dial, instanceID, nil
 			}
 		}
+
 	}
 	return nil, "", nil
 }
 
-func (c *fileConfig) SetDriver(driverID string, driverInfo Driver) error {
-	return errors.New("SetDriver not available for file config provider")
-}
-
-func (c *fileConfig) SetDriverInstance(driverID string, instanceID string, instance DriverInstance) error {
+func (c *fileConfig) SetInstance(instanceID string, instance Instance) error {
 	return errors.New("SetDriverInstance not available for file config provider")
 }
 
@@ -176,11 +128,7 @@ func (c *fileConfig) SetDial(instanceID string, dialID string, dialInfo Dial) er
 	return errors.New("SetDial not available for file config provider")
 }
 
-func (c *fileConfig) DeleteDriver(driverID string) error {
-	return errors.New("DeleteDriver not available for file config provider")
-}
-
-func (c *fileConfig) DeleteDriverInstance(instanceID string) error {
+func (c *fileConfig) DeleteInstance(instanceID string) error {
 	return errors.New("DeleteDriverInstance not available for file config provider")
 }
 
@@ -192,7 +140,7 @@ func (c *fileConfig) DeleteDial(dialID string) error {
 	return errors.New("DeleteDial not available for file config provider")
 }
 
-func (c *fileConfig) DriverInstanceNameExists(driverInstanceName string) (bool, error) {
+func (c *fileConfig) InstanceNameExists(driverInstanceName string) (bool, error) {
 	if !c.loaded {
 		_, err := c.LoadConfiguration()
 		if err != nil {
@@ -200,44 +148,8 @@ func (c *fileConfig) DriverInstanceNameExists(driverInstanceName string) (bool, 
 		}
 	}
 
-	for _, d := range c.config.Drivers {
-		for _, di := range d.DriverInstances {
-			if di.Name == driverInstanceName {
-				return true, nil
-			}
-		}
-	}
-
-	return false, nil
-}
-
-func (c *fileConfig) DriverTypeExists(driverType string) (bool, error) {
-	if !c.loaded {
-		_, err := c.LoadConfiguration()
-		if err != nil {
-			return false, err
-		}
-	}
-
-	for _, d := range c.config.Drivers {
-		if d.DriverType == driverType {
-			return true, nil
-		}
-	}
-
-	return false, nil
-}
-
-func (c *fileConfig) DriverExists(driverID string) (bool, error) {
-	if !c.loaded {
-		_, err := c.LoadConfiguration()
-		if err != nil {
-			return false, err
-		}
-	}
-
-	for id, _ := range c.config.Drivers {
-		if id == driverID {
+	for _, di := range c.config.Instances {
+		if di.Name == driverInstanceName {
 			return true, nil
 		}
 	}
@@ -252,14 +164,13 @@ func (c *fileConfig) GetPlan(planid string) (*brokerapi.ServicePlan, string, str
 			return nil, "", "", err
 		}
 	}
-	for _, d := range c.config.Drivers {
-		for iID, i := range d.DriverInstances {
-			for dialID, di := range i.Dials {
-				if di.Plan.ID == planid {
-					return &di.Plan, dialID, iID, nil
-				}
+	for iID, i := range c.config.Instances {
+		for dialID, di := range i.Dials {
+			if di.Plan.ID == planid {
+				return &di.Plan, dialID, iID, nil
 			}
 		}
+
 	}
 	return nil, "", "", nil
 }

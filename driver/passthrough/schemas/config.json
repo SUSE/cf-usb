@@ -1,9 +1,0 @@
-{
-	"type" : "object",
-	"properties" : {
-		"static_config": {
-			"type" : "string"
-		}
-	},
-	"required" : ["static_config"]
-}

@@ -25,17 +25,17 @@ type Service struct {
 	 */
 	Description string `json:"description,omitempty"`
 
-	/* driver instance id
+	/* id
+	 */
+	ID string `json:"id,omitempty"`
+
+	/* instance id
 
 	Required: true
 	Max Length: 36
 	Min Length: 36
 	*/
-	DriverInstanceID *string `json:"driver_instance_id"`
-
-	/* id
-	 */
-	ID string `json:"id,omitempty"`
+	InstanceID *string `json:"instance_id"`
 
 	/* metadata
 	 */
@@ -58,7 +58,7 @@ type Service struct {
 func (m *Service) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateDriverInstanceID(formats); err != nil {
+	if err := m.validateInstanceID(formats); err != nil {
 		// prop
 		res = append(res, err)
 	}
@@ -79,17 +79,17 @@ func (m *Service) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *Service) validateDriverInstanceID(formats strfmt.Registry) error {
+func (m *Service) validateInstanceID(formats strfmt.Registry) error {
 
-	if err := validate.Required("driver_instance_id", "body", m.DriverInstanceID); err != nil {
+	if err := validate.Required("instance_id", "body", m.InstanceID); err != nil {
 		return err
 	}
 
-	if err := validate.MinLength("driver_instance_id", "body", string(*m.DriverInstanceID), 36); err != nil {
+	if err := validate.MinLength("instance_id", "body", string(*m.InstanceID), 36); err != nil {
 		return err
 	}
 
-	if err := validate.MaxLength("driver_instance_id", "body", string(*m.DriverInstanceID), 36); err != nil {
+	if err := validate.MaxLength("instance_id", "body", string(*m.InstanceID), 36); err != nil {
 		return err
 	}
 

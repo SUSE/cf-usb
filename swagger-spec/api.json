@@ -1,1072 +1,723 @@
 {
-    "swagger": "2.0",
-    "info": {
-        "description": "Universal service broker management API",
-        "version": "0.0.1",
-        "title": "USB management api",
-        "termsOfService": "https://github.com/hpcloud/cf-usb",
-        "contact": {
-            "email": "hcf-dev@hpe.com"
-        },
-        "license": {
-            "name": "Apache 2.0",
-            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
-        }
-    },
-    "securityDefinitions": {
-        "Authorization": {
-            "type": "apiKey",
-            "in": "header",
-            "name": "Authorization",
-            "description": "UAA Token"
-        }
-    },
-    "security": [
-        {
-            "Authorization": []
-        }
-    ],
-    "consumes": [
-        "application/json"
-    ],
-    "produces": [
-        "application/json"
-    ],
-    "paths": {
-        "/update_catalog": {
-            "post": {
-                "description": "Updates the broker catalog\n",
-                "operationId": "updateCatalog",
-                "responses": {
-                    "200": {
-                        "description": "Successful response"
-                    },
-                    "500": {
-                        "description": "Unexpected error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/info": {
-            "get": {
-                "description": "Gets information about the USB.\n",
-                "operationId": "getInfo",
-                "responses": {
-                    "200": {
-                        "description": "Successful response",
-                        "schema": {
-                            "$ref": "#/definitions/info"
-                        }
-                    },
-                    "500": {
-                        "description": "Unexpected error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/drivers": {
-            "get": {
-                "description": "Gets information about the available `drivers`\n",
-                "operationId": "getDrivers",
-                "responses": {
-                    "200": {
-                        "description": "Successful response",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/driver"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Unexpected error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "Create a new driver\n",
-                "operationId": "createDriver",
-                "parameters": [
-                    {
-                        "name": "driver",
-                        "in": "body",
-                        "description": "Driver to be created",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/driver"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Driver created",
-                        "schema": {
-                            "$ref": "#/definitions/driver"
-                        }
-                    },
-                    "409": {
-                        "description": "A driver with the same type already exists"
-                    },
-                    "500": {
-                        "description": "Unexpected error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/drivers/{driver_id}": {
-            "get": {
-                "description": "Get driver",
-                "operationId": "getDriver",
-                "parameters": [
-                    {
-                        "name": "driver_id",
-                        "in": "path",
-                        "description": "Driver ID",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/driver"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found"
-                    },
-                    "500": {
-                        "description": "Unexpected error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "description": "Update driver",
-                "operationId": "updateDriver",
-                "parameters": [
-                    {
-                        "name": "driver_id",
-                        "in": "path",
-                        "description": "Driver ID",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
-                        "name": "driver",
-                        "in": "body",
-                        "description": "Driver to be updated",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/driver"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Driver updated",
-                        "schema": {
-                            "$ref": "#/definitions/driver"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found"
-                    },
-                    "409": {
-                        "description": "A driver with the same type already exists"
-                    },
-                    "500": {
-                        "description": "Unexpected error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "Update driver",
-                "operationId": "deleteDriver",
-                "parameters": [
-                    {
-                        "name": "driver_id",
-                        "in": "path",
-                        "description": "Driver ID",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "Driver deleted"
-                    },
-                    "404": {
-                        "description": "Not Found"
-                    },
-                    "500": {
-                        "description": "Unexpected error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/drivers/{driver_id}/bits": {
-            "put": {
-                "description": "Upload driver bits",
-                "operationId": "uploadDriver",
-                "parameters": [
-                    {
-                        "name": "driver_id",
-                        "in": "path",
-                        "description": "Driver ID",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
-                        "name": "sha",
-                        "in": "formData",
-                        "description": "file sha1 base64 encoded",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
-                        "name": "file",
-                        "in": "formData",
-                        "description": "Driver executable",
-                        "required": true,
-                        "type": "file"
-                    }
-                ],
-                "consumes": [
-                    "multipart/form-data"
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Driver uploaded"
-                    },
-                    "404": {
-                        "description": "Not Found"
-                    },
-                    "500": {
-                        "description": "Unexpected error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/drivers/{driver_id}/config_schema": {
-            "get": {
-                "description": "Get driver config schema",
-                "operationId": "getDriverSchema",
-                "parameters": [
-                    {
-                        "name": "driver_id",
-                        "in": "path",
-                        "description": "Driver ID",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/driver_schema"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found"
-                    },
-                    "500": {
-                        "description": "Unexpected error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/drivers/{driver_id}/dial_schema": {
-            "get": {
-                "description": "Get dial schema",
-                "operationId": "getDialSchema",
-                "parameters": [
-                    {
-                        "name": "driver_id",
-                        "in": "path",
-                        "description": "Driver ID",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dial_schema"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found"
-                    },
-                    "500": {
-                        "description": "Unexpected error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/driver_instances": {
-            "get": {
-                "description": "Gets driver instances for a driver\n",
-                "operationId": "getDriverInstances",
-                "parameters": [
-                    {
-                        "name": "driver_id",
-                        "description": "Driver ID",
-                        "in": "query",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/driver_instance"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Unexpected error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "Create a driver instance",
-                "operationId": "createDriverInstance",
-                "parameters": [
-                    {
-                        "name": "driver_instance",
-                        "description": "driver instance to be created",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/driver_instance"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Instance created",
-                        "schema": {
-                            "$ref": "#/definitions/driver_instance"
-                        }
-                    },
-                    "409": {
-                        "description": "Conflict"
-                    },
-                    "500": {
-                        "description": "Unexpected error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/driver_instances/{driver_instance_id}": {
-            "get": {
-                "description": "Gets driver configurations\n",
-                "operationId": "getDriverInstance",
-                "parameters": [
-                    {
-                        "name": "driver_instance_id",
-                        "in": "path",
-                        "description": "Driver Instance ID",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/driver_instance"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found"
-                    },
-                    "500": {
-                        "description": "Unexpected error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "description": "Update a driver instance\n",
-                "operationId": "updateDriverInstance",
-                "parameters": [
-                    {
-                        "name": "driver_instance_id",
-                        "in": "path",
-                        "description": "Driver Instance ID",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
-                        "name": "driver_config",
-                        "in": "body",
-                        "description": "Add driver_config",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/driver_instance"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Sucessfull response",
-                        "schema": {
-                            "$ref": "#/definitions/driver_instance"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found"
-                    },
-                    "409": {
-                        "description": "Conflict"
-                    },
-                    "500": {
-                        "description": "Unexpected error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "Delete a driver instance",
-                "operationId": "deleteDriverInstance",
-                "parameters": [
-                    {
-                        "name": "driver_instance_id",
-                        "in": "path",
-                        "description": "Driver Instance ID",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "Driver deleted"
-                    },
-                    "404": {
-                        "description": "Not Found"
-                    },
-                    "500": {
-                        "description": "Unexpected error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/driver_instances/{driver_instance_id}/ping": {
-            "get": {
-                "description": "Pings the driver\n",
-                "operationId": "pingDriverInstance",
-                "parameters": [
-                    {
-                        "name": "driver_instance_id",
-                        "in": "path",
-                        "description": "Driver Instance ID",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    },
-                    "404": {
-                        "description": "Not Found"
-                    },
-                    "500": {
-                        "description": "Unexpected error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/services": {
-            "get": {
-                "description": "Gets the existing `service`\n",
-                "operationId": "getServiceByInstanceId",
-                "parameters": [
-                    {
-                        "name": "driver_instance_id",
-                        "in": "query",
-                        "type": "string",
-                        "required": true,
-                        "description": "Driver instance ID"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Sucessfull response",
-                        "schema": {
-                            "$ref": "#/definitions/service"
-                        }
-                    },
-                    "500": {
-                        "description": "Unexpected error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/services/{service_id}": {
-            "get": {
-                "description": "Gets the `service` with the id **serviceID**",
-                "operationId": "getService",
-                "parameters": [
-                    {
-                        "name": "service_id",
-                        "in": "path",
-                        "description": "ID of the service",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Sucessfull response",
-                        "schema": {
-                            "$ref": "#/definitions/service"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found"
-                    },
-                    "500": {
-                        "description": "Unexpected error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "description": "Updates the `service` with the id **serviceID**",
-                "operationId": "updateService",
-                "parameters": [
-                    {
-                        "name": "service_id",
-                        "in": "path",
-                        "description": "ID of the service",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
-                        "name": "service",
-                        "in": "body",
-                        "description": "Update service",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/service"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Sucessfull response",
-                        "schema": {
-                            "$ref": "#/definitions/service"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found"
-                    },
-                    "409": {
-                        "description": "Conflict"
-                    },
-                    "500": {
-                        "description": "Unexpected error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/plans": {
-            "get": {
-                "description": "Gets `plans`",
-                "operationId": "getServicePlans",
-                "parameters": [
-                    {
-                        "name": "driver_instance_id",
-                        "in": "query",
-                        "type": "string",
-                        "required": false,
-                        "description": "Driver Instance ID"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Sucessfull response",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/plan"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Unexpected error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/plans/{plan_id}": {
-            "get": {
-                "description": "Gets the `plan` with the **planID**",
-                "operationId": "getServicePlan",
-                "parameters": [
-                    {
-                        "name": "plan_id",
-                        "in": "path",
-                        "description": "ID of the plan",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Sucessfull response",
-                        "schema": {
-                            "$ref": "#/definitions/plan"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found"
-                    },
-                    "500": {
-                        "description": "Unexpected error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "description": "Updates the plan with the id **planID** for the service id **serviceID**",
-                "operationId": "updateServicePlan",
-                "parameters": [
-                    {
-                        "name": "plan_id",
-                        "in": "path",
-                        "description": "ID of the plan",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
-                        "name": "plan",
-                        "in": "body",
-                        "description": "Update plan",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/plan"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Sucessfull response",
-                        "schema": {
-                            "$ref": "#/definitions/plan"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found"
-                    },
-                    "500": {
-                        "description": "Unexpected error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/dials": {
-            "get": {
-                "description": "Gets `dials`",
-                "operationId": "getAllDials",
-                "parameters": [
-                    {
-                        "name": "driver_instance_id",
-                        "in": "query",
-                        "type": "string",
-                        "required": false,
-                        "description": "Driver instance ID"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Sucessfull response",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/dial"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Unexpected error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "Create a dial for",
-                "operationId": "createDial",
-                "parameters": [
-                    {
-                        "name": "dial",
-                        "in": "body",
-                        "description": "New dial",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dial"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Sucessfull response",
-                        "schema": {
-                            "$ref": "#/definitions/dial"
-                        }
-                    },
-                    "500": {
-                        "description": "Unexpected error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/dials/{dial_id}": {
-            "get": {
-                "description": "Gets the `dial` with the **dial_id**",
-                "operationId": "getDial",
-                "parameters": [
-                    {
-                        "name": "dial_id",
-                        "in": "path",
-                        "description": "ID of the dial",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Sucessfull response",
-                        "schema": {
-                            "$ref": "#/definitions/dial"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found"
-                    },
-                    "500": {
-                        "description": "Unexpected error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "description": "Updates the dial with the id **dial_id**",
-                "operationId": "updateDial",
-                "parameters": [
-                    {
-                        "name": "dial_id",
-                        "in": "path",
-                        "description": "ID of the dial",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
-                        "name": "dial",
-                        "in": "body",
-                        "description": "Updated dial",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dial"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Sucessfull response",
-                        "schema": {
-                            "$ref": "#/definitions/dial"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found"
-                    },
-                    "500": {
-                        "description": "Unexpected error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "Delets the `dial` with the **dial_id**",
-                "operationId": "deleteDial",
-                "parameters": [
-                    {
-                        "name": "dial_id",
-                        "in": "path",
-                        "description": "ID of the dial",
-                        "required": true,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "Sucessfull response"
-                    },
-                    "404": {
-                        "description": "Not Found"
-                    },
-                    "500": {
-                        "description": "Unexpected error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        }
-    },
-    "definitions": {
-        "info": {
-            "type": "object",
-            "required": [
-                "broker_api_version",
+	"swagger": "2.0",
+	"info": {
+		"description": "Universal service broker management API",
+		"version": "0.0.1",
+		"title": "USB management api",
+		"termsOfService": "https://github.com/hpcloud/cf-usb",
+		"contact": {
+			"email": "hcf-dev@hpe.com"
+		},
+		"license": {
+			"name": "Apache 2.0",
+			"url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+		}
+	},
+	"securityDefinitions": {
+		"Authorization": {
+			"type": "apiKey",
+			"in": "header",
+			"name": "Authorization",
+			"description": "UAA Token"
+		}
+	},
+	"security": [{
+		"Authorization": []
+	}],
+	"consumes": [
+		"application/json"
+	],
+	"produces": [
+		"application/json"
+	],
+	"paths": {
+		"/update_catalog": {
+			"post": {
+				"description": "Updates the broker catalog\n",
+				"operationId": "updateCatalog",
+				"responses": {
+					"200": {
+						"description": "Successful response"
+					},
+					"500": {
+						"description": "Unexpected error",
+						"schema": {
+							"type": "string"
+						}
+					}
+				}
+			}
+		},
+		"/info": {
+			"get": {
+				"description": "Gets information about the USB.\n",
+				"operationId": "getInfo",
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"schema": {
+							"$ref": "#/definitions/info"
+						}
+					},
+					"500": {
+						"description": "Unexpected error",
+						"schema": {
+							"type": "string"
+						}
+					}
+				}
+			}
+		},
+		"/instances": {
+			"get": {
+				"description": "Gets available instances",
+				"operationId": "getInstances",
+				"parameters": [],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"schema": {
+							"type": "array",
+							"items": {
+								"$ref": "#/definitions/instance"
+							}
+						}
+					},
+					"500": {
+						"description": "Unexpected error",
+						"schema": {
+							"type": "string"
+						}
+					}
+				}
+			},
+			"post": {
+				"description": "Create an instance",
+				"operationId": "createInstance",
+				"parameters": [{
+					"name": "instance",
+					"description": "Instance to be created",
+					"in": "body",
+					"required": true,
+					"schema": {
+						"$ref": "#/definitions/instance"
+					}
+				}],
+				"responses": {
+					"201": {
+						"description": "Instance created",
+						"schema": {
+							"$ref": "#/definitions/instance"
+						}
+					},
+					"409": {
+						"description": "Conflict"
+					},
+					"500": {
+						"description": "Unexpected error",
+						"schema": {
+							"type": "string"
+						}
+					}
+				}
+			}
+		},
+		"/instances/{instance_id}": {
+			"get": {
+				"description": "Gets instance configurations\n",
+				"operationId": "getInstance",
+				"parameters": [{
+					"name": "instance_id",
+					"in": "path",
+					"description": "Instance ID",
+					"required": true,
+					"type": "string"
+				}],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"schema": {
+							"$ref": "#/definitions/instance"
+						}
+					},
+					"404": {
+						"description": "Not Found"
+					},
+					"500": {
+						"description": "Unexpected error",
+						"schema": {
+							"type": "string"
+						}
+					}
+				}
+			},
+			"put": {
+				"description": "Update an instance\n",
+				"operationId": "updateInstance",
+				"parameters": [{
+					"name": "instance_id",
+					"in": "path",
+					"description": "Instance ID",
+					"required": true,
+					"type": "string"
+				}, {
+					"name": "instance_config",
+					"in": "body",
+					"description": "Add instance_config",
+					"required": true,
+					"schema": {
+						"$ref": "#/definitions/instance"
+					}
+				}],
+				"responses": {
+					"200": {
+						"description": "Sucessfull response",
+						"schema": {
+							"$ref": "#/definitions/instance"
+						}
+					},
+					"404": {
+						"description": "Not Found"
+					},
+					"409": {
+						"description": "Conflict"
+					},
+					"500": {
+						"description": "Unexpected error",
+						"schema": {
+							"type": "string"
+						}
+					}
+				}
+			},
+			"delete": {
+				"description": "Delete an instance",
+				"operationId": "deleteInstance",
+				"parameters": [{
+					"name": "instance_id",
+					"in": "path",
+					"description": "Instance ID",
+					"required": true,
+					"type": "string"
+				}],
+				"responses": {
+					"204": {
+						"description": "Instance deleted"
+					},
+					"404": {
+						"description": "Not Found"
+					},
+					"500": {
+						"description": "Unexpected error",
+						"schema": {
+							"type": "string"
+						}
+					}
+				}
+			}
+		},
+		"/instances/{instance_id}/ping": {
+			"get": {
+				"description": "Pings the instance\n",
+				"operationId": "pingInstance",
+				"parameters": [{
+					"name": "instance_id",
+					"in": "path",
+					"description": "Instance ID",
+					"required": true,
+					"type": "string"
+				}],
+				"responses": {
+					"200": {
+						"description": "OK"
+					},
+					"404": {
+						"description": "Not Found"
+					},
+					"500": {
+						"description": "Unexpected error",
+						"schema": {
+							"type": "string"
+						}
+					}
+				}
+			}
+		},
+		"/services": {
+			"get": {
+				"description": "Gets the existing `service`\n",
+				"operationId": "getServiceByInstanceId",
+				"parameters": [{
+					"name": "instance_id",
+					"in": "query",
+					"type": "string",
+					"required": true,
+					"description": "Instance ID"
+				}],
+				"responses": {
+					"200": {
+						"description": "Sucessfull response",
+						"schema": {
+							"$ref": "#/definitions/service"
+						}
+					},
+					"500": {
+						"description": "Unexpected error",
+						"schema": {
+							"type": "string"
+						}
+					}
+				}
+			}
+		},
+		"/services/{service_id}": {
+			"get": {
+				"description": "Gets the `service` with the id **serviceID**",
+				"operationId": "getService",
+				"parameters": [{
+					"name": "service_id",
+					"in": "path",
+					"description": "ID of the service",
+					"required": true,
+					"type": "string"
+				}],
+				"responses": {
+					"200": {
+						"description": "Sucessfull response",
+						"schema": {
+							"$ref": "#/definitions/service"
+						}
+					},
+					"404": {
+						"description": "Not Found"
+					},
+					"500": {
+						"description": "Unexpected error",
+						"schema": {
+							"type": "string"
+						}
+					}
+				}
+			},
+			"put": {
+				"description": "Updates the `service` with the id **serviceID**",
+				"operationId": "updateService",
+				"parameters": [{
+					"name": "service_id",
+					"in": "path",
+					"description": "ID of the service",
+					"required": true,
+					"type": "string"
+				}, {
+					"name": "service",
+					"in": "body",
+					"description": "Update service",
+					"required": true,
+					"schema": {
+						"$ref": "#/definitions/service"
+					}
+				}],
+				"responses": {
+					"200": {
+						"description": "Sucessfull response",
+						"schema": {
+							"$ref": "#/definitions/service"
+						}
+					},
+					"404": {
+						"description": "Not Found"
+					},
+					"409": {
+						"description": "Conflict"
+					},
+					"500": {
+						"description": "Unexpected error",
+						"schema": {
+							"type": "string"
+						}
+					}
+				}
+			}
+		},
+		"/plans": {
+			"get": {
+				"description": "Gets `plans`",
+				"operationId": "getServicePlans",
+				"parameters": [{
+					"name": "instance_id",
+					"in": "query",
+					"type": "string",
+					"required": false,
+					"description": "Instance ID"
+				}],
+				"responses": {
+					"200": {
+						"description": "Sucessfull response",
+						"schema": {
+							"type": "array",
+							"items": {
+								"$ref": "#/definitions/plan"
+							}
+						}
+					},
+					"500": {
+						"description": "Unexpected error",
+						"schema": {
+							"type": "string"
+						}
+					}
+				}
+			}
+		},
+		"/plans/{plan_id}": {
+			"get": {
+				"description": "Gets the `plan` with the **planID**",
+				"operationId": "getServicePlan",
+				"parameters": [{
+					"name": "plan_id",
+					"in": "path",
+					"description": "ID of the plan",
+					"required": true,
+					"type": "string"
+				}],
+				"responses": {
+					"200": {
+						"description": "Sucessfull response",
+						"schema": {
+							"$ref": "#/definitions/plan"
+						}
+					},
+					"404": {
+						"description": "Not Found"
+					},
+					"500": {
+						"description": "Unexpected error",
+						"schema": {
+							"type": "string"
+						}
+					}
+				}
+			},
+			"put": {
+				"description": "Updates the plan with the id **planID** for the service id **serviceID**",
+				"operationId": "updateServicePlan",
+				"parameters": [{
+					"name": "plan_id",
+					"in": "path",
+					"description": "ID of the plan",
+					"required": true,
+					"type": "string"
+				}, {
+					"name": "plan",
+					"in": "body",
+					"description": "Update plan",
+					"required": true,
+					"schema": {
+						"$ref": "#/definitions/plan"
+					}
+				}],
+				"responses": {
+					"200": {
+						"description": "Sucessfull response",
+						"schema": {
+							"$ref": "#/definitions/plan"
+						}
+					},
+					"404": {
+						"description": "Not Found"
+					},
+					"500": {
+						"description": "Unexpected error",
+						"schema": {
+							"type": "string"
+						}
+					}
+				}
+			}
+		},
+		"/dials": {
+			"get": {
+				"description": "Gets `dials`",
+				"operationId": "getAllDials",
+				"parameters": [{
+					"name": "instance_id",
+					"in": "query",
+					"type": "string",
+					"required": false,
+					"description": "Instance ID"
+				}],
+				"responses": {
+					"200": {
+						"description": "Sucessfull response",
+						"schema": {
+							"type": "array",
+							"items": {
+								"$ref": "#/definitions/dial"
+							}
+						}
+					},
+					"500": {
+						"description": "Unexpected error",
+						"schema": {
+							"type": "string"
+						}
+					}
+				}
+			},
+			"post": {
+				"description": "Create a dial for",
+				"operationId": "createDial",
+				"parameters": [{
+					"name": "dial",
+					"in": "body",
+					"description": "New dial",
+					"required": true,
+					"schema": {
+						"$ref": "#/definitions/dial"
+					}
+				}],
+				"responses": {
+					"201": {
+						"description": "Sucessfull response",
+						"schema": {
+							"$ref": "#/definitions/dial"
+						}
+					},
+					"500": {
+						"description": "Unexpected error",
+						"schema": {
+							"type": "string"
+						}
+					}
+				}
+			}
+		},
+		"/dials/{dial_id}": {
+			"get": {
+				"description": "Gets the `dial` with the **dial_id**",
+				"operationId": "getDial",
+				"parameters": [{
+					"name": "dial_id",
+					"in": "path",
+					"description": "ID of the dial",
+					"required": true,
+					"type": "string"
+				}],
+				"responses": {
+					"200": {
+						"description": "Sucessfull response",
+						"schema": {
+							"$ref": "#/definitions/dial"
+						}
+					},
+					"404": {
+						"description": "Not Found"
+					},
+					"500": {
+						"description": "Unexpected error",
+						"schema": {
+							"type": "string"
+						}
+					}
+				}
+			},
+			"put": {
+				"description": "Updates the dial with the id **dial_id**",
+				"operationId": "updateDial",
+				"parameters": [{
+					"name": "dial_id",
+					"in": "path",
+					"description": "ID of the dial",
+					"required": true,
+					"type": "string"
+				}, {
+					"name": "dial",
+					"in": "body",
+					"description": "Updated dial",
+					"required": true,
+					"schema": {
+						"$ref": "#/definitions/dial"
+					}
+				}],
+				"responses": {
+					"200": {
+						"description": "Sucessfull response",
+						"schema": {
+							"$ref": "#/definitions/dial"
+						}
+					},
+					"404": {
+						"description": "Not Found"
+					},
+					"500": {
+						"description": "Unexpected error",
+						"schema": {
+							"type": "string"
+						}
+					}
+				}
+			},
+			"delete": {
+				"description": "Delets the `dial` with the **dial_id**",
+				"operationId": "deleteDial",
+				"parameters": [{
+					"name": "dial_id",
+					"in": "path",
+					"description": "ID of the dial",
+					"required": true,
+					"type": "string"
+				}],
+				"responses": {
+					"204": {
+						"description": "Sucessfull response"
+					},
+					"404": {
+						"description": "Not Found"
+					},
+					"500": {
+						"description": "Unexpected error",
+						"schema": {
+							"type": "string"
+						}
+					}
+				}
+			}
+		}
+	},
+	"definitions": {
+		"info": {
+			"type": "object",
+			"required": [
+				"broker_api_version",
 				"usb_version"
-            ],
-            "properties": {
-                "broker_api_version": {
-                   "type": "string"
-                },
-				 "usb_version": {
-                   "type": "string"
-                }
-            }
-        },
-        "service": {
-            "type": "object",
-            "required": [
-                "driver_instance_id",
-                "name"
-            ],
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "driver_instance_id": {
-                    "type": "string",
-                    "minLength": 36,
-                    "maxLength": 36
-                },
-                "bindable": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string",
-                    "minLength": 3,
-                    "maxLength": 50
-                },
-                "description": {
-                    "type": "string"
-                },
-                "tags": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "metadata": {
-                    "type": "object"
-                }
-            }
-        },
-        "plan": {
-            "type": "object",
-            "required": [
-                "dial_id",
-                "name"
-            ],
-            "properties": {
-                "name": {
-                    "type": "string",
-                    "minLength": 3,
-                    "maxLength": 50
-                },
-                "id": {
-                    "type": "string"
-                },
-                "dial_id": {
-                    "type": "string",
-                    "minLength": 36,
-                    "maxLength": 36
-                },
-                "description": {
-                    "type": "string"
-                },
-                "free": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "dial": {
-            "type": "object",
-            "required": [
-                "driver_instance_id"
-            ],
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "driver_instance_id": {
-                    "type": "string",
-                    "minLength": 36,
-                    "maxLength": 36
-                },
-                "configuration": {
-                    "type": "object"
-                },
-                "plan": {
-                    "type": "string"
-                }
-            }
-        },
-        "driver_instance": {
-            "type": "object",
-            "required": [
-                "driver_id",
-                "name"
-            ],
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "driver_id": {
-                    "type": "string",
-                    "minLength": 36,
-                    "maxLength": 36
-                },
-                "name": {
-                    "type": "string"
-                },
-                "targetURL": {
-                    "type": "string"
-                },
-			  "configuration": {
-                    "type": "object"
-                },
-                "dials": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "service": {
-                    "type": "string"
-                }
-            }
-        },
-        "driver": {
-            "type": "object",
-            "required": [
-                "name",
-                "driver_type"
-            ],
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string",
-                    "minLength": 3,
-                    "maxLength": 50
-                },
-                "driver_type": {
-                    "type": "string",
-                    "minLength": 3,
-                    "maxLength": 50
-                },
-                "driver_instances": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "dial_schema": {
-            "type": "string"
-        },
-        "driver_schema": {
-            "type": "string"
-        }
-    }
+			],
+			"properties": {
+				"broker_api_version": {
+					"type": "string"
+				},
+				"usb_version": {
+					"type": "string"
+				}
+			}
+		},
+		"service": {
+			"type": "object",
+			"required": [
+				"instance_id",
+				"name"
+			],
+			"properties": {
+				"id": {
+					"type": "string"
+				},
+				"instance_id": {
+					"type": "string",
+					"minLength": 36,
+					"maxLength": 36
+				},
+				"bindable": {
+					"type": "boolean"
+				},
+				"name": {
+					"type": "string",
+					"minLength": 3,
+					"maxLength": 50
+				},
+				"description": {
+					"type": "string"
+				},
+				"tags": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					}
+				},
+				"metadata": {
+					"type": "object"
+				}
+			}
+		},
+		"plan": {
+			"type": "object",
+			"required": [
+				"dial_id",
+				"name"
+			],
+			"properties": {
+				"name": {
+					"type": "string",
+					"minLength": 3,
+					"maxLength": 50
+				},
+				"id": {
+					"type": "string"
+				},
+				"dial_id": {
+					"type": "string",
+					"minLength": 36,
+					"maxLength": 36
+				},
+				"description": {
+					"type": "string"
+				},
+				"free": {
+					"type": "boolean"
+				}
+			}
+		},
+		"dial": {
+			"type": "object",
+			"required": [
+				"instance_id"
+			],
+			"properties": {
+				"id": {
+					"type": "string"
+				},
+				"instance_id": {
+					"type": "string",
+					"minLength": 36,
+					"maxLength": 36
+				},
+				"configuration": {
+					"type": "object"
+				},
+				"plan": {
+					"type": "string"
+				}
+			}
+		},
+		"instance": {
+			"type": "object",
+			"required": [
+				"name"
+			],
+			"properties": {
+				"id": {
+					"type": "string"
+				},
+				"name": {
+					"type": "string"
+				},
+				"targetURL": {
+					"type": "string"
+				},
+				"configuration": {
+					"type": "object"
+				},
+				"dials": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					}
+				},
+				"service": {
+					"type": "string"
+				}
+			}
+		},
+		"dial_schema": {
+			"type": "string"
+		}
+	}
 }

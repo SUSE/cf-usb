@@ -81,7 +81,6 @@ func (s *ServiceManager) DeleteWorkspace(workspace_id string) models.Error {
 
 func (s *ServiceManager) CreateWorkspaceConnection(workspace_id string, request models.ServiceManagerConnectionCreateRequest) (models.ServiceManagerConnectionResponse, models.Error) {
 	s.logger.Info("create connection", lager.Data{"workspace_id": workspace_id})
-
 	response := models.ServiceManagerConnectionResponse{}
 	error := models.Error{}
 	params := connection.CreateConnectionParams{}
@@ -101,7 +100,6 @@ func (s *ServiceManager) CreateWorkspaceConnection(workspace_id string, request 
 
 func (s *ServiceManager) GetWorkspaceConnection(workspace_id string, connection_id string) (models.ServiceManagerConnectionResponse, models.Error) {
 	s.logger.Info("get connection", lager.Data{"workspace_id": workspace_id, "connection_id": connection_id})
-
 	response := models.ServiceManagerConnectionResponse{}
 	error := models.Error{}
 

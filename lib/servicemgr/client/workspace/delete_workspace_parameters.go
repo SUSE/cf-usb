@@ -30,8 +30,8 @@ type DeleteWorkspaceParams struct {
 }
 
 // WithWorkspaceID adds the workspaceId to the delete workspace params
-func (o *DeleteWorkspaceParams) WithWorkspaceID(workspaceId string) *DeleteWorkspaceParams {
-	o.WorkspaceID = workspaceId
+func (o *DeleteWorkspaceParams) WithWorkspaceID(WorkspaceID string) *DeleteWorkspaceParams {
+	o.WorkspaceID = WorkspaceID
 	return o
 }
 

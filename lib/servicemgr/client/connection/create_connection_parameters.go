@@ -37,14 +37,14 @@ type CreateConnectionParams struct {
 }
 
 // WithConnectionCreateRequest adds the connectionCreateRequest to the create connection params
-func (o *CreateConnectionParams) WithConnectionCreateRequest(connectionCreateRequest *models.ServiceManagerConnectionCreateRequest) *CreateConnectionParams {
-	o.ConnectionCreateRequest = connectionCreateRequest
+func (o *CreateConnectionParams) WithConnectionCreateRequest(ConnectionCreateRequest *models.ServiceManagerConnectionCreateRequest) *CreateConnectionParams {
+	o.ConnectionCreateRequest = ConnectionCreateRequest
 	return o
 }
 
 // WithWorkspaceID adds the workspaceId to the create connection params
-func (o *CreateConnectionParams) WithWorkspaceID(workspaceId string) *CreateConnectionParams {
-	o.WorkspaceID = workspaceId
+func (o *CreateConnectionParams) WithWorkspaceID(WorkspaceID string) *CreateConnectionParams {
+	o.WorkspaceID = WorkspaceID
 	return o
 }
 

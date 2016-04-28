@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/frodenas/brokerapi"
-	"github.com/go-swagger/go-swagger/spec"
 	"github.com/hpcloud/cf-usb/lib/config"
 	"github.com/hpcloud/cf-usb/lib/config/mocks"
 	"github.com/hpcloud/cf-usb/lib/data"

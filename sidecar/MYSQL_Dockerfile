@@ -1,0 +1,5 @@
+FROM scratch
+COPY build/linux/mysql/* /
+ENV PATH /:$PATH
+CMD ["broker-server", "--host","0.0.0.0","--port","62000"]
+EXPOSE 62000

@@ -32,8 +32,8 @@ type CreateWorkspaceParams struct {
 }
 
 // WithCreateWorkspaceRequest adds the createWorkspaceRequest to the create workspace params
-func (o *CreateWorkspaceParams) WithCreateWorkspaceRequest(createWorkspaceRequest *models.ServiceManagerWorkspaceCreateRequest) *CreateWorkspaceParams {
-	o.CreateWorkspaceRequest = createWorkspaceRequest
+func (o *CreateWorkspaceParams) WithCreateWorkspaceRequest(CreateWorkspaceRequest *models.ServiceManagerWorkspaceCreateRequest) *CreateWorkspaceParams {
+	o.CreateWorkspaceRequest = CreateWorkspaceRequest
 	return o
 }
 
