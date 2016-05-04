@@ -16,13 +16,16 @@ swagger:model info
 */
 type Info struct {
 
-	/* broker api version
+	/* The version of the Cloud Foundry Service Broker supported by this
+	instance of the USB.
+
 
 	Required: true
 	*/
 	BrokerAPIVersion *string `json:"broker_api_version"`
 
-	/* usb version
+	/* The current version of the USB.
+
 
 	Required: true
 	*/

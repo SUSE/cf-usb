@@ -30,15 +30,15 @@ func (_m *ConfigProvider) LoadConfiguration() (*config.Config, error) {
 
 	return r0, r1
 }
-func (_m *ConfigProvider) LoadDriverInstance(driverInstanceID string) (*config.DriverInstance, error) {
+func (_m *ConfigProvider) LoadDriverInstance(driverInstanceID string) (*config.Instance, error) {
 	ret := _m.Called(driverInstanceID)
 
-	var r0 *config.DriverInstance
-	if rf, ok := ret.Get(0).(func(string) *config.DriverInstance); ok {
+	var r0 *config.Instance
+	if rf, ok := ret.Get(0).(func(string) *config.Instance); ok {
 		r0 = rf(driverInstanceID)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*config.DriverInstance)
+			r0 = ret.Get(0).(*config.Instance)
 		}
 	}
 
@@ -72,27 +72,27 @@ func (_m *ConfigProvider) GetUaaAuthConfig() (*config.UaaAuth, error) {
 
 	return r0, r1
 }
-func (_m *ConfigProvider) SetDriverInstance(driverid string, instanceid string, driverInstance config.DriverInstance) error {
-	ret := _m.Called(driverid, instanceid, driverInstance)
+func (_m *ConfigProvider) SetInstance(instanceid string, driverInstance config.Instance) error {
+	ret := _m.Called(instanceid, driverInstance)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(string, string, config.DriverInstance) error); ok {
-		r0 = rf(driverid, instanceid, driverInstance)
+	if rf, ok := ret.Get(0).(func(string, config.Instance) error); ok {
+		r0 = rf(instanceid, driverInstance)
 	} else {
 		r0 = ret.Error(0)
 	}
 
 	return r0
 }
-func (_m *ConfigProvider) GetDriverInstance(instanceid string) (*config.DriverInstance, string, error) {
+func (_m *ConfigProvider) GetInstance(instanceid string) (*config.Instance, string, error) {
 	ret := _m.Called(instanceid)
 
-	var r0 *config.DriverInstance
-	if rf, ok := ret.Get(0).(func(string) *config.DriverInstance); ok {
+	var r0 *config.Instance
+	if rf, ok := ret.Get(0).(func(string) *config.Instance); ok {
 		r0 = rf(instanceid)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*config.DriverInstance)
+			r0 = ret.Get(0).(*config.Instance)
 		}
 	}
 
@@ -112,7 +112,7 @@ func (_m *ConfigProvider) GetDriverInstance(instanceid string) (*config.DriverIn
 
 	return r0, r1, r2
 }
-func (_m *ConfigProvider) DeleteDriverInstance(instanceid string) error {
+func (_m *ConfigProvider) DeleteInstance(instanceid string) error {
 	ret := _m.Called(instanceid)
 
 	var r0 error
@@ -228,7 +228,7 @@ func (_m *ConfigProvider) DeleteDial(dialid string) error {
 
 	return r0
 }
-func (_m *ConfigProvider) DriverInstanceNameExists(driverInstanceName string) (bool, error) {
+func (_m *ConfigProvider) InstanceNameExists(driverInstanceName string) (bool, error) {
 	ret := _m.Called(driverInstanceName)
 
 	var r0 bool

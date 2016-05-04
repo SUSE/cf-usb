@@ -2,6 +2,10 @@ package govalidator
 
 type Errors []error
 
+func (es Errors) Errors() []error {
+	return es
+}
+
 func (es Errors) Error() string {
 	var err string
 	for _, e := range es {
@@ -11,10 +15,15 @@ func (es Errors) Error() string {
 }
 
 type Error struct {
-	Name string
-	Err  error
+	Name                     string
+	Err                      error
+	CustomErrorMessageExists bool
 }
 
 func (e Error) Error() string {
-	return e.Name + ": " + e.Err.Error()
+	if e.CustomErrorMessageExists {
+		return e.Err.Error()
+	} else {
+		return e.Name + ": " + e.Err.Error()
+	}
 }
