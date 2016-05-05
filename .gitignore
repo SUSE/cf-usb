@@ -1,5 +1,6 @@
 build/
 *.test
+.tools/
 coverage.xml
 cf-usb-release/dev_releases
 cf-usb-release/.dev_builds

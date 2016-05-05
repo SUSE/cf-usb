@@ -1,0 +1,31 @@
+#!/bin/sh
+
+OSES="linux darwin"
+
+GIT_ROOT=${GIT_ROOT:-$(git rev-parse --show-toplevel)}
+
+set -o errexit
+
+. make/include/colors.sh
+
+echo "${OK_COLOR}==> Installing tools${NO_COLOR}"
+#Great tools to have, and used in the build file
+go get -u golang.org/x/tools/cmd/goimports
+go get -u golang.org/x/tools/cmd/cover
+go get -u github.com/golang/lint/golint
+	
+#Tools for the project
+go get -u github.com/axw/gocov/gocov
+go get -u github.com/jteeuwen/go-bindata/...
+	
+#go get github.com/hashicorp/consul
+
+echo "Fetching go-swagger"
+
+#Get specific version of go-swagger
+SWAGGER_HASH=`cat ${GIT_ROOT}/Godeps/Godeps.json | grep -A 2 "github.com/go-swagger/go-swagger" | grep Rev | head -n 1 | awk '{print $2}' | tr -d \"`
+
+git clone https://github.com/go-swagger/go-swagger.git ${GIT_ROOT}/.temp
+cd  ${GIT_ROOT}/.temp; git reset --hard ${SWAGGER_HASH}
+go build -o ${GIT_ROOT}/.tools/swagger ${GIT_ROOT}/.temp/cmd/swagger/swagger.go 
+rm -rf ${GIT_ROOT}/.temp
