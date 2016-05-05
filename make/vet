@@ -1,0 +1,12 @@
+#!/bin/sh
+
+set -o errexit
+
+. make/include/colors.sh
+
+echo "${OK_COLOR}==> Vetting${ERROR_COLOR}"
+
+
+go list -f '{{ .Dir }}' ./... | grep -v /vendor/  | tr ' ' '\n' | xargs -I '{p}' -n1 go tool vet -composites=false {p} | sed "s/^/Failed: /"
+
+echo "${NO_COLOR}\c"

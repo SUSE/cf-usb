@@ -1,5 +1,0 @@
-{
-	"ImportPath": "github.com/mihaibuzgau/usb-driver-generator",
-	"GoVersion": "go1.5",
-	"Deps": []
-}

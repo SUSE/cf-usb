@@ -1,0 +1,18 @@
+#!/bin/sh
+
+OSES="linux darwin"
+
+set -o errexit
+
+. make/include/colors.sh
+. make/include/versioning.sh
+
+echo "${OK_COLOR}==> Building ${ERROR_COLOR}"
+
+for OS in ${OSES}; do \
+		 env GOOS=${OS} GOARCH=amd64 go build -o build/${OS}-amd64/usb/usb \
+		 -ldflags="-X main.version=${APP_VERSION}" \
+		 ./cmd/usb/  
+done
+
+echo "${NO_COLOR}\c"
