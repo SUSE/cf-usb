@@ -1,0 +1,21 @@
+#!/bin/sh
+
+set -o errexit
+
+. make/include/colors.sh
+
+GIT_ROOT=${GIT_ROOT:-$(git rev-parse --show-toplevel)}
+
+echo "${OK_COLOR}==> Generating CSM client ${NO_COLOR}"
+
+rm -rf ${GIT_ROOT}/lib/csm/models/ ${GIT_ROOT}/lib/csm/client/
+
+${GIT_ROOT}/.tools/swagger generate client \
+	-f ${GOPATH}/src/github.com/hpcloud/catalog-service-manager/docs/swagger-spec/api.json \
+	-t ${GIT_ROOT}/lib/csm
+	
+echo "${OK_COLOR}==> Generating management API ${NO_COLOR}"
+rm -rf ${GIT_ROOT}/lib/operations ${GIT_ROOT}/lib/genmodel
+
+${GIT_ROOT}/.tools/swagger generate server -f ${GIT_ROOT}/swagger-spec/management-api.json -m genmodel -s "mgmt" -A usb-mgmt -t ${GIT_ROOT}/lib --exclude-main
+rm lib/mgmt/server.go
