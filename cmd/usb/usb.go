@@ -10,13 +10,12 @@ import (
 
 	"github.com/hpcloud/cf-usb/lib"
 	"github.com/hpcloud/cf-usb/lib/config"
-	"github.com/hpcloud/cf-usb/lib/data"
 	"github.com/hpcloud/cf-usb/lib/mgmt"
 	"github.com/hpcloud/cf-usb/lib/mgmt/authentication/uaa"
 	"github.com/hpcloud/cf-usb/lib/mgmt/cc_integration/ccapi"
 	"github.com/hpcloud/cf-usb/lib/mgmt/cc_integration/httpclient"
 	"github.com/hpcloud/cf-usb/lib/mgmt/cc_integration/uaaapi"
-	"github.com/hpcloud/cf-usb/lib/operations"
+	"github.com/hpcloud/cf-usb/lib/mgmt/operations"
 	"github.com/pivotal-golang/lager"
 )
 
@@ -68,12 +67,8 @@ func (usb *UsbApp) Run(configProvider config.ConfigProvider, logger lager.Logger
 			logger.Info("starting")
 
 			mgmtaddr := usb.config.ManagementAPI.Listen
-			swaggerJSON, err := data.Asset("swagger-spec/api.json")
-			if err != nil {
-				logger.Fatal("loading-swagger-asset-failed", err)
-			}
 
-			swaggerSpec, err := loads.Analyzed(swaggerJSON, "")
+			swaggerSpec, err := loads.Analyzed(mgmt.SwaggerJSON, "")
 			if err != nil {
 				logger.Fatal("initializing-swagger-failed", err)
 			}
@@ -105,10 +100,10 @@ func (usb *UsbApp) Run(configProvider config.ConfigProvider, logger lager.Logger
 			ccServiceBroker := ccapi.NewServiceBroker(client, tokenGenerator, usb.config.ManagementAPI.CloudController.Api, logger)
 
 			mgmtAPI := operations.NewUsbMgmtAPI(swaggerSpec)
-			mgmt.ConfigureAPI(mgmtAPI, auth, configProvider, ccServiceBroker, logger, version)
+			api := mgmt.ConfigureAPI(mgmtAPI, auth, configProvider, ccServiceBroker, logger, version)
 
 			logger.Info("start-listening", lager.Data{"address": mgmtaddr})
-			err = http.ListenAndServe(mgmtaddr, mgmtAPI.Serve(nil))
+			err = http.ListenAndServe(mgmtaddr, api)
 			if err != nil {
 				logger.Fatal("listening-failed", err)
 			}

@@ -1,0 +1,336 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Universal Service Broker Management API",
+        "version": "1.0.1",
+        "title": "USB Management API",
+        "termsOfService": "https://github.com/hpcloud/cf-usb",
+        "contact": {
+            "email": "hcf-dev@hpe.com"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        }
+    },
+    "securityDefinitions": {
+        "Authorization": {
+            "type": "apiKey",
+            "in": "header",
+            "name": "Authorization",
+            "description": "UAA Token"
+        }
+    },
+    "security": [
+        {
+            "Authorization": []
+        }
+    ],
+    "consumes": [
+        "application/json"
+    ],
+    "produces": [
+        "application/json"
+    ],
+    "paths": {
+        "/update_catalog": {
+            "post": {
+                "description": "Updates Cloud Foundry's service catalog.\n",
+                "operationId": "updateCatalog",
+                "responses": {
+                    "200": {
+                        "description": "Successful response"
+                    },
+                    "500": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/info": {
+            "get": {
+                "description": "Gets information about the USB.\n",
+                "operationId": "getInfo",
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "schema": {
+                            "$ref": "#/definitions/info"
+                        }
+                    },
+                    "500": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/driver_endpoints": {
+            "get": {
+                "description": "Lists all registered driver endpoints",
+                "operationId": "getDriverEndpoints",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/driverEndpoint"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Registers a driver endpoint with the USB",
+                "operationId": "registerDriverEndpoint",
+                "parameters": [
+                    {
+                        "name": "driverEndpoint",
+                        "description": "An endpoint to be registered with the USB",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/driverEndpoint"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Driver endpoint registered",
+                        "schema": {
+                            "$ref": "#/definitions/driverEndpoint"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict"
+                    },
+                    "500": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/driver_endpoints/{driver_endpoint_id}": {
+            "get": {
+                "description": "Gets details for a specific driver endpoint\n",
+                "operationId": "getDriverEndpoint",
+                "parameters": [
+                    {
+                        "name": "driver_endpoint_id",
+                        "in": "path",
+                        "description": "Driver Endpoint ID",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/driverEndpoint"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "500": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Update a driver endpoint\n",
+                "operationId": "updateDriverEndpoint",
+                "parameters": [
+                    {
+                        "name": "driver_endpoint_id",
+                        "in": "path",
+                        "description": "Driver Endpoint ID\n",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "driver_endpoint",
+                        "in": "body",
+                        "description": "Updated information for an already registered driver endpoint \n",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/driverEndpoint"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Sucessful response",
+                        "schema": {
+                            "$ref": "#/definitions/driverEndpoint"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "409": {
+                        "description": "Conflict"
+                    },
+                    "500": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Unregisters a driver instance",
+                "operationId": "unregisterDriverInstance",
+                "parameters": [
+                    {
+                        "name": "driver_endpoint_id",
+                        "in": "path",
+                        "description": "Driver Endpoint ID",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Driver endpoint unregistered"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "500": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/driver_endpoint/{driver_endpoint_id}/ping": {
+            "get": {
+                "description": "Pings a driver endpoint to determine basic health status\n",
+                "operationId": "pingDriverEndpoint",
+                "parameters": [
+                    {
+                        "name": "driver_endpoint_id",
+                        "in": "path",
+                        "description": "Driver Endpoint ID",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "500": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "info": {
+            "type": "object",
+            "required": [
+                "broker_api_version",
+                "usb_version"
+            ],
+            "properties": {
+                "broker_api_version": {
+                    "type": "string",
+                    "description": "The version of the Cloud Foundry Service Broker supported by this\ninstance of the USB.\n"
+                },
+                "usb_version": {
+                    "type": "string",
+                    "description": "The current version of the USB.\n"
+                }
+            }
+        },
+        "endpointMetadata": {
+            "type": "object",
+            "properties": {
+                "display_name": {
+                    "type": "string",
+                    "description": "The name of the service to be displayed in graphical clients\n"
+                },
+                "image_url": {
+                    "type": "string",
+                    "description": "The URL to an image\n"
+                },
+                "long_description": {
+                    "type": "string",
+                    "description": "Long description\n"
+                },
+                "provider_display_name": {
+                    "type": "string",
+                    "description": "The name of the upstream entity providing the actual service\n"
+                },
+                "documentation_url": {
+                    "type": "string",
+                    "description": "Link to a documentation page for the service\n"
+                },
+                "support_url": {
+                    "type": "string",
+                    "description": "Link to support information for the service\n"
+                }
+            }
+        },
+        "driverEndpoint": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "description": "USB generated ID for the driver endpoint. \n"
+                },
+                "name": {
+                    "type": "string",
+                    "description": "The name of the driver endpoint. It's displayed by the Cloud Foundry\nCLI when the user lists available service offerings.\n"
+                },
+                "endpointURL": {
+                    "type": "string",
+                    "description": "URL for the driver endpoint. Used by the USB to create service \ninstances, generate credentials, discover plans and schemas.\n"
+                },
+                "authenticationKey": {
+                    "type": "string",
+                    "description": "An authentication key used by the USB when communicating with the \ndriver endpoint.\n"
+                },
+                "metadata": {
+                    "$ref": "#/definitions/endpointMetadata",
+                    "description": "Optional metadata configuration used by graphical clients to display\ninformation about a service.\n"
+                }
+            }
+        }
+    }
+}

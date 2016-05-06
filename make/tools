@@ -16,14 +16,14 @@ go get -u github.com/golang/lint/golint
 	
 #Tools for the project
 go get -u github.com/axw/gocov/gocov
-go get -u github.com/jteeuwen/go-bindata/...
 	
 #go get github.com/hashicorp/consul
 
 echo "Fetching go-swagger"
 
 #Get specific version of go-swagger
-SWAGGER_HASH=`cat ${GIT_ROOT}/Godeps/Godeps.json | grep -A 2 "github.com/go-swagger/go-swagger" | grep Rev | head -n 1 | awk '{print $2}' | tr -d \"`
+#SWAGGER_HASH=`cat ${GIT_ROOT}/Godeps/Godeps.json | grep -A 2 "github.com/go-swagger/go-swagger" | grep Rev | head -n 1 | awk '{print $2}' | tr -d \"`
+SWAGGER_HASH=13cbd521cb6fd24ba943da4786e8f9fe6f84dc78
 
 git clone https://github.com/go-swagger/go-swagger.git ${GIT_ROOT}/.temp
 cd  ${GIT_ROOT}/.temp; git reset --hard ${SWAGGER_HASH}

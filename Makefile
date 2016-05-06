@@ -31,9 +31,8 @@ tools:
 genswagger:
 	@echo "$(OK_COLOR)==> Generationg management APIs using swagger$(NO_COLOR)"
 	rm -rf lib/operations lib/genmodel
-	swagger generate server -f swagger-spec/api.json -m genmodel -s "" -A usb-mgmt -t lib
-	rm -rf lib/cmd
-	go-bindata -pkg="data" -o lib/data/swagger.go swagger-spec/
+	${GIT_ROOT}/.tools/swagger generate server -f ${GIT_ROOT}/swagger-spec/management-api.json -m genmodel -s "mgmt" -A usb-mgmt -t ${GIT_ROOT}/lib --exclude-main
+	rm lib/mgmt/server.go
 
 dist:  
 	${GIT_ROOT}/make/dist

@@ -28,11 +28,13 @@ type stringValues []reflect.Value
 var ParamTagMap = map[string]ParamValidator{
 	"length":       ByteLength,
 	"stringlength": StringLength,
+	"matches":      StringMatches,
 }
 
 var ParamTagRegexMap = map[string]*regexp.Regexp{
 	"length":       regexp.MustCompile("^length\\((\\d+)\\|(\\d+)\\)$"),
 	"stringlength": regexp.MustCompile("^stringlength\\((\\d+)\\|(\\d+)\\)$"),
+	"matches":      regexp.MustCompile(`matches\(([^)]+)\)`),
 }
 
 // CustomTypeTagMap is a map of functions that can be used as tags for ValidateStruct function.
@@ -44,6 +46,7 @@ var CustomTypeTagMap = map[string]CustomTypeValidator{}
 var TagMap = map[string]Validator{
 	"email":          IsEmail,
 	"url":            IsURL,
+	"dialstring":     IsDialString,
 	"requrl":         IsRequestURL,
 	"requri":         IsRequestURI,
 	"alpha":          IsAlpha,
@@ -78,12 +81,16 @@ var TagMap = map[string]Validator{
 	"base64":         IsBase64,
 	"datauri":        IsDataURI,
 	"ip":             IsIP,
+	"port":           IsPort,
 	"ipv4":           IsIPv4,
 	"ipv6":           IsIPv6,
+	"dns":            IsDNSName,
+	"host":           IsHost,
 	"mac":            IsMAC,
 	"latitude":       IsLatitude,
 	"longitude":      IsLongitude,
 	"ssn":            IsSSN,
+	"semver":         IsSemver,
 }
 
 // ISO3166Entry stores country codes

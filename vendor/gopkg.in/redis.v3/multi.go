@@ -3,7 +3,9 @@ package redis
 import (
 	"errors"
 	"fmt"
-	"log"
+
+	"gopkg.in/redis.v3/internal"
+	"gopkg.in/redis.v3/internal/pool"
 )
 
 var errDiscard = errors.New("redis: Discard can be used only inside Exec")
@@ -23,8 +25,8 @@ type Multi struct {
 	closed bool
 }
 
-// Watch marks the keys to be watched for conditional execution
-// of a transaction.
+// Watch creates new transaction and marks the keys to be watched
+// for conditional execution of a transaction.
 func (c *Client) Watch(keys ...string) (*Multi, error) {
 	tx := c.Multi()
 	if err := tx.Watch(keys...).Err(); err != nil {
@@ -39,23 +41,11 @@ func (c *Client) Multi() *Multi {
 	multi := &Multi{
 		base: &baseClient{
 			opt:      c.opt,
-			connPool: newStickyConnPool(c.connPool, true),
+			connPool: pool.NewStickyConnPool(c.connPool.(*pool.ConnPool), true),
 		},
 	}
 	multi.commandable.process = multi.process
 	return multi
-}
-
-func (c *Multi) putConn(cn *conn, ei error) {
-	var err error
-	if isBadConn(cn, ei) {
-		err = c.base.connPool.Remove(nil) // nil to force removal
-	} else {
-		err = c.base.connPool.Put(cn)
-	}
-	if err != nil {
-		log.Printf("redis: putConn failed: %s", err)
-	}
 }
 
 func (c *Multi) process(cmd Cmder) {
@@ -70,7 +60,7 @@ func (c *Multi) process(cmd Cmder) {
 func (c *Multi) Close() error {
 	c.closed = true
 	if err := c.Unwatch().Err(); err != nil {
-		log.Printf("redis: Unwatch failed: %s", err)
+		internal.Logf("Unwatch failed: %s", err)
 	}
 	return c.base.Close()
 }
@@ -120,7 +110,7 @@ func (c *Multi) Discard() error {
 // failed command or nil.
 func (c *Multi) Exec(f func() error) ([]Cmder, error) {
 	if c.closed {
-		return nil, errClosed
+		return nil, pool.ErrClosed
 	}
 
 	c.cmds = []Cmder{NewStatusCmd("MULTI")}
@@ -139,19 +129,19 @@ func (c *Multi) Exec(f func() error) ([]Cmder, error) {
 	// Strip MULTI and EXEC commands.
 	retCmds := cmds[1 : len(cmds)-1]
 
-	cn, _, err := c.base.conn()
+	cn, err := c.base.conn()
 	if err != nil {
 		setCmdsErr(retCmds, err)
 		return retCmds, err
 	}
 
 	err = c.execCmds(cn, cmds)
-	c.putConn(cn, err)
+	c.base.putConn(cn, err, false)
 	return retCmds, err
 }
 
-func (c *Multi) execCmds(cn *conn, cmds []Cmder) error {
-	err := cn.writeCmds(cmds...)
+func (c *Multi) execCmds(cn *pool.Conn, cmds []Cmder) error {
+	err := writeCmd(cn, cmds...)
 	if err != nil {
 		setCmdsErr(cmds[1:len(cmds)-1], err)
 		return err
@@ -173,6 +163,9 @@ func (c *Multi) execCmds(cn *conn, cmds []Cmder) error {
 	// Parse number of replies.
 	line, err := readLine(cn)
 	if err != nil {
+		if err == Nil {
+			err = TxFailedErr
+		}
 		setCmdsErr(cmds[1:len(cmds)-1], err)
 		return err
 	}
@@ -180,10 +173,6 @@ func (c *Multi) execCmds(cn *conn, cmds []Cmder) error {
 		err := fmt.Errorf("redis: expected '*', but got line %q", line)
 		setCmdsErr(cmds[1:len(cmds)-1], err)
 		return err
-	}
-	if len(line) == 3 && line[1] == '-' && line[2] == '1' {
-		setCmdsErr(cmds[1:len(cmds)-1], TxFailedErr)
-		return TxFailedErr
 	}
 
 	var firstCmdErr error

@@ -1,8 +1,0 @@
-/broker-server
-/CreateConnection
-/CreateWorkspace
-/DeleteConnection
-/DeleteWorkspace
-/FailClient
-/GetConnection
-/GetWorkspace
