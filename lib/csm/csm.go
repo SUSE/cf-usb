@@ -20,19 +20,32 @@ type csmClient struct {
 	workspaceCient   *workspace.Client
 	connectionClient *connection.Client
 	authInfoWriter   runtime.ClientAuthInfoWriter
+	loggedIn         bool
 }
 
-func NewCSMClient(logger lager.Logger, csmUrl url.URL, authToken string) CSMInterface {
+func NewCSMClient(logger lager.Logger) CSMInterface {
 	csm := csmClient{}
-	transport := runtimeClient.New(csmUrl.Host, "/", []string{csmUrl.Scheme})
-	csm.workspaceCient = workspace.New(transport, strfmt.Default)
-	csm.connectionClient = connection.New(transport, strfmt.Default)
-	csm.logger = logger
-	csm.authInfoWriter = runtimeClient.APIKeyAuth("x-csm-token", "header", authToken)
+	csm.loggedIn = false
 	return &csm
 }
 
+func (csm *csmClient) Login(targetEndpoint string, token string) error {
+	target, err := url.Parse(targetEndpoint)
+	if err != nil {
+		return err
+	}
+	transport := runtimeClient.New(target.Host, "/", []string{target.Scheme})
+	csm.workspaceCient = workspace.New(transport, strfmt.Default)
+	csm.connectionClient = connection.New(transport, strfmt.Default)
+	csm.authInfoWriter = runtimeClient.APIKeyAuth("x-csm-token", "header", token)
+	csm.loggedIn = true
+	return nil
+}
+
 func (csm *csmClient) CreateWorkspace(workspaceID string) error {
+	if !csm.loggedIn {
+		return errors.New("Not logged in")
+	}
 	csm.logger.Info("csm-create-workspace", lager.Data{"workspaceID": workspaceID})
 	request := models.ServiceManagerWorkspaceCreateRequest{
 		WorkspaceID: &workspaceID,
@@ -63,6 +76,9 @@ func (csm *csmClient) CreateWorkspace(workspaceID string) error {
 
 }
 func (csm *csmClient) WorkspaceExists(workspaceID string) (bool, error) {
+	if !csm.loggedIn {
+		return false, errors.New("Not logged in")
+	}
 	csm.logger.Info("csm-workspace-exists", lager.Data{"workspaceID": workspaceID})
 
 	params := workspace.GetWorkspaceParams{}
@@ -91,6 +107,9 @@ func (csm *csmClient) WorkspaceExists(workspaceID string) (bool, error) {
 
 }
 func (csm *csmClient) DeleteWorkspace(workspaceID string) error {
+	if !csm.loggedIn {
+		return errors.New("Not logged in")
+	}
 	csm.logger.Info("csm-delete-workspace", lager.Data{"workspaceID": workspaceID})
 	params := workspace.DeleteWorkspaceParams{}
 	params.WorkspaceID = workspaceID
@@ -113,6 +132,9 @@ func (csm *csmClient) DeleteWorkspace(workspaceID string) error {
 
 }
 func (csm *csmClient) CreateConnection(workspaceID, connectionID string) (interface{}, error) {
+	if !csm.loggedIn {
+		return nil, errors.New("Not logged in")
+	}
 	csm.logger.Info("csm-create-connection", lager.Data{"workspaceID": workspaceID, "connectionID": connectionID})
 	params := connection.CreateConnectionParams{}
 	params.WorkspaceID = workspaceID
@@ -143,6 +165,9 @@ func (csm *csmClient) CreateConnection(workspaceID, connectionID string) (interf
 
 }
 func (csm *csmClient) ConnectionExists(workspaceID, connectionID string) (bool, error) {
+	if !csm.loggedIn {
+		return false, errors.New("Not logged in")
+	}
 	csm.logger.Info("csm-connection-exists", lager.Data{"workspaceID": workspaceID, "connectionID": connectionID})
 	params := connection.GetConnectionParams{
 		WorkspaceID:  workspaceID,
@@ -173,6 +198,9 @@ func (csm *csmClient) ConnectionExists(workspaceID, connectionID string) (bool, 
 
 }
 func (csm *csmClient) DeleteConnection(workspaceID, connectionID string) error {
+	if !csm.loggedIn {
+		return errors.New("Not logged in")
+	}
 	csm.logger.Info("csm-delete-connection", lager.Data{"workspaceID": workspaceID, "connectionID": connectionID})
 	params := connection.DeleteConnectionParams{
 		WorkspaceID:  workspaceID,

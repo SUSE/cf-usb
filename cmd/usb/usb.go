@@ -10,6 +10,7 @@ import (
 
 	"github.com/hpcloud/cf-usb/lib"
 	"github.com/hpcloud/cf-usb/lib/config"
+	"github.com/hpcloud/cf-usb/lib/csm"
 	"github.com/hpcloud/cf-usb/lib/mgmt"
 	"github.com/hpcloud/cf-usb/lib/mgmt/authentication/uaa"
 	"github.com/hpcloud/cf-usb/lib/mgmt/cc_integration/ccapi"
@@ -52,7 +53,9 @@ func (usb *UsbApp) Run(configProvider config.ConfigProvider, logger lager.Logger
 
 	usb.logger.Info("initializing-drivers")
 
-	usbService := lib.NewUsbBroker(configProvider, usb.logger)
+	csmClient := csm.NewCSMClient(usb.logger)
+
+	usbService := lib.NewUsbBroker(configProvider, usb.logger, csmClient)
 
 	usb.logger.Info("initializing-brokerapi")
 
