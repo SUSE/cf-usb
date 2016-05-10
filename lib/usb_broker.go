@@ -2,7 +2,6 @@ package lib
 
 import (
 	"errors"
-	"net/url"
 
 	"github.com/frodenas/brokerapi"
 	"github.com/hpcloud/cf-usb/lib/config"
@@ -14,11 +13,12 @@ var usbBroker UsbBroker
 
 type UsbBroker struct {
 	configProvider config.ConfigProvider
+	csmClient      csm.CSMInterface
 	logger         lager.Logger
 }
 
-func NewUsbBroker(configProvider config.ConfigProvider, logger lager.Logger) *UsbBroker {
-	return &UsbBroker{configProvider: configProvider, logger: logger.Session("usb-broker")}
+func NewUsbBroker(configProvider config.ConfigProvider, logger lager.Logger, csm csm.CSMInterface) *UsbBroker {
+	return &UsbBroker{configProvider: configProvider, csmClient: csm, logger: logger.Session("usb-broker")}
 }
 
 func (broker *UsbBroker) Services() brokerapi.CatalogResponse {
@@ -33,6 +33,7 @@ func (broker *UsbBroker) Services() brokerapi.CatalogResponse {
 
 	for _, instance := range config.Instances {
 		service := instance.Service
+		service.Metadata = &instance.Metadata
 
 		for _, dial := range instance.Dials {
 			service.Plans = append(service.Plans, dial.Plan)
@@ -167,14 +168,11 @@ func (broker *UsbBroker) LastOperation(instanceID string) (brokerapi.LastOperati
 
 	instance := config.Instances[instanceID]
 
-	instanceURL, err := url.Parse(instance.TargetURL)
+	err = broker.csmClient.Login(instance.TargetURL, instance.AuthenticationKey)
 	if err != nil {
 		return brokerapi.LastOperationResponse{}, err
 	}
-
-	csmClient := csm.NewCSMClient(broker.logger, *instanceURL, instance.AuthenticationKey)
-
-	exists, err := csmClient.WorkspaceExists(instanceID)
+	exists, err := broker.csmClient.WorkspaceExists(instanceID)
 	if err != nil {
 		return brokerapi.LastOperationResponse{}, err
 	}
@@ -195,12 +193,11 @@ func (broker *UsbBroker) getCSMClient(serviceID string) (csm.CSMInterface, error
 	for _, driverInstance := range config.Instances {
 		if driverInstance.Service.ID == serviceID {
 			if driverInstance.TargetURL != "" {
-				u, err := url.Parse(driverInstance.TargetURL)
+				err = broker.csmClient.Login(driverInstance.TargetURL, driverInstance.AuthenticationKey)
 				if err != nil {
 					return nil, err
 				}
-				client := csm.NewCSMClient(broker.logger, *u, driverInstance.AuthenticationKey)
-				return client, nil
+				return broker.csmClient, nil
 			}
 		}
 

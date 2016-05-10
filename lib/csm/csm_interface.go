@@ -1,6 +1,7 @@
 package csm
 
 type CSMInterface interface {
+	Login(string, string) error
 	CreateWorkspace(string) error
 	WorkspaceExists(string) (bool, error)
 	DeleteWorkspace(string) error

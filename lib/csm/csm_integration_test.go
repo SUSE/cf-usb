@@ -1,7 +1,6 @@
 package csm
 
 import (
-	"net/url"
 	"strings"
 	"testing"
 
@@ -16,13 +15,11 @@ var csmEndpoint = "http://192.168.77.77:8081"
 var authToken = "csm-auth-token"
 
 func getCSMClient() (CSMInterface, error) {
-
-	csmUrl, err := url.Parse(csmEndpoint)
+	client := NewCSMClient(logger)
+	err := client.Login(csmEndpoint, authToken)
 	if err != nil {
 		return nil, err
 	}
-
-	client := NewCSMClient(logger, *csmUrl, authToken)
 	return client, nil
 }
 
