@@ -2,6 +2,7 @@ package mgmt
 
 import (
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
@@ -187,6 +188,47 @@ func ConfigureAPI(api *operations.UsbMgmtAPI, auth authentication.Authentication
 		err = configProvider.SetInstance(instanceID, instance)
 		if err != nil {
 			log.Error("set-driver-instance-failed", err)
+			return &operations.RegisterDriverEndpointInternalServerError{Payload: err.Error()}
+		}
+
+		var defaultDial config.Dial
+
+		defaultDialID := uuid.NewV4().String()
+
+		var plan brokerapi.ServicePlan
+
+		plan.ID = uuid.NewV4().String()
+		plan.Description = "default plan"
+		plan.Name = "default"
+		plan.Free = true
+
+		var meta brokerapi.ServicePlanMetadata
+
+		meta.DisplayName = "default plan"
+
+		plan.Metadata = &meta
+
+		defaultDial.Plan = plan
+		defaultDialConfig := json.RawMessage([]byte("{}"))
+		defaultDial.Configuration = &defaultDialConfig
+
+		err = configProvider.SetDial(instanceID, defaultDialID, defaultDial)
+		if err != nil {
+			log.Error("set-dial-failed", err)
+			return &operations.RegisterDriverEndpointInternalServerError{Payload: err.Error()}
+		}
+
+		var service brokerapi.Service
+
+		service.ID = uuid.NewV4().String()
+		service.Name = *params.DriverEndpoint.Name
+		service.Description = "Default service"
+		service.Tags = []string{service.Name}
+		service.Bindable = true
+
+		err = configProvider.SetService(instanceID, service)
+		if err != nil {
+			log.Error("set-service-failed", err)
 			return &operations.RegisterDriverEndpointInternalServerError{Payload: err.Error()}
 		}
 
