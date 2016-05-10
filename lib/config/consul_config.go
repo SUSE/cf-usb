@@ -116,27 +116,24 @@ func (c *consulConfig) GetInstance(instanceID string) (*Instance, string, error)
 	if key == "" {
 		return nil, "", nil
 	}
-	val, err := c.provisioner.GetValue(key + "/Name")
+	val, err := c.provisioner.GetValue(key + "/name")
 	if err != nil {
 		return nil, "", err
 	}
 
 	instance.Name = string(val)
 
-	target, err := c.provisioner.GetValue(key + "/TargetURL")
+	target, err := c.provisioner.GetValue(key + "/target_url")
 	if err != nil {
 		return nil, "", err
 	}
 	instance.TargetURL = string(target)
 
-	instanceConfig, err := c.provisioner.GetValue(key + "/Configuration")
+	authKey, err := c.provisioner.GetValue(key + "/authentication_key")
 	if err != nil {
 		return nil, "", err
 	}
-
-	configuration := json.RawMessage(instanceConfig)
-
-	instance.Configuration = &configuration
+	instance.AuthenticationKey = string(authKey)
 
 	serviceInfo, err := c.provisioner.GetValue(key + "/service")
 
@@ -186,17 +183,17 @@ func (c *consulConfig) GetDial(dialID string) (*Dial, string, error) {
 
 func (c *consulConfig) SetInstance(instanceID string, instance Instance) error {
 
-	err := c.provisioner.AddKV("usb/instances/"+instanceID+"/Name", []byte(instance.Name), nil)
+	err := c.provisioner.AddKV("usb/instances/"+instanceID+"/name", []byte(instance.Name), nil)
 	if err != nil {
 		return err
 	}
 
-	err = c.provisioner.AddKV("usb/instances/"+instanceID+"/TargetURL", []byte(instance.TargetURL), nil)
+	err = c.provisioner.AddKV("usb/instances/"+instanceID+"/target_url", []byte(instance.TargetURL), nil)
 	if err != nil {
 		return err
 	}
 
-	err = c.provisioner.AddKV("usb/instances/"+instanceID+"/Configuration", *instance.Configuration, nil)
+	err = c.provisioner.AddKV("usb/instances/"+instanceID+"/authentication_key", []byte(instance.AuthenticationKey), nil)
 	if err != nil {
 		return err
 	}
@@ -260,10 +257,13 @@ func (c *consulConfig) getKey(instanceID string) (string, error) {
 	if err != nil {
 		return "", nil
 	}
+
 	for _, key := range keys {
 		if strings.Contains(key, instanceID) {
-			key = strings.TrimSuffix(key, "/Configuration")
-			key = strings.TrimSuffix(key, "/Name")
+			key = strings.TrimSuffix(key, "/name")
+			key = strings.TrimSuffix(key, "/authentication_key")
+			key = strings.TrimSuffix(key, "/target_url")
+			key = strings.TrimSuffix(key, "/service")
 			return key, nil
 		}
 	}

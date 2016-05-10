@@ -45,7 +45,6 @@ type Dial struct {
 type Instance struct {
 	TargetURL         string                    `json:"target"`
 	Name              string                    `json:"name"`
-	Configuration     *json.RawMessage          `json:"configuration"`
 	Dials             map[string]Dial           `json:"dials"`
 	Service           brokerapi.Service         `json:"service"`
 	Metadata          brokerapi.ServiceMetadata `json:"metadata"`

@@ -36,10 +36,6 @@
 			"name": "dummy1",
 			"target": "http://127.0.0.1:8080",
 			"authentication_key": "authkey",
-			"configuration": {
-				"property_one": "one",
-				"property_two": "two"
-			},
 			"dials": {
 				"B0000000-0000-0000-0000-000000000001": {
 					"configuration": {
@@ -81,10 +77,6 @@
 			"name": "dummy2",
 			"target": "http://127.0.0.1:8080",
 			"authentication_key": "authkey",
-			"configuration": {
-				"property_one": "onenew",
-				"property_two": "twonew"
-			},
 			"dials": {
 				"B0000000-0000-0000-0000-000000000011": {
 					"plan": {
