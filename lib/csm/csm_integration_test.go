@@ -1,7 +1,6 @@
 package csm
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/pivotal-golang/lager/lagertest"
@@ -26,8 +25,6 @@ func getCSMClient() (CSMInterface, error) {
 func TestCSMClient(t *testing.T) {
 	assert := assert.New(t)
 	workspaceID := uuid.NewV4().String()
-	//TODO: Remove this line with CSM accepts guids as IDs...
-	workspaceID = strings.Replace(workspaceID, "-", "", -1)
 
 	connectionID := uuid.NewV4().String()
 
@@ -62,8 +59,6 @@ func TestCSMClient(t *testing.T) {
 func TestGetConnectionDoesNotExist(t *testing.T) {
 	assert := assert.New(t)
 	workspaceID := uuid.NewV4().String()
-	//TODO: Remove this line with CSM accepts guids as IDs...
-	workspaceID = strings.Replace(workspaceID, "-", "", -1)
 
 	connectionID := uuid.NewV4().String()
 
@@ -81,8 +76,6 @@ func TestGetWorkspaceDoesNotExist(t *testing.T) {
 	assert := assert.New(t)
 
 	workspaceID := uuid.NewV4().String()
-	//TODO: Remove this line with CSM accepts guids as IDs...
-	workspaceID = strings.Replace(workspaceID, "-", "", -1)
 
 	client, err := getCSMClient()
 	if err != nil {
@@ -98,8 +91,6 @@ func TestDeleteWorkspaceNotExist(t *testing.T) {
 	assert := assert.New(t)
 
 	workspaceID := uuid.NewV4().String()
-	//TODO: Remove this line with CSM accepts guids as IDs...
-	workspaceID = strings.Replace(workspaceID, "-", "", -1)
 
 	client, err := getCSMClient()
 	if err != nil {
@@ -115,8 +106,6 @@ func TestCreateWorkspaceThatExists(t *testing.T) {
 	assert := assert.New(t)
 
 	workspaceID := uuid.NewV4().String()
-	//TODO: Remove this line with CSM accepts guids as IDs...
-	workspaceID = strings.Replace(workspaceID, "-", "", -1)
 
 	client, err := getCSMClient()
 	if err != nil {
@@ -126,8 +115,7 @@ func TestCreateWorkspaceThatExists(t *testing.T) {
 	err = client.CreateWorkspace(workspaceID)
 	assert.Nil(err)
 	err = client.CreateWorkspace(workspaceID)
-	//TODO: uncomment the following line when this is fixed in CSM
-	//assert.NotNil(err)
+	assert.NotNil(err)
 	err = client.DeleteWorkspace(workspaceID)
 	assert.Nil(err)
 }
