@@ -12,42 +12,6 @@ function start()
     # create log directory if it doesn't exist
     [ ! -d /var/vcap/sys/log/cf-usb/ ] && mkdir -p /var/vcap/sys/log/cf-usb/
 
-    # wait 120 seconds for nfs to mount the share
-    cnt=1
-    while [ $cnt -le 40 ];
-    do
-	[ -z "`mount|grep /var/vcap/nfs`" ] && \
-	{
-	    cnt=$(( $cnt + 1 ))
-	    echo "`date`: nfs share not yet mounted. Sleeping 3 seconds" >>/var/vcap/sys/log/cf-usb/cf-usb.log
-	    sleep 3
-	} || \
-	{
-	    echo "`date`: nfs share is mounted"  >>/var/vcap/sys/log/cf-usb/cf-usb.log
-	    break
-	}
-    done
-
-    export USB_DRIVER_PATH=/var/vcap/nfs/shared/drivers
-
-    # copy the drivers to $USB_DRIVER_PATH
-    [ ! -d $USB_DRIVER_PATH ] && mkdir -p $USB_DRIVER_PATH
-
-    cp /var/vcap/packages/cf-usb/bin/drivers/* $USB_DRIVER_PATH
-
-    # TODO: This is hacky and should be replaced with a better mechanism
-    <% if p("cf-usb.configprovider") == "consulConfigProvider" %>
-    driver_index=0
-    for driver in $USB_DRIVER_PATH/*;
-    do
-      driver_index=$(( $driver_index + 1 ))
-
-	    curl -s -S -X PUT -d "`basename $driver`" http://<%= p("cf-usb.configconnectionstring") %>/v1/kv/usb/drivers/00000000-0000-0000-0000-`printf "%012d" $driver_index`/Name
-
-      curl -s -S -X PUT -d "`basename $driver`" http://<%= p("cf-usb.configconnectionstring") %>/v1/kv/usb/drivers/00000000-0000-0000-0000-`printf "%012d" $driver_index`/Type
-    done
-    <% end %>
-
     <% if p("cf-usb.configprovider") == "consulConfigProvider" %>
 
     broker_api='{"external_url":"http://<%= p("cf-usb.broker.external_url") %>","listen":":<%= p("cf-usb.broker.port") %>","credentials":{"username":"<%= p("cf-usb.broker.username") %>","password":"<%= p("cf-usb.broker.password") %>"}}'
@@ -59,19 +23,6 @@ function start()
     # TODO: the 2.6 constant here is a hack
     curl -s -S -X PUT -d "2.6" http://<%= p("cf-usb.configconnectionstring") %>/v1/kv/usb/api_version
     <% end %>
-
-    # TODO: This will leave old drivers behind in consul
-    # <% if p("cf-usb.override") %>
-    # # override the drivers
-    # cp -f /var/vcap/packages/cf-usb/bin/drivers/* $USB_DRIVER_PATH/
-    #
-    # <% if p("cf-usb.configprovider") == "consulConfigProvider" %>
-    # for driver in $USB_DRIVER_PATH/*;
-    # do
-	  #   curl -s -S -X PUT -d "`basename $driver`" http://<%= p("cf-usb.configconnectionstring") %>/v1/kv/usb/drivers/`random_uuid`
-    # done
-    # <% end %>
-    # <% end %>
 
     # create the pidfile directory if it doesn't exist
     [ ! -d `dirname $pidfile` ] && mkdir -p `dirname $pidfile`

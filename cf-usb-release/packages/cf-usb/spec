@@ -5,11 +5,10 @@ files:
   - cf-usb/Godeps/**/*
   - cf-usb/Makefile
   - cf-usb/lib/**/*
+  - cf-usb/make/**/*
   - cf-usb/cmd/**/*
-  - cf-usb/driver/**/*
+  - cf-usb/vendor/**/*
   - cf-usb/integration_test/**/*
-  - cf-usb/driver-generator/**/*
-  - cf-usb/version.mk
 
 dependencies:
   - golang
