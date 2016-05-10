@@ -88,6 +88,10 @@ func (csm *csmClient) WorkspaceExists(workspaceID string) (bool, error) {
 	response, err := csm.workspaceCient.GetWorkspace(&params, csm.authInfoWriter)
 
 	if err != nil {
+		//TODO Improve this
+		if strings.Contains(err.Error(), "Code:404") {
+			return false, nil
+		}
 		return false, err
 	}
 
@@ -177,7 +181,13 @@ func (csm *csmClient) ConnectionExists(workspaceID, connectionID string) (bool, 
 	}
 
 	response, err := csm.connectionClient.GetConnection(&params, csm.authInfoWriter)
+
 	if err != nil {
+		//TODO Improve this
+		if strings.Contains(err.Error(), "Code:404") {
+			return false, nil
+		}
+
 		return false, err
 	}
 
