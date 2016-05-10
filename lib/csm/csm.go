@@ -25,11 +25,13 @@ type csmClient struct {
 
 func NewCSMClient(logger lager.Logger) CSMInterface {
 	csm := csmClient{}
+	csm.logger = logger
 	csm.loggedIn = false
 	return &csm
 }
 
 func (csm *csmClient) Login(targetEndpoint string, token string) error {
+	csm.logger.Info("csm-login", lager.Data{"endpoint": targetEndpoint})
 	target, err := url.Parse(targetEndpoint)
 	if err != nil {
 		return err
