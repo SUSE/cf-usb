@@ -43,12 +43,11 @@ type Dial struct {
 }
 
 type Instance struct {
-	TargetURL         string                    `json:"target"`
-	Name              string                    `json:"name"`
-	Dials             map[string]Dial           `json:"dials"`
-	Service           brokerapi.Service         `json:"service"`
-	Metadata          brokerapi.ServiceMetadata `json:"metadata"`
-	AuthenticationKey string                    `json:"authentication_key"`
+	TargetURL         string            `json:"target"`
+	Name              string            `json:"name"`
+	Dials             map[string]Dial   `json:"dials"`
+	Service           brokerapi.Service `json:"service"`
+	AuthenticationKey string            `json:"authentication_key"`
 }
 
 type RoutesRegister struct {

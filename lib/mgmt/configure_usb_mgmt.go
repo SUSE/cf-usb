@@ -64,12 +64,12 @@ func ConfigureAPI(api *operations.UsbMgmtAPI, auth authentication.Authentication
 		}
 
 		metadata := &genmodel.EndpointMetadata{
-			DisplayName:         endpoint.Metadata.DisplayName,
-			ImageURL:            endpoint.Metadata.ImageURL,
-			LongDescription:     endpoint.Metadata.LongDescription,
-			ProviderDisplayName: endpoint.Metadata.ProviderDisplayName,
-			DocumentationURL:    endpoint.Metadata.DocumentationURL,
-			SupportURL:          endpoint.Metadata.SupportURL,
+			DisplayName:         endpoint.Service.Metadata.DisplayName,
+			ImageURL:            endpoint.Service.Metadata.ImageURL,
+			LongDescription:     endpoint.Service.Metadata.LongDescription,
+			ProviderDisplayName: endpoint.Service.Metadata.ProviderDisplayName,
+			DocumentationURL:    endpoint.Service.Metadata.DocumentationURL,
+			SupportURL:          endpoint.Service.Metadata.SupportURL,
 		}
 
 		driverEndpoint := &genmodel.DriverEndpoint{
@@ -92,14 +92,15 @@ func ConfigureAPI(api *operations.UsbMgmtAPI, auth authentication.Authentication
 
 		var response []*genmodel.DriverEndpoint
 		for id, endpoint := range config.Instances {
+			metadata := &genmodel.EndpointMetadata{}
 
-			metadata := &genmodel.EndpointMetadata{
-				DisplayName:         endpoint.Metadata.DisplayName,
-				ImageURL:            endpoint.Metadata.ImageURL,
-				LongDescription:     endpoint.Metadata.LongDescription,
-				ProviderDisplayName: endpoint.Metadata.ProviderDisplayName,
-				DocumentationURL:    endpoint.Metadata.DocumentationURL,
-				SupportURL:          endpoint.Metadata.SupportURL,
+			if endpoint.Service.Metadata != nil {
+				metadata.DisplayName = endpoint.Service.Metadata.DisplayName
+				metadata.ImageURL = endpoint.Service.Metadata.ImageURL
+				metadata.LongDescription = endpoint.Service.Metadata.LongDescription
+				metadata.ProviderDisplayName = endpoint.Service.Metadata.ProviderDisplayName
+				metadata.DocumentationURL = endpoint.Service.Metadata.DocumentationURL
+				metadata.SupportURL = endpoint.Service.Metadata.SupportURL
 			}
 
 			driverEndpoint := &genmodel.DriverEndpoint{
@@ -185,8 +186,6 @@ func ConfigureAPI(api *operations.UsbMgmtAPI, auth authentication.Authentication
 			}
 		}
 
-		instance.Metadata = metadata
-
 		err = configProvider.SetInstance(instanceID, instance)
 		if err != nil {
 			log.Error("set-driver-instance-failed", err)
@@ -227,6 +226,7 @@ func ConfigureAPI(api *operations.UsbMgmtAPI, auth authentication.Authentication
 		service.Description = "Default service"
 		service.Tags = []string{service.Name}
 		service.Bindable = true
+		service.Metadata = &metadata
 
 		err = configProvider.SetService(instanceID, service)
 		if err != nil {
@@ -398,12 +398,12 @@ func ConfigureAPI(api *operations.UsbMgmtAPI, auth authentication.Authentication
 		instance.TargetURL = params.DriverEndpoint.EndpointURL
 
 		if params.DriverEndpoint.Metadata != nil {
-			instance.Metadata.DisplayName = params.DriverEndpoint.Metadata.DisplayName
-			instance.Metadata.DocumentationURL = params.DriverEndpoint.Metadata.DocumentationURL
-			instance.Metadata.ImageURL = params.DriverEndpoint.Metadata.ImageURL
-			instance.Metadata.LongDescription = params.DriverEndpoint.Metadata.LongDescription
-			instance.Metadata.ProviderDisplayName = params.DriverEndpoint.Metadata.ProviderDisplayName
-			instance.Metadata.SupportURL = params.DriverEndpoint.Metadata.SupportURL
+			instance.Service.Metadata.DisplayName = params.DriverEndpoint.Metadata.DisplayName
+			instance.Service.Metadata.DocumentationURL = params.DriverEndpoint.Metadata.DocumentationURL
+			instance.Service.Metadata.ImageURL = params.DriverEndpoint.Metadata.ImageURL
+			instance.Service.Metadata.LongDescription = params.DriverEndpoint.Metadata.LongDescription
+			instance.Service.Metadata.ProviderDisplayName = params.DriverEndpoint.Metadata.ProviderDisplayName
+			instance.Service.Metadata.SupportURL = params.DriverEndpoint.Metadata.SupportURL
 		}
 
 		err = configProvider.SetInstance(params.DriverEndpointID, instance)

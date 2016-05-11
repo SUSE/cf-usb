@@ -33,7 +33,6 @@ func (broker *UsbBroker) Services() brokerapi.CatalogResponse {
 
 	for _, instance := range config.Instances {
 		service := instance.Service
-		service.Metadata = &instance.Metadata
 
 		for _, dial := range instance.Dials {
 			service.Plans = append(service.Plans, dial.Plan)
