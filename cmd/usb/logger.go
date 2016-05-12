@@ -1,10 +1,12 @@
 package main
 
 import (
-	"github.com/pivotal-golang/lager"
 	"os"
+
+	"github.com/pivotal-golang/lager"
 )
 
+//enum used to describe the possible values for logging
 const (
 	DEBUG = "debug"
 	INFO  = "info"
@@ -12,6 +14,7 @@ const (
 	FATAL = "fatal"
 )
 
+//NewLogger initializes a new logger for usb that will log anything above the "level" specified
 func NewLogger(level string) lager.Logger {
 	var logger = lager.NewLogger("usb")
 

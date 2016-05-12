@@ -11,15 +11,14 @@ import (
 )
 
 type DummyServiceProperties struct {
-	PropOne string `json:"property_one"`
-	PropTwo string `json:"property_two"`
+	PropOne json.RawMessage `json:"service"`
 }
 
 type DummyServiceDials struct {
 	MAXDB int `json:"max_dbsize_mb"`
 }
 
-func loadConfigAsset() (*Config, ConfigProvider, error) {
+func loadConfigAsset() (*Config, Provider, error) {
 	config := &Config{}
 
 	workDir, err := os.Getwd()
@@ -44,7 +43,7 @@ func TestLoadConfig(t *testing.T) {
 	}
 
 	assert.Equal("2.6", config.APIVersion)
-	assert.Equal("http://1.2.3.4:54054", config.BrokerAPI.ExternalUrl)
+	assert.Equal("http://1.2.3.4:54054", config.BrokerAPI.ExternalURL)
 	assert.Equal(":54054", config.BrokerAPI.Listen)
 	assert.Equal("username", config.BrokerAPI.Credentials.Username)
 	assert.Equal("password", config.BrokerAPI.Credentials.Password)
@@ -52,8 +51,8 @@ func TestLoadConfig(t *testing.T) {
 	assert.Equal(false, config.ManagementAPI.DevMode)
 	assert.Equal("myuaaclient", config.ManagementAPI.UaaClient)
 	assert.Equal("myuaasecret", config.ManagementAPI.UaaSecret)
-	assert.Equal("http://api.bosh-lite.com", config.ManagementAPI.CloudController.Api)
-	assert.Equal(true, config.ManagementAPI.CloudController.SkipTlsValidation)
+	assert.Equal("http://api.bosh-lite.com", config.ManagementAPI.CloudController.API)
+	assert.Equal(true, config.ManagementAPI.CloudController.SkipTLSValidation)
 }
 
 func TestLoadServiceConfig(t *testing.T) {
@@ -65,52 +64,17 @@ func TestLoadServiceConfig(t *testing.T) {
 	}
 
 	for _, d := range config.Instances {
-		dsp := DummyServiceProperties{}
-		diConf := (*json.RawMessage)(d.Configuration)
-		err := json.Unmarshal(*diConf, &dsp)
-		if err != nil {
-			assert.Equal(err, "Error unmarshaling properties")
-		}
+
 		if d.Name == "dummy1" {
-			assert.Equal("one", dsp.PropOne)
-			assert.Equal("two", dsp.PropTwo)
+			assert.Equal("echo", d.Service.Name)
+			assert.Equal("This is the first plan", d.Dials["B0000000-0000-0000-0000-000000000001"].Plan.Description)
 		}
 		if d.Name == "dummy2" {
-			assert.Equal("onenew", dsp.PropOne)
-			assert.Equal("twonew", dsp.PropTwo)
+			assert.Equal("echo", d.Service.Name)
+			assert.Equal("This is the secondary plan", d.Dials["B0000000-0000-0000-0000-000000000011"].Plan.Description)
 		}
 
 	}
-
-}
-
-func TestGetDriverConfig(t *testing.T) {
-	assert := assert.New(t)
-
-	_, provider, err := loadConfigAsset()
-	if err != nil {
-		assert.Error(err, "Unable to load from temp config file")
-	}
-
-	driverInstance, err := provider.LoadDriverInstance("A0000000-0000-0000-0000-000000000002")
-
-	if err != nil {
-		assert.Error(err, "Unable to get driver configuration")
-	}
-	t.Log(driverInstance)
-	instance := *driverInstance
-
-	dsp := DummyServiceProperties{}
-
-	conf := (*json.RawMessage)(instance.Configuration)
-	err = json.Unmarshal(*conf, &dsp)
-
-	if err != nil {
-		assert.Error(err, "Exception unmarshaling properties")
-	}
-
-	assert.Equal("one", dsp.PropOne)
-	assert.Equal("two", dsp.PropTwo)
 
 }
 

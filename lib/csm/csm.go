@@ -23,7 +23,8 @@ type csmClient struct {
 	loggedIn         bool
 }
 
-func NewCSMClient(logger lager.Logger) CSMInterface {
+//NewCSMClient instantiates a new csmClient
+func NewCSMClient(logger lager.Logger) CSM {
 	csm := csmClient{}
 	csm.logger = logger
 	csm.loggedIn = false
@@ -71,7 +72,7 @@ func (csm *csmClient) CreateWorkspace(workspaceID string) error {
 	status := strings.TrimSpace(*response.Payload.Status)
 
 	if status != "successful" {
-		return errors.New(fmt.Sprintf("Error making the request. Extension returned status %s. Details: %v", status, response.Payload.Details))
+		return fmt.Errorf("Error making the request. Extension returned status %s. Details: %v", status, response.Payload.Details)
 	}
 
 	return nil
@@ -164,7 +165,7 @@ func (csm *csmClient) CreateConnection(workspaceID, connectionID string) (interf
 	status := strings.TrimSpace(*response.Payload.Status)
 
 	if status != "successful" {
-		return nil, errors.New(fmt.Sprintf("Error making the request. Extension returned status %s. Details: %v", status, response.Payload.Details))
+		return nil, fmt.Errorf("Error making the request. Extension returned status %s. Details: %v", status, response.Payload.Details)
 	}
 
 	return response.Payload.Details, err

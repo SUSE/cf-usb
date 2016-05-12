@@ -10,10 +10,11 @@ import (
 const usbKey = "usb"
 
 type redisConfig struct {
-	provider redis.RedisProvisionerInterface
+	provider redis.Provisioner
 }
 
-func NewRedisConfig(provider redis.RedisProvisionerInterface) ConfigProvider {
+//NewRedisConfig generates and returns a new redis config provider
+func NewRedisConfig(provider redis.Provisioner) Provider {
 	provisioner := redisConfig{}
 	provisioner.provider = provider
 	return &provisioner

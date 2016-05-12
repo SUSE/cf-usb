@@ -13,9 +13,9 @@ func TestGetToken(t *testing.T) {
 	assert := assert.New(t)
 	tokenValue := "atoken"
 
-	var infoLogger *lagertest.TestLogger = lagertest.NewTestLogger("cc-api")
+	var infoLogger = lagertest.NewTestLogger("cc-api")
 
-	client := new(mocks.HttpClient)
+	client := new(mocks.HTTPClient)
 	client.Mock.On("Request", mock.Anything).Return([]byte(`{"access_token":"atoken","expires_in":10000}`), nil)
 
 	tokenGenerator := NewTokenGenerator("http://api.1.2.3.4.io", "clientId", "clientSecret", client, infoLogger)
@@ -31,9 +31,9 @@ func TestGetToken(t *testing.T) {
 
 func TestGetWrongToken(t *testing.T) {
 	assert := assert.New(t)
-	var infoLogger *lagertest.TestLogger = lagertest.NewTestLogger("cc-api")
+	var infoLogger = lagertest.NewTestLogger("cc-api")
 
-	client := new(mocks.HttpClient)
+	client := new(mocks.HTTPClient)
 	client.Mock.On("Request", mock.Anything).Return([]byte(`{"access_token":"atoken","expires_in":""}`), nil)
 
 	tokenGenerator := NewTokenGenerator("http://api.1.2.3.4.io", "clientId", "clientSecret", client, infoLogger)

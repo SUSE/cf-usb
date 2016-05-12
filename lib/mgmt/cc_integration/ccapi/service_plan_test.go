@@ -9,13 +9,13 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-var loggerSP *lagertest.TestLogger = lagertest.NewTestLogger("cc-api")
+var loggerSP = lagertest.NewTestLogger("cc-api")
 
 func TestUpdateServicePlanVisibility(t *testing.T) {
 	tokenGenerator := new(mocks.GetTokenInterface)
 	tokenGenerator.On("GetToken").Return("bearer atoken", nil)
 
-	client := new(mocks.HttpClient)
+	client := new(mocks.HTTPClient)
 	client.Mock.On("Request", mock.Anything).Return([]byte(`{"resources":[{"metadata":{"guid":""},"entity":{"name":"","free":false,"description":"","public":false,"service_guid":""}}]}`), nil)
 	client.Mock.On("Request", mock.Anything).Return(nil, nil)
 

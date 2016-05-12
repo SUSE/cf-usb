@@ -1,19 +1,23 @@
 package main
 
 import (
-	"github.com/codegangsta/cli"
-	"github.com/hpcloud/cf-usb/lib/config"
 	"os"
 	"strings"
+
+	"github.com/codegangsta/cli"
+	"github.com/hpcloud/cf-usb/lib/config"
 )
 
+//FileConfigProvider provides a configuration from a config file
 type FileConfigProvider struct {
 }
 
+//NewFileConfigProvider creates a new instance of FileConfigProvider
 func NewFileConfigProvider() (*FileConfigProvider, error) {
 	return nil, nil
 }
 
+//GetCLICommands returns the commands details for FileConfigProvider
 func (k *FileConfigProvider) GetCLICommands(app Usb) []cli.Command {
 	return []cli.Command{
 		{

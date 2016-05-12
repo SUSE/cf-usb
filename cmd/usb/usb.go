@@ -20,20 +20,24 @@ import (
 	"github.com/pivotal-golang/lager"
 )
 
+//Usb is the base type for Universal Service Broker
 type Usb interface {
 	GetCommands() []CLICommandProvider
-	Run(config.ConfigProvider, lager.Logger)
+	Run(config.Provider, lager.Logger)
 }
 
+//UsbApp is the base type to be used by applications
 type UsbApp struct {
 	config *config.Config
 	logger lager.Logger
 }
 
+//NewUsbApp creates an instance of UsbApp and returns it's pointer address
 func NewUsbApp() Usb {
 	return &UsbApp{config: &config.Config{}}
 }
 
+//GetCommands returns the available config provider commands
 func (usb *UsbApp) GetCommands() []CLICommandProvider {
 	return []CLICommandProvider{
 		&FileConfigProvider{},
@@ -42,7 +46,8 @@ func (usb *UsbApp) GetCommands() []CLICommandProvider {
 	}
 }
 
-func (usb *UsbApp) Run(configProvider config.ConfigProvider, logger lager.Logger) {
+//Run starts and runs an UsbApp based on the configProvider passed as a param
+func (usb *UsbApp) Run(configProvider config.Provider, logger lager.Logger) {
 	var err error
 	usb.logger = logger
 	usb.config, err = configProvider.LoadConfiguration()
@@ -91,16 +96,16 @@ func (usb *UsbApp) Run(configProvider config.ConfigProvider, logger lager.Logger
 				logger.Fatal("initializing-uaa-auth-failed", err)
 			}
 
-			client := httpclient.NewHttpClient(usb.config.ManagementAPI.CloudController.SkipTlsValidation)
-			info := ccapi.NewGetInfo(usb.config.ManagementAPI.CloudController.Api, client, logger)
-			tokenUrl, err := info.GetTokenEndpoint()
+			client := httpclient.NewHTTPClient(usb.config.ManagementAPI.CloudController.SkipTLSValidation)
+			info := ccapi.NewGetInfo(usb.config.ManagementAPI.CloudController.API, client, logger)
+			tokenURL, err := info.GetTokenEndpoint()
 			if err != nil {
 				logger.Fatal("retrieving-uaa-endpoint-failed", err)
 			}
 
-			tokenGenerator := uaaapi.NewTokenGenerator(tokenUrl, usb.config.ManagementAPI.UaaClient, usb.config.ManagementAPI.UaaSecret, client, logger)
+			tokenGenerator := uaaapi.NewTokenGenerator(tokenURL, usb.config.ManagementAPI.UaaClient, usb.config.ManagementAPI.UaaSecret, client, logger)
 
-			ccServiceBroker := ccapi.NewServiceBroker(client, tokenGenerator, usb.config.ManagementAPI.CloudController.Api, logger)
+			ccServiceBroker := ccapi.NewServiceBroker(client, tokenGenerator, usb.config.ManagementAPI.CloudController.API, logger)
 
 			mgmtAPI := operations.NewUsbMgmtAPI(swaggerSpec)
 			api := mgmt.ConfigureAPI(mgmtAPI, auth, configProvider, ccServiceBroker, logger, version)

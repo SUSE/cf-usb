@@ -2,15 +2,10 @@ package config
 
 import (
 	"encoding/json"
+
 	"github.com/frodenas/brokerapi"
 	_ "github.com/golang/protobuf/proto" //workaround for godep + gomega
 
-	"github.com/hashicorp/consul/api"
-	"github.com/hpcloud/cf-usb/lib/config/consul"
-	. "github.com/onsi/gomega"
-	"github.com/stretchr/testify/assert"
-	"github.com/tedsuo/ifrit"
-	"github.com/tedsuo/ifrit/ginkgomon"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -18,10 +13,17 @@ import (
 	"path"
 	"testing"
 	"time"
+
+	"github.com/hashicorp/consul/api"
+	"github.com/hpcloud/cf-usb/lib/config/consul"
+	. "github.com/onsi/gomega"
+	"github.com/stretchr/testify/assert"
+	"github.com/tedsuo/ifrit"
+	"github.com/tedsuo/ifrit/ginkgomon"
 )
 
 var IntegrationConfig = struct {
-	Provider         ConfigProvider
+	Provider         Provider
 	consulAddress    string
 	consulDatacenter string
 	consulUser       string
@@ -30,7 +32,7 @@ var IntegrationConfig = struct {
 	consulToken      string
 }{}
 
-var DefaultConsulPath string = "consul"
+var DefaultConsulPath = "consul"
 
 func init() {
 	IntegrationConfig.consulAddress = os.Getenv("CONSUL_ADDRESS")
@@ -41,7 +43,7 @@ func init() {
 	IntegrationConfig.consulToken = os.Getenv("CONSUL_TOKEN")
 }
 
-func initProvider() (bool, error, ifrit.Process) {
+func initProvider() (bool, ifrit.Process, error) {
 	var consulConfig api.Config
 	if IntegrationConfig.consulAddress == "" {
 		return false, nil, nil
@@ -49,6 +51,9 @@ func initProvider() (bool, error, ifrit.Process) {
 	consulConfig.Address = IntegrationConfig.consulAddress
 	consulConfig.Datacenter = IntegrationConfig.consulPassword
 
+	if consulConfig.Address == "" || consulConfig.Datacenter == "" {
+		return false, nil, nil
+	}
 	var auth api.HttpBasicAuth
 	auth.Username = IntegrationConfig.consulUser
 	auth.Password = IntegrationConfig.consulPassword
@@ -69,24 +74,24 @@ func initProvider() (bool, error, ifrit.Process) {
 	if consulIsRunning == false {
 		process, err = startConsulProcess()
 		if err != nil {
-			return false, err, nil
+			return false, nil, err
 		}
 	}
 
 	provisioner, err := consul.New(&consulConfig)
 	if err != nil {
-		return false, err, nil
+		return false, nil, err
 	}
 
 	IntegrationConfig.Provider = NewConsulConfig(provisioner)
-	return true, nil, process
+	return true, process, nil
 }
 
 func Test_IntDriverInstance(t *testing.T) {
 	RegisterTestingT(t)
 
-	initialized, err, process := initProvider()
-	if initialized == false {
+	initialized, process, err := initProvider()
+	if initialized == false || err != nil {
 		t.Skip("Skipping Consul Set Driver test, environment variables not set: CONSUL_ADDRESS(host:port), CONSUL_DATACENTER, CONSUL_TOKEN / CONSUL_USER + CONSUL_PASSWORD, CONSUL_SCHEMA")
 		t.Log(err)
 	}
@@ -95,8 +100,6 @@ func Test_IntDriverInstance(t *testing.T) {
 
 	var instance Instance
 	instance.Name = "testInstance"
-	raw := json.RawMessage("{\"a1\":\"b1\"}")
-	instance.Configuration = &raw
 	err = IntegrationConfig.Provider.SetInstance("testInstanceID", instance)
 	assert.NoError(err)
 
@@ -114,7 +117,6 @@ func Test_IntDriverInstance(t *testing.T) {
 
 	instanceDetails, err := IntegrationConfig.Provider.LoadDriverInstance("testInstanceID")
 	t.Log("Load driver instance results:")
-	t.Log(instanceDetails.Configuration)
 	t.Log(instanceDetails.Dials)
 	t.Log(instanceDetails.Service)
 	assert.Equal("testInstance", instanceDetails.Name)
@@ -129,7 +131,7 @@ func Test_IntDriverInstance(t *testing.T) {
 func Test_IntDial(t *testing.T) {
 	RegisterTestingT(t)
 
-	initialized, err, process := initProvider()
+	initialized, process, err := initProvider()
 	if initialized == false {
 		t.Skip("Skipping Consul Set Driver test, environment variables not set: CONSUL_ADDRESS(host:port), CONSUL_DATACENTER, CONSUL_TOKEN / CONSUL_USER + CONSUL_PASSWORD, CONSUL_SCHEMA")
 		t.Log(err)
@@ -139,8 +141,6 @@ func Test_IntDial(t *testing.T) {
 
 	var instance Instance
 	instance.Name = "testInstance"
-	rawInstance := json.RawMessage("{\"a1\":\"b1\"}")
-	instance.Configuration = &rawInstance
 	err = IntegrationConfig.Provider.SetInstance("testInstanceID", instance)
 	assert.NoError(err)
 

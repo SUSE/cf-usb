@@ -1,22 +1,26 @@
 package main
 
 import (
-	"github.com/codegangsta/cli"
-	"github.com/hpcloud/cf-usb/lib/config"
 	"os"
 	"strings"
+
+	"github.com/codegangsta/cli"
+	"github.com/hpcloud/cf-usb/lib/config"
 
 	"github.com/hashicorp/consul/api"
 	"github.com/hpcloud/cf-usb/lib/config/consul"
 )
 
+//ConsulConfigProvider provides a consul config
 type ConsulConfigProvider struct {
 }
 
+//NewConsulConfigProvider returns a new consul config provider
 func NewConsulConfigProvider() (*ConsulConfigProvider, error) {
 	return nil, nil
 }
 
+//GetCLICommands returns the CLI Commands details from ConsulConfigProvider
 func (k *ConsulConfigProvider) GetCLICommands(app Usb) []cli.Command {
 	return []cli.Command{
 		{

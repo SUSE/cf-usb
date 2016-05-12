@@ -4,11 +4,12 @@ import "github.com/stretchr/testify/mock"
 
 import "github.com/hashicorp/consul/api"
 
-type ConsulProvisionerInterface struct {
+type Provisioner struct {
 	mock.Mock
 }
 
-func (_m *ConsulProvisionerInterface) AddKV(_a0 string, _a1 []byte, _a2 *api.WriteOptions) error {
+// AddKV provides a mock function with given fields: _a0, _a1, _a2
+func (_m *Provisioner) AddKV(_a0 string, _a1 []byte, _a2 *api.WriteOptions) error {
 	ret := _m.Called(_a0, _a1, _a2)
 
 	var r0 error
@@ -20,7 +21,9 @@ func (_m *ConsulProvisionerInterface) AddKV(_a0 string, _a1 []byte, _a2 *api.Wri
 
 	return r0
 }
-func (_m *ConsulProvisionerInterface) PutKVs(_a0 *api.KVPairs, _a1 *api.WriteOptions) error {
+
+// PutKVs provides a mock function with given fields: _a0, _a1
+func (_m *Provisioner) PutKVs(_a0 *api.KVPairs, _a1 *api.WriteOptions) error {
 	ret := _m.Called(_a0, _a1)
 
 	var r0 error
@@ -32,7 +35,9 @@ func (_m *ConsulProvisionerInterface) PutKVs(_a0 *api.KVPairs, _a1 *api.WriteOpt
 
 	return r0
 }
-func (_m *ConsulProvisionerInterface) GetValue(_a0 string) ([]byte, error) {
+
+// GetValue provides a mock function with given fields: _a0
+func (_m *Provisioner) GetValue(_a0 string) ([]byte, error) {
 	ret := _m.Called(_a0)
 
 	var r0 []byte
@@ -53,7 +58,9 @@ func (_m *ConsulProvisionerInterface) GetValue(_a0 string) ([]byte, error) {
 
 	return r0, r1
 }
-func (_m *ConsulProvisionerInterface) GetAllKVs(_a0 string, _a1 *api.QueryOptions) (api.KVPairs, error) {
+
+// GetAllKVs provides a mock function with given fields: _a0, _a1
+func (_m *Provisioner) GetAllKVs(_a0 string, _a1 *api.QueryOptions) (api.KVPairs, error) {
 	ret := _m.Called(_a0, _a1)
 
 	var r0 api.KVPairs
@@ -72,7 +79,9 @@ func (_m *ConsulProvisionerInterface) GetAllKVs(_a0 string, _a1 *api.QueryOption
 
 	return r0, r1
 }
-func (_m *ConsulProvisionerInterface) DeleteKV(_a0 string, _a1 *api.WriteOptions) error {
+
+// DeleteKV provides a mock function with given fields: _a0, _a1
+func (_m *Provisioner) DeleteKV(_a0 string, _a1 *api.WriteOptions) error {
 	ret := _m.Called(_a0, _a1)
 
 	var r0 error
@@ -84,7 +93,9 @@ func (_m *ConsulProvisionerInterface) DeleteKV(_a0 string, _a1 *api.WriteOptions
 
 	return r0
 }
-func (_m *ConsulProvisionerInterface) DeleteKVs(_a0 string, _a1 *api.WriteOptions) error {
+
+// DeleteKVs provides a mock function with given fields: _a0, _a1
+func (_m *Provisioner) DeleteKVs(_a0 string, _a1 *api.WriteOptions) error {
 	ret := _m.Called(_a0, _a1)
 
 	var r0 error
@@ -96,7 +107,9 @@ func (_m *ConsulProvisionerInterface) DeleteKVs(_a0 string, _a1 *api.WriteOption
 
 	return r0
 }
-func (_m *ConsulProvisionerInterface) GetAllKeys(_a0 string, _a1 string, _a2 *api.QueryOptions) ([]string, error) {
+
+// GetAllKeys provides a mock function with given fields: _a0, _a1, _a2
+func (_m *Provisioner) GetAllKeys(_a0 string, _a1 string, _a2 *api.QueryOptions) ([]string, error) {
 	ret := _m.Called(_a0, _a1, _a2)
 
 	var r0 []string

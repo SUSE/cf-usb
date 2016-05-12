@@ -13,7 +13,7 @@ import (
 )
 
 var RedisTestConfig = struct {
-	Provider ConfigProvider
+	Provider Provider
 }{}
 
 func getRedisConfigString() (string, error) {
@@ -31,7 +31,7 @@ func getRedisConfigString() (string, error) {
 
 func Test_Redis_LoadConfiguration(t *testing.T) {
 	assert := assert.New(t)
-	provisioner := new(redisMock.RedisProvisionerInterface)
+	provisioner := new(redisMock.Provisioner)
 	configSring, err := getRedisConfigString()
 	if err != nil {
 		t.Error(err)
@@ -51,7 +51,7 @@ func Test_Redis_LoadConfiguration(t *testing.T) {
 
 func Test_Redis_GetDriverInstance(t *testing.T) {
 	assert := assert.New(t)
-	provisioner := new(redisMock.RedisProvisionerInterface)
+	provisioner := new(redisMock.Provisioner)
 	configSring, err := getRedisConfigString()
 	if err != nil {
 		t.Error(err)
@@ -68,7 +68,7 @@ func Test_Redis_GetDriverInstance(t *testing.T) {
 
 func Test_Redis_GetDial(t *testing.T) {
 	assert := assert.New(t)
-	provisioner := new(redisMock.RedisProvisionerInterface)
+	provisioner := new(redisMock.Provisioner)
 	configSring, err := getRedisConfigString()
 	if err != nil {
 		t.Error(err)
@@ -87,7 +87,7 @@ func Test_Redis_GetDial(t *testing.T) {
 
 func Test_Redis_GetService(t *testing.T) {
 	assert := assert.New(t)
-	provisioner := new(redisMock.RedisProvisionerInterface)
+	provisioner := new(redisMock.Provisioner)
 
 	configSring, err := getRedisConfigString()
 	if err != nil {
@@ -132,7 +132,7 @@ func Test_Redis_SetDriverInstance(t *testing.T) {
 
 func Test_Redis_SetDial(t *testing.T) {
 	assert := assert.New(t)
-	provisioner := new(redisMock.RedisProvisionerInterface)
+	provisioner := new(redisMock.Provisioner)
 	configSring, err := getRedisConfigString()
 	if err != nil {
 		t.Error(err)
@@ -151,7 +151,7 @@ func Test_Redis_SetDial(t *testing.T) {
 
 func Test_Redis_SetService(t *testing.T) {
 	assert := assert.New(t)
-	provisioner := new(redisMock.RedisProvisionerInterface)
+	provisioner := new(redisMock.Provisioner)
 
 	configSring, err := getRedisConfigString()
 	if err != nil {
@@ -175,7 +175,7 @@ func Test_Redis_SetService(t *testing.T) {
 
 func Test_Redis_DeleteDriverInstance(t *testing.T) {
 	assert := assert.New(t)
-	provisioner := new(redisMock.RedisProvisionerInterface)
+	provisioner := new(redisMock.Provisioner)
 	configSring, err := getRedisConfigString()
 	if err != nil {
 		t.Error(err)
@@ -192,7 +192,7 @@ func Test_Redis_DeleteDriverInstance(t *testing.T) {
 
 func Test_Redis_DeleteDial(t *testing.T) {
 	assert := assert.New(t)
-	provisioner := new(redisMock.RedisProvisionerInterface)
+	provisioner := new(redisMock.Provisioner)
 	configSring, err := getRedisConfigString()
 	if err != nil {
 		t.Error(err)
@@ -209,7 +209,7 @@ func Test_Redis_DeleteDial(t *testing.T) {
 
 func Test_Redis_DeleteService(t *testing.T) {
 	assert := assert.New(t)
-	provisioner := new(redisMock.RedisProvisionerInterface)
+	provisioner := new(redisMock.Provisioner)
 
 	configSring, err := getRedisConfigString()
 	if err != nil {

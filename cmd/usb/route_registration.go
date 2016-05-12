@@ -13,6 +13,7 @@ import (
 	"github.com/cloudfoundry/yagnats"
 )
 
+//StartRouteRegistration starts regitration of routes based on the config received as parameter
 func (usb *UsbApp) StartRouteRegistration(config *config.Config, log lager.Logger) {
 	logger := log.Session("cf-router-registrar")
 
@@ -21,31 +22,31 @@ func (usb *UsbApp) StartRouteRegistration(config *config.Config, log lager.Logge
 	routesToRegister := map[int]string{}
 	ip := ""
 
-	_, brokerApiPortString, err := net.SplitHostPort(usb.config.BrokerAPI.Listen)
+	_, brokerAPIPortString, err := net.SplitHostPort(usb.config.BrokerAPI.Listen)
 	if err != nil {
 		logger.Fatal("invalid-brokerapi-listening-address", err)
 	}
 
-	brokerApiPort, err := strconv.Atoi(brokerApiPortString)
+	brokerAPIPort, err := strconv.Atoi(brokerAPIPortString)
 	if err != nil {
 		logger.Fatal("invalid-type-brokerapi-listening-address", err)
 	}
 
-	routesToRegister[brokerApiPort] = usb.config.RoutesRegister.BrokerAPIHost
+	routesToRegister[brokerAPIPort] = usb.config.RoutesRegister.BrokerAPIHost
 
 	if usb.config.ManagementAPI != nil && usb.config.RoutesRegister.ManagmentAPIHost != "" {
 		mgmtaddr := usb.config.ManagementAPI.Listen
-		_, mgmApiPortString, err := net.SplitHostPort(mgmtaddr)
+		_, mgmAPIPortString, err := net.SplitHostPort(mgmtaddr)
 		if err != nil {
 			logger.Fatal("invalid-management-api-listening-address", err)
 		}
 
-		mgmApiPort, err := strconv.Atoi(mgmApiPortString)
+		mgmAPIPort, err := strconv.Atoi(mgmAPIPortString)
 		if err != nil {
 			logger.Fatal("invalid-type-brokerapi-listening-address", err)
 		}
 
-		routesToRegister[mgmApiPort] = usb.config.RoutesRegister.ManagmentAPIHost
+		routesToRegister[mgmAPIPort] = usb.config.RoutesRegister.ManagmentAPIHost
 	}
 
 	ip, err = localip.LocalIP()
