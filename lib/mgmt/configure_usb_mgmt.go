@@ -172,18 +172,20 @@ func ConfigureAPI(api *operations.UsbMgmtAPI, auth authentication.Authentication
 		}
 		instance.Name = *params.DriverEndpoint.Name
 
-		if params.DriverEndpoint.Metadata != nil {
-			metadata := brokerapi.ServiceMetadata{
-				DisplayName:         params.DriverEndpoint.Metadata.DisplayName,
-				ImageURL:            params.DriverEndpoint.Metadata.ImageURL,
-				LongDescription:     params.DriverEndpoint.Metadata.LongDescription,
-				ProviderDisplayName: params.DriverEndpoint.Metadata.ProviderDisplayName,
-				DocumentationURL:    params.DriverEndpoint.Metadata.DocumentationURL,
-				SupportURL:          params.DriverEndpoint.Metadata.SupportURL,
-			}
+		metadata := brokerapi.ServiceMetadata{}
 
-			instance.Metadata = metadata
+		if params.DriverEndpoint.Metadata != nil {
+			{
+				metadata.DisplayName = params.DriverEndpoint.Metadata.DisplayName
+				metadata.ImageURL = params.DriverEndpoint.Metadata.ImageURL
+				metadata.LongDescription = params.DriverEndpoint.Metadata.LongDescription
+				metadata.ProviderDisplayName = params.DriverEndpoint.Metadata.ProviderDisplayName
+				metadata.DocumentationURL = params.DriverEndpoint.Metadata.DocumentationURL
+				metadata.SupportURL = params.DriverEndpoint.Metadata.SupportURL
+			}
 		}
+
+		instance.Metadata = metadata
 
 		err = configProvider.SetInstance(instanceID, instance)
 		if err != nil {
