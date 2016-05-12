@@ -88,6 +88,8 @@ func Test_RegisterDriverEndpoint(t *testing.T) {
 
 	params.DriverEndpoint.Metadata = metadata
 
+	provider.On("SetDial", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	provider.On("SetService", mock.Anything, mock.Anything).Return(nil)
 	provider.On("SetInstance", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	provider.On("InstanceNameExists", mock.Anything).Return(false, nil)
 
