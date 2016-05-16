@@ -18,32 +18,32 @@ type EndpointMetadata struct {
 	/* The name of the service to be displayed in graphical clients
 
 	 */
-	DisplayName string `json:"display_name,omitempty"`
+	DisplayName string `json:"displayName,omitempty"`
 
 	/* Link to a documentation page for the service
 
 	 */
-	DocumentationURL string `json:"documentation_url,omitempty"`
+	DocumentationURL string `json:"documentationUrl,omitempty"`
 
 	/* The URL to an image
 
 	 */
-	ImageURL string `json:"image_url,omitempty"`
+	ImageURL string `json:"imageUrl,omitempty"`
 
 	/* Long description
 
 	 */
-	LongDescription string `json:"long_description,omitempty"`
+	LongDescription string `json:"longDescription,omitempty"`
 
 	/* The name of the upstream entity providing the actual service
 
 	 */
-	ProviderDisplayName string `json:"provider_display_name,omitempty"`
+	ProviderDisplayName string `json:"providerDisplayName,omitempty"`
 
 	/* Link to support information for the service
 
 	 */
-	SupportURL string `json:"support_url,omitempty"`
+	SupportURL string `json:"supportUrl,omitempty"`
 }
 
 // Validate validates this endpoint metadata
