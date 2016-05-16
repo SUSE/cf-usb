@@ -102,9 +102,12 @@ func ConfigureAPI(api *operations.UsbMgmtAPI, auth authentication.Authentication
 				SupportURL:          endpoint.Metadata.SupportURL,
 			}
 
+			var name string
+			name = endpoint.Name
+
 			driverEndpoint := &genmodel.DriverEndpoint{
 				ID:                id,
-				Name:              &endpoint.Name,
+				Name:              &name,
 				EndpointURL:       endpoint.TargetURL,
 				AuthenticationKey: endpoint.AuthenticationKey,
 				Metadata:          metadata,
