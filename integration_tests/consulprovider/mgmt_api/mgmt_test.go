@@ -43,7 +43,7 @@ func init() {
 	ConsulConfig.ConsulToken = os.Getenv("CONSUL_TOKEN")
 }
 
-func initConsulProvider() (*config.ConfigProvider, error) {
+func initConsulProvider() (*config.Provider, error) {
 	var consulConfig api.Config
 	consulConfig.Address = ConsulConfig.ConsulAddress
 	consulConfig.Datacenter = ConsulConfig.ConsulDatacenter
@@ -65,7 +65,7 @@ func initConsulProvider() (*config.ConfigProvider, error) {
 	return &configProvider, nil
 }
 
-func initMgmt(provider config.ConfigProvider) (*operations.UsbMgmtAPI, error) {
+func initMgmt(provider config.Provider) (*operations.UsbMgmtAPI, error) {
 
 	swaggerSpec, err := loads.Analyzed(mgmt.SwaggerJSON, "")
 	if err != nil {

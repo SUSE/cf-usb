@@ -10,7 +10,10 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"fmt"
+	"io/ioutil"
 	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -24,16 +27,45 @@ var instances []config.Instance
 var logger = lagertest.NewTestLogger("csm-client-test")
 var csmEndpoint = ""
 var authToken = ""
-var configFile = ""
+var serviceID = ""
 
 func init() {
 	csmEndpoint = os.Getenv("CSM_ENDPOINT")
-	authToken = os.Getenv("csm-auth-token")
-	configFile = os.Getenv("USB_CONFIG_FILE")
+	authToken = os.Getenv("CSM_API_KEY")
 }
 
-func setupEnv() (*lib.UsbBroker, *csm.CSMInterface, error) {
+func setupEnv() (*lib.UsbBroker, *csm.Interface, error) {
+	file, err := ioutil.TempFile(os.TempDir(), "brokertest")
+	if err != nil {
+		return nil, nil, err
+	}
+	workDir, err := os.Getwd()
+	testFile := filepath.Join(workDir, "../../../test-assets/file-config/config.json")
+
+	info, err := ioutil.ReadFile(testFile)
+	if err != nil {
+		return nil, nil, err
+	}
+	content := string(info)
+	content = strings.Replace(content, "http://127.0.0.1:8080", csmEndpoint, -1)
+	content = strings.Replace(content, "authkey", authToken, -1)
+
+	configFile := file.Name()
+
+	err = ioutil.WriteFile(configFile, []byte(content), 0777)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	configProvider := config.NewFileConfig(configFile)
+	config, err := configProvider.LoadConfiguration()
+	if err != nil {
+		return nil, nil, err
+	}
+	for _, instance := range config.Instances {
+		serviceID = instance.Service.ID
+		break
+	}
 	csmInterface := csm.NewCSMClient(logger)
 	broker := lib.NewUsbBroker(configProvider, logger, csmInterface)
 	return broker, &csmInterface, nil
@@ -43,14 +75,18 @@ func TestBrokerAPIProvisionTest(t *testing.T) {
 	assert := assert.New(t)
 	broker, _, err := setupEnv()
 	if err != nil {
-		t.Error(err)
+		t.Skip(err)
 	}
-	if csmEndpoint == "" || authToken == "" || configFile == "" {
-		t.Skipf("Skipping broker file integration test - missing CSM_ENDPOINT, csm-auth-token and/or USB_CONFIG_FILE")
+	if csmEndpoint == "" || authToken == "" {
+		t.Skipf("Skipping broker file integration test - missing CSM_ENDPOINT and CSM_API_KEY")
+	}
+	if serviceID == "" {
+		t.Skip("Config file does not contain a service definition")
 	}
 
 	workspaceID := uuid.NewV4().String()
 	details := brokerapi.ProvisionDetails{}
+	details.ServiceID = serviceID
 	response, _, err := broker.Provision(workspaceID, details, false)
 	t.Log(response)
 	assert.NotNil(response)
@@ -61,16 +97,20 @@ func TestBrokerAPIBindTest(t *testing.T) {
 	assert := assert.New(t)
 	broker, _, err := setupEnv()
 	if err != nil {
-		t.Error(err)
+		t.Skip(err)
 	}
-	if csmEndpoint == "" || authToken == "" || configFile == "" {
-		t.Skipf("Skipping broker file integration test - missing CSM_ENDPOINT, csm-auth-token and/or USB_CONFIG_FILE")
+	if csmEndpoint == "" || authToken == "" {
+		t.Skipf("Skipping broker file integration test - missing CSM_ENDPOINT and CSM_API_KEY")
 	}
-
+	if serviceID == "" {
+		t.Skip("Config file does not contain a service definition")
+	}
 	workspaceID := uuid.NewV4().String()
 	connectionID := uuid.NewV4().String()
 	serviceDetails := brokerapi.ProvisionDetails{}
+	serviceDetails.ServiceID = serviceID
 	bindDetails := brokerapi.BindDetails{}
+	bindDetails.ServiceID = serviceID
 	response, _, err := broker.Provision(workspaceID, serviceDetails, false)
 	responseBind, err := broker.Bind(workspaceID, connectionID, bindDetails)
 	t.Log(response)
@@ -83,17 +123,23 @@ func TestBrokerAPIUnbindTest(t *testing.T) {
 	assert := assert.New(t)
 	broker, _, err := setupEnv()
 	if err != nil {
-		t.Error(err)
+		t.Skip(err)
 	}
-	if csmEndpoint == "" || authToken == "" || configFile == "" {
-		t.Skipf("Skipping broker file integration test - missing CSM_ENDPOINT, csm-auth-token and/or USB_CONFIG_FILE")
+	if csmEndpoint == "" || authToken == "" {
+		t.Skipf("Skipping broker file integration test - missing CSM_ENDPOINT and CSM_API_KEY")
+	}
+	if serviceID == "" {
+		t.Skip("Config file does not contain a service definition")
 	}
 
 	workspaceID := uuid.NewV4().String()
 	connectionID := uuid.NewV4().String()
 	serviceDetails := brokerapi.ProvisionDetails{}
+	serviceDetails.ServiceID = serviceID
 	bindDetails := brokerapi.BindDetails{}
+	bindDetails.ServiceID = serviceID
 	unbindDetails := brokerapi.UnbindDetails{}
+	unbindDetails.ServiceID = serviceID
 	response, _, err := broker.Provision(workspaceID, serviceDetails, false)
 	assert.NoError(err)
 
@@ -111,15 +157,19 @@ func TestBrokerAPIDeprovisionTest(t *testing.T) {
 	assert := assert.New(t)
 	broker, _, err := setupEnv()
 	if err != nil {
-		t.Error(err)
+		t.Skip(err)
 	}
-	if csmEndpoint == "" || authToken == "" || configFile == "" {
-		t.Skipf("Skipping broker file integration test - missing CSM_ENDPOINT, csm-auth-token and/or USB_CONFIG_FILE")
+	if csmEndpoint == "" || authToken == "" {
+		t.Skipf("Skipping broker file integration test - missing CSM_ENDPOINT and CSM_API_KEY")
 	}
-
+	if serviceID == "" {
+		t.Skip("Config file does not contain a service definition")
+	}
 	workspaceID := uuid.NewV4().String()
 	provisionDetails := brokerapi.ProvisionDetails{}
+	provisionDetails.ServiceID = serviceID
 	deprovisionDetails := brokerapi.DeprovisionDetails{}
+	deprovisionDetails.ServiceID = serviceID
 	response, _, err := broker.Provision(workspaceID, provisionDetails, false)
 	t.Log(response)
 	assert.NotNil(response)

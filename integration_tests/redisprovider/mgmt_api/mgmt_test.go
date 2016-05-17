@@ -41,7 +41,7 @@ func init() {
 	}
 }
 
-func initRedisProvider() (*config.ConfigProvider, error) {
+func initRedisProvider() (*config.Provider, error) {
 	db, err := strconv.ParseInt(RedisConfig.RedisDatabase, 10, 64)
 	if err != nil {
 		return nil, err
@@ -60,7 +60,7 @@ func initRedisProvider() (*config.ConfigProvider, error) {
 	return &configProvider, nil
 }
 
-func initMgmt(provider config.ConfigProvider) (*operations.UsbMgmtAPI, error) {
+func initMgmt(provider config.Provider) (*operations.UsbMgmtAPI, error) {
 
 	swaggerSpec, err := loads.Analyzed(mgmt.SwaggerJSON, "")
 	if err != nil {

@@ -44,10 +44,10 @@ func init() {
 	ConsulConfig.ConsulSchema = os.Getenv("CONSUL_SCHEMA")
 	ConsulConfig.ConsulToken = os.Getenv("CONSUL_TOKEN")
 	csmEndpoint = os.Getenv("CSM_ENDPOINT")
-	authToken = os.Getenv("csm-auth-token")
+	authToken = os.Getenv("CSM_API_KEY")
 }
 
-func setupEnv() (*lib.UsbBroker, *csm.CSMInterface, error) {
+func setupEnv() (*lib.UsbBroker, *csm.Interface, error) {
 	var consulConfig api.Config
 	consulConfig.Address = ConsulConfig.ConsulAddress
 	consulConfig.Datacenter = ConsulConfig.ConsulDatacenter
@@ -65,7 +65,43 @@ func setupEnv() (*lib.UsbBroker, *csm.CSMInterface, error) {
 	if err != nil {
 		return nil, nil, err
 	}
+	var list api.KVPairs
+	list = append(list, &api.KVPair{Key: "usb/api_version", Value: []byte("2.6")})
+
+	list = append(list, &api.KVPair{Key: "usb/broker_api", Value: []byte("{\"listen\":\":54054\",\"credentials\":{\"username\":\"demouser\",\"password\":\"demopassword\"}}")})
+
+	list = append(list, &api.KVPair{Key: "usb/management_api", Value: []byte("{\"listen\":\":54053\",\"uaa_secret\":\"myuaasecret\",\"uaa_client\":\"myuaaclient\",\"authentication\":{\"uaa\":{\"adminscope\":\"usb.management.admin\",\"public_key\":\"\"}}}")})
+
+	err = provisioner.PutKVs(&list, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	instanceInfo := config.Instance{}
+	instanceInfo.AuthenticationKey = authToken
+	instanceInfo.Name = "testInstance"
+	instanceInfo.Dials = make(map[string]config.Dial)
+
+	dialInfo := config.Dial{}
+	dialInfo.Plan = brokerapi.ServicePlan{}
+	dialInfo.Plan.Free = true
+	dialInfo.Plan.Name = "testPlan"
+	dialID := uuid.NewV4().String()
+	instanceInfo.Dials[dialID] = dialInfo
+
+	service := brokerapi.Service{}
+	service.ID = "83E94C97-C755-46A5-8653-461517EB442A"
+	service.Name = "testService"
+	service.Plans = append(service.Plans, dialInfo.Plan)
+	instanceInfo.Service = service
+	instanceInfo.TargetURL = csmEndpoint
+
 	configProvider := config.NewConsulConfig(provisioner)
+	err = configProvider.SetInstance(uuid.NewV4().String(), instanceInfo)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	csmInterface := csm.NewCSMClient(logger)
 	broker := lib.NewUsbBroker(configProvider, logger, csmInterface)
 	return broker, &csmInterface, nil
@@ -78,11 +114,12 @@ func TestBrokerAPIProvisionTest(t *testing.T) {
 		t.Error(err)
 	}
 	if csmEndpoint == "" || authToken == "" || ConsulConfig.ConsulAddress == "" {
-		t.Skipf("Skipping broker consul integration test - missing CSM_ENDPOINT, csm-auth-token and/or CONSUL configuration environment variables")
+		t.Skipf("Skipping broker consul integration test - missing CSM_ENDPOINT, CSM_API_KEY and/or CONSUL configuration environment variables")
 	}
 
 	workspaceID := uuid.NewV4().String()
 	details := brokerapi.ProvisionDetails{}
+	details.ServiceID = "83E94C97-C755-46A5-8653-461517EB442A"
 	response, _, err := broker.Provision(workspaceID, details, false)
 	t.Log(response)
 	assert.NotNil(response)
@@ -96,13 +133,15 @@ func TestBrokerAPIBindTest(t *testing.T) {
 		t.Error(err)
 	}
 	if csmEndpoint == "" || authToken == "" || ConsulConfig.ConsulAddress == "" {
-		t.Skipf("Skipping broker consul integration test - missing CSM_ENDPOINT, csm-auth-token and/or CONSUL configuration environment variables")
+		t.Skipf("Skipping broker consul integration test - missing CSM_ENDPOINT, CSM_API_KEY and/or CONSUL configuration environment variables")
 	}
 
 	workspaceID := uuid.NewV4().String()
 	connectionID := uuid.NewV4().String()
 	serviceDetails := brokerapi.ProvisionDetails{}
+	serviceDetails.ServiceID = "83E94C97-C755-46A5-8653-461517EB442A"
 	bindDetails := brokerapi.BindDetails{}
+	bindDetails.ServiceID = "83E94C97-C755-46A5-8653-461517EB442A"
 	response, _, err := broker.Provision(workspaceID, serviceDetails, false)
 	responseBind, err := broker.Bind(workspaceID, connectionID, bindDetails)
 	t.Log(response)
@@ -118,14 +157,17 @@ func TestBrokerAPIUnbindTest(t *testing.T) {
 		t.Error(err)
 	}
 	if csmEndpoint == "" || authToken == "" || ConsulConfig.ConsulAddress == "" {
-		t.Skipf("Skipping broker consul integration test - missing CSM_ENDPOINT, csm-auth-token and/or CONSUL configuration environment variables")
+		t.Skipf("Skipping broker consul integration test - missing CSM_ENDPOINT, CSM_API_KEY and/or CONSUL configuration environment variables")
 	}
 
 	workspaceID := uuid.NewV4().String()
 	connectionID := uuid.NewV4().String()
 	serviceDetails := brokerapi.ProvisionDetails{}
+	serviceDetails.ServiceID = "83E94C97-C755-46A5-8653-461517EB442A"
 	bindDetails := brokerapi.BindDetails{}
+	bindDetails.ServiceID = "83E94C97-C755-46A5-8653-461517EB442A"
 	unbindDetails := brokerapi.UnbindDetails{}
+	unbindDetails.ServiceID = "83E94C97-C755-46A5-8653-461517EB442A"
 	response, _, err := broker.Provision(workspaceID, serviceDetails, false)
 	assert.NoError(err)
 
@@ -146,12 +188,14 @@ func TestBrokerAPIDeprovisionTest(t *testing.T) {
 		t.Error(err)
 	}
 	if csmEndpoint == "" || authToken == "" || ConsulConfig.ConsulAddress == "" {
-		t.Skipf("Skipping broker consul integration test - missing CSM_ENDPOINT, csm-auth-token and/or CONSUL configuration environment variables")
+		t.Skipf("Skipping broker consul integration test - missing CSM_ENDPOINT, CSM_API_KEY and/or CONSUL configuration environment variables")
 	}
 
 	workspaceID := uuid.NewV4().String()
 	provisionDetails := brokerapi.ProvisionDetails{}
+	provisionDetails.ServiceID = "83E94C97-C755-46A5-8653-461517EB442A"
 	deprovisionDetails := brokerapi.DeprovisionDetails{}
+	deprovisionDetails.ServiceID = "83E94C97-C755-46A5-8653-461517EB442A"
 	response, _, err := broker.Provision(workspaceID, provisionDetails, false)
 	t.Log(response)
 	assert.NotNil(response)
