@@ -1,6 +1,7 @@
 package managementtest
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 	"testing"
@@ -24,7 +25,7 @@ import (
 )
 
 var logger = lagertest.NewTestLogger("mgmt-api-test")
-var sbMocked = new(sbMocks.ServiceBrokerInterface)
+var sbMocked = new(sbMocks.USBServiceBroker)
 
 var RedisConfig = struct {
 	RedisAddress  string
@@ -32,16 +33,16 @@ var RedisConfig = struct {
 	RedisPassword string
 }{}
 
-func init() {
+func initRedisProvider() (*config.Provider, error) {
 	RedisConfig.RedisAddress = os.Getenv("REDIS_ADDRESS")
 	RedisConfig.RedisDatabase = os.Getenv("REDIS_DATABASE")
 	RedisConfig.RedisPassword = os.Getenv("REDIS_PASSWORD")
 	if RedisConfig.RedisDatabase == "" {
 		RedisConfig.RedisDatabase = "0"
 	}
-}
-
-func initRedisProvider() (*config.Provider, error) {
+	if RedisConfig.RedisAddress == "" {
+		return nil, fmt.Errorf("REDIS configuration environment variables not set")
+	}
 	db, err := strconv.ParseInt(RedisConfig.RedisDatabase, 10, 64)
 	if err != nil {
 		return nil, err
@@ -93,13 +94,9 @@ func initMgmt(provider config.Provider) (*operations.UsbMgmtAPI, error) {
 func TestGetInfo(t *testing.T) {
 	assert := assert.New(t)
 
-	if RedisConfig.RedisAddress == "" {
-		t.Skip("Skipping management redis integration test - REDIS environment variables not set")
-	}
-
 	redisProvider, err := initRedisProvider()
 	if err != nil {
-		t.Error(err)
+		t.Skip(err)
 	}
 	mgmtInterface, err := initMgmt(*redisProvider)
 	if err != nil {
@@ -114,13 +111,10 @@ func TestGetInfo(t *testing.T) {
 
 func Test_RegisterDriverEndpoint(t *testing.T) {
 	assert := assert.New(t)
-	if RedisConfig.RedisAddress == "" {
-		t.Skip("Skipping management redis integration test - REDIS environment variables not set")
-	}
 
 	redisProvider, err := initRedisProvider()
 	if err != nil {
-		t.Error(err)
+		t.Skip(err)
 	}
 	mgmtInterface, err := initMgmt(*redisProvider)
 	if err != nil {
@@ -162,13 +156,10 @@ func Test_RegisterDriverEndpoint(t *testing.T) {
 
 func Test_UpdateInstanceEndpoint(t *testing.T) {
 	assert := assert.New(t)
-	if RedisConfig.RedisAddress == "" {
-		t.Skip("Skipping management redis integration test - REDIS environment variables not set")
-	}
 
 	redisProvider, err := initRedisProvider()
 	if err != nil {
-		t.Error(err)
+		t.Skip(err)
 	}
 	mgmtInterface, err := initMgmt(*redisProvider)
 	if err != nil {
@@ -226,13 +217,10 @@ func Test_UpdateInstanceEndpoint(t *testing.T) {
 
 func Test_GetDriverEndpoint(t *testing.T) {
 	assert := assert.New(t)
-	if RedisConfig.RedisAddress == "" {
-		t.Skip("Skipping management redis integration test - REDIS environment variables not set")
-	}
 
 	redisProvider, err := initRedisProvider()
 	if err != nil {
-		t.Error(err)
+		t.Skip(err)
 	}
 	mgmtInterface, err := initMgmt(*redisProvider)
 	if err != nil {
@@ -284,13 +272,10 @@ func Test_GetDriverEndpoint(t *testing.T) {
 
 func Test_GetDriverEndpoints(t *testing.T) {
 	assert := assert.New(t)
-	if RedisConfig.RedisAddress == "" {
-		t.Skip("Skipping management redis integration test - REDIS environment variables not set")
-	}
 
 	redisProvider, err := initRedisProvider()
 	if err != nil {
-		t.Error(err)
+		t.Skip(err)
 	}
 	mgmtInterface, err := initMgmt(*redisProvider)
 	if err != nil {
@@ -303,13 +288,10 @@ func Test_GetDriverEndpoints(t *testing.T) {
 
 func Test_UnregisterDriverEndpoint(t *testing.T) {
 	assert := assert.New(t)
-	if RedisConfig.RedisAddress == "" {
-		t.Skip("Skipping management redis integration test - REDIS environment variables not set")
-	}
 
 	redisProvider, err := initRedisProvider()
 	if err != nil {
-		t.Error(err)
+		t.Skip(err)
 	}
 	mgmtInterface, err := initMgmt(*redisProvider)
 	if err != nil {

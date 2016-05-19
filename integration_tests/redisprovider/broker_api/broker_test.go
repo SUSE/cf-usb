@@ -34,7 +34,7 @@ var logger = lagertest.NewTestLogger("csm-client-test")
 var csmEndpoint = ""
 var authToken = ""
 
-func init() {
+func setupEnv() (*lib.UsbBroker, *csm.CSM, error) {
 	RedisConfig.RedisAddress = os.Getenv("REDIS_ADDRESS")
 	RedisConfig.RedisDatabase = os.Getenv("REDIS_DATABASE")
 	RedisConfig.RedisPassword = os.Getenv("REDIS_PASSWORD")
@@ -43,9 +43,15 @@ func init() {
 	}
 	csmEndpoint = os.Getenv("CSM_ENDPOINT")
 	authToken = os.Getenv("CSM_API_KEY")
-}
-
-func setupEnv() (*lib.UsbBroker, *csm.Interface, error) {
+	if RedisConfig.RedisAddress == "" {
+		return nil, nil, fmt.Errorf("REDIS configuration environment variables not set")
+	}
+	if csmEndpoint == "" {
+		return nil, nil, fmt.Errorf("CSM_ENDPOINT not set")
+	}
+	if authToken == "" {
+		return nil, nil, fmt.Errorf("CSM_API_KEY not set")
+	}
 	db, err := strconv.ParseInt(RedisConfig.RedisDatabase, 10, 64)
 	if err != nil {
 		return nil, nil, err
@@ -94,9 +100,6 @@ func TestBrokerAPIProvisionTest(t *testing.T) {
 	if err != nil {
 		t.Skip(err)
 	}
-	if csmEndpoint == "" || authToken == "" || RedisConfig.RedisAddress == "" {
-		t.Skipf("Skipping broker redis integration test - missing CSM_ENDPOINT, CSM_API_KEY and/or REDIS configuration environment variables")
-	}
 
 	workspaceID := uuid.NewV4().String()
 	details := brokerapi.ProvisionDetails{}
@@ -112,9 +115,6 @@ func TestBrokerAPIBindTest(t *testing.T) {
 	broker, _, err := setupEnv()
 	if err != nil {
 		t.Skip(err)
-	}
-	if csmEndpoint == "" || authToken == "" || RedisConfig.RedisAddress == "" {
-		t.Skipf("Skipping broker redis integration test - missing CSM_ENDPOINT, CSM_API_KEY and/or REDIS configuration environment variables")
 	}
 
 	workspaceID := uuid.NewV4().String()
@@ -136,9 +136,6 @@ func TestBrokerAPIUnbindTest(t *testing.T) {
 	broker, _, err := setupEnv()
 	if err != nil {
 		t.Skip(err)
-	}
-	if csmEndpoint == "" || authToken == "" || RedisConfig.RedisAddress == "" {
-		t.Skipf("Skipping broker redis integration test - missing CSM_ENDPOINT, CSM_API_KEY and/or REDIS configuration environment variables")
 	}
 
 	workspaceID := uuid.NewV4().String()
@@ -167,9 +164,6 @@ func TestBrokerAPIDeprovisionTest(t *testing.T) {
 	broker, _, err := setupEnv()
 	if err != nil {
 		t.Skip(err)
-	}
-	if csmEndpoint == "" || authToken == "" || RedisConfig.RedisAddress == "" {
-		t.Skipf("Skipping broker redis integration test - missing CSM_ENDPOINT, CSM_API_KEY and/or REDIS configuration environment variables")
 	}
 
 	workspaceID := uuid.NewV4().String()

@@ -1,6 +1,7 @@
 package managementtest
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
@@ -23,7 +24,7 @@ import (
 )
 
 var logger = lagertest.NewTestLogger("mgmt-api-test")
-var sbMocked = new(sbMocks.ServiceBrokerInterface)
+var sbMocked = new(sbMocks.USBServiceBroker)
 
 var ConsulConfig = struct {
 	ConsulAddress    string
@@ -34,16 +35,17 @@ var ConsulConfig = struct {
 	ConsulToken      string
 }{}
 
-func init() {
+func initConsulProvider() (*config.Provider, error) {
 	ConsulConfig.ConsulAddress = os.Getenv("CONSUL_ADDRESS")
 	ConsulConfig.ConsulDatacenter = os.Getenv("CONSUL_DATACENTER")
 	ConsulConfig.ConsulPassword = os.Getenv("CONSUL_PASSWORD")
 	ConsulConfig.ConsulUser = os.Getenv("CONSUL_USER")
 	ConsulConfig.ConsulSchema = os.Getenv("CONSUL_SCHEMA")
 	ConsulConfig.ConsulToken = os.Getenv("CONSUL_TOKEN")
-}
+	if ConsulConfig.ConsulAddress == "" {
+		return nil, fmt.Errorf("CONSUL configuration environment variables not set")
+	}
 
-func initConsulProvider() (*config.Provider, error) {
 	var consulConfig api.Config
 	consulConfig.Address = ConsulConfig.ConsulAddress
 	consulConfig.Datacenter = ConsulConfig.ConsulDatacenter
@@ -98,13 +100,9 @@ func initMgmt(provider config.Provider) (*operations.UsbMgmtAPI, error) {
 func TestGetInfo(t *testing.T) {
 	assert := assert.New(t)
 
-	if ConsulConfig.ConsulAddress == "" {
-		t.Skip("Skipping management consul integration test - CONSUL environment variables not set")
-	}
-
 	consulProvider, err := initConsulProvider()
 	if err != nil {
-		t.Error(err)
+		t.Skip(err)
 	}
 	mgmtInterface, err := initMgmt(*consulProvider)
 	if err != nil {
@@ -119,12 +117,9 @@ func TestGetInfo(t *testing.T) {
 
 func Test_RegisterDriverEndpoint(t *testing.T) {
 	assert := assert.New(t)
-	if ConsulConfig.ConsulAddress == "" {
-		t.Skip("Skipping management consul integration test - CONSUL environment variables not set")
-	}
 	consulProvider, err := initConsulProvider()
 	if err != nil {
-		t.Error(err)
+		t.Skip(err)
 	}
 
 	mgmtInterface, err := initMgmt(*consulProvider)
@@ -167,12 +162,9 @@ func Test_RegisterDriverEndpoint(t *testing.T) {
 
 func Test_UpdateInstanceEndpoint(t *testing.T) {
 	assert := assert.New(t)
-	if ConsulConfig.ConsulAddress == "" {
-		t.Skip("Skipping management consul integration test - CONSUL environment variables not set")
-	}
 	consulProvider, err := initConsulProvider()
 	if err != nil {
-		t.Error(err)
+		t.Skip(err)
 	}
 
 	mgmtInterface, err := initMgmt(*consulProvider)
@@ -231,12 +223,9 @@ func Test_UpdateInstanceEndpoint(t *testing.T) {
 
 func Test_GetDriverEndpoint(t *testing.T) {
 	assert := assert.New(t)
-	if ConsulConfig.ConsulAddress == "" {
-		t.Skip("Skipping management consul integration test - CONSUL environment variables not set")
-	}
 	consulProvider, err := initConsulProvider()
 	if err != nil {
-		t.Error(err)
+		t.Skip(err)
 	}
 
 	mgmtInterface, err := initMgmt(*consulProvider)
@@ -289,12 +278,9 @@ func Test_GetDriverEndpoint(t *testing.T) {
 
 func Test_GetDriverEndpoints(t *testing.T) {
 	assert := assert.New(t)
-	if ConsulConfig.ConsulAddress == "" {
-		t.Skip("Skipping management consul integration test - CONSUL environment variables not set")
-	}
 	consulProvider, err := initConsulProvider()
 	if err != nil {
-		t.Error(err)
+		t.Skip(err)
 	}
 
 	mgmtInterface, err := initMgmt(*consulProvider)
@@ -308,12 +294,9 @@ func Test_GetDriverEndpoints(t *testing.T) {
 
 func Test_UnregisterDriverEndpoint(t *testing.T) {
 	assert := assert.New(t)
-	if ConsulConfig.ConsulAddress == "" {
-		t.Skip("Skipping management consul integration test - CONSUL environment variables not set")
-	}
 	consulProvider, err := initConsulProvider()
 	if err != nil {
-		t.Error(err)
+		t.Skip(err)
 	}
 
 	mgmtInterface, err := initMgmt(*consulProvider)

@@ -36,7 +36,7 @@ var logger = lagertest.NewTestLogger("csm-client-test")
 var csmEndpoint = ""
 var authToken = ""
 
-func init() {
+func setupEnv() (*lib.UsbBroker, *csm.CSM, error) {
 	ConsulConfig.ConsulAddress = os.Getenv("CONSUL_ADDRESS")
 	ConsulConfig.ConsulDatacenter = os.Getenv("CONSUL_DATACENTER")
 	ConsulConfig.ConsulPassword = os.Getenv("CONSUL_PASSWORD")
@@ -45,9 +45,16 @@ func init() {
 	ConsulConfig.ConsulToken = os.Getenv("CONSUL_TOKEN")
 	csmEndpoint = os.Getenv("CSM_ENDPOINT")
 	authToken = os.Getenv("CSM_API_KEY")
-}
+	if ConsulConfig.ConsulAddress == "" {
+		return nil, nil, fmt.Errorf("CONSUL configuration environment variables not set")
+	}
+	if csmEndpoint == "" {
+		return nil, nil, fmt.Errorf("CSM_ENDPOINT not set")
+	}
+	if authToken == "" {
+		return nil, nil, fmt.Errorf("CSM_API_KEY not set")
+	}
 
-func setupEnv() (*lib.UsbBroker, *csm.Interface, error) {
 	var consulConfig api.Config
 	consulConfig.Address = ConsulConfig.ConsulAddress
 	consulConfig.Datacenter = ConsulConfig.ConsulDatacenter
@@ -111,10 +118,7 @@ func TestBrokerAPIProvisionTest(t *testing.T) {
 	assert := assert.New(t)
 	broker, _, err := setupEnv()
 	if err != nil {
-		t.Error(err)
-	}
-	if csmEndpoint == "" || authToken == "" || ConsulConfig.ConsulAddress == "" {
-		t.Skipf("Skipping broker consul integration test - missing CSM_ENDPOINT, CSM_API_KEY and/or CONSUL configuration environment variables")
+		t.Skip(err)
 	}
 
 	workspaceID := uuid.NewV4().String()
@@ -130,10 +134,7 @@ func TestBrokerAPIBindTest(t *testing.T) {
 	assert := assert.New(t)
 	broker, _, err := setupEnv()
 	if err != nil {
-		t.Error(err)
-	}
-	if csmEndpoint == "" || authToken == "" || ConsulConfig.ConsulAddress == "" {
-		t.Skipf("Skipping broker consul integration test - missing CSM_ENDPOINT, CSM_API_KEY and/or CONSUL configuration environment variables")
+		t.Skip(err)
 	}
 
 	workspaceID := uuid.NewV4().String()
@@ -154,10 +155,7 @@ func TestBrokerAPIUnbindTest(t *testing.T) {
 	assert := assert.New(t)
 	broker, _, err := setupEnv()
 	if err != nil {
-		t.Error(err)
-	}
-	if csmEndpoint == "" || authToken == "" || ConsulConfig.ConsulAddress == "" {
-		t.Skipf("Skipping broker consul integration test - missing CSM_ENDPOINT, CSM_API_KEY and/or CONSUL configuration environment variables")
+		t.Skip(err)
 	}
 
 	workspaceID := uuid.NewV4().String()
@@ -185,10 +183,7 @@ func TestBrokerAPIDeprovisionTest(t *testing.T) {
 	assert := assert.New(t)
 	broker, _, err := setupEnv()
 	if err != nil {
-		t.Error(err)
-	}
-	if csmEndpoint == "" || authToken == "" || ConsulConfig.ConsulAddress == "" {
-		t.Skipf("Skipping broker consul integration test - missing CSM_ENDPOINT, CSM_API_KEY and/or CONSUL configuration environment variables")
+		t.Skip(err)
 	}
 
 	workspaceID := uuid.NewV4().String()

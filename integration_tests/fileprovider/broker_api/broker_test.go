@@ -29,12 +29,15 @@ var csmEndpoint = ""
 var authToken = ""
 var serviceID = ""
 
-func init() {
+func setupEnv() (*lib.UsbBroker, *csm.CSM, error) {
 	csmEndpoint = os.Getenv("CSM_ENDPOINT")
 	authToken = os.Getenv("CSM_API_KEY")
-}
-
-func setupEnv() (*lib.UsbBroker, *csm.Interface, error) {
+	if csmEndpoint == "" {
+		return nil, nil, fmt.Errorf("CSM_ENDPOINT not set")
+	}
+	if authToken == "" {
+		return nil, nil, fmt.Errorf("CSM_API_KEY not set")
+	}
 	file, err := ioutil.TempFile(os.TempDir(), "brokertest")
 	if err != nil {
 		return nil, nil, err
@@ -77,9 +80,6 @@ func TestBrokerAPIProvisionTest(t *testing.T) {
 	if err != nil {
 		t.Skip(err)
 	}
-	if csmEndpoint == "" || authToken == "" {
-		t.Skipf("Skipping broker file integration test - missing CSM_ENDPOINT and CSM_API_KEY")
-	}
 	if serviceID == "" {
 		t.Skip("Config file does not contain a service definition")
 	}
@@ -98,9 +98,6 @@ func TestBrokerAPIBindTest(t *testing.T) {
 	broker, _, err := setupEnv()
 	if err != nil {
 		t.Skip(err)
-	}
-	if csmEndpoint == "" || authToken == "" {
-		t.Skipf("Skipping broker file integration test - missing CSM_ENDPOINT and CSM_API_KEY")
 	}
 	if serviceID == "" {
 		t.Skip("Config file does not contain a service definition")
@@ -124,9 +121,6 @@ func TestBrokerAPIUnbindTest(t *testing.T) {
 	broker, _, err := setupEnv()
 	if err != nil {
 		t.Skip(err)
-	}
-	if csmEndpoint == "" || authToken == "" {
-		t.Skipf("Skipping broker file integration test - missing CSM_ENDPOINT and CSM_API_KEY")
 	}
 	if serviceID == "" {
 		t.Skip("Config file does not contain a service definition")
@@ -158,9 +152,6 @@ func TestBrokerAPIDeprovisionTest(t *testing.T) {
 	broker, _, err := setupEnv()
 	if err != nil {
 		t.Skip(err)
-	}
-	if csmEndpoint == "" || authToken == "" {
-		t.Skipf("Skipping broker file integration test - missing CSM_ENDPOINT and CSM_API_KEY")
 	}
 	if serviceID == "" {
 		t.Skip("Config file does not contain a service definition")
