@@ -335,10 +335,14 @@ func (c *consulConfig) LoadDriverInstance(instanceID string) (*Instance, error) 
 }
 
 func (c *consulConfig) GetUaaAuthConfig() (*UaaAuth, error) {
-	conf := (*json.RawMessage)(c.config.ManagementAPI.Authentication)
+	config, err := c.LoadConfiguration()
+	if err != nil {
+		return nil, err
+	}
+	conf := (*json.RawMessage)(config.ManagementAPI.Authentication)
 
 	uaa := Uaa{}
-	err := json.Unmarshal(*conf, &uaa)
+	err = json.Unmarshal(*conf, &uaa)
 	if err != nil {
 		return nil, err
 	}
