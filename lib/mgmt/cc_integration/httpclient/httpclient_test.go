@@ -7,17 +7,17 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestHttpClient(t *testing.T) {
+func TestHTTPClient(t *testing.T) {
 	assert := assert.New(t)
 
-	client := NewHttpClient(true)
+	client := NewHTTPClient(true)
 	reqTest := os.Getenv("REQUEST_TEST")
 
 	if reqTest == "" {
 		t.Skip("Skipping test, not all env variables are set:'REQUEST_TEST'")
 	}
 
-	req := Request{Verb: "GET", Endpoint: reqTest, ApiUrl: "", StatusCode: 200}
+	req := Request{Verb: "GET", Endpoint: reqTest, APIURL: "", StatusCode: 200}
 
 	response, err := client.Request(req)
 

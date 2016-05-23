@@ -1,17 +1,20 @@
 package consul
 
 import (
-	"github.com/hashicorp/consul/api"
 	"strings"
+
+	"github.com/hashicorp/consul/api"
 )
 
-type ConsulProvisioner struct {
+//ProvisionerConsul provides the definition of consul provisioner
+type ProvisionerConsul struct {
 	ConsulClient *api.Client
 }
 
-func NewDefault() (ConsulProvisionerInterface, error) {
+//NewDefault returns an instance of Consul Provisioner with default values
+func NewDefault() (Provisioner, error) {
 	var err error
-	provisioner := ConsulProvisioner{}
+	provisioner := ProvisionerConsul{}
 
 	provisioner.ConsulClient, err = api.NewClient(api.DefaultConfig())
 
@@ -22,16 +25,18 @@ func NewDefault() (ConsulProvisionerInterface, error) {
 	return &provisioner, nil
 }
 
-func New(config *api.Config) (ConsulProvisionerInterface, error) {
+//New returns a new Consul Provisioner
+func New(config *api.Config) (Provisioner, error) {
 	var err error
-	provisioner := ConsulProvisioner{}
+	provisioner := ProvisionerConsul{}
 
 	provisioner.ConsulClient, err = api.NewClient(config)
 
 	return &provisioner, err
 }
 
-func (e *ConsulProvisioner) AddKV(key string, value []byte, options *api.WriteOptions) error {
+//AddKV adds a key value pair to consul db
+func (e *ProvisionerConsul) AddKV(key string, value []byte, options *api.WriteOptions) error {
 	kv := e.ConsulClient.KV()
 
 	p := &api.KVPair{Key: key, Value: value}
@@ -41,7 +46,8 @@ func (e *ConsulProvisioner) AddKV(key string, value []byte, options *api.WriteOp
 	return err
 }
 
-func (e *ConsulProvisioner) GetValue(key string) ([]byte, error) {
+//GetValue gets the value with the specified key from consul
+func (e *ProvisionerConsul) GetValue(key string) ([]byte, error) {
 	kv := e.ConsulClient.KV()
 
 	keys, err := e.GetAllKeys(strings.Split(key, "/")[0], "", nil)
@@ -65,7 +71,8 @@ func (e *ConsulProvisioner) GetValue(key string) ([]byte, error) {
 	return pair.Value, err
 }
 
-func (e *ConsulProvisioner) PutKVs(pairs *api.KVPairs, options *api.WriteOptions) error {
+//PutKVs puts several key-value pairs in Consul
+func (e *ProvisionerConsul) PutKVs(pairs *api.KVPairs, options *api.WriteOptions) error {
 	var err error
 	for _, kv := range *pairs {
 		err = e.AddKV(kv.Key, kv.Value, options)
@@ -76,28 +83,32 @@ func (e *ConsulProvisioner) PutKVs(pairs *api.KVPairs, options *api.WriteOptions
 	return nil
 }
 
-func (e *ConsulProvisioner) GetAllKeys(prefix string, separator string, options *api.QueryOptions) ([]string, error) {
+//GetAllKeys obtains all keys from consul
+func (e *ProvisionerConsul) GetAllKeys(prefix string, separator string, options *api.QueryOptions) ([]string, error) {
 	kv := e.ConsulClient.KV()
 	result, _, err := kv.Keys(prefix, separator, options)
 
 	return result, err
 }
 
-func (e *ConsulProvisioner) GetAllKVs(prefix string, options *api.QueryOptions) (api.KVPairs, error) {
+//GetAllKVs obtains all key-values pairs from consul
+func (e *ProvisionerConsul) GetAllKVs(prefix string, options *api.QueryOptions) (api.KVPairs, error) {
 	kv := e.ConsulClient.KV()
 	result, _, err := kv.List(prefix, options)
 
 	return result, err
 }
 
-func (e *ConsulProvisioner) DeleteKVs(prefix string, options *api.WriteOptions) error {
+//DeleteKVs deletes the specified key-value pairs from consul
+func (e *ProvisionerConsul) DeleteKVs(prefix string, options *api.WriteOptions) error {
 	kv := e.ConsulClient.KV()
 	_, err := kv.DeleteTree(prefix, options)
 
 	return err
 }
 
-func (e *ConsulProvisioner) DeleteKV(key string, options *api.WriteOptions) error {
+//DeleteKV deletes the specified key-value pair from consul
+func (e *ProvisionerConsul) DeleteKV(key string, options *api.WriteOptions) error {
 	kv := e.ConsulClient.KV()
 
 	_, err := kv.Delete(key, options)

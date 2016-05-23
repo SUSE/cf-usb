@@ -9,14 +9,14 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-var loggerSB *lagertest.TestLogger = lagertest.NewTestLogger("cc-api")
+var loggerSB = lagertest.NewTestLogger("cc-api")
 
 func TestCreate(t *testing.T) {
 	assert := assert.New(t)
 	tokenGenerator := new(mocks.GetTokenInterface)
 	tokenGenerator.On("GetToken").Return("bearer atoken", nil)
 
-	client := new(mocks.HttpClient)
+	client := new(mocks.HTTPClient)
 	client.Mock.On("Request", mock.Anything).Return(nil, nil)
 
 	sb := NewServiceBroker(client, tokenGenerator, "http://api.1.2.3.4.io", loggerSB)
@@ -35,7 +35,7 @@ func TestUpdate(t *testing.T) {
 	tokenGenerator := new(mocks.GetTokenInterface)
 	tokenGenerator.On("GetToken").Return("bearer atoken", nil)
 
-	client := new(mocks.HttpClient)
+	client := new(mocks.HTTPClient)
 	client.Mock.On("Request", mock.Anything).Return(nil, nil)
 
 	sb := NewServiceBroker(client, tokenGenerator, "http://api.bosh-lite.com", loggerSB)
@@ -54,13 +54,13 @@ func TestGetServiceBrokerGuidByName(t *testing.T) {
 	tokenGenerator := new(mocks.GetTokenInterface)
 	tokenGenerator.On("GetToken").Return("bearer atoken", nil)
 
-	client := new(mocks.HttpClient)
+	client := new(mocks.HTTPClient)
 	client.Mock.On("Request", mock.Anything).Return([]byte(`{"resources":[{"metadata":{"guid":"aguid"}}]}`), nil)
 
 	sb := NewServiceBroker(client, tokenGenerator, "http://api.1.2.3.4.io", loggerSB)
 	assert.NotNil(sb)
 
-	guid, err := sb.GetServiceBrokerGuidByName("usbTest")
+	guid, err := sb.GetServiceBrokerGUIDByName("usbTest")
 	if err != nil {
 		t.Errorf("Error get service broker by name: %v", err)
 	}
@@ -75,7 +75,7 @@ func TestEnableServiceAccess(t *testing.T) {
 	tokenGenerator := new(mocks.GetTokenInterface)
 	tokenGenerator.On("GetToken").Return("bearer atoken", nil)
 
-	client := new(mocks.HttpClient)
+	client := new(mocks.HTTPClient)
 	client.Mock.On("Request", mock.Anything).Return([]byte(`{"resources":[{"metadata":{"guid":""},"entity":{"name":"","free":false,"description":"","public":false,"service_guid":""}}]}`), nil)
 
 	sb := NewServiceBroker(client, tokenGenerator, "http://api.1.2.3.4.io", loggerSB)
@@ -91,7 +91,7 @@ func TestCheckServiceNameExists(t *testing.T) {
 	tokenGenerator := new(mocks.GetTokenInterface)
 	tokenGenerator.On("GetToken").Return("bearer atoken", nil)
 
-	client := new(mocks.HttpClient)
+	client := new(mocks.HTTPClient)
 	client.Mock.On("Request", mock.Anything).Return([]byte(`{"resources":[{"metadata":{"guid":"688f14a3-a5fc-4fa3-bc82-07338c180f64","url":"/v2/services/688f14a3-a5fc-4fa3-bc82-07338c180f64","created_at":"2016-01-19T19:41:27Z","updated_at":null},"entity":{"label":"label-66","provider":null,"url":null,"description":"desc-214","long_description":null,"version":null,"info_url":null,"active":true,"bindable":true,"unique_id":"641552b1-b35b-402f-81f0-6c27a3677427","extra":null,"tags":[],"requires":[],"documentation_url":null,"service_broker_guid":"aa8c13b3-f362-4d42-b25a-1be9a519e425","plan_updateable":false,"service_plans_url":"/v2/services/688f14a3-a5fc-4fa3-bc82-07338c180f64/service_plans"}}]}`), nil)
 
 	sb := NewServiceBroker(client, tokenGenerator, "http://api.1.2.3.4.io", loggerSB)

@@ -1,6 +1,7 @@
 package csm
 
 import (
+	"os"
 	"testing"
 
 	"github.com/pivotal-golang/lager/lagertest"
@@ -8,12 +9,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var logger *lagertest.TestLogger = lagertest.NewTestLogger("csm-client-test")
+var logger = lagertest.NewTestLogger("csm-client-test")
 
-var csmEndpoint = "http://192.168.77.77:8081"
-var authToken = "csm-auth-token"
+var csmEndpoint string
+var authToken string
 
-func getCSMClient() (CSMInterface, error) {
+func getCSMClient() (CSM, error) {
 	client := NewCSMClient(logger)
 	err := client.Login(csmEndpoint, authToken)
 	if err != nil {
@@ -23,6 +24,11 @@ func getCSMClient() (CSMInterface, error) {
 }
 
 func TestCSMClient(t *testing.T) {
+	csmEndpoint = os.Getenv("CSM_ENDPOINT")
+	authToken = os.Getenv("csm-auth-token")
+	if csmEndpoint == "" || authToken == "" {
+		t.Skipf("Skipping test TestCSMClient - missing CSM_ENDPOINT and/or csm-auth-token")
+	}
 	assert := assert.New(t)
 	workspaceID := uuid.NewV4().String()
 
@@ -57,6 +63,11 @@ func TestCSMClient(t *testing.T) {
 }
 
 func TestGetConnectionDoesNotExist(t *testing.T) {
+	csmEndpoint = os.Getenv("CSM_ENDPOINT")
+	authToken = os.Getenv("csm-auth-token")
+	if csmEndpoint == "" || authToken == "" {
+		t.Skipf("Skipping test TestCSMClient - missing CSM_ENDPOINT and/or csm-auth-token")
+	}
 	assert := assert.New(t)
 	workspaceID := uuid.NewV4().String()
 
@@ -73,6 +84,11 @@ func TestGetConnectionDoesNotExist(t *testing.T) {
 }
 
 func TestGetWorkspaceDoesNotExist(t *testing.T) {
+	csmEndpoint = os.Getenv("CSM_ENDPOINT")
+	authToken = os.Getenv("csm-auth-token")
+	if csmEndpoint == "" || authToken == "" {
+		t.Skipf("Skipping test TestCSMClient - missing CSM_ENDPOINT and/or csm-auth-token")
+	}
 	assert := assert.New(t)
 
 	workspaceID := uuid.NewV4().String()
@@ -88,6 +104,11 @@ func TestGetWorkspaceDoesNotExist(t *testing.T) {
 }
 
 func TestDeleteWorkspaceNotExist(t *testing.T) {
+	csmEndpoint = os.Getenv("CSM_ENDPOINT")
+	authToken = os.Getenv("csm-auth-token")
+	if csmEndpoint == "" || authToken == "" {
+		t.Skipf("Skipping test TestCSMClient - missing CSM_ENDPOINT and/or csm-auth-token")
+	}
 	assert := assert.New(t)
 
 	workspaceID := uuid.NewV4().String()
@@ -103,6 +124,11 @@ func TestDeleteWorkspaceNotExist(t *testing.T) {
 }
 
 func TestCreateWorkspaceThatExists(t *testing.T) {
+	csmEndpoint = os.Getenv("CSM_ENDPOINT")
+	authToken = os.Getenv("csm-auth-token")
+	if csmEndpoint == "" || authToken == "" {
+		t.Skipf("Skipping test TestCSMClient - missing CSM_ENDPOINT and/or csm-auth-token")
+	}
 	assert := assert.New(t)
 
 	workspaceID := uuid.NewV4().String()

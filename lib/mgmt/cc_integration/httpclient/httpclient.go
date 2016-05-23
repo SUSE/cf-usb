@@ -9,19 +9,22 @@ import (
 	"net/http"
 )
 
-type HttpClient interface {
+//HTTPClient defines a HTTPClient
+type HTTPClient interface {
 	Request(request Request) ([]byte, error)
 }
 
+//BasicAuth holds the basic structure for basic auth
 type BasicAuth struct {
 	Username string
 	Password string
 }
 
+//Request defines a request
 type Request struct {
 	Verb        string
 	Endpoint    string
-	ApiUrl      string
+	APIURL      string
 	Body        io.ReadSeeker
 	Headers     map[string]string
 	Credentials *BasicAuth
@@ -32,12 +35,14 @@ type httpClient struct {
 	skipSslValidation bool
 }
 
-func NewHttpClient(skipSslValidation bool) HttpClient {
+//NewHTTPClient creates and returns a  HTTPClient
+func NewHTTPClient(skipSslValidation bool) HTTPClient {
 	return &httpClient{
 		skipSslValidation: skipSslValidation,
 	}
 }
 
+//Request performs a request on a http client
 func (client *httpClient) Request(request Request) ([]byte, error) {
 	httpResponse, err := client.httpRequest(request)
 	if err != nil {
@@ -48,7 +53,7 @@ func (client *httpClient) Request(request Request) ([]byte, error) {
 }
 
 func (client *httpClient) httpRequest(req Request) ([]byte, error) {
-	request, err := http.NewRequest(req.Verb, req.Endpoint+req.ApiUrl, req.Body)
+	request, err := http.NewRequest(req.Verb, req.Endpoint+req.APIURL, req.Body)
 	if err != nil {
 		return nil, errors.New("Error building request")
 	}
@@ -79,7 +84,7 @@ func (client *httpClient) httpRequest(req Request) ([]byte, error) {
 	}
 
 	if response.StatusCode != req.StatusCode {
-		return nil, errors.New(fmt.Sprintf("status code: %d, body: %s", response.StatusCode, responseBody))
+		return nil, fmt.Errorf("status code: %d, body: %s", response.StatusCode, responseBody)
 	}
 
 	return responseBody, nil

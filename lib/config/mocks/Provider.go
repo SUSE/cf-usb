@@ -5,11 +5,12 @@ import "github.com/stretchr/testify/mock"
 
 import "github.com/frodenas/brokerapi"
 
-type ConfigProvider struct {
+type Provider struct {
 	mock.Mock
 }
 
-func (_m *ConfigProvider) LoadConfiguration() (*config.Config, error) {
+// LoadConfiguration provides a mock function with given fields:
+func (_m *Provider) LoadConfiguration() (*config.Config, error) {
 	ret := _m.Called()
 
 	var r0 *config.Config
@@ -30,7 +31,9 @@ func (_m *ConfigProvider) LoadConfiguration() (*config.Config, error) {
 
 	return r0, r1
 }
-func (_m *ConfigProvider) LoadDriverInstance(driverInstanceID string) (*config.Instance, error) {
+
+// LoadDriverInstance provides a mock function with given fields: driverInstanceID
+func (_m *Provider) LoadDriverInstance(driverInstanceID string) (*config.Instance, error) {
 	ret := _m.Called(driverInstanceID)
 
 	var r0 *config.Instance
@@ -51,7 +54,9 @@ func (_m *ConfigProvider) LoadDriverInstance(driverInstanceID string) (*config.I
 
 	return r0, r1
 }
-func (_m *ConfigProvider) GetUaaAuthConfig() (*config.UaaAuth, error) {
+
+// GetUaaAuthConfig provides a mock function with given fields:
+func (_m *Provider) GetUaaAuthConfig() (*config.UaaAuth, error) {
 	ret := _m.Called()
 
 	var r0 *config.UaaAuth
@@ -72,7 +77,9 @@ func (_m *ConfigProvider) GetUaaAuthConfig() (*config.UaaAuth, error) {
 
 	return r0, r1
 }
-func (_m *ConfigProvider) SetInstance(instanceid string, driverInstance config.Instance) error {
+
+// SetInstance provides a mock function with given fields: instanceid, driverInstance
+func (_m *Provider) SetInstance(instanceid string, driverInstance config.Instance) error {
 	ret := _m.Called(instanceid, driverInstance)
 
 	var r0 error
@@ -84,7 +91,9 @@ func (_m *ConfigProvider) SetInstance(instanceid string, driverInstance config.I
 
 	return r0
 }
-func (_m *ConfigProvider) GetInstance(instanceid string) (*config.Instance, string, error) {
+
+// GetInstance provides a mock function with given fields: instanceid
+func (_m *Provider) GetInstance(instanceid string) (*config.Instance, string, error) {
 	ret := _m.Called(instanceid)
 
 	var r0 *config.Instance
@@ -112,7 +121,9 @@ func (_m *ConfigProvider) GetInstance(instanceid string) (*config.Instance, stri
 
 	return r0, r1, r2
 }
-func (_m *ConfigProvider) DeleteInstance(instanceid string) error {
+
+// DeleteInstance provides a mock function with given fields: instanceid
+func (_m *Provider) DeleteInstance(instanceid string) error {
 	ret := _m.Called(instanceid)
 
 	var r0 error
@@ -124,7 +135,9 @@ func (_m *ConfigProvider) DeleteInstance(instanceid string) error {
 
 	return r0
 }
-func (_m *ConfigProvider) SetService(instanceid string, service brokerapi.Service) error {
+
+// SetService provides a mock function with given fields: instanceid, service
+func (_m *Provider) SetService(instanceid string, service brokerapi.Service) error {
 	ret := _m.Called(instanceid, service)
 
 	var r0 error
@@ -136,7 +149,9 @@ func (_m *ConfigProvider) SetService(instanceid string, service brokerapi.Servic
 
 	return r0
 }
-func (_m *ConfigProvider) GetService(serviceid string) (*brokerapi.Service, string, error) {
+
+// GetService provides a mock function with given fields: serviceid
+func (_m *Provider) GetService(serviceid string) (*brokerapi.Service, string, error) {
 	ret := _m.Called(serviceid)
 
 	var r0 *brokerapi.Service
@@ -164,7 +179,9 @@ func (_m *ConfigProvider) GetService(serviceid string) (*brokerapi.Service, stri
 
 	return r0, r1, r2
 }
-func (_m *ConfigProvider) DeleteService(instanceid string) error {
+
+// DeleteService provides a mock function with given fields: instanceid
+func (_m *Provider) DeleteService(instanceid string) error {
 	ret := _m.Called(instanceid)
 
 	var r0 error
@@ -176,7 +193,9 @@ func (_m *ConfigProvider) DeleteService(instanceid string) error {
 
 	return r0
 }
-func (_m *ConfigProvider) SetDial(instanceid string, dialid string, dial config.Dial) error {
+
+// SetDial provides a mock function with given fields: instanceid, dialid, dial
+func (_m *Provider) SetDial(instanceid string, dialid string, dial config.Dial) error {
 	ret := _m.Called(instanceid, dialid, dial)
 
 	var r0 error
@@ -188,7 +207,9 @@ func (_m *ConfigProvider) SetDial(instanceid string, dialid string, dial config.
 
 	return r0
 }
-func (_m *ConfigProvider) GetDial(dialid string) (*config.Dial, string, error) {
+
+// GetDial provides a mock function with given fields: dialid
+func (_m *Provider) GetDial(dialid string) (*config.Dial, string, error) {
 	ret := _m.Called(dialid)
 
 	var r0 *config.Dial
@@ -216,7 +237,9 @@ func (_m *ConfigProvider) GetDial(dialid string) (*config.Dial, string, error) {
 
 	return r0, r1, r2
 }
-func (_m *ConfigProvider) DeleteDial(dialid string) error {
+
+// DeleteDial provides a mock function with given fields: dialid
+func (_m *Provider) DeleteDial(dialid string) error {
 	ret := _m.Called(dialid)
 
 	var r0 error
@@ -228,7 +251,9 @@ func (_m *ConfigProvider) DeleteDial(dialid string) error {
 
 	return r0
 }
-func (_m *ConfigProvider) InstanceNameExists(driverInstanceName string) (bool, error) {
+
+// InstanceNameExists provides a mock function with given fields: driverInstanceName
+func (_m *Provider) InstanceNameExists(driverInstanceName string) (bool, error) {
 	ret := _m.Called(driverInstanceName)
 
 	var r0 bool
@@ -247,45 +272,9 @@ func (_m *ConfigProvider) InstanceNameExists(driverInstanceName string) (bool, e
 
 	return r0, r1
 }
-func (_m *ConfigProvider) DriverTypeExists(driverType string) (bool, error) {
-	ret := _m.Called(driverType)
 
-	var r0 bool
-	if rf, ok := ret.Get(0).(func(string) bool); ok {
-		r0 = rf(driverType)
-	} else {
-		r0 = ret.Get(0).(bool)
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(driverType)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-func (_m *ConfigProvider) DriverExists(driverID string) (bool, error) {
-	ret := _m.Called(driverID)
-
-	var r0 bool
-	if rf, ok := ret.Get(0).(func(string) bool); ok {
-		r0 = rf(driverID)
-	} else {
-		r0 = ret.Get(0).(bool)
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(driverID)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-func (_m *ConfigProvider) GetPlan(plandid string) (*brokerapi.ServicePlan, string, string, error) {
+// GetPlan provides a mock function with given fields: plandid
+func (_m *Provider) GetPlan(plandid string) (*brokerapi.ServicePlan, string, string, error) {
 	ret := _m.Called(plandid)
 
 	var r0 *brokerapi.ServicePlan
@@ -319,23 +308,4 @@ func (_m *ConfigProvider) GetPlan(plandid string) (*brokerapi.ServicePlan, strin
 	}
 
 	return r0, r1, r2, r3
-}
-func (_m *ConfigProvider) GetDriversPath() (string, error) {
-	ret := _m.Called()
-
-	var r0 string
-	if rf, ok := ret.Get(0).(func() string); ok {
-		r0 = rf()
-	} else {
-		r0 = ret.Get(0).(string)
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func() error); ok {
-		r1 = rf()
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
 }

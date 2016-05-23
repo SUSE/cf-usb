@@ -1,22 +1,26 @@
 package main
 
 import (
-	"github.com/codegangsta/cli"
-	"github.com/hpcloud/cf-usb/lib/config"
 	"os"
 	"strconv"
 	"strings"
 
+	"github.com/codegangsta/cli"
+	"github.com/hpcloud/cf-usb/lib/config"
+
 	"github.com/hpcloud/cf-usb/lib/config/redis"
 )
 
+//RedisConfigProvider provides a config held in redis for usb
 type RedisConfigProvider struct {
 }
 
+//NewRedisConfigProvider creates an instance of RedisConfigProvider
 func NewRedisConfigProvider() (*RedisConfigProvider, error) {
 	return nil, nil
 }
 
+//GetCLICommands returns the redis provider commands details
 func (k *RedisConfigProvider) GetCLICommands(app Usb) []cli.Command {
 	return []cli.Command{
 		{

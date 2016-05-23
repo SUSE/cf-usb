@@ -1,17 +1,20 @@
 package redis
 
 import (
-	"gopkg.in/redis.v3"
 	"time"
+
+	"gopkg.in/redis.v3"
 )
 
-type RedisProvisioner struct {
+//ProvisionerRedis provides the definition of redis provisioner
+type ProvisionerRedis struct {
 	RedisClient *redis.Client
 }
 
-func New(address string, password string, db int64) (RedisProvisionerInterface, error) {
+//New creates a new redis Provisioner and returns it or an error if it fails
+func New(address string, password string, db int64) (Provisioner, error) {
 
-	provisioner := RedisProvisioner{}
+	provisioner := ProvisionerRedis{}
 
 	provisioner.RedisClient = redis.NewClient(&redis.Options{
 		Addr:     address,
@@ -27,7 +30,8 @@ func New(address string, password string, db int64) (RedisProvisionerInterface, 
 	return provisioner, nil
 }
 
-func (e RedisProvisioner) GetValue(key string) (string, error) {
+//GetValue gets the value corresponding to the passed key from redis
+func (e ProvisionerRedis) GetValue(key string) (string, error) {
 	value, err := e.RedisClient.Get(key).Result()
 	if err != nil {
 		return "", err
@@ -35,12 +39,14 @@ func (e RedisProvisioner) GetValue(key string) (string, error) {
 	return value, nil
 }
 
-func (e RedisProvisioner) SetKV(key string, value string, expiration time.Duration) error {
+//SetKV sets the value corresponding to the passed key in redis
+func (e ProvisionerRedis) SetKV(key string, value string, expiration time.Duration) error {
 	_, err := e.RedisClient.Set(key, value, expiration).Result()
 	return err
 }
 
-func (e RedisProvisioner) KeyExists(key string) (bool, error) {
+//KeyExists checks if the passed key exists already in redis
+func (e ProvisionerRedis) KeyExists(key string) (bool, error) {
 	exists, err := e.RedisClient.Exists(key).Result()
 	if err != nil {
 		return false, err
@@ -48,7 +54,8 @@ func (e RedisProvisioner) KeyExists(key string) (bool, error) {
 	return exists, nil
 }
 
-func (e RedisProvisioner) RemoveKey(key string) (bool, error) {
+//RemoveKey removes the passed key from redis
+func (e ProvisionerRedis) RemoveKey(key string) (bool, error) {
 	_, err := e.RedisClient.Del(key).Result()
 	if err != nil {
 		return false, err

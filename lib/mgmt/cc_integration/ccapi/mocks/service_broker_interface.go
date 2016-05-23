@@ -2,11 +2,13 @@ package mocks
 
 import "github.com/stretchr/testify/mock"
 
-type ServiceBrokerInterface struct {
+//USBBrokerInterface mock type
+type USBServiceBroker struct {
 	mock.Mock
 }
 
-func (_m *ServiceBrokerInterface) Create(name string, url string, username string, password string) error {
+//Create returns a mock USBServiceBroker, to be used in tests
+func (_m *USBServiceBroker) Create(name string, url string, username string, password string) error {
 	ret := _m.Called(name, url, username, password)
 
 	var r0 error
@@ -18,7 +20,9 @@ func (_m *ServiceBrokerInterface) Create(name string, url string, username strin
 
 	return r0
 }
-func (_m *ServiceBrokerInterface) Delete(name string) error {
+
+//Delete is a mock Delete for ServiceBroker, to be used in tests
+func (_m *USBServiceBroker) Delete(name string) error {
 	ret := _m.Called(name)
 
 	var r0 error
@@ -30,31 +34,37 @@ func (_m *ServiceBrokerInterface) Delete(name string) error {
 
 	return r0
 }
-func (_m *ServiceBrokerInterface) Update(serviceBrokerGuid string, name string, url string, username string, password string) error {
-	ret := _m.Called(serviceBrokerGuid, name, url, username, password)
+
+//Update is a mock Update for ServiceBroker
+func (_m *USBServiceBroker) Update(serviceBrokerGUID string, name string, url string, username string, password string) error {
+	ret := _m.Called(serviceBrokerGUID, name, url, username, password)
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(string, string, string, string, string) error); ok {
-		r0 = rf(serviceBrokerGuid, name, url, username, password)
+		r0 = rf(serviceBrokerGUID, name, url, username, password)
 	} else {
 		r0 = ret.Error(0)
 	}
 
 	return r0
 }
-func (_m *ServiceBrokerInterface) EnableServiceAccess(serviceId string) error {
-	ret := _m.Called(serviceId)
+
+//EnableServiceAccess is a mock EnableServiceAccess for ServiceBroker, to be used in tests
+func (_m *USBServiceBroker) EnableServiceAccess(serviceID string) error {
+	ret := _m.Called(serviceID)
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(string) error); ok {
-		r0 = rf(serviceId)
+		r0 = rf(serviceID)
 	} else {
 		r0 = ret.Error(0)
 	}
 
 	return r0
 }
-func (_m *ServiceBrokerInterface) GetServiceBrokerGuidByName(name string) (string, error) {
+
+//GetServiceBrokerGUIDByName is a mock GetServiceBrokerGUIDByName for ServiceBroker, to be used in tests
+func (_m *USBServiceBroker) GetServiceBrokerGUIDByName(name string) (string, error) {
 	ret := _m.Called(name)
 
 	var r0 string
@@ -73,7 +83,9 @@ func (_m *ServiceBrokerInterface) GetServiceBrokerGuidByName(name string) (strin
 
 	return r0, r1
 }
-func (_m *ServiceBrokerInterface) CheckServiceNameExists(name string) bool {
+
+//CheckServiceNameExists is a mock CheckServiceNameExists for ServiceBroker, to be used in tests
+func (_m *USBServiceBroker) CheckServiceNameExists(name string) bool {
 	ret := _m.Called(name)
 
 	var r0 bool
@@ -85,12 +97,14 @@ func (_m *ServiceBrokerInterface) CheckServiceNameExists(name string) bool {
 
 	return r0
 }
-func (_m *ServiceBrokerInterface) CheckServiceInstancesExist(service_name string) bool {
-	ret := _m.Called(service_name)
+
+//CheckServiceInstancesExist is a mock CheckServiceInstanceExist for ServiceBroker, to be used in tests
+func (_m *USBServiceBroker) CheckServiceInstancesExist(serviceName string) bool {
+	ret := _m.Called(serviceName)
 
 	var r0 bool
 	if rf, ok := ret.Get(0).(func(string) bool); ok {
-		r0 = rf(service_name)
+		r0 = rf(serviceName)
 	} else {
 		r0 = ret.Get(0).(bool)
 	}

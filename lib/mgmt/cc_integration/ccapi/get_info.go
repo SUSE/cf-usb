@@ -8,35 +8,40 @@ import (
 	"github.com/pivotal-golang/lager"
 )
 
+//GetInfoInterface is the interface for providing information about token endpoint
 type GetInfoInterface interface {
 	GetTokenEndpoint() (string, error)
 }
 
+//GetInfo is the definition of the GetInfo type
 type GetInfo struct {
-	ccApi  string
-	client httpclient.HttpClient
+	ccAPI  string
+	client httpclient.HTTPClient
 	logger lager.Logger
 }
 
+//GetInfoResponse is the structure of token endpoint
 type GetInfoResponse struct {
 	TokenEndpoint string `json:"token_endpoint"`
 }
 
-func NewGetInfo(ccApi string, client httpclient.HttpClient, logger lager.Logger) GetInfoInterface {
+//NewGetInfo instantiates a new GetInfo
+func NewGetInfo(ccAPI string, client httpclient.HTTPClient, logger lager.Logger) GetInfoInterface {
 	return &GetInfo{
-		ccApi:  ccApi,
+		ccAPI:  ccAPI,
 		client: client,
 		logger: logger.Session("cc-info"),
 	}
 }
 
+//GetTokenEndpoint obtains the endpoint from GetInfo
 func (info *GetInfo) GetTokenEndpoint() (string, error) {
-	log := info.logger.Session("get-token-endpoint", lager.Data{"cc-api": info.ccApi})
+	log := info.logger.Session("get-token-endpoint", lager.Data{"cc-api": info.ccAPI})
 	log.Debug("starting")
 
 	path := fmt.Sprintf("/v2/info")
 
-	request := httpclient.Request{Verb: "GET", Endpoint: info.ccApi, ApiUrl: path, StatusCode: 200}
+	request := httpclient.Request{Verb: "GET", Endpoint: info.ccAPI, APIURL: path, StatusCode: 200}
 
 	log.Info("starting-cc-request", lager.Data{"path": path, "verb": "GET"})
 

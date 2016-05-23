@@ -12,35 +12,41 @@ import (
 	"github.com/dgrijalva/jwt-go"
 )
 
-//go:generate counterfeiter -o fakes/fake_token.go . Token
+//Token is used for UAA authentication
 type Token interface {
 	DecodeToken(userToken string, desiredPermissions ...string) error
 	CheckPublicToken() error
 }
 
+//NullToken is a token used in develop mode
 type NullToken struct{}
 
-func (_ NullToken) DecodeToken(_ string, _ ...string) error {
+//DecodeToken -
+func (NT NullToken) DecodeToken(r string, r1 ...string) error {
 	return nil
 }
 
-func (_ NullToken) CheckPublicToken() error {
+//CheckPublicToken for a null token the punlic token will never return an error
+func (NT NullToken) CheckPublicToken() error {
 	return nil
 }
 
-type accessToken struct {
+//AccessToken is the definition of an Access Token
+type AccessToken struct {
 	uaaPublicKey                string
 	uaaSymmetricVerificationKey string
 }
 
-func NewAccessToken(uaaPublicKey string, uaaSymmetricVerificationKey string) accessToken {
-	return accessToken{
+//NewAccessToken creates a new access token
+func NewAccessToken(uaaPublicKey string, uaaSymmetricVerificationKey string) AccessToken {
+	return AccessToken{
 		uaaPublicKey:                uaaPublicKey,
 		uaaSymmetricVerificationKey: uaaSymmetricVerificationKey,
 	}
 }
 
-func (accessToken accessToken) DecodeToken(userToken string, desiredPermissions ...string) error {
+//DecodeToken checks if a userToken has the desired permissionss
+func (accessToken AccessToken) DecodeToken(userToken string, desiredPermissions ...string) error {
 	userToken, err := checkTokenFormat(userToken)
 	if err != nil {
 		return err
@@ -88,7 +94,8 @@ func (accessToken accessToken) DecodeToken(userToken string, desiredPermissions 
 	return nil
 }
 
-func (accessToken accessToken) CheckPublicToken() error {
+//CheckPublicToken checks the validity of the public token
+func (accessToken AccessToken) CheckPublicToken() error {
 	var block *pem.Block
 	if block, _ = pem.Decode([]byte(accessToken.uaaPublicKey)); block == nil {
 		return errors.New("Public uaa token must be PEM encoded")

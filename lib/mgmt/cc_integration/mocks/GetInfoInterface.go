@@ -2,10 +2,12 @@ package mocks
 
 import "github.com/stretchr/testify/mock"
 
+//GetInfoInterface is a mock for Info Interface
 type GetInfoInterface struct {
 	mock.Mock
 }
 
+//GetTokenEndpoint mocks geting the endpoint of the token
 func (_m *GetInfoInterface) GetTokenEndpoint() (string, error) {
 	ret := _m.Called()
 

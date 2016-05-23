@@ -1,6 +1,7 @@
 package csm
 
-type CSMInterface interface {
+//CSM is the model to use for implementing a new CSM client
+type CSM interface {
 	Login(string, string) error
 	CreateWorkspace(string) error
 	WorkspaceExists(string) (bool, error)

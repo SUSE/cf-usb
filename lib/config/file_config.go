@@ -15,7 +15,8 @@ type fileConfig struct {
 	config *Config
 }
 
-func NewFileConfig(path string) ConfigProvider {
+//NewFileConfig builds and returns a new file config Provider
+func NewFileConfig(path string) Provider {
 	return &fileConfig{path: path, loaded: false}
 }
 
@@ -27,7 +28,7 @@ func (c *fileConfig) LoadConfiguration() (*Config, error) {
 		return nil, err
 	}
 
-	config, err = parseJson(jsonConf)
+	config, err = parseJSON(jsonConf)
 	if err != nil {
 		return nil, err
 	}
@@ -175,7 +176,7 @@ func (c *fileConfig) GetPlan(planid string) (*brokerapi.ServicePlan, string, str
 	return nil, "", "", nil
 }
 
-func parseJson(jsonConf []byte) (*Config, error) {
+func parseJSON(jsonConf []byte) (*Config, error) {
 	config := &Config{}
 
 	err := json.Unmarshal(jsonConf, &config)

@@ -17,14 +17,14 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-var logger *lagertest.TestLogger = lagertest.NewTestLogger("mgmt-api-test")
-var sbMocked *sbMocks.ServiceBrokerInterface = new(sbMocks.ServiceBrokerInterface)
+var logger = lagertest.NewTestLogger("mgmt-api-test")
+var sbMocked = new(sbMocks.USBServiceBroker)
 
 var UnitTest = struct {
 	MgmtAPI *operations.UsbMgmtAPI
 }{}
 
-func init_mgmt(provider config.ConfigProvider) error {
+func initMgmt(provider config.Provider) error {
 
 	swaggerSpec, err := loads.Analyzed(SwaggerJSON, "")
 	if err != nil {
@@ -54,7 +54,7 @@ func TestGetInfo(t *testing.T) {
 		t.Errorf("Error loading config: %v", err)
 	}
 
-	err = init_mgmt(fileConfig)
+	err = initMgmt(fileConfig)
 	if err != nil {
 		t.Error(err)
 	}
@@ -68,9 +68,9 @@ func TestGetInfo(t *testing.T) {
 
 func Test_RegisterDriverEndpoint(t *testing.T) {
 	assert := assert.New(t)
-	provider := new(mocks.ConfigProvider)
+	provider := new(mocks.Provider)
 
-	err := init_mgmt(provider)
+	err := initMgmt(provider)
 	if err != nil {
 		t.Error(err)
 	}
@@ -102,9 +102,10 @@ func Test_RegisterDriverEndpoint(t *testing.T) {
 	testConfig.ManagementAPI = &config.ManagementAPI{}
 	testConfig.ManagementAPI.BrokerName = "usb"
 	provider.On("LoadConfiguration").Return(&testConfig, nil)
-
+	provider.On("SetDial", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	provider.On("SetService", mock.Anything, mock.Anything).Return(nil)
 	sbMocked.Mock.On("CheckServiceNameExists", mock.Anything).Return(false)
-	sbMocked.Mock.On("GetServiceBrokerGuidByName", mock.Anything).Return("aguid", nil)
+	sbMocked.Mock.On("GetServiceBrokerGUIDByName", mock.Anything).Return("aguid", nil)
 	sbMocked.Mock.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	sbMocked.Mock.On("Update", "aguid", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	sbMocked.Mock.On("EnableServiceAccess", mock.Anything).Return(nil)
@@ -116,9 +117,9 @@ func Test_RegisterDriverEndpoint(t *testing.T) {
 
 func Test_UpdateInstanceEndpoint(t *testing.T) {
 	assert := assert.New(t)
-	provider := new(mocks.ConfigProvider)
+	provider := new(mocks.Provider)
 
-	err := init_mgmt(provider)
+	err := initMgmt(provider)
 	if err != nil {
 		t.Error(err)
 	}
@@ -150,10 +151,11 @@ func Test_UpdateInstanceEndpoint(t *testing.T) {
 }
 
 func Test_GetDriverEndpoint(t *testing.T) {
-	assert := assert.New(t)
-	provider := new(mocks.ConfigProvider)
 
-	err := init_mgmt(provider)
+	assert := assert.New(t)
+	provider := new(mocks.Provider)
+
+	err := initMgmt(provider)
 	if err != nil {
 		t.Error(err)
 	}
@@ -167,13 +169,14 @@ func Test_GetDriverEndpoint(t *testing.T) {
 
 	response := UnitTest.MgmtAPI.GetDriverEndpointHandler.Handle(*params, true)
 	assert.IsType(&operations.GetDriverEndpointOK{}, response)
+
 }
 
 func Test_GetDriverEndpoints(t *testing.T) {
 	assert := assert.New(t)
-	provider := new(mocks.ConfigProvider)
+	provider := new(mocks.Provider)
 
-	err := init_mgmt(provider)
+	err := initMgmt(provider)
 	if err != nil {
 		t.Error(err)
 	}
@@ -199,9 +202,9 @@ func Test_GetDriverEndpoints(t *testing.T) {
 
 func Test_UnregisterDriverEndpoint(t *testing.T) {
 	assert := assert.New(t)
-	provider := new(mocks.ConfigProvider)
+	provider := new(mocks.Provider)
 
-	err := init_mgmt(provider)
+	err := initMgmt(provider)
 	if err != nil {
 		t.Error(err)
 	}

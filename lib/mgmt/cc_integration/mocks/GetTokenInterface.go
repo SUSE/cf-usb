@@ -2,10 +2,12 @@ package mocks
 
 import "github.com/stretchr/testify/mock"
 
+//GetTokenInterface is a mock for token interface
 type GetTokenInterface struct {
 	mock.Mock
 }
 
+//GetToken mocks GetToken function
 func (_m *GetTokenInterface) GetToken() (string, error) {
 	ret := _m.Called()
 

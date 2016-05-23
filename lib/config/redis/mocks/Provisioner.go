@@ -4,11 +4,12 @@ import "github.com/stretchr/testify/mock"
 
 import "time"
 
-type RedisProvisionerInterface struct {
+type Provisioner struct {
 	mock.Mock
 }
 
-func (_m *RedisProvisionerInterface) SetKV(_a0 string, _a1 string, _a2 time.Duration) error {
+// SetKV provides a mock function with given fields: _a0, _a1, _a2
+func (_m *Provisioner) SetKV(_a0 string, _a1 string, _a2 time.Duration) error {
 	ret := _m.Called(_a0, _a1, _a2)
 
 	var r0 error
@@ -20,7 +21,9 @@ func (_m *RedisProvisionerInterface) SetKV(_a0 string, _a1 string, _a2 time.Dura
 
 	return r0
 }
-func (_m *RedisProvisionerInterface) GetValue(_a0 string) (string, error) {
+
+// GetValue provides a mock function with given fields: _a0
+func (_m *Provisioner) GetValue(_a0 string) (string, error) {
 	ret := _m.Called(_a0)
 
 	var r0 string
@@ -39,7 +42,9 @@ func (_m *RedisProvisionerInterface) GetValue(_a0 string) (string, error) {
 
 	return r0, r1
 }
-func (_m *RedisProvisionerInterface) KeyExists(_a0 string) (bool, error) {
+
+// KeyExists provides a mock function with given fields: _a0
+func (_m *Provisioner) KeyExists(_a0 string) (bool, error) {
 	ret := _m.Called(_a0)
 
 	var r0 bool
@@ -58,7 +63,9 @@ func (_m *RedisProvisionerInterface) KeyExists(_a0 string) (bool, error) {
 
 	return r0, r1
 }
-func (_m *RedisProvisionerInterface) RemoveKey(_a0 string) (bool, error) {
+
+// RemoveKey provides a mock function with given fields: _a0
+func (_m *Provisioner) RemoveKey(_a0 string) (bool, error) {
 	ret := _m.Called(_a0)
 
 	var r0 bool

@@ -10,14 +10,14 @@ import (
 
 	"github.com/frodenas/brokerapi"
 	"github.com/hpcloud/cf-usb/lib/config"
-	fakes "github.com/hpcloud/cf-usb/lib/csm/fakes"
+	fakes "github.com/hpcloud/cf-usb/lib/csm/csmfakes"
 	"github.com/pivotal-golang/lager/lagertest"
 	"github.com/stretchr/testify/assert"
 )
 
-var logger *lagertest.TestLogger = lagertest.NewTestLogger("usb-broker-test")
+var logger = lagertest.NewTestLogger("usb-broker-test")
 
-func setupEnv() (*UsbBroker, *fakes.FakeCSMInterface, error) {
+func setupEnv() (*UsbBroker, *fakes.FakeCSM, error) {
 	workDir, err := os.Getwd()
 	if err != nil {
 		return nil, nil, err
@@ -28,7 +28,7 @@ func setupEnv() (*UsbBroker, *fakes.FakeCSMInterface, error) {
 	configFile := filepath.Join(workDir, "../test-assets/file-config/config.json")
 
 	configProvider := config.NewFileConfig(configFile)
-	fake := new(fakes.FakeCSMInterface)
+	fake := new(fakes.FakeCSM)
 
 	broker := NewUsbBroker(configProvider, logger, fake)
 	return broker, fake, nil

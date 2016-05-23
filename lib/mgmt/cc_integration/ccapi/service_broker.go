@@ -10,75 +10,87 @@ import (
 	"github.com/pivotal-golang/lager"
 )
 
-type ServiceBrokerInterface interface {
+//USBServiceBroker is the  interface to use for creating and relating with a a Service Broker
+type USBServiceBroker interface {
 	Create(name, url, username, password string) error
 	Delete(name string) error
-	Update(serviceBrokerGuid, name, url, username, password string) error
-	EnableServiceAccess(serviceId string) error
-	GetServiceBrokerGuidByName(name string) (string, error)
+	Update(serviceBrokerGUID, name, url, username, password string) error
+	EnableServiceAccess(serviceID string) error
+	GetServiceBrokerGUIDByName(name string) (string, error)
 	CheckServiceNameExists(name string) bool
 	CheckServiceInstancesExist(serviceName string) bool
 }
 
+//ServiceBroker is the definition of ServiceBroker type
 type ServiceBroker struct {
-	client         httpclient.HttpClient
+	client         httpclient.HTTPClient
 	tokenGenerator uaaapi.GetTokenInterface
-	ccApi          string
+	ccAPI          string
 	logger         lager.Logger
 }
 
+//BrokerValues is the type defining BrokerValues and maped to json values for BrokerValues
 type BrokerValues struct {
 	Name         string `json:"name"`
-	BrokerUrl    string `json:"broker_url"`
+	BrokerURL    string `json:"broker_url"`
 	AuthUsername string `json:"auth_username"`
 	AuthPassword string `json:"auth_password"`
 }
 
+//BrokerResources holds the resources for the broker. Is mapped to json:resources
 type BrokerResources struct {
 	Resources []BrokerResource `json:"resources"`
 }
 
+//BrokerResource holds the broker metadata. Is mapped to json:metadata
 type BrokerResource struct {
 	Values BrokerMetadata `json:"metadata"`
 }
 
+//BrokerMetadata mapped to json:guid
 type BrokerMetadata struct {
-	Guid string `json:"guid"`
+	GUID string `json:"guid"`
 }
 
+//ServiceInstanceResources holds the service instance resources
 type ServiceInstanceResources struct {
 	Resources []ServiceInstance `json:"resources"`
 }
 
+//ServiceInstance holds the metadata and entity of service instance
 type ServiceInstance struct {
 	Meta  ServiceInstanceMetadata `json:"metadata"`
 	Value ServiceInstanceEntity   `json:"entity"`
 }
 
+//ServiceInstanceMetadata hold the metadata and is mapped to json:guid
 type ServiceInstanceMetadata struct {
-	Guid string `json:"guid"`
+	GUID string `json:"guid"`
 }
 
+//ServiceInstanceEntity holds the Name and ServicePlanGUID for service instance. Is mapped to json
 type ServiceInstanceEntity struct {
 	Name            string `json:"name"`
-	ServicePlanGuid string `json:"service_plan_guid"`
+	ServicePlanGUID string `json:"service_plan_guid"`
 }
 
-func NewServiceBroker(client httpclient.HttpClient, token uaaapi.GetTokenInterface, ccApi string, logger lager.Logger) ServiceBrokerInterface {
+//NewServiceBroker creates and returns ServiceBroker
+func NewServiceBroker(client httpclient.HTTPClient, token uaaapi.GetTokenInterface, ccAPI string, logger lager.Logger) USBServiceBroker {
 	return &ServiceBroker{
 		client:         client,
 		tokenGenerator: token,
-		ccApi:          ccApi,
-		logger:         logger.Session("cc-service-broker-client", lager.Data{"cc-api": ccApi}),
+		ccAPI:          ccAPI,
+		logger:         logger.Session("cc-service-broker-client", lager.Data{"cc-api": ccAPI}),
 	}
 }
 
+//Create creates a service and returns an error if it fails
 func (sb *ServiceBroker) Create(name, url, username, password string) error {
 	log := sb.logger.Session("create-broker", lager.Data{"name": name, "url": url})
 	log.Debug("starting")
 
 	path := "/v2/service_brokers"
-	body := &BrokerValues{Name: name, BrokerUrl: url, AuthUsername: username, AuthPassword: password}
+	body := &BrokerValues{Name: name, BrokerURL: url, AuthUsername: username, AuthPassword: password}
 
 	values, err := json.Marshal(body)
 	if err != nil {
@@ -95,7 +107,7 @@ func (sb *ServiceBroker) Create(name, url, username, password string) error {
 
 	log.Debug("preparing-request", lager.Data{"request-content": string(values), "headers": headers})
 
-	request := httpclient.Request{Verb: "POST", Endpoint: sb.ccApi, ApiUrl: path, Body: strings.NewReader(string(values)), Headers: headers, StatusCode: 201}
+	request := httpclient.Request{Verb: "POST", Endpoint: sb.ccAPI, APIURL: path, Body: strings.NewReader(string(values)), Headers: headers, StatusCode: 201}
 
 	log.Info("starting-cc-request", lager.Data{"path": path})
 
@@ -109,7 +121,8 @@ func (sb *ServiceBroker) Create(name, url, username, password string) error {
 	return nil
 }
 
-func (sb *ServiceBroker) Update(serviceBrokerGuid, name, url, username, password string) error {
+//Update updates a service
+func (sb *ServiceBroker) Update(serviceBrokerGUID, name, url, username, password string) error {
 	log := sb.logger.Session("update-broker", lager.Data{"name": name, "url": url})
 	log.Debug("starting")
 
@@ -121,8 +134,8 @@ func (sb *ServiceBroker) Update(serviceBrokerGuid, name, url, username, password
 	headers := make(map[string]string)
 	headers["Authorization"] = token
 
-	path := fmt.Sprintf("/v2/service_brokers/%s", serviceBrokerGuid)
-	body := BrokerValues{Name: name, BrokerUrl: url, AuthUsername: username, AuthPassword: password}
+	path := fmt.Sprintf("/v2/service_brokers/%s", serviceBrokerGUID)
+	body := BrokerValues{Name: name, BrokerURL: url, AuthUsername: username, AuthPassword: password}
 
 	values, err := json.Marshal(body)
 	if err != nil {
@@ -131,7 +144,7 @@ func (sb *ServiceBroker) Update(serviceBrokerGuid, name, url, username, password
 
 	log.Debug("preparing-request", lager.Data{"request-content": string(values), "headers": headers})
 
-	request := httpclient.Request{Verb: "PUT", Endpoint: sb.ccApi, ApiUrl: path, Body: strings.NewReader(string(values)), Headers: headers, StatusCode: 200}
+	request := httpclient.Request{Verb: "PUT", Endpoint: sb.ccAPI, APIURL: path, Body: strings.NewReader(string(values)), Headers: headers, StatusCode: 200}
 
 	log.Info("starting-cc-request", lager.Data{"path": path})
 
@@ -145,11 +158,12 @@ func (sb *ServiceBroker) Update(serviceBrokerGuid, name, url, username, password
 	return nil
 }
 
+//EnableServiceAccess enables service access for the service having serviceName
 func (sb *ServiceBroker) EnableServiceAccess(serviceName string) error {
 	log := sb.logger.Session("enableservice-access", lager.Data{"service-name": serviceName})
 	log.Debug("starting")
 
-	sp := NewServicePlan(sb.client, sb.tokenGenerator, sb.ccApi, log)
+	sp := NewServicePlan(sb.client, sb.tokenGenerator, sb.ccAPI, log)
 
 	err := sp.Update(serviceName)
 	if err != nil {
@@ -161,7 +175,8 @@ func (sb *ServiceBroker) EnableServiceAccess(serviceName string) error {
 	return nil
 }
 
-func (sb *ServiceBroker) GetServiceBrokerGuidByName(name string) (string, error) {
+//GetServiceBrokerGUIDByName obtains the broker guid corresponding to the passed name
+func (sb *ServiceBroker) GetServiceBrokerGUIDByName(name string) (string, error) {
 	log := sb.logger.Session("get-service-broker-guid-by-name", lager.Data{"name": name})
 	log.Debug("starting")
 
@@ -179,7 +194,7 @@ func (sb *ServiceBroker) GetServiceBrokerGuidByName(name string) (string, error)
 
 	log.Debug("preparing-request", lager.Data{"path": path, "headers": headers})
 
-	findRequest := httpclient.Request{Verb: "GET", Endpoint: sb.ccApi, ApiUrl: path, Headers: headers, StatusCode: 200}
+	findRequest := httpclient.Request{Verb: "GET", Endpoint: sb.ccAPI, APIURL: path, Headers: headers, StatusCode: 200}
 
 	log.Info("starting-cc-request", lager.Data{"path": path})
 
@@ -202,12 +217,13 @@ func (sb *ServiceBroker) GetServiceBrokerGuidByName(name string) (string, error)
 		return "", nil
 	}
 
-	guid := resources.Resources[0].Values.Guid
+	guid := resources.Resources[0].Values.GUID
 	log.Debug("found", lager.Data{"service-broker-guid": guid})
 
 	return guid, nil
 }
 
+//CheckServiceNameExists checks if a service with the passed name is already defined
 func (sb *ServiceBroker) CheckServiceNameExists(name string) bool {
 	exist := false
 	log := sb.logger.Session("check-service-name-exists", lager.Data{"name": name})
@@ -219,8 +235,8 @@ func (sb *ServiceBroker) CheckServiceNameExists(name string) bool {
 		return false
 	}
 
-	sp := NewServicePlan(sb.client, sb.tokenGenerator, sb.ccApi, log)
-	guid, err := sp.GetServiceGuidByLabel(name, token)
+	sp := NewServicePlan(sb.client, sb.tokenGenerator, sb.ccAPI, log)
+	guid, err := sp.GetServiceGUIDByLabel(name, token)
 	if err != nil {
 		log.Error("get-service-guid-by-label", err)
 	}
@@ -232,6 +248,7 @@ func (sb *ServiceBroker) CheckServiceNameExists(name string) bool {
 	return exist
 }
 
+//CheckServiceInstancesExist checks if a service instance with the passed name is already registered
 func (sb *ServiceBroker) CheckServiceInstancesExist(serviceName string) bool {
 	exist := false
 	log := sb.logger.Session("check-service-instances-exist", lager.Data{"service-name": serviceName})
@@ -243,30 +260,30 @@ func (sb *ServiceBroker) CheckServiceInstancesExist(serviceName string) bool {
 		return false
 	}
 
-	sp := NewServicePlan(sb.client, sb.tokenGenerator, sb.ccApi, log)
-	serviceGuid, err := sp.GetServiceGuidByLabel(serviceName, token)
+	sp := NewServicePlan(sb.client, sb.tokenGenerator, sb.ccAPI, log)
+	serviceGUID, err := sp.GetServiceGUIDByLabel(serviceName, token)
 	if err != nil {
 		log.Error("check-service-instance-exists-get-service-guid-by-label", err)
 		return false
 	}
 
-	servicePlans, err := sp.GetServicePlans(serviceGuid, token)
+	servicePlans, err := sp.GetServicePlans(serviceGUID, token)
 	if err != nil {
 		log.Error("check-service-instance-exists-get-service-plans", err)
 		return false
 	}
-	
+
 	headers := make(map[string]string)
 	headers["Authorization"] = token
 	headers["Content-Type"] = "application/x-www-form-urlencoded; charset=UTF-8"
 	headers["Accept"] = "application/json; charset=utf-8"
 
 	for _, plan := range servicePlans.Resources {
-		path := fmt.Sprintf("/v2/service_plans/%s/service_instances", plan.Values.Guid)
+		path := fmt.Sprintf("/v2/service_plans/%s/service_instances", plan.Values.GUID)
 
 		log.Debug("preparing-request-service_instances", lager.Data{"path": path, "headers": headers})
 
-		findRequest := httpclient.Request{Verb: "GET", Endpoint: sb.ccApi, ApiUrl: path, Headers: headers, StatusCode: 200}
+		findRequest := httpclient.Request{Verb: "GET", Endpoint: sb.ccAPI, APIURL: path, Headers: headers, StatusCode: 200}
 
 		log.Info("starting-cc-request-service_instances", lager.Data{"path": path})
 
@@ -291,11 +308,12 @@ func (sb *ServiceBroker) CheckServiceInstancesExist(serviceName string) bool {
 	return exist
 }
 
+//Delete deletes the service with the given name
 func (sb *ServiceBroker) Delete(name string) error {
 	log := sb.logger.Session("delete-broker", lager.Data{"name": name})
 	log.Debug("starting")
 
-	guid, err := sb.GetServiceBrokerGuidByName(name)
+	guid, err := sb.GetServiceBrokerGUIDByName(name)
 	if err != nil {
 		return err
 	}
@@ -312,7 +330,7 @@ func (sb *ServiceBroker) Delete(name string) error {
 
 	log.Debug("preparing-request", lager.Data{"request-content": string(values), "headers": headers})
 
-	request := httpclient.Request{Verb: "DELETE", Endpoint: sb.ccApi, ApiUrl: path, Body: strings.NewReader(string(values)), Headers: headers, StatusCode: 204}
+	request := httpclient.Request{Verb: "DELETE", Endpoint: sb.ccAPI, APIURL: path, Body: strings.NewReader(string(values)), Headers: headers, StatusCode: 204}
 
 	log.Info("starting-cc-request", lager.Data{"path": path})
 

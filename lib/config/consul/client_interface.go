@@ -2,7 +2,8 @@ package consul
 
 import "github.com/hashicorp/consul/api"
 
-type ConsulProvisionerInterface interface {
+//Provisioner defines a type containing the values needed for ConsulProvisioner
+type Provisioner interface {
 	AddKV(string, []byte, *api.WriteOptions) error
 	PutKVs(*api.KVPairs, *api.WriteOptions) error
 	GetValue(string) ([]byte, error)

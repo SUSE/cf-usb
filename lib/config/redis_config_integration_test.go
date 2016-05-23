@@ -15,7 +15,7 @@ import (
 )
 
 var RedisIntegrationConfig = struct {
-	Provider ConfigProvider
+	Provider Provider
 	address  string
 	password string
 	db       int64
@@ -118,8 +118,6 @@ func Test_RedisSetDriverInstance(t *testing.T) {
 
 	var instance Instance
 	instance.Name = "testDriverInstance"
-	raw := json.RawMessage("{\"a1\":\"b1\"}")
-	instance.Configuration = &raw
 	instance.Dials = make(map[string]Dial)
 	instance.Service = brokerapi.Service{}
 

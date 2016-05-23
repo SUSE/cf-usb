@@ -1,18 +1,19 @@
 package redis
 
 import (
-	"github.com/stretchr/testify/assert"
 	"os"
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 var redisConfig = struct {
 	address         string
 	password        string
 	db              int64
-	testProvisioner RedisProvisionerInterface
+	testProvisioner Provisioner
 }{}
 
 func init() {

@@ -2,7 +2,6 @@ package config
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strings"
 
@@ -12,11 +11,12 @@ import (
 
 type consulConfig struct {
 	address     string
-	provisioner consul.ConsulProvisionerInterface
+	provisioner consul.Provisioner
 	config      *Config
 }
 
-func NewConsulConfig(provisioner consul.ConsulProvisionerInterface) ConfigProvider {
+//NewConsulConfig builds and returns a new consul ConfigProvider
+func NewConsulConfig(provisioner consul.Provisioner) Provider {
 	var consulStruct consulConfig
 
 	consulStruct.provisioner = provisioner
@@ -44,13 +44,13 @@ func (c *consulConfig) LoadConfiguration() (*Config, error) {
 		return nil, err
 	}
 
-	managementApiConfig, err := c.provisioner.GetValue("usb/management_api")
+	managementAPIConfig, err := c.provisioner.GetValue("usb/management_api")
 	if err != nil {
 		return nil, err
 	}
 
 	var management ManagementAPI
-	err = json.Unmarshal(managementApiConfig, &management)
+	err = json.Unmarshal(managementAPIConfig, &management)
 	if err != nil {
 		return nil, err
 	}
@@ -221,7 +221,7 @@ func (c *consulConfig) SetService(instanceID string, service brokerapi.Service) 
 		return err
 	}
 	if key == "" {
-		return errors.New(fmt.Sprintf("Instance %s not found", instanceID))
+		return fmt.Errorf("Instance %s not found", instanceID)
 	}
 
 	data, err := json.Marshal(service)
@@ -240,7 +240,7 @@ func (c *consulConfig) SetDial(instanceID string, dialID string, dial Dial) erro
 		return err
 	}
 	if key == "" {
-		return errors.New(fmt.Sprintf("Instance %s not found", instanceID))
+		return fmt.Errorf("Instance %s not found", instanceID)
 	}
 
 	data, err := json.Marshal(dial)

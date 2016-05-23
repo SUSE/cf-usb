@@ -1,11 +1,6 @@
 package consul
 
 import (
-	"github.com/hashicorp/consul/api"
-	. "github.com/onsi/gomega"
-	"github.com/stretchr/testify/assert"
-	"github.com/tedsuo/ifrit"
-	"github.com/tedsuo/ifrit/ginkgomon"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -14,6 +9,12 @@ import (
 	"path"
 	"testing"
 	"time"
+
+	"github.com/hashicorp/consul/api"
+	. "github.com/onsi/gomega"
+	"github.com/stretchr/testify/assert"
+	"github.com/tedsuo/ifrit"
+	"github.com/tedsuo/ifrit/ginkgomon"
 )
 
 var consulConfig = struct {
@@ -23,10 +24,10 @@ var consulConfig = struct {
 	Pass            string
 	Scheme          string
 	Token           string
-	TestProvisioner ConsulProvisionerInterface
+	TestProvisioner Provisioner
 }{}
 
-var DefaultConsulPath string = "consul"
+var DefaultConsulPath = "consul"
 
 func init() {
 	consulConfig.Address = os.Getenv("CONSUL_ADDRESS")
@@ -37,7 +38,7 @@ func init() {
 	consulConfig.Token = os.Getenv("CONSUL_TOKEN")
 }
 
-func initProvider() (error, ifrit.Process) {
+func initProvider() (ifrit.Process, error) {
 	var config api.Config
 	var err error
 
@@ -66,11 +67,11 @@ func initProvider() (error, ifrit.Process) {
 	if consulIsRunning == false {
 		process, err = startConsulProcess()
 		if err != nil {
-			return err, nil
+			return nil, err
 		}
 	}
 
-	return nil, process
+	return process, nil
 }
 
 func Test_KeyValue(t *testing.T) {
@@ -81,7 +82,7 @@ func Test_KeyValue(t *testing.T) {
 		t.Skip("Skipping test as Consul env vars are not set: CONSUL_ADDRESS, CONSUL_DATACENTER, (CONSUL_USERNAME, CONSUL_PASSWORD) / CONSUL_TOKEN")
 	}
 
-	err, process := initProvider()
+	process, err := initProvider()
 	assert.NoError(err)
 
 	log.Println("Testing add key-value")
@@ -120,7 +121,7 @@ func Test_KVList(t *testing.T) {
 		t.Skip("Skipping test as Consul env vars are not set: CONSUL_ADDRESS, CONSUL_DATACENTER, (CONSUL_USERNAME, CONSUL_PASSWORD) / CONSUL_TOKEN")
 	}
 
-	err, process := initProvider()
+	process, err := initProvider()
 	assert.NoError(err)
 
 	log.Println("Testing put key-value list")

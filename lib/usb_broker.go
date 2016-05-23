@@ -11,16 +11,19 @@ import (
 
 var usbBroker UsbBroker
 
+//UsbBroker is the definition for broker type
 type UsbBroker struct {
-	configProvider config.ConfigProvider
-	csmClient      csm.CSMInterface
+	configProvider config.Provider
+	csmClient      csm.CSM
 	logger         lager.Logger
 }
 
-func NewUsbBroker(configProvider config.ConfigProvider, logger lager.Logger, csm csm.CSMInterface) *UsbBroker {
+//NewUsbBroker creates and returns a UsbBroker
+func NewUsbBroker(configProvider config.Provider, logger lager.Logger, csm csm.CSM) *UsbBroker {
 	return &UsbBroker{configProvider: configProvider, csmClient: csm, logger: logger.Session("usb-broker")}
 }
 
+//Services returns the services found in the broker catalog
 func (broker *UsbBroker) Services() brokerapi.CatalogResponse {
 	broker.logger.Info("get-catalog-request", lager.Data{})
 
@@ -46,6 +49,7 @@ func (broker *UsbBroker) Services() brokerapi.CatalogResponse {
 	return brokerapi.CatalogResponse{Services: catalog}
 }
 
+//Provision provision an instance with the instanceID
 func (broker *UsbBroker) Provision(instanceID string, serviceDetails brokerapi.ProvisionDetails, acceptsIncomplete bool) (brokerapi.ProvisioningResponse, bool, error) {
 	broker.logger.Info("provision-instance-request", lager.Data{"instance-id": instanceID, "service-id": serviceDetails.ServiceID, "accept-incomplete": acceptsIncomplete})
 
@@ -73,10 +77,12 @@ func (broker *UsbBroker) Provision(instanceID string, serviceDetails brokerapi.P
 	return brokerapi.ProvisioningResponse{}, false, nil
 }
 
+//Update updates the details of the instance
 func (broker *UsbBroker) Update(instanceID string, details brokerapi.UpdateDetails, acceptsIncomplete bool) (bool, error) {
 	return false, brokerapi.ErrInstanceNotUpdateable
 }
 
+//Deprovision deprovisions the instance identified by instanceID
 func (broker *UsbBroker) Deprovision(instanceID string, deprovisionDetails brokerapi.DeprovisionDetails, acceptsIncomplete bool) (bool, error) {
 	broker.logger.Info("deprovision-instance-request", lager.Data{"instance-id": instanceID, "service-id": deprovisionDetails.ServiceID, "accept-incomplete": acceptsIncomplete})
 
@@ -103,6 +109,7 @@ func (broker *UsbBroker) Deprovision(instanceID string, deprovisionDetails broke
 	return false, nil
 }
 
+//Bind creates a bind for the instance identified by instanceID with the details passed
 func (broker *UsbBroker) Bind(instanceID, bindingID string, details brokerapi.BindDetails) (brokerapi.BindingResponse, error) {
 	broker.logger.Info("generate-credentials-request", lager.Data{"instance-id": instanceID, "binding-id": bindingID, "service-id": details.ServiceID})
 
@@ -134,6 +141,7 @@ func (broker *UsbBroker) Bind(instanceID, bindingID string, details brokerapi.Bi
 	return response, nil
 }
 
+//Unbind removes an existent bind
 func (broker *UsbBroker) Unbind(instanceID, bindingID string, details brokerapi.UnbindDetails) error {
 	broker.logger.Info("revoke-credentials-request", lager.Data{"instance-id": instanceID, "binding-id": bindingID, "service-id": details.ServiceID})
 
@@ -156,6 +164,7 @@ func (broker *UsbBroker) Unbind(instanceID, bindingID string, details brokerapi.
 	return nil
 }
 
+//LastOperation retrieves the last operation performed on the instance identified by instanceID
 func (broker *UsbBroker) LastOperation(instanceID string) (brokerapi.LastOperationResponse, error) {
 	broker.logger.Info("last-operation-request", lager.Data{"instance-id": instanceID})
 
@@ -183,7 +192,7 @@ func (broker *UsbBroker) LastOperation(instanceID string) (brokerapi.LastOperati
 
 }
 
-func (broker *UsbBroker) getCSMClient(serviceID string) (csm.CSMInterface, error) {
+func (broker *UsbBroker) getCSMClient(serviceID string) (csm.CSM, error) {
 	config, err := broker.configProvider.LoadConfiguration()
 	if err != nil {
 		return nil, err
