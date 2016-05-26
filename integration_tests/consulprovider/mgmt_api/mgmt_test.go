@@ -171,11 +171,6 @@ func Test_UpdateInstanceEndpoint(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	sbMocked.Mock.On("CheckServiceNameExists", mock.Anything).Return(false)
-	sbMocked.Mock.On("GetServiceBrokerGUIDByName", mock.Anything).Return("aguid", nil)
-	sbMocked.Mock.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-	sbMocked.Mock.On("Update", "aguid", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-	sbMocked.Mock.On("EnableServiceAccess", mock.Anything).Return(nil)
 
 	instanceID := uuid.NewV4().String()
 	params := &operations.RegisterDriverEndpointParams{}

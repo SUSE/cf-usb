@@ -379,7 +379,7 @@ func ConfigureAPI(api *operations.UsbMgmtAPI, auth authentication.Authentication
 
 		instanceInfo, _, err := configProvider.GetInstance(params.DriverEndpointID)
 		if err != nil {
-			return &operations.UnregisterDriverInstanceInternalServerError{Payload: err.Error()}
+			return &operations.UpdateDriverEndpointInternalServerError{Payload: err.Error()}
 		}
 		if instanceInfo == nil {
 			return &operations.UpdateDriverEndpointNotFound{}
@@ -390,7 +390,7 @@ func ConfigureAPI(api *operations.UsbMgmtAPI, auth authentication.Authentication
 		if instanceInfo.Name != *params.DriverEndpoint.Name {
 			driverInstanceNameExist, err := configProvider.InstanceNameExists(*params.DriverEndpoint.Name)
 			if err != nil {
-				return &operations.UnregisterDriverInstanceInternalServerError{Payload: err.Error()}
+				return &operations.UpdateDriverEndpointInternalServerError{Payload: err.Error()}
 			}
 
 			if driverInstanceNameExist {
@@ -399,53 +399,62 @@ func ConfigureAPI(api *operations.UsbMgmtAPI, auth authentication.Authentication
 				return &operations.UpdateDriverEndpointConflict{}
 			}
 		}
-		instance.Name = *params.DriverEndpoint.Name
-		instance.AuthenticationKey = params.DriverEndpoint.AuthenticationKey
-		instance.TargetURL = params.DriverEndpoint.EndpointURL
+
+		if params.DriverEndpoint.AuthenticationKey != "" {
+			instance.AuthenticationKey = params.DriverEndpoint.AuthenticationKey
+		}
+		if params.DriverEndpoint.EndpointURL != "" {
+			instance.TargetURL = params.DriverEndpoint.EndpointURL
+		}
 
 		if params.DriverEndpoint.Metadata != nil {
-			instance.Service.Metadata.DisplayName = params.DriverEndpoint.Metadata.DisplayName
-			instance.Service.Metadata.DocumentationURL = params.DriverEndpoint.Metadata.DocumentationURL
-			instance.Service.Metadata.ImageURL = params.DriverEndpoint.Metadata.ImageURL
-			instance.Service.Metadata.LongDescription = params.DriverEndpoint.Metadata.LongDescription
-			instance.Service.Metadata.ProviderDisplayName = params.DriverEndpoint.Metadata.ProviderDisplayName
-			instance.Service.Metadata.SupportURL = params.DriverEndpoint.Metadata.SupportURL
+			if params.DriverEndpoint.Metadata.DisplayName != "" {
+				instance.Service.Metadata.DisplayName = params.DriverEndpoint.Metadata.DisplayName
+			}
+			if params.DriverEndpoint.Metadata.DocumentationURL != "" {
+				instance.Service.Metadata.DocumentationURL = params.DriverEndpoint.Metadata.DocumentationURL
+			}
+			if params.DriverEndpoint.Metadata.ImageURL != "" {
+				instance.Service.Metadata.ImageURL = params.DriverEndpoint.Metadata.ImageURL
+			}
+			if params.DriverEndpoint.Metadata.LongDescription != "" {
+				instance.Service.Metadata.LongDescription = params.DriverEndpoint.Metadata.LongDescription
+			}
+			if params.DriverEndpoint.Metadata.ProviderDisplayName != "" {
+				instance.Service.Metadata.ProviderDisplayName = params.DriverEndpoint.Metadata.ProviderDisplayName
+			}
+			if params.DriverEndpoint.Metadata.SupportURL != "" {
+				instance.Service.Metadata.SupportURL = params.DriverEndpoint.Metadata.SupportURL
+			}
 		}
 
 		err = configProvider.SetInstance(params.DriverEndpointID, instance)
 		if err != nil {
-			return &operations.UnregisterDriverInstanceInternalServerError{Payload: err.Error()}
+			return &operations.UpdateDriverEndpointInternalServerError{Payload: err.Error()}
 		}
 
-		config, err := configProvider.LoadConfiguration()
-		if err != nil {
-			return &operations.UnregisterDriverInstanceInternalServerError{Payload: err.Error()}
+		var metadata *genmodel.EndpointMetadata
+
+		if instance.Service.Metadata != nil {
+			metadata = &genmodel.EndpointMetadata{
+				DisplayName:         instance.Service.Metadata.DisplayName,
+				ImageURL:            instance.Service.Metadata.ImageURL,
+				LongDescription:     instance.Service.Metadata.LongDescription,
+				ProviderDisplayName: instance.Service.Metadata.ProviderDisplayName,
+				DocumentationURL:    instance.Service.Metadata.DocumentationURL,
+				SupportURL:          instance.Service.Metadata.SupportURL,
+			}
 		}
 
-		brokerName := defaultBrokerName
-		if len(config.ManagementAPI.BrokerName) > 0 {
-			brokerName = config.ManagementAPI.BrokerName
+		driverEndpoint := &genmodel.DriverEndpoint{
+			ID:                params.DriverEndpointID,
+			Name:              &instance.Name,
+			EndpointURL:       instance.TargetURL,
+			AuthenticationKey: instance.AuthenticationKey,
+			Metadata:          metadata,
 		}
 
-		guid, err := ccServiceBroker.GetServiceBrokerGUIDByName(brokerName)
-		if err != nil {
-			log.Error("get-service-broker-failed", err)
-			return &operations.UnregisterDriverInstanceInternalServerError{Payload: err.Error()}
-		}
-
-		err = ccServiceBroker.Update(guid, brokerName, config.BrokerAPI.ExternalURL, config.BrokerAPI.Credentials.Username, config.BrokerAPI.Credentials.Password)
-		if err != nil {
-			log.Error("update-service-broker-failed", err)
-			return &operations.UnregisterDriverInstanceInternalServerError{Payload: err.Error()}
-		}
-
-		err = ccServiceBroker.EnableServiceAccess(instance.Name)
-		if err != nil {
-			log.Error("enable-service-access-failed", err)
-			return &operations.UnregisterDriverInstanceInternalServerError{Payload: err.Error()}
-		}
-
-		return &operations.UpdateDriverEndpointOK{Payload: params.DriverEndpoint}
+		return &operations.UpdateDriverEndpointOK{Payload: driverEndpoint}
 	})
 
 	api.ServerShutdown = func() {}
