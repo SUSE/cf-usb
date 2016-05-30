@@ -8,7 +8,6 @@ files:
   - cf-usb/make/**/*
   - cf-usb/cmd/**/*
   - cf-usb/vendor/**/*
-  - cf-usb/integration_test/**/*
 
 dependencies:
   - golang
