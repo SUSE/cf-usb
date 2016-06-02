@@ -21,17 +21,16 @@ go get -u github.com/axw/gocov/gocov
 
 echo "Fetching go-swagger"
 
-#Get specific version of go-swagger
-#SWAGGER_HASH=`cat ${GIT_ROOT}/Godeps/Godeps.json | grep -A 2 "github.com/go-swagger/go-swagger" | grep Rev | head -n 1 | awk '{print $2}' | tr -d \"`
-SWAGGER_HASH=13cbd521cb6fd24ba943da4786e8f9fe6f84dc78
+swagger_file=${GIT_ROOT}/.tools/swagger
 
-swgger_file=${GIT_ROOT}/.tools/swagger 
-
-if [ -f $swgger_file ] ; then
-    rm $swgger_file
+if [ -f $swagger_file ] ; then
+  rm $swagger_file
 fi
 
-git clone https://github.com/go-swagger/go-swagger.git ${GIT_ROOT}/.temp
-cd  ${GIT_ROOT}/.temp; git reset --hard ${SWAGGER_HASH}
-go build -o ${GIT_ROOT}/.tools/swagger ${GIT_ROOT}/.temp/cmd/swagger/swagger.go 
+export GOPATH=${GIT_ROOT}/.temp
+
+go get -u github.com/go-swagger/go-swagger/cmd/swagger
+cd  ${GIT_ROOT}/.temp/src/github.com/go-swagger/go-swagger
+git reset --hard 0.5.9 
+go build -o ${GIT_ROOT}/.tools/swagger ${GIT_ROOT}/.temp/src/github.com/go-swagger/go-swagger/cmd/swagger/swagger.go
 rm -rf ${GIT_ROOT}/.temp

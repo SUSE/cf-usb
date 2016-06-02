@@ -76,6 +76,9 @@ type UsbMgmtAPI struct {
 
 	// Custom command line argument groups with their descriptions
 	CommandLineOptionsGroups []swag.CommandLineOptionsGroup
+
+	// User defined logger function.
+	Logger func(string, ...interface{})
 }
 
 // SetDefaultProduces sets the default produces media type
@@ -177,7 +180,7 @@ func (o *UsbMgmtAPI) AuthenticatorsFor(schemes map[string]spec.SecurityScheme) m
 
 		case "Authorization":
 
-			result[name] = security.APIKeyAuth(scheme.Name, scheme.In, func(tok string) (interface{}, error) { return o.AuthorizationAuth(tok) })
+			result[name] = security.APIKeyAuth(scheme.Name, scheme.In, o.AuthorizationAuth)
 
 		}
 	}
