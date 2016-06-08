@@ -3,8 +3,8 @@ package csm
 import (
 	"errors"
 	"fmt"
+	"net/http"
 	"net/url"
-	"strings"
 
 	"github.com/go-openapi/runtime"
 	runtimeClient "github.com/go-openapi/runtime/client"
@@ -55,24 +55,14 @@ func (csm *csmClient) CreateWorkspace(workspaceID string) error {
 	}
 	params := workspace.CreateWorkspaceParams{}
 	params.CreateWorkspaceRequest = &request
-	response, err := csm.workspaceCient.CreateWorkspace(&params, csm.authInfoWriter)
+	_, err := csm.workspaceCient.CreateWorkspace(&params, csm.authInfoWriter)
 
 	if err != nil {
-		return err
-	}
-
-	csm.logger.Info("csm-create-workspace", lager.Data{"response": response.Error()})
-
-	//TODO: This is not working in CSM
-	//	responseError := strings.TrimSpace(response.Error())
-	//	if responseError != "" {
-	//		logger.Info("csm-create-workspace", lager.Data{"error": "2"})
-	//		return errors.New(responseError)
-	//	}
-	status := strings.TrimSpace(*response.Payload.Status)
-
-	if status != "successful" {
-		return fmt.Errorf("Error making the request. Extension returned status %s. Details: %v", status, response.Payload.Details)
+		csmError, ok := err.(*workspace.CreateWorkspaceDefault)
+		if !ok {
+			return err
+		}
+		return fmt.Errorf(*csmError.Payload.Message)
 	}
 
 	return nil
@@ -86,28 +76,18 @@ func (csm *csmClient) WorkspaceExists(workspaceID string) (bool, error) {
 
 	params := workspace.GetWorkspaceParams{}
 	params.WorkspaceID = workspaceID
-	response, err := csm.workspaceCient.GetWorkspace(&params, csm.authInfoWriter)
+	_, err := csm.workspaceCient.GetWorkspace(&params, csm.authInfoWriter)
 
 	if err != nil {
-		//TODO Improve this
-		if strings.Contains(err.Error(), "Code:404") {
+		csmError, ok := err.(*workspace.GetWorkspaceDefault)
+		if !ok {
+			return false, err
+		}
+
+		if csmError.Code() == http.StatusNotFound {
 			return false, nil
 		}
-		return false, err
-	}
-
-	//TODO: This is not working in CSM
-	//	responseError := strings.TrimSpace(response.Error())
-	//	if responseError != "" {
-	//		return false, errors.New(responseError)
-	//	}
-	csm.logger.Info("csm-workspace-exists", lager.Data{"response": response.Error()})
-
-	status := strings.TrimSpace(*response.Payload.Status)
-
-	//TODO: This is wrong and needs to be improved in the CSM server
-	if status == "failed" {
-		return false, nil
+		return false, fmt.Errorf(*csmError.Payload.Message)
 	}
 
 	return true, nil
@@ -120,21 +100,17 @@ func (csm *csmClient) DeleteWorkspace(workspaceID string) error {
 	csm.logger.Info("csm-delete-workspace", lager.Data{"workspaceID": workspaceID})
 	params := workspace.DeleteWorkspaceParams{}
 	params.WorkspaceID = workspaceID
-	response, err := csm.workspaceCient.DeleteWorkspace(&params, csm.authInfoWriter)
+	_, err := csm.workspaceCient.DeleteWorkspace(&params, csm.authInfoWriter)
 
 	if err != nil {
-		return err
+		csmError, ok := err.(*workspace.DeleteWorkspaceDefault)
+		if !ok {
+			return err
+		}
+		return fmt.Errorf(*csmError.Payload.Message)
 	}
 
-	csm.logger.Info("csm-delete-workspace", lager.Data{"response": response.Error()})
-	//TODO: This is not working in CSM
-	//	responseError := strings.TrimSpace(response.Error())
-	//	if responseError != "" {
-	//		return errors.New(responseError)
-	//	}
-
-	//TODO: in CSM this passes all the time, it does not take into consideration if a workspace exists
-
+	//TODO: does not throw an error if the workspace does not exist
 	return nil
 
 }
@@ -153,22 +129,14 @@ func (csm *csmClient) CreateConnection(workspaceID, connectionID string) (interf
 	params.ConnectionCreateRequest = &request
 	response, err := csm.connectionClient.CreateConnection(&params, csm.authInfoWriter)
 	if err != nil {
-		return nil, err
+		csmError, ok := err.(*connection.CreateConnectionDefault)
+		if !ok {
+			return nil, err
+		}
+		return nil, fmt.Errorf(*csmError.Payload.Message)
 	}
 
-	csm.logger.Info("csm-create-connection", lager.Data{"response": response.Error()})
-	//TODO: This is not working in CSM
-	//	responseError := strings.TrimSpace(response.Error())
-	//	if responseError != "" {
-	//		return errors.New(responseError)
-	//	}
-	status := strings.TrimSpace(*response.Payload.Status)
-
-	if status != "successful" {
-		return nil, fmt.Errorf("Error making the request. Extension returned status %s. Details: %v", status, response.Payload.Details)
-	}
-
-	return response.Payload.Details, err
+	return response.Payload.Details, nil
 
 }
 func (csm *csmClient) ConnectionExists(workspaceID, connectionID string) (bool, error) {
@@ -181,30 +149,17 @@ func (csm *csmClient) ConnectionExists(workspaceID, connectionID string) (bool, 
 		ConnectionID: connectionID,
 	}
 
-	response, err := csm.connectionClient.GetConnection(&params, csm.authInfoWriter)
+	_, err := csm.connectionClient.GetConnection(&params, csm.authInfoWriter)
 
 	if err != nil {
-		//TODO Improve this
-		if strings.Contains(err.Error(), "Code:404") {
+		csmError, ok := err.(*connection.GetConnectionDefault)
+		if !ok {
+			return false, err
+		}
+		if csmError.Code() == http.StatusNotFound {
 			return false, nil
 		}
-
-		return false, err
-	}
-
-	csm.logger.Info("csm-create-connection", lager.Data{"response": response.Error()})
-	//TODO: This is not working in CSM
-	//	responseError := strings.TrimSpace(response.Error())
-	//	if responseError != "" {
-	//		return errors.New(responseError)
-	//	}
-
-	status := strings.TrimSpace(*response.Payload.Status)
-
-	//TODO: This is wrong and needs to be improved in the CSM server.
-	//Currently is the only way to determine if a connection does not exist
-	if status == "failed" {
-		return false, nil
+		return false, fmt.Errorf(*csmError.Payload.Message)
 	}
 
 	return true, nil
@@ -220,17 +175,14 @@ func (csm *csmClient) DeleteConnection(workspaceID, connectionID string) error {
 		ConnectionID: connectionID,
 	}
 
-	response, err := csm.connectionClient.DeleteConnection(&params, csm.authInfoWriter)
+	_, err := csm.connectionClient.DeleteConnection(&params, csm.authInfoWriter)
 	if err != nil {
-		return err
+		csmError, ok := err.(*connection.DeleteConnectionDefault)
+		if !ok {
+			return err
+		}
+		return fmt.Errorf(*csmError.Payload.Message)
 	}
-
-	csm.logger.Info("csm-delete-connection", lager.Data{"response": response.Error()})
-	//TODO: This is not working in CSM
-	//	responseError := strings.TrimSpace(response.Error())
-	//	if responseError != "" {
-	//		return errors.New(responseError)
-	//	}
 
 	//TODO: in CSM this passes all the time, it does not take into consideration if a connection exists
 	return nil
