@@ -39,6 +39,10 @@ paths:
           description: successful operation
           schema:
             $ref: '#/definitions/CatalogServices'
+        default:
+          description: "generic error response"
+          schema:
+            $ref: '#/definitions/BrokerError'
   '/service_instances/{instance_id}/last_operation':
     parameters:
       - $ref: '#/parameters/instance_id'
@@ -62,6 +66,10 @@ paths:
             its database. 
           schema:
             $ref: '#/definitions/Empty'
+        default:
+          description: "generic error response"
+          schema:
+            $ref: '#/definitions/BrokerError'
   '/service_instances/{instance_id}':
     parameters:
       - $ref: '#/parameters/instance_id'
@@ -116,6 +124,10 @@ paths:
             ?accepts_incomplete=true
           schema:
             $ref: '#/definitions/AsyncError'
+        default:
+          description: "generic error response"
+          schema:
+            $ref: '#/definitions/BrokerError'
     patch:
       operationId: updateServiceInstance
       summary: Updating a Service Instance
@@ -161,6 +173,10 @@ paths:
             Errors](https://docs.cloudfoundry.org/services/api.html#broker-errors).
           schema:
             $ref: '#/definitions/AsyncError'
+        default:
+          description: "generic error response"
+          schema:
+            $ref: '#/definitions/BrokerError'
     delete:
       operationId: deprovisionServiceInstance
       summary: Deprovisions a service instance.
@@ -205,6 +221,10 @@ paths:
             include ?accepts_incomplete=true
           schema:
             $ref: '#/definitions/AsyncError'
+        default:
+          description: "generic error response"
+          schema:
+            $ref: '#/definitions/BrokerError'
   '/service_instances/{instance_id}/service_bindings/{binding_id}':
     parameters:
       - $ref: '#/parameters/instance_id'
@@ -259,6 +279,10 @@ paths:
             in the request body.
           schema:
             $ref: '#/definitions/Empty'
+        default:
+          description: "generic error response"
+          schema:
+            $ref: '#/definitions/BrokerError'
     delete:
       operationId: serviceUnbind
       summary: Unbinds a service
@@ -287,6 +311,10 @@ paths:
             response body is {}.
           schema:
             $ref: '#/definitions/Empty'
+        default:
+          description: "generic error response"
+          schema:
+            $ref: '#/definitions/BrokerError'
 parameters:
   instance_id:
     name: instance_id
@@ -310,9 +338,9 @@ definitions:
       services:
         type: array
         items:
-          $ref: '#/definitions/Services'
-  Services:
-    description: Schema of a service object
+          $ref: '#/definitions/CatalogService'
+  CatalogService:
+    description: Schema of a service object see http://docs.cloudfoundry.org/services/api.html
     properties:
       id:
         type: string
@@ -358,11 +386,23 @@ definitions:
         type: string
         description: A short description of the service that will appear in the catalog.
       metadata:
-        type: object
         description: >-
           A list of metadata for a service plan. For more information, [see
           Service
           Metadata](https://docs.cloudfoundry.org/services/catalog-metadata.html).
+        properties:
+          name:
+            type: string
+            description: >-
+              A short name for the service plan to be displayed in a catalog.
+          description:
+            type: string
+            description: >-
+              A description of the service plan to be displayed in a catalog.
+          metadata:
+            type: object
+            description: >-
+              Additional non mandatory fields for Plan metadata (e.g. metadata.displayName, metadata.bullets)
       free:
         type: boolean
         description: >-
@@ -444,8 +484,11 @@ definitions:
           Single
           Sign-On](https://docs.cloudfoundry.org/services/dashboard-sso.html).
   Empty:
-    type: string
+    type: object
     description: 'Expected empty response could be {}'
+    properties: 
+      fake:
+        type: string
   LastOperation:
     description: Last operation response.
     properties:
@@ -559,27 +602,20 @@ definitions:
       displayName:
         type: string
         description: displayName of the service.
-      listing:
-        $ref: '#/definitions/Listing'
-      provider:
-        $ref: '#/definitions/Provider'
-  Listing:
-    description: Listing.
-    properties:
-      blurb:
-        description: blurb
-        type: string
       imageUrl:
         description: image URL.
         type: string
       longDescription:
         description: Long Description
         type: string
-  Provider:
-    description: Provider
-    properties:
-      name:
-        description: Provider Name
+      providerDisplayName:
+        description: Provider Display Name
+        type: string
+      documentationURL:
+        description: Documentation URL
+        type: string
+      supportURL:
+        description: Support URL
         type: string
   DeleteService:
     description: Parameters needed to unbind a service instance
@@ -615,3 +651,11 @@ definitions:
         description: >-
           ID of the plan from the catalog. While not strictly necessary, some
           brokers might make use of this ID.
+  BrokerError:
+    description: General error
+    required:
+    - message
+    properties:
+      message: 
+        type: string
+        description: "An error message explaining why the request failed. This message will be displayed to the user who initiated the request."

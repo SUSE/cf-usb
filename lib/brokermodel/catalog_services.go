@@ -18,7 +18,7 @@ type CatalogServices struct {
 
 	/* services
 	 */
-	Services []*Services `json:"services,omitempty"`
+	Services []*CatalogService `json:"services,omitempty"`
 }
 
 // Validate validates this catalog services

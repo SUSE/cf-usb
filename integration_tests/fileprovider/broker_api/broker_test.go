@@ -1,8 +1,13 @@
 package brokertest
 
 import (
-	"github.com/frodenas/brokerapi"
-	"github.com/hpcloud/cf-usb/lib"
+	"reflect"
+
+	loads "github.com/go-openapi/loads"
+	"github.com/hpcloud/cf-usb/lib/broker"
+	"github.com/hpcloud/cf-usb/lib/broker/operations"
+	"github.com/hpcloud/cf-usb/lib/broker/operations/service_instances"
+	"github.com/hpcloud/cf-usb/lib/brokermodel"
 	"github.com/hpcloud/cf-usb/lib/config"
 	"github.com/hpcloud/cf-usb/lib/csm"
 	"github.com/pivotal-golang/lager/lagertest"
@@ -29,25 +34,25 @@ var csmEndpoint = ""
 var authToken = ""
 var serviceID = ""
 
-func setupEnv() (*lib.UsbBroker, *csm.CSM, error) {
+func setupEnv() (*operations.BrokerAPI, error) {
 	csmEndpoint = os.Getenv("CSM_ENDPOINT")
 	authToken = os.Getenv("CSM_API_KEY")
 	if csmEndpoint == "" {
-		return nil, nil, fmt.Errorf("CSM_ENDPOINT not set")
+		return nil, fmt.Errorf("CSM_ENDPOINT not set")
 	}
 	if authToken == "" {
-		return nil, nil, fmt.Errorf("CSM_API_KEY not set")
+		return nil, fmt.Errorf("CSM_API_KEY not set")
 	}
 	file, err := ioutil.TempFile(os.TempDir(), "brokertest")
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	workDir, err := os.Getwd()
 	testFile := filepath.Join(workDir, "../../../test-assets/file-config/config.json")
 
 	info, err := ioutil.ReadFile(testFile)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	content := string(info)
 	content = strings.Replace(content, "http://127.0.0.1:8080", csmEndpoint, -1)
@@ -57,26 +62,34 @@ func setupEnv() (*lib.UsbBroker, *csm.CSM, error) {
 
 	err = ioutil.WriteFile(configFile, []byte(content), 0777)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	configProvider := config.NewFileConfig(configFile)
 	config, err := configProvider.LoadConfiguration()
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
+
 	for _, instance := range config.Instances {
 		serviceID = instance.Service.ID
 		break
 	}
 	csmInterface := csm.NewCSMClient(logger)
-	broker := lib.NewUsbBroker(configProvider, logger, csmInterface)
-	return broker, &csmInterface, nil
+	swaggerSpec, err := loads.Analyzed(broker.SwaggerJSON, "")
+	if err != nil {
+		return nil, err
+	}
+	brokerAPI := operations.NewBrokerAPI(swaggerSpec)
+
+	broker.ConfigureAPI(brokerAPI, csmInterface, configProvider, logger)
+
+	return brokerAPI, nil
 }
 
 func TestBrokerAPIProvisionTest(t *testing.T) {
 	assert := assert.New(t)
-	broker, _, err := setupEnv()
+	brokerA, err := setupEnv()
 	if err != nil {
 		t.Skip(err)
 	}
@@ -85,40 +98,74 @@ func TestBrokerAPIProvisionTest(t *testing.T) {
 	}
 
 	workspaceID := uuid.NewV4().String()
-	details := brokerapi.ProvisionDetails{}
-	details.ServiceID = serviceID
-	response, _, err := broker.Provision(workspaceID, details, false)
-	t.Log(response)
-	assert.NotNil(response)
-	assert.NoError(err)
-}
 
+	params := service_instances.CreateServiceInstanceParams{}
+	params.Service = &brokermodel.Service{}
+	params.Service.ServiceID = serviceID
+	params.InstanceID = workspaceID
+
+	response := brokerA.ServiceInstancesCreateServiceInstanceHandler.Handle(params, false)
+	assert.NotNil(response)
+	if reflect.TypeOf(response).String() == "*service_instances.CreateServiceInstanceDefault" {
+		resp := response.(*service_instances.CreateServiceInstanceDefault)
+		assert.Fail(*resp.Payload.Message)
+		return
+	}
+
+	assert.Equal(
+		reflect.TypeOf(service_instances.CreateServiceInstanceCreated{}),
+		reflect.ValueOf(response).Elem().Type(),
+		"Wrong response type while binding")
+}
 func TestBrokerAPIBindTest(t *testing.T) {
 	assert := assert.New(t)
-	broker, _, err := setupEnv()
+	brokerA, err := setupEnv()
 	if err != nil {
 		t.Skip(err)
 	}
 	if serviceID == "" {
 		t.Skip("Config file does not contain a service definition")
 	}
+
 	workspaceID := uuid.NewV4().String()
+	params := service_instances.CreateServiceInstanceParams{}
+	params.Service = &brokermodel.Service{}
+	params.Service.ServiceID = serviceID
+	params.InstanceID = workspaceID
+	response := brokerA.ServiceInstancesCreateServiceInstanceHandler.Handle(params, false)
+
 	connectionID := uuid.NewV4().String()
-	serviceDetails := brokerapi.ProvisionDetails{}
-	serviceDetails.ServiceID = serviceID
-	bindDetails := brokerapi.BindDetails{}
-	bindDetails.ServiceID = serviceID
-	response, _, err := broker.Provision(workspaceID, serviceDetails, false)
-	responseBind, err := broker.Bind(workspaceID, connectionID, bindDetails)
-	t.Log(response)
-	assert.NotNil(response)
-	assert.NotNil(responseBind)
-	assert.NoError(err)
+	if assert.NotNil(response) {
+		assert.Equal("*service_instances.CreateServiceInstanceCreated", reflect.TypeOf(response).String())
+		connParams := service_instances.ServiceBindParams{}
+		connParams.InstanceID = workspaceID
+		connParams.BindingID = connectionID
+		connParams.Binding = &brokermodel.Binding{}
+		connParams.Binding.ServiceID = serviceID
+		resp := brokerA.ServiceInstancesServiceBindHandler.Handle(connParams, false)
+		assert.NotNil(resp)
+		t.Log(reflect.ValueOf(resp).Elem().Type())
+
+		switch resp.(type) {
+		case *service_instances.ServiceBindCreated:
+			break
+		case *service_instances.ServiceBindDefault:
+			assert.FailNow("Waiting for ServiceBindCreated, but got ServiceBindDefault")
+			resp := response.(*service_instances.ServiceBindDefault)
+			assert.Fail(*resp.Payload.Message)
+			return
+		default:
+			assert.Fail("No error response should happen")
+			return
+		}
+
+		assert.Equal(reflect.TypeOf(service_instances.ServiceBindCreated{}), reflect.ValueOf(resp).Elem().Type()) //reflect.TypeOf(resp).String())
+	}
 }
 
 func TestBrokerAPIUnbindTest(t *testing.T) {
 	assert := assert.New(t)
-	broker, _, err := setupEnv()
+	brokerA, err := setupEnv()
 	if err != nil {
 		t.Skip(err)
 	}
@@ -128,28 +175,56 @@ func TestBrokerAPIUnbindTest(t *testing.T) {
 
 	workspaceID := uuid.NewV4().String()
 	connectionID := uuid.NewV4().String()
-	serviceDetails := brokerapi.ProvisionDetails{}
-	serviceDetails.ServiceID = serviceID
-	bindDetails := brokerapi.BindDetails{}
-	bindDetails.ServiceID = serviceID
-	unbindDetails := brokerapi.UnbindDetails{}
-	unbindDetails.ServiceID = serviceID
-	response, _, err := broker.Provision(workspaceID, serviceDetails, false)
-	assert.NoError(err)
 
-	responseBind, err := broker.Bind(workspaceID, connectionID, bindDetails)
-	assert.NoError(err)
+	params := service_instances.CreateServiceInstanceParams{}
+	params.Service = &brokermodel.Service{}
+	params.Service.ServiceID = "83E94C97-C755-46A5-8653-461517EB442A"
+	params.InstanceID = workspaceID
 
-	err = broker.Unbind(workspaceID, connectionID, unbindDetails)
-	t.Log(response)
-	assert.NotNil(response)
-	assert.NotNil(responseBind)
-	assert.NoError(err)
+	response := brokerA.ServiceInstancesCreateServiceInstanceHandler.Handle(params, false)
+	if assert.NotNil(response) &&
+		assert.Equal(
+			reflect.TypeOf(service_instances.CreateServiceInstanceCreated{}),
+			reflect.ValueOf(response).Elem().Type(),
+			"Wrong response type while binding") {
+		assert.Equal("*service_instances.CreateServiceInstanceCreated", reflect.TypeOf(response).String())
+		connParams := service_instances.ServiceBindParams{}
+		connParams.InstanceID = workspaceID
+		connParams.BindingID = connectionID
+		connParams.Binding = &brokermodel.Binding{}
+		connParams.Binding.ServiceID = serviceID
+		resp := brokerA.ServiceInstancesServiceBindHandler.Handle(connParams, false)
+		if assert.NotNil(resp, "There should be an answer when binding") && assert.Equal(reflect.TypeOf(service_instances.ServiceBindCreated{}), reflect.ValueOf(resp).Elem().Type(), "Wrong response type while binding") {
+			unbindParams := service_instances.ServiceUnbindParams{}
+			unbindParams.InstanceID = workspaceID
+			unbindParams.BindingID = connectionID
+			unbindParams.UnbindParameters = &brokermodel.UnbindParameters{}
+			unbindParams.UnbindParameters.ServiceID = serviceID
+			respUnbind := brokerA.ServiceInstancesServiceUnbindHandler.Handle(unbindParams, false)
+			if assert.NotNil(respUnbind, "There should be an unswer when unbinding") {
+				switch respUnbind.(type) {
+				case *service_instances.ServiceUnbindOK:
+					break
+				case *service_instances.ServiceUnbindDefault:
+					assert.Fail("Waiting for ServiceUnbindOK, but Got ServiceUnbindDefault")
+					resp := response.(*service_instances.ServiceUnbindDefault)
+					assert.Fail(*resp.Payload.Message)
+					break
+				case *service_instances.ServiceUnbindGone:
+					assert.Fail("Waiting for ServiceUnbindOK, but Got ServiceUnbindGone")
+					break
+				default:
+					assert.FailNow("No error response should happen")
+				}
+			}
+		}
+
+	}
 }
 
 func TestBrokerAPIDeprovisionTest(t *testing.T) {
 	assert := assert.New(t)
-	broker, _, err := setupEnv()
+	brokerA, err := setupEnv()
 	if err != nil {
 		t.Skip(err)
 	}
@@ -157,15 +232,37 @@ func TestBrokerAPIDeprovisionTest(t *testing.T) {
 		t.Skip("Config file does not contain a service definition")
 	}
 	workspaceID := uuid.NewV4().String()
-	provisionDetails := brokerapi.ProvisionDetails{}
-	provisionDetails.ServiceID = serviceID
-	deprovisionDetails := brokerapi.DeprovisionDetails{}
-	deprovisionDetails.ServiceID = serviceID
-	response, _, err := broker.Provision(workspaceID, provisionDetails, false)
-	t.Log(response)
-	assert.NotNil(response)
-	assert.NoError(err)
+	params := service_instances.CreateServiceInstanceParams{}
+	params.Service = &brokermodel.Service{}
+	params.Service.ServiceID = serviceID
+	params.InstanceID = workspaceID
+	deprovisionParams := service_instances.DeprovisionServiceInstanceParams{}
+	deprovisionParams.DeprovisionParameters = &brokermodel.DeleteService{}
+	deprovisionParams.DeprovisionParameters.ServiceID = serviceID
+	deprovisionParams.InstanceID = workspaceID
 
-	_, err = broker.Deprovision(workspaceID, deprovisionDetails, false)
-	assert.NoError(err)
+	response := brokerA.ServiceInstancesCreateServiceInstanceHandler.Handle(params, false)
+	t.Log(response)
+	if assert.NotNil(response, "There should be an answer when provisioning") &&
+		assert.Equal(
+			reflect.TypeOf(service_instances.CreateServiceInstanceCreated{}),
+			reflect.ValueOf(response).Elem().Type(),
+			"Wrong response type while binding") {
+		resp := brokerA.ServiceInstancesDeprovisionServiceInstanceHandler.Handle(deprovisionParams, false)
+		if assert.NotNil(resp, "There should be an unswer when unprovisioning") {
+			switch resp.(type) {
+			case *service_instances.DeprovisionServiceInstanceOK:
+				break
+			case *service_instances.DeprovisionServiceInstanceDefault:
+				assert.Fail("Waiting for DeprovisionServiceInstanceOK, but Got DeprovisionServiceInstanceDefault")
+				break
+			case *service_instances.DeprovisionServiceInstanceGone:
+				assert.Fail("Waiting for DeprovisionServiceInstanceOK, but Got DeprovisionServiceInstanceGone")
+				break
+			default:
+				assert.FailNow("No error response should happen when deprovisioning")
+			}
+		}
+	}
+
 }

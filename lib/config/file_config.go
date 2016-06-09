@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/frodenas/brokerapi"
+	"github.com/hpcloud/cf-usb/lib/brokermodel"
 )
 
 type fileConfig struct {
@@ -89,7 +89,7 @@ func (c *fileConfig) GetInstance(instanceID string) (*Instance, string, error) {
 	return nil, "", nil
 }
 
-func (c *fileConfig) GetService(serviceID string) (*brokerapi.Service, string, error) {
+func (c *fileConfig) GetService(serviceID string) (*brokermodel.CatalogService, string, error) {
 	if !c.loaded {
 		_, err := c.LoadConfiguration()
 		if err != nil {
@@ -121,7 +121,7 @@ func (c *fileConfig) SetInstance(instanceID string, instance Instance) error {
 	return errors.New("SetDriverInstance not available for file config provider")
 }
 
-func (c *fileConfig) SetService(instanceID string, service brokerapi.Service) error {
+func (c *fileConfig) SetService(instanceID string, service brokermodel.CatalogService) error {
 	return errors.New("SetService not available for file config provider")
 }
 
@@ -158,7 +158,7 @@ func (c *fileConfig) InstanceNameExists(driverInstanceName string) (bool, error)
 	return false, nil
 }
 
-func (c *fileConfig) GetPlan(planid string) (*brokerapi.ServicePlan, string, string, error) {
+func (c *fileConfig) GetPlan(planid string) (*brokermodel.Plan, string, string, error) {
 	if !c.loaded {
 		_, err := c.LoadConfiguration()
 		if err != nil {

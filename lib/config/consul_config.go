@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/frodenas/brokerapi"
+	"github.com/hpcloud/cf-usb/lib/brokermodel"
 	"github.com/hpcloud/cf-usb/lib/config/consul"
 )
 
@@ -145,7 +145,7 @@ func (c *consulConfig) GetInstance(instanceID string) (*Instance, string, error)
 	return &instance, driverID, nil
 }
 
-func (c *consulConfig) GetService(serviceid string) (*brokerapi.Service, string, error) {
+func (c *consulConfig) GetService(serviceid string) (*brokermodel.CatalogService, string, error) {
 	config, err := c.LoadConfiguration()
 	if err != nil {
 		return nil, "", err
@@ -213,7 +213,7 @@ func (c *consulConfig) SetInstance(instanceID string, instance Instance) error {
 	return nil
 }
 
-func (c *consulConfig) SetService(instanceID string, service brokerapi.Service) error {
+func (c *consulConfig) SetService(instanceID string, service brokermodel.CatalogService) error {
 
 	key, err := c.getKey(instanceID)
 
@@ -369,7 +369,7 @@ func (c *consulConfig) InstanceNameExists(driverInstanceName string) (bool, erro
 	return false, nil
 }
 
-func (c *consulConfig) GetPlan(planid string) (*brokerapi.ServicePlan, string, string, error) {
+func (c *consulConfig) GetPlan(planid string) (*brokermodel.Plan, string, string, error) {
 	config, err := c.LoadConfiguration()
 	if err != nil {
 		return nil, "", "", err

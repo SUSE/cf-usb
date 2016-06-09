@@ -10,7 +10,7 @@
 		}
 	},
 	"routes_register": {
-		"nats_members": ["nats1", "nats2"],
+		"nats_members": ["nats1","nats2"],
 		"broker_api_host": "broker",
 		"management_api_host": "management"
 	},

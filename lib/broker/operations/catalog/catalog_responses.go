@@ -47,3 +47,58 @@ func (o *CatalogOK) WriteResponse(rw http.ResponseWriter, producer runtime.Produ
 		}
 	}
 }
+
+/*CatalogDefault generic error response
+
+swagger:response catalogDefault
+*/
+type CatalogDefault struct {
+	_statusCode int
+
+	// In: body
+	Payload *brokermodel.BrokerError `json:"body,omitempty"`
+}
+
+// NewCatalogDefault creates CatalogDefault with default headers values
+func NewCatalogDefault(code int) *CatalogDefault {
+	if code <= 0 {
+		code = 500
+	}
+
+	return &CatalogDefault{
+		_statusCode: code,
+	}
+}
+
+// WithStatusCode adds the status to the catalog default response
+func (o *CatalogDefault) WithStatusCode(code int) *CatalogDefault {
+	o._statusCode = code
+	return o
+}
+
+// SetStatusCode sets the status to the catalog default response
+func (o *CatalogDefault) SetStatusCode(code int) {
+	o._statusCode = code
+}
+
+// WithPayload adds the payload to the catalog default response
+func (o *CatalogDefault) WithPayload(payload *brokermodel.BrokerError) *CatalogDefault {
+	o.Payload = payload
+	return o
+}
+
+// SetPayload sets the payload to the catalog default response
+func (o *CatalogDefault) SetPayload(payload *brokermodel.BrokerError) {
+	o.Payload = payload
+}
+
+// WriteResponse to the client
+func (o *CatalogDefault) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
+
+	rw.WriteHeader(o._statusCode)
+	if o.Payload != nil {
+		if err := producer.Produce(rw, o.Payload); err != nil {
+			panic(err) // let the recovery middleware deal with this
+		}
+	}
+}

@@ -60,7 +60,7 @@ func (usb *UsbApp) Run(configProvider config.Provider, logger lager.Logger) {
 
 	csmClient := csm.NewCSMClient(usb.logger)
 
-	usb.logger.Info("initializing-brokerapi")
+	usb.logger.Info("initializing-broker")
 
 	swaggerSpec, err := loads.Analyzed(broker.SwaggerJSON, "")
 	if err != nil {
@@ -126,13 +126,11 @@ func (usb *UsbApp) Run(configProvider config.Provider, logger lager.Logger) {
 		go usb.StartRouteRegistration(usb.config, usb.logger)
 	}
 
-	//brokerAPI := brokerapi.New(usbService, usb.logger, usb.config.BrokerAPI.Credentials)
-
 	addr := usb.config.BrokerAPI.Listen
 
-	usb.logger.Info("start-listening-brokerapi", lager.Data{"address": addr})
+	usb.logger.Info("start-listening-broker", lager.Data{"address": addr})
 	err = http.ListenAndServe(addr, ccServiceBroker)
 	if err != nil {
-		usb.logger.Fatal("listening-brokerapi-failed", err)
+		usb.logger.Fatal("listening-broker-failed", err)
 	}
 }

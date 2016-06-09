@@ -3,7 +3,7 @@ package config
 import (
 	"encoding/json"
 
-	"github.com/frodenas/brokerapi"
+	"github.com/hpcloud/cf-usb/lib/brokermodel"
 	"github.com/hpcloud/cf-usb/lib/config/redis"
 )
 
@@ -129,7 +129,7 @@ func (c *redisConfig) DeleteInstance(instanceID string) error {
 	return nil
 }
 
-func (c *redisConfig) SetService(instanceID string, service brokerapi.Service) error {
+func (c *redisConfig) SetService(instanceID string, service brokermodel.CatalogService) error {
 
 	config, err := c.LoadConfiguration()
 	if err != nil {
@@ -157,7 +157,7 @@ func (c *redisConfig) SetService(instanceID string, service brokerapi.Service) e
 	return nil
 }
 
-func (c *redisConfig) GetService(serviceID string) (*brokerapi.Service, string, error) {
+func (c *redisConfig) GetService(serviceID string) (*brokermodel.CatalogService, string, error) {
 	config, err := c.LoadConfiguration()
 	if err != nil {
 		return nil, "", err
@@ -179,7 +179,7 @@ func (c *redisConfig) DeleteService(instanceID string) error {
 	}
 
 	if instance, ok := config.Instances[instanceID]; ok {
-		instance.Service = brokerapi.Service{}
+		instance.Service = brokermodel.CatalogService{}
 		config.Instances[instanceID] = instance
 	}
 	data, err := json.Marshal(config)
@@ -283,7 +283,7 @@ func (c *redisConfig) InstanceNameExists(driverInstanceName string) (bool, error
 	return false, nil
 }
 
-func (c *redisConfig) GetPlan(planid string) (*brokerapi.ServicePlan, string, string, error) {
+func (c *redisConfig) GetPlan(planid string) (*brokermodel.Plan, string, string, error) {
 	config, err := c.LoadConfiguration()
 	if err != nil {
 		return nil, "", "", err

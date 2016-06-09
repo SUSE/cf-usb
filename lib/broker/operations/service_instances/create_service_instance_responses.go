@@ -129,7 +129,7 @@ swagger:response createServiceInstanceConflict
 type CreateServiceInstanceConflict struct {
 
 	// In: body
-	Payload brokermodel.Empty `json:"body,omitempty"`
+	Payload *brokermodel.Empty `json:"body,omitempty"`
 }
 
 // NewCreateServiceInstanceConflict creates CreateServiceInstanceConflict with default headers values
@@ -138,13 +138,13 @@ func NewCreateServiceInstanceConflict() *CreateServiceInstanceConflict {
 }
 
 // WithPayload adds the payload to the create service instance conflict response
-func (o *CreateServiceInstanceConflict) WithPayload(payload brokermodel.Empty) *CreateServiceInstanceConflict {
+func (o *CreateServiceInstanceConflict) WithPayload(payload *brokermodel.Empty) *CreateServiceInstanceConflict {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the create service instance conflict response
-func (o *CreateServiceInstanceConflict) SetPayload(payload brokermodel.Empty) {
+func (o *CreateServiceInstanceConflict) SetPayload(payload *brokermodel.Empty) {
 	o.Payload = payload
 }
 
@@ -152,10 +152,11 @@ func (o *CreateServiceInstanceConflict) SetPayload(payload brokermodel.Empty) {
 func (o *CreateServiceInstanceConflict) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(409)
-	if err := producer.Produce(rw, o.Payload); err != nil {
-		panic(err) // let the recovery middleware deal with this
+	if o.Payload != nil {
+		if err := producer.Produce(rw, o.Payload); err != nil {
+			panic(err) // let the recovery middleware deal with this
+		}
 	}
-
 }
 
 /*CreateServiceInstanceUnprocessableEntity Shoud be returned if the broker only supports asynchronous provisioning for the requested plan and the request did not include ?accepts_incomplete=true
@@ -188,6 +189,61 @@ func (o *CreateServiceInstanceUnprocessableEntity) SetPayload(payload *brokermod
 func (o *CreateServiceInstanceUnprocessableEntity) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(422)
+	if o.Payload != nil {
+		if err := producer.Produce(rw, o.Payload); err != nil {
+			panic(err) // let the recovery middleware deal with this
+		}
+	}
+}
+
+/*CreateServiceInstanceDefault generic error response
+
+swagger:response createServiceInstanceDefault
+*/
+type CreateServiceInstanceDefault struct {
+	_statusCode int
+
+	// In: body
+	Payload *brokermodel.BrokerError `json:"body,omitempty"`
+}
+
+// NewCreateServiceInstanceDefault creates CreateServiceInstanceDefault with default headers values
+func NewCreateServiceInstanceDefault(code int) *CreateServiceInstanceDefault {
+	if code <= 0 {
+		code = 500
+	}
+
+	return &CreateServiceInstanceDefault{
+		_statusCode: code,
+	}
+}
+
+// WithStatusCode adds the status to the create service instance default response
+func (o *CreateServiceInstanceDefault) WithStatusCode(code int) *CreateServiceInstanceDefault {
+	o._statusCode = code
+	return o
+}
+
+// SetStatusCode sets the status to the create service instance default response
+func (o *CreateServiceInstanceDefault) SetStatusCode(code int) {
+	o._statusCode = code
+}
+
+// WithPayload adds the payload to the create service instance default response
+func (o *CreateServiceInstanceDefault) WithPayload(payload *brokermodel.BrokerError) *CreateServiceInstanceDefault {
+	o.Payload = payload
+	return o
+}
+
+// SetPayload sets the payload to the create service instance default response
+func (o *CreateServiceInstanceDefault) SetPayload(payload *brokermodel.BrokerError) {
+	o.Payload = payload
+}
+
+// WriteResponse to the client
+func (o *CreateServiceInstanceDefault) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
+
+	rw.WriteHeader(o._statusCode)
 	if o.Payload != nil {
 		if err := producer.Produce(rw, o.Payload); err != nil {
 			panic(err) // let the recovery middleware deal with this

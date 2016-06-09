@@ -3,14 +3,19 @@ package config
 import (
 	"encoding/json"
 
-	"github.com/frodenas/brokerapi"
+	"github.com/hpcloud/cf-usb/lib/brokermodel"
 )
+
+type BrokerCredentials struct {
+	Username string
+	Password string
+}
 
 //BrokerAPI provides the type for definition of broker API
 type BrokerAPI struct {
-	ExternalURL string                      `json:"external_url"`
-	Listen      string                      `json:"listen"`
-	Credentials brokerapi.BrokerCredentials `json:"credentials"`
+	ExternalURL string            `json:"external_url"`
+	Listen      string            `json:"listen"`
+	Credentials BrokerCredentials `json:"credentials"`
 }
 
 //ManagementAPI provides the type for definition of management API
@@ -44,17 +49,17 @@ type CloudController struct {
 
 //Dial is the dial definition. Dials should have a configuration and a serviceplan
 type Dial struct {
-	Configuration *json.RawMessage      `json:"configuration,omitempty"`
-	Plan          brokerapi.ServicePlan `json:"plan"`
+	Configuration *json.RawMessage `json:"configuration,omitempty"`
+	Plan          brokermodel.Plan `json:"plan"`
 }
 
 //Instance is definition of an Instance with the corresponding info
 type Instance struct {
-	TargetURL         string            `json:"target"`
-	Name              string            `json:"name"`
-	Dials             map[string]Dial   `json:"dials"`
-	Service           brokerapi.Service `json:"service"`
-	AuthenticationKey string            `json:"authentication_key"`
+	TargetURL         string                     `json:"target"`
+	Name              string                     `json:"name"`
+	Dials             map[string]Dial            `json:"dials"`
+	Service           brokermodel.CatalogService `json:"service"`
+	AuthenticationKey string                     `json:"authentication_key"`
 }
 
 //RoutesRegister is the definition for RouteRegister
@@ -81,12 +86,12 @@ type Provider interface {
 	SetInstance(instanceid string, driverInstance Instance) error
 	GetInstance(instanceid string) (instance *Instance, driverID string, err error)
 	DeleteInstance(instanceid string) error
-	SetService(instanceid string, service brokerapi.Service) error
-	GetService(serviceid string) (service *brokerapi.Service, instanceid string, err error)
+	SetService(instanceid string, service brokermodel.CatalogService) error
+	GetService(serviceid string) (service *brokermodel.CatalogService, instanceid string, err error)
 	DeleteService(instanceid string) error
 	SetDial(instanceid string, dialid string, dial Dial) error
 	GetDial(dialid string) (dial *Dial, instanceID string, err error)
 	DeleteDial(dialid string) error
 	InstanceNameExists(driverInstanceName string) (bool, error)
-	GetPlan(plandid string) (plan *brokerapi.ServicePlan, dialid string, instanceid string, err error)
+	GetPlan(plandid string) (plan *brokermodel.Plan, dialid string, instanceid string, err error)
 }

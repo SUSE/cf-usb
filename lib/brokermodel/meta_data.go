@@ -5,7 +5,6 @@ package brokermodel
 
 import (
 	strfmt "github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
 
 	"github.com/go-openapi/errors"
 )
@@ -20,63 +19,33 @@ type MetaData struct {
 	 */
 	DisplayName string `json:"displayName,omitempty"`
 
-	/* listing
+	/* Documentation URL
 	 */
-	Listing *Listing `json:"listing,omitempty"`
+	DocumentationURL string `json:"documentationURL,omitempty"`
 
-	/* provider
+	/* image URL.
 	 */
-	Provider *Provider `json:"provider,omitempty"`
+	ImageURL string `json:"imageUrl,omitempty"`
+
+	/* Long Description
+	 */
+	LongDescription string `json:"longDescription,omitempty"`
+
+	/* Provider Display Name
+	 */
+	ProviderDisplayName string `json:"providerDisplayName,omitempty"`
+
+	/* Support URL
+	 */
+	SupportURL string `json:"supportURL,omitempty"`
 }
 
 // Validate validates this meta data
 func (m *MetaData) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateListing(formats); err != nil {
-		// prop
-		res = append(res, err)
-	}
-
-	if err := m.validateProvider(formats); err != nil {
-		// prop
-		res = append(res, err)
-	}
-
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-	return nil
-}
-
-func (m *MetaData) validateListing(formats strfmt.Registry) error {
-
-	if swag.IsZero(m.Listing) { // not required
-		return nil
-	}
-
-	if m.Listing != nil {
-
-		if err := m.Listing.Validate(formats); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (m *MetaData) validateProvider(formats strfmt.Registry) error {
-
-	if swag.IsZero(m.Provider) { // not required
-		return nil
-	}
-
-	if m.Provider != nil {
-
-		if err := m.Provider.Validate(formats); err != nil {
-			return err
-		}
-	}
-
 	return nil
 }

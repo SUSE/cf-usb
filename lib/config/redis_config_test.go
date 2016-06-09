@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/frodenas/brokerapi"
+	"github.com/hpcloud/cf-usb/lib/brokermodel"
 	redisMock "github.com/hpcloud/cf-usb/lib/config/redis/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -163,7 +163,7 @@ func Test_Redis_SetService(t *testing.T) {
 
 	RedisTestConfig.Provider = NewRedisConfig(provisioner)
 
-	var service brokerapi.Service
+	var service brokermodel.CatalogService
 	service.Bindable = true
 	service.ID = "testServiceID"
 	service.Description = "test service"

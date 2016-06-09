@@ -5,13 +5,12 @@ import (
 	"log"
 	"testing"
 
+	"github.com/hpcloud/cf-usb/lib/brokermodel"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/hashicorp/consul/api"
 	consulMock "github.com/hpcloud/cf-usb/lib/config/consul/mocks"
 	"github.com/stretchr/testify/mock"
-
-	"github.com/frodenas/brokerapi"
 )
 
 var TestConfig = struct {
@@ -85,21 +84,21 @@ func Test_SetService(t *testing.T) {
 
 	assert := assert.New(t)
 
-	var serv brokerapi.Service
+	var serv = brokermodel.CatalogService{}
 	serv.Bindable = true
 	serv.Description = "testService desc"
 	serv.ID = "testServiceID"
-	serv.Metadata = &brokerapi.ServiceMetadata{DisplayName: "test service"}
+	serv.Metadata = &brokermodel.MetaData{DisplayName: "test service"} //struct{DisplayName string}{"test service"} //&brokerapi.ServiceMetadata{DisplayName: "test service"}
 	serv.Name = "testService"
 	serv.Tags = []string{"serv1", "serv2"}
 
-	var plan brokerapi.ServicePlan
+	var plan = brokermodel.Plan{}
 	plan.Description = "testPlan desc"
 	plan.ID = "testPlanID"
 	plan.Name = "free"
-	plan.Metadata = &brokerapi.ServicePlanMetadata{DisplayName: "test plan"}
+	plan.Metadata = &brokermodel.PlanMetadata{Metadata: struct{ DisplayName string }{"test plan"}}
 
-	serv.Plans = []brokerapi.ServicePlan{plan}
+	serv.Plans = []*brokermodel.Plan{&plan}
 
 	err := TestConfig.Provider.SetService("testInstanceID", serv)
 	assert.NoError(err)
@@ -171,11 +170,11 @@ func Test_SetDial(t *testing.T) {
 
 	var dialInfo Dial
 
-	var plan brokerapi.ServicePlan
+	var plan brokermodel.Plan
 	plan.Description = "testPlan desc"
 	plan.ID = "testPlanID"
 	plan.Name = "free"
-	plan.Metadata = &brokerapi.ServicePlanMetadata{DisplayName: "test plan"}
+	plan.Metadata = &brokermodel.PlanMetadata{Metadata: struct{ DisplayName string }{"test plan"}}
 
 	raw := json.RawMessage("{\"a1\":\"b1\"}")
 

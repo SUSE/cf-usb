@@ -80,7 +80,7 @@ var serviceManagerWorkspaceResponseTypeProcessingTypePropEnum []interface{}
 func (m *ServiceManagerWorkspaceResponse) validateProcessingTypeEnum(path, location string, value string) error {
 	if serviceManagerWorkspaceResponseTypeProcessingTypePropEnum == nil {
 		var res []string
-		if err := json.Unmarshal([]byte(`["None","Default","Extension"]`), &res); err != nil {
+		if err := json.Unmarshal([]byte(`["none","default","extension"]`), &res); err != nil {
 			return err
 		}
 		for _, v := range res {
