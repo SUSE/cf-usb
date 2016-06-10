@@ -129,7 +129,7 @@ swagger:response createServiceInstanceConflict
 type CreateServiceInstanceConflict struct {
 
 	// In: body
-	Payload *brokermodel.Empty `json:"body,omitempty"`
+	Payload brokermodel.Empty `json:"body,omitempty"`
 }
 
 // NewCreateServiceInstanceConflict creates CreateServiceInstanceConflict with default headers values
@@ -138,13 +138,13 @@ func NewCreateServiceInstanceConflict() *CreateServiceInstanceConflict {
 }
 
 // WithPayload adds the payload to the create service instance conflict response
-func (o *CreateServiceInstanceConflict) WithPayload(payload *brokermodel.Empty) *CreateServiceInstanceConflict {
+func (o *CreateServiceInstanceConflict) WithPayload(payload brokermodel.Empty) *CreateServiceInstanceConflict {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the create service instance conflict response
-func (o *CreateServiceInstanceConflict) SetPayload(payload *brokermodel.Empty) {
+func (o *CreateServiceInstanceConflict) SetPayload(payload brokermodel.Empty) {
 	o.Payload = payload
 }
 
@@ -152,11 +152,10 @@ func (o *CreateServiceInstanceConflict) SetPayload(payload *brokermodel.Empty) {
 func (o *CreateServiceInstanceConflict) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(409)
-	if o.Payload != nil {
-		if err := producer.Produce(rw, o.Payload); err != nil {
-			panic(err) // let the recovery middleware deal with this
-		}
+	if err := producer.Produce(rw, o.Payload); err != nil {
+		panic(err) // let the recovery middleware deal with this
 	}
+
 }
 
 /*CreateServiceInstanceUnprocessableEntity Shoud be returned if the broker only supports asynchronous provisioning for the requested plan and the request did not include ?accepts_incomplete=true

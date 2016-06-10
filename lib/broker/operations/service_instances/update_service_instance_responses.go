@@ -18,7 +18,7 @@ swagger:response updateServiceInstanceOK
 type UpdateServiceInstanceOK struct {
 
 	// In: body
-	Payload *brokermodel.Empty `json:"body,omitempty"`
+	Payload brokermodel.Empty `json:"body,omitempty"`
 }
 
 // NewUpdateServiceInstanceOK creates UpdateServiceInstanceOK with default headers values
@@ -27,13 +27,13 @@ func NewUpdateServiceInstanceOK() *UpdateServiceInstanceOK {
 }
 
 // WithPayload adds the payload to the update service instance o k response
-func (o *UpdateServiceInstanceOK) WithPayload(payload *brokermodel.Empty) *UpdateServiceInstanceOK {
+func (o *UpdateServiceInstanceOK) WithPayload(payload brokermodel.Empty) *UpdateServiceInstanceOK {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the update service instance o k response
-func (o *UpdateServiceInstanceOK) SetPayload(payload *brokermodel.Empty) {
+func (o *UpdateServiceInstanceOK) SetPayload(payload brokermodel.Empty) {
 	o.Payload = payload
 }
 
@@ -41,11 +41,10 @@ func (o *UpdateServiceInstanceOK) SetPayload(payload *brokermodel.Empty) {
 func (o *UpdateServiceInstanceOK) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(200)
-	if o.Payload != nil {
-		if err := producer.Produce(rw, o.Payload); err != nil {
-			panic(err) // let the recovery middleware deal with this
-		}
+	if err := producer.Produce(rw, o.Payload); err != nil {
+		panic(err) // let the recovery middleware deal with this
 	}
+
 }
 
 /*UpdateServiceInstanceAccepted Service instance update is in progress. This triggers Cloud Controller to poll the Service Instance Last Operation Endpoint for operation status.
@@ -55,7 +54,7 @@ swagger:response updateServiceInstanceAccepted
 type UpdateServiceInstanceAccepted struct {
 
 	// In: body
-	Payload *brokermodel.Empty `json:"body,omitempty"`
+	Payload brokermodel.Empty `json:"body,omitempty"`
 }
 
 // NewUpdateServiceInstanceAccepted creates UpdateServiceInstanceAccepted with default headers values
@@ -64,13 +63,13 @@ func NewUpdateServiceInstanceAccepted() *UpdateServiceInstanceAccepted {
 }
 
 // WithPayload adds the payload to the update service instance accepted response
-func (o *UpdateServiceInstanceAccepted) WithPayload(payload *brokermodel.Empty) *UpdateServiceInstanceAccepted {
+func (o *UpdateServiceInstanceAccepted) WithPayload(payload brokermodel.Empty) *UpdateServiceInstanceAccepted {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the update service instance accepted response
-func (o *UpdateServiceInstanceAccepted) SetPayload(payload *brokermodel.Empty) {
+func (o *UpdateServiceInstanceAccepted) SetPayload(payload brokermodel.Empty) {
 	o.Payload = payload
 }
 
@@ -78,11 +77,10 @@ func (o *UpdateServiceInstanceAccepted) SetPayload(payload *brokermodel.Empty) {
 func (o *UpdateServiceInstanceAccepted) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(202)
-	if o.Payload != nil {
-		if err := producer.Produce(rw, o.Payload); err != nil {
-			panic(err) // let the recovery middleware deal with this
-		}
+	if err := producer.Produce(rw, o.Payload); err != nil {
+		panic(err) // let the recovery middleware deal with this
 	}
+
 }
 
 /*UpdateServiceInstanceUnprocessableEntity May be returned if the particular plan change requested is not supported or if the request can not currently be fulfilled due to the state of the instance (eg. instance utilization is over the quota of the requested plan). Broker should include a user-facing message in the body; for details [see Broker Errors](https://docs.cloudfoundry.org/services/api.html#broker-errors).

@@ -4,16 +4,14 @@ package service_instances
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-	"io"
 	"net/http"
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/go-openapi/validate"
 
 	strfmt "github.com/go-openapi/strfmt"
-
-	"github.com/hpcloud/cf-usb/lib/brokermodel"
 )
 
 // NewDeprovisionServiceInstanceParams creates a new DeprovisionServiceInstanceParams object
@@ -32,16 +30,21 @@ type DeprovisionServiceInstanceParams struct {
 	// HTTP Request Object
 	HTTPRequest *http.Request
 
-	/*Parameters to identify the service to be deprovisioned
-	  Required: true
-	  In: body
-	*/
-	DeprovisionParameters *brokermodel.DeleteService
 	/*The instance_id of a service instance is provided by the Cloud Controller. This ID will be used for future requests (bind and deprovision), so the broker must use it to correlate the resource it creates.
 	  Required: true
 	  In: path
 	*/
 	InstanceID string
+	/*the plan id as stored in the catalog
+	  Required: true
+	  In: query
+	*/
+	PlanID string
+	/*the service id as stored in the catalog
+	  Required: true
+	  In: query
+	*/
+	ServiceID string
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
@@ -50,32 +53,20 @@ func (o *DeprovisionServiceInstanceParams) BindRequest(r *http.Request, route *m
 	var res []error
 	o.HTTPRequest = r
 
-	if runtime.HasBody(r) {
-		defer r.Body.Close()
-		var body brokermodel.DeleteService
-		if err := route.Consumer.Consume(r.Body, &body); err != nil {
-			if err == io.EOF {
-				res = append(res, errors.Required("deprovisionParameters", "body"))
-			} else {
-				res = append(res, errors.NewParseError("deprovisionParameters", "body", "", err))
-			}
-
-		} else {
-			if err := body.Validate(route.Formats); err != nil {
-				res = append(res, err)
-			}
-
-			if len(res) == 0 {
-				o.DeprovisionParameters = &body
-			}
-		}
-
-	} else {
-		res = append(res, errors.Required("deprovisionParameters", "body"))
-	}
+	qs := runtime.Values(r.URL.Query())
 
 	rInstanceID, rhkInstanceID, _ := route.Params.GetOK("instance_id")
 	if err := o.bindInstanceID(rInstanceID, rhkInstanceID, route.Formats); err != nil {
+		res = append(res, err)
+	}
+
+	qPlanID, qhkPlanID, _ := qs.GetOK("plan_id")
+	if err := o.bindPlanID(qPlanID, qhkPlanID, route.Formats); err != nil {
+		res = append(res, err)
+	}
+
+	qServiceID, qhkServiceID, _ := qs.GetOK("service_id")
+	if err := o.bindServiceID(qServiceID, qhkServiceID, route.Formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -92,6 +83,40 @@ func (o *DeprovisionServiceInstanceParams) bindInstanceID(rawData []string, hasK
 	}
 
 	o.InstanceID = raw
+
+	return nil
+}
+
+func (o *DeprovisionServiceInstanceParams) bindPlanID(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	if !hasKey {
+		return errors.Required("plan_id", "query")
+	}
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
+	if err := validate.RequiredString("plan_id", "query", raw); err != nil {
+		return err
+	}
+
+	o.PlanID = raw
+
+	return nil
+}
+
+func (o *DeprovisionServiceInstanceParams) bindServiceID(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	if !hasKey {
+		return errors.Required("service_id", "query")
+	}
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
+	if err := validate.RequiredString("service_id", "query", raw); err != nil {
+		return err
+	}
+
+	o.ServiceID = raw
 
 	return nil
 }

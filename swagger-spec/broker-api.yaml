@@ -190,12 +190,16 @@ paths:
       tags:
         - service_instances
       parameters:
-        - name: deprovisionParameters
+        - name: service_id
           required: true
-          in: body
-          description: Parameters to identify the service to be deprovisioned
-          schema:
-            $ref: '#/definitions/DeleteService'
+          in: query
+          description: the service id as stored in the catalog
+          type: string
+        - name: plan_id
+          required: true
+          in: query
+          description: the plan id as stored in the catalog
+          type: string
       responses:
         '200':
           description: 'Service instance was deleted. The expected response body is {}.'
@@ -292,14 +296,19 @@ paths:
         an application immediately cannot access the resource.
       produces:
         - application/json
+      parameters:
+        - name: service_id
+          required: true
+          in: query
+          description: the service id as stored in the catalog
+          type: string
+        - name: plan_id
+          required: true
+          in: query
+          description: the plan id as stored in the catalog
+          type: string
       tags:
         - service_instances
-      parameters:
-        - name: UnbindParameters
-          in: body
-          required: true
-          schema:
-            $ref: '#/definitions/UnbindParameters'
       responses:
         '200':
           description: 'Binding was deleted. The expected response body is {}.'
@@ -486,9 +495,6 @@ definitions:
   Empty:
     type: object
     description: 'Expected empty response could be {}'
-    properties: 
-      fake:
-        type: string
   LastOperation:
     description: Last operation response.
     properties:
@@ -617,40 +623,6 @@ definitions:
       supportURL:
         description: Support URL
         type: string
-  DeleteService:
-    description: Parameters needed to unbind a service instance
-    properties:
-      service_id:
-        type: string
-        description: >-
-          ID of the service from the catalog. While not strictly necessary, some
-          brokers might make use of this ID.
-      plan_id:
-        type: string
-        description: >-
-          ID of the plan from the catalog. While not strictly necessary, some
-          brokers might make use of this ID.
-      accepts_incomplete:
-        description: >-
-          A value of true indicates that both the Cloud Controller and the
-          requesting client support asynchronous provisioning. If this parameter
-          is not included in the request, and the broker can only provision an
-          instance of the requested plan asynchronously, the broker should
-          reject the request with a 422 as described below
-        type: boolean
-  UnbindParameters:
-    description: Parameters needed to unbind a service instance
-    properties:
-      service_id:
-        type: string
-        description: >-
-          ID of the service from the catalog. While not strictly necessary, some
-          brokers might make use of this ID.
-      plan_id:
-        type: string
-        description: >-
-          ID of the plan from the catalog. While not strictly necessary, some
-          brokers might make use of this ID.
   BrokerError:
     description: General error
     required:

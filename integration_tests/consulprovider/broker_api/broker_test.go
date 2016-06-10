@@ -193,7 +193,8 @@ func TestBrokerAPIBindTest(t *testing.T) {
 			return
 		}
 
-		assert.Equal(reflect.TypeOf(service_instances.ServiceBindCreated{}), reflect.ValueOf(resp).Elem().Type()) //reflect.TypeOf(resp).String())
+		assert.Equal(reflect.TypeOf(service_instances.ServiceBindCreated{}),
+			reflect.ValueOf(resp).Elem().Type())
 	}
 }
 
@@ -229,8 +230,7 @@ func TestBrokerAPIUnbindTest(t *testing.T) {
 			unbindParams := service_instances.ServiceUnbindParams{}
 			unbindParams.InstanceID = workspaceID
 			unbindParams.BindingID = connectionID
-			unbindParams.UnbindParameters = &brokermodel.UnbindParameters{}
-			unbindParams.UnbindParameters.ServiceID = "83E94C97-C755-46A5-8653-461517EB442A"
+			unbindParams.ServiceID = "83E94C97-C755-46A5-8653-461517EB442A"
 			respUnbind := brokerA.ServiceInstancesServiceUnbindHandler.Handle(unbindParams, false)
 			if assert.NotNil(respUnbind, "There should be an unswer when unbinding") {
 				switch respUnbind.(type) {
@@ -267,8 +267,7 @@ func TestBrokerAPIDeprovisionTest(t *testing.T) {
 	params.Service.ServiceID = "83E94C97-C755-46A5-8653-461517EB442A"
 	params.InstanceID = workspaceID
 	deprovisionParams := service_instances.DeprovisionServiceInstanceParams{}
-	deprovisionParams.DeprovisionParameters = &brokermodel.DeleteService{}
-	deprovisionParams.DeprovisionParameters.ServiceID = "83E94C97-C755-46A5-8653-461517EB442A"
+	deprovisionParams.ServiceID = "83E94C97-C755-46A5-8653-461517EB442A"
 	deprovisionParams.InstanceID = workspaceID
 
 	response := brokerA.ServiceInstancesCreateServiceInstanceHandler.Handle(params, false)

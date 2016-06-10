@@ -18,7 +18,7 @@ swagger:response deprovisionServiceInstanceOK
 type DeprovisionServiceInstanceOK struct {
 
 	// In: body
-	Payload *brokermodel.Empty `json:"body,omitempty"`
+	Payload brokermodel.Empty `json:"body,omitempty"`
 }
 
 // NewDeprovisionServiceInstanceOK creates DeprovisionServiceInstanceOK with default headers values
@@ -27,13 +27,13 @@ func NewDeprovisionServiceInstanceOK() *DeprovisionServiceInstanceOK {
 }
 
 // WithPayload adds the payload to the deprovision service instance o k response
-func (o *DeprovisionServiceInstanceOK) WithPayload(payload *brokermodel.Empty) *DeprovisionServiceInstanceOK {
+func (o *DeprovisionServiceInstanceOK) WithPayload(payload brokermodel.Empty) *DeprovisionServiceInstanceOK {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the deprovision service instance o k response
-func (o *DeprovisionServiceInstanceOK) SetPayload(payload *brokermodel.Empty) {
+func (o *DeprovisionServiceInstanceOK) SetPayload(payload brokermodel.Empty) {
 	o.Payload = payload
 }
 
@@ -41,11 +41,10 @@ func (o *DeprovisionServiceInstanceOK) SetPayload(payload *brokermodel.Empty) {
 func (o *DeprovisionServiceInstanceOK) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(200)
-	if o.Payload != nil {
-		if err := producer.Produce(rw, o.Payload); err != nil {
-			panic(err) // let the recovery middleware deal with this
-		}
+	if err := producer.Produce(rw, o.Payload); err != nil {
+		panic(err) // let the recovery middleware deal with this
 	}
+
 }
 
 /*DeprovisionServiceInstanceAccepted Service instance update is in progress. This triggers Cloud Controller to poll the Service Instance Last Operation Endpoint for operation status.
@@ -55,7 +54,7 @@ swagger:response deprovisionServiceInstanceAccepted
 type DeprovisionServiceInstanceAccepted struct {
 
 	// In: body
-	Payload *brokermodel.Empty `json:"body,omitempty"`
+	Payload brokermodel.Empty `json:"body,omitempty"`
 }
 
 // NewDeprovisionServiceInstanceAccepted creates DeprovisionServiceInstanceAccepted with default headers values
@@ -64,13 +63,13 @@ func NewDeprovisionServiceInstanceAccepted() *DeprovisionServiceInstanceAccepted
 }
 
 // WithPayload adds the payload to the deprovision service instance accepted response
-func (o *DeprovisionServiceInstanceAccepted) WithPayload(payload *brokermodel.Empty) *DeprovisionServiceInstanceAccepted {
+func (o *DeprovisionServiceInstanceAccepted) WithPayload(payload brokermodel.Empty) *DeprovisionServiceInstanceAccepted {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the deprovision service instance accepted response
-func (o *DeprovisionServiceInstanceAccepted) SetPayload(payload *brokermodel.Empty) {
+func (o *DeprovisionServiceInstanceAccepted) SetPayload(payload brokermodel.Empty) {
 	o.Payload = payload
 }
 
@@ -78,11 +77,10 @@ func (o *DeprovisionServiceInstanceAccepted) SetPayload(payload *brokermodel.Emp
 func (o *DeprovisionServiceInstanceAccepted) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(202)
-	if o.Payload != nil {
-		if err := producer.Produce(rw, o.Payload); err != nil {
-			panic(err) // let the recovery middleware deal with this
-		}
+	if err := producer.Produce(rw, o.Payload); err != nil {
+		panic(err) // let the recovery middleware deal with this
 	}
+
 }
 
 /*DeprovisionServiceInstanceGone Should be returned if the binding does not exist. The expected response body is {}.
@@ -92,7 +90,7 @@ swagger:response deprovisionServiceInstanceGone
 type DeprovisionServiceInstanceGone struct {
 
 	// In: body
-	Payload *brokermodel.Empty `json:"body,omitempty"`
+	Payload brokermodel.Empty `json:"body,omitempty"`
 }
 
 // NewDeprovisionServiceInstanceGone creates DeprovisionServiceInstanceGone with default headers values
@@ -101,13 +99,13 @@ func NewDeprovisionServiceInstanceGone() *DeprovisionServiceInstanceGone {
 }
 
 // WithPayload adds the payload to the deprovision service instance gone response
-func (o *DeprovisionServiceInstanceGone) WithPayload(payload *brokermodel.Empty) *DeprovisionServiceInstanceGone {
+func (o *DeprovisionServiceInstanceGone) WithPayload(payload brokermodel.Empty) *DeprovisionServiceInstanceGone {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the deprovision service instance gone response
-func (o *DeprovisionServiceInstanceGone) SetPayload(payload *brokermodel.Empty) {
+func (o *DeprovisionServiceInstanceGone) SetPayload(payload brokermodel.Empty) {
 	o.Payload = payload
 }
 
@@ -115,11 +113,10 @@ func (o *DeprovisionServiceInstanceGone) SetPayload(payload *brokermodel.Empty) 
 func (o *DeprovisionServiceInstanceGone) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(410)
-	if o.Payload != nil {
-		if err := producer.Produce(rw, o.Payload); err != nil {
-			panic(err) // let the recovery middleware deal with this
-		}
+	if err := producer.Produce(rw, o.Payload); err != nil {
+		panic(err) // let the recovery middleware deal with this
 	}
+
 }
 
 /*DeprovisionServiceInstanceUnprocessableEntity Should be returned if the broker only supports asynchronous deprovisioning for the requested plan and the request did not include ?accepts_incomplete=true

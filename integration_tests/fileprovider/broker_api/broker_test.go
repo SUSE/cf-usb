@@ -198,8 +198,7 @@ func TestBrokerAPIUnbindTest(t *testing.T) {
 			unbindParams := service_instances.ServiceUnbindParams{}
 			unbindParams.InstanceID = workspaceID
 			unbindParams.BindingID = connectionID
-			unbindParams.UnbindParameters = &brokermodel.UnbindParameters{}
-			unbindParams.UnbindParameters.ServiceID = serviceID
+			unbindParams.ServiceID = serviceID
 			respUnbind := brokerA.ServiceInstancesServiceUnbindHandler.Handle(unbindParams, false)
 			if assert.NotNil(respUnbind, "There should be an unswer when unbinding") {
 				switch respUnbind.(type) {
@@ -237,8 +236,7 @@ func TestBrokerAPIDeprovisionTest(t *testing.T) {
 	params.Service.ServiceID = serviceID
 	params.InstanceID = workspaceID
 	deprovisionParams := service_instances.DeprovisionServiceInstanceParams{}
-	deprovisionParams.DeprovisionParameters = &brokermodel.DeleteService{}
-	deprovisionParams.DeprovisionParameters.ServiceID = serviceID
+	deprovisionParams.ServiceID = serviceID
 	deprovisionParams.InstanceID = workspaceID
 
 	response := brokerA.ServiceInstancesCreateServiceInstanceHandler.Handle(params, false)

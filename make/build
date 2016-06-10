@@ -6,7 +6,7 @@ set -o errexit
 
 . make/include/colors.sh
 #. make/include/versioning.sh
-APP_VERSION=1.3.2
+APP_VERSION=1.3.0
 
 echo "${OK_COLOR}==> Building ${ERROR_COLOR}"
 

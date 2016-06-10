@@ -92,7 +92,7 @@ swagger:response serviceBindConflict
 type ServiceBindConflict struct {
 
 	// In: body
-	Payload *brokermodel.Empty `json:"body,omitempty"`
+	Payload brokermodel.Empty `json:"body,omitempty"`
 }
 
 // NewServiceBindConflict creates ServiceBindConflict with default headers values
@@ -101,13 +101,13 @@ func NewServiceBindConflict() *ServiceBindConflict {
 }
 
 // WithPayload adds the payload to the service bind conflict response
-func (o *ServiceBindConflict) WithPayload(payload *brokermodel.Empty) *ServiceBindConflict {
+func (o *ServiceBindConflict) WithPayload(payload brokermodel.Empty) *ServiceBindConflict {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the service bind conflict response
-func (o *ServiceBindConflict) SetPayload(payload *brokermodel.Empty) {
+func (o *ServiceBindConflict) SetPayload(payload brokermodel.Empty) {
 	o.Payload = payload
 }
 
@@ -115,11 +115,10 @@ func (o *ServiceBindConflict) SetPayload(payload *brokermodel.Empty) {
 func (o *ServiceBindConflict) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(409)
-	if o.Payload != nil {
-		if err := producer.Produce(rw, o.Payload); err != nil {
-			panic(err) // let the recovery middleware deal with this
-		}
+	if err := producer.Produce(rw, o.Payload); err != nil {
+		panic(err) // let the recovery middleware deal with this
 	}
+
 }
 
 /*ServiceBindUnprocessableEntity Should be returned if the broker requires that app_guid be included in the request body.
@@ -129,7 +128,7 @@ swagger:response serviceBindUnprocessableEntity
 type ServiceBindUnprocessableEntity struct {
 
 	// In: body
-	Payload *brokermodel.Empty `json:"body,omitempty"`
+	Payload brokermodel.Empty `json:"body,omitempty"`
 }
 
 // NewServiceBindUnprocessableEntity creates ServiceBindUnprocessableEntity with default headers values
@@ -138,13 +137,13 @@ func NewServiceBindUnprocessableEntity() *ServiceBindUnprocessableEntity {
 }
 
 // WithPayload adds the payload to the service bind unprocessable entity response
-func (o *ServiceBindUnprocessableEntity) WithPayload(payload *brokermodel.Empty) *ServiceBindUnprocessableEntity {
+func (o *ServiceBindUnprocessableEntity) WithPayload(payload brokermodel.Empty) *ServiceBindUnprocessableEntity {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the service bind unprocessable entity response
-func (o *ServiceBindUnprocessableEntity) SetPayload(payload *brokermodel.Empty) {
+func (o *ServiceBindUnprocessableEntity) SetPayload(payload brokermodel.Empty) {
 	o.Payload = payload
 }
 
@@ -152,11 +151,10 @@ func (o *ServiceBindUnprocessableEntity) SetPayload(payload *brokermodel.Empty) 
 func (o *ServiceBindUnprocessableEntity) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(422)
-	if o.Payload != nil {
-		if err := producer.Produce(rw, o.Payload); err != nil {
-			panic(err) // let the recovery middleware deal with this
-		}
+	if err := producer.Produce(rw, o.Payload); err != nil {
+		panic(err) // let the recovery middleware deal with this
 	}
+
 }
 
 /*ServiceBindDefault generic error response

@@ -18,7 +18,7 @@ swagger:response serviceUnbindOK
 type ServiceUnbindOK struct {
 
 	// In: body
-	Payload *brokermodel.Empty `json:"body,omitempty"`
+	Payload brokermodel.Empty `json:"body,omitempty"`
 }
 
 // NewServiceUnbindOK creates ServiceUnbindOK with default headers values
@@ -27,13 +27,13 @@ func NewServiceUnbindOK() *ServiceUnbindOK {
 }
 
 // WithPayload adds the payload to the service unbind o k response
-func (o *ServiceUnbindOK) WithPayload(payload *brokermodel.Empty) *ServiceUnbindOK {
+func (o *ServiceUnbindOK) WithPayload(payload brokermodel.Empty) *ServiceUnbindOK {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the service unbind o k response
-func (o *ServiceUnbindOK) SetPayload(payload *brokermodel.Empty) {
+func (o *ServiceUnbindOK) SetPayload(payload brokermodel.Empty) {
 	o.Payload = payload
 }
 
@@ -41,11 +41,10 @@ func (o *ServiceUnbindOK) SetPayload(payload *brokermodel.Empty) {
 func (o *ServiceUnbindOK) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(200)
-	if o.Payload != nil {
-		if err := producer.Produce(rw, o.Payload); err != nil {
-			panic(err) // let the recovery middleware deal with this
-		}
+	if err := producer.Produce(rw, o.Payload); err != nil {
+		panic(err) // let the recovery middleware deal with this
 	}
+
 }
 
 /*ServiceUnbindGone Should be returned if the binding does not exist. The expected response body is {}.
@@ -55,7 +54,7 @@ swagger:response serviceUnbindGone
 type ServiceUnbindGone struct {
 
 	// In: body
-	Payload *brokermodel.Empty `json:"body,omitempty"`
+	Payload brokermodel.Empty `json:"body,omitempty"`
 }
 
 // NewServiceUnbindGone creates ServiceUnbindGone with default headers values
@@ -64,13 +63,13 @@ func NewServiceUnbindGone() *ServiceUnbindGone {
 }
 
 // WithPayload adds the payload to the service unbind gone response
-func (o *ServiceUnbindGone) WithPayload(payload *brokermodel.Empty) *ServiceUnbindGone {
+func (o *ServiceUnbindGone) WithPayload(payload brokermodel.Empty) *ServiceUnbindGone {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the service unbind gone response
-func (o *ServiceUnbindGone) SetPayload(payload *brokermodel.Empty) {
+func (o *ServiceUnbindGone) SetPayload(payload brokermodel.Empty) {
 	o.Payload = payload
 }
 
@@ -78,11 +77,10 @@ func (o *ServiceUnbindGone) SetPayload(payload *brokermodel.Empty) {
 func (o *ServiceUnbindGone) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(410)
-	if o.Payload != nil {
-		if err := producer.Produce(rw, o.Payload); err != nil {
-			panic(err) // let the recovery middleware deal with this
-		}
+	if err := producer.Produce(rw, o.Payload); err != nil {
+		panic(err) // let the recovery middleware deal with this
 	}
+
 }
 
 /*ServiceUnbindDefault generic error response

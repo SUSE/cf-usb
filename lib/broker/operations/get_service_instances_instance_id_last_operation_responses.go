@@ -55,7 +55,7 @@ swagger:response getServiceInstancesInstanceIdLastOperationGone
 type GetServiceInstancesInstanceIDLastOperationGone struct {
 
 	// In: body
-	Payload *brokermodel.Empty `json:"body,omitempty"`
+	Payload brokermodel.Empty `json:"body,omitempty"`
 }
 
 // NewGetServiceInstancesInstanceIDLastOperationGone creates GetServiceInstancesInstanceIDLastOperationGone with default headers values
@@ -64,13 +64,13 @@ func NewGetServiceInstancesInstanceIDLastOperationGone() *GetServiceInstancesIns
 }
 
 // WithPayload adds the payload to the get service instances instance Id last operation gone response
-func (o *GetServiceInstancesInstanceIDLastOperationGone) WithPayload(payload *brokermodel.Empty) *GetServiceInstancesInstanceIDLastOperationGone {
+func (o *GetServiceInstancesInstanceIDLastOperationGone) WithPayload(payload brokermodel.Empty) *GetServiceInstancesInstanceIDLastOperationGone {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the get service instances instance Id last operation gone response
-func (o *GetServiceInstancesInstanceIDLastOperationGone) SetPayload(payload *brokermodel.Empty) {
+func (o *GetServiceInstancesInstanceIDLastOperationGone) SetPayload(payload brokermodel.Empty) {
 	o.Payload = payload
 }
 
@@ -78,11 +78,10 @@ func (o *GetServiceInstancesInstanceIDLastOperationGone) SetPayload(payload *bro
 func (o *GetServiceInstancesInstanceIDLastOperationGone) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(410)
-	if o.Payload != nil {
-		if err := producer.Produce(rw, o.Payload); err != nil {
-			panic(err) // let the recovery middleware deal with this
-		}
+	if err := producer.Produce(rw, o.Payload); err != nil {
+		panic(err) // let the recovery middleware deal with this
 	}
+
 }
 
 /*GetServiceInstancesInstanceIDLastOperationDefault generic error response

@@ -18,191 +18,276 @@ import (
 	"github.com/pivotal-golang/lager"
 )
 
+var (
+	brokerCsm            csm.CSM
+	brokerConfigProvider config.Provider
+	brokerLogger         lager.Logger
+)
+
+const (
+	failed   string = "failed"
+	succeded string = "succeded"
+)
+
 func getBrokerError(s string) *brokermodel.BrokerError {
 	msg := s
 	brokerError := brokermodel.BrokerError{Message: &msg}
 	return &brokerError
 }
 
-// This file is safe to edit. Once it exists it will not be overwritten
+func idLastOperationHandler(params operations.GetServiceInstancesInstanceIDLastOperationParams, principal interface{}) middleware.Responder {
+	//TODO add async
+	exists, err := brokerCsm.WorkspaceExists(params.InstanceID)
+	payload := &brokermodel.LastOperation{}
 
-func configureFlags(api *operations.BrokerAPI) {
-	// api.CommandLineOptionsGroups = []swag.CommandLineOptionsGroup{ ... }
-}
-
-func ConfigureAPI(api *operations.BrokerAPI, csm csm.CSM, configProvider config.Provider, logger lager.Logger) http.Handler {
-	// configure the api here
-	api.ServeError = errors.ServeError
-
-	// Set your custom logger if needed. Default one is log.Printf
-	// Expected interface func(string, ...interface{})
-	//
-	// Example:
-	// s.api.Logger = log.Printf
-
-	api.JSONConsumer = runtime.JSONConsumer()
-
-	api.JSONProducer = runtime.JSONProducer()
-
-	api.BasicAuth = func(user string, pass string) (interface{}, error) {
-		conf, err := configProvider.LoadConfiguration()
-		if err != nil {
-			return nil, err
-		}
-		if conf.BrokerAPI.Credentials.Username == user &&
-			conf.BrokerAPI.Credentials.Password == pass {
-			return true, nil
-		}
-		return false, nil
+	if err != nil {
+		payload.State = failed
+		payload.Description = err.Error()
+		brokerLogger.Info("last-operation-error", lager.Data{"error": err.Error()})
+		return operations.NewGetServiceInstancesInstanceIDLastOperationOK().WithPayload(payload)
 	}
 
-	api.GetServiceInstancesInstanceIDLastOperationHandler = operations.GetServiceInstancesInstanceIDLastOperationHandlerFunc(func(params operations.GetServiceInstancesInstanceIDLastOperationParams, principal interface{}) middleware.Responder {
-		//TODO add async
-		exists, err := csm.WorkspaceExists(params.InstanceID)
-		payload := &brokermodel.LastOperation{}
-		if err != nil {
-			payload.State = "failed"
-			payload.Description = err.Error()
-			return operations.NewGetServiceInstancesInstanceIDLastOperationOK().WithPayload(payload)
-		}
+	payload.Description = fmt.Sprintf("resources exists = %t", exists)
+	payload.State = succeded
+	brokerLogger.Info("last-operation-completed", lager.Data{"instance-id": params.InstanceID})
+	return operations.NewGetServiceInstancesInstanceIDLastOperationOK().WithPayload(payload)
 
-		payload.Description = fmt.Sprintf("resources exists = %t", exists)
-		payload.State = "succeeded"
-		return operations.NewGetServiceInstancesInstanceIDLastOperationOK().WithPayload(payload)
+}
 
-	})
-	api.CatalogCatalogHandler = catalog.CatalogHandlerFunc(func(principal interface{}) middleware.Responder {
-		var cat = brokermodel.CatalogServices{}
+func catalogHandler(principal interface{}) middleware.Responder {
+	var cat = brokermodel.CatalogServices{}
 
-		conf, err := configProvider.LoadConfiguration()
+	conf, err := brokerConfigProvider.LoadConfiguration()
 
-		if err != nil {
-			return catalog.NewCatalogDefault(500).WithPayload(getBrokerError(err.Error()))
-		}
+	if err != nil {
+		brokerLogger.Info("catalog-request-error", lager.Data{"error": err.Error()})
+		return catalog.NewCatalogDefault(500).WithPayload(getBrokerError(err.Error()))
+	}
 
-		for _, instance := range conf.Instances {
-			catServ := instance.Service
-			for _, dial := range instance.Dials {
-				dialTemp := dial
-				catServ.Plans = append(catServ.Plans, &dialTemp.Plan)
-			}
-			cat.Services = append(cat.Services, &catServ)
+	for _, instance := range conf.Instances {
+		catServ := instance.Service
+		for _, dial := range instance.Dials {
+			dialTemp := dial
+			catServ.Plans = append(catServ.Plans, &dialTemp.Plan)
+		}
+		cat.Services = append(cat.Services, &catServ)
 
-		}
-		return catalog.NewCatalogOK().WithPayload(&cat)
-		//return middleware.NotImplemented("operation catalog.Catalog has not yet been implemented")
-	})
-	api.ServiceInstancesCreateServiceInstanceHandler = service_instances.CreateServiceInstanceHandlerFunc(func(params service_instances.CreateServiceInstanceParams, principal interface{}) middleware.Responder {
-		servID, err := getServiceAfterLogin(csm, configProvider, params.Service.ServiceID)
-		if err != nil {
-			return service_instances.NewCreateServiceInstanceDefault(401).WithPayload(getBrokerError(err.Error()))
-		}
-		if servID == nil {
-			return service_instances.NewCreateServiceInstanceDefault(410).WithPayload(getBrokerError(servID.ID + " not found"))
-		}
-		exists, err := csm.WorkspaceExists(params.InstanceID)
-		if err != nil {
-			return service_instances.NewCreateServiceInstanceDefault(500).WithPayload(getBrokerError(err.Error()))
-		}
-		if exists {
-			return service_instances.NewCreateServiceInstanceConflict()
-		}
+	}
 
-		err = csm.CreateWorkspace(params.InstanceID)
-		if err != nil {
-			return service_instances.NewCreateServiceInstanceDefault(500).WithPayload(getBrokerError(err.Error()))
-		}
+	brokerLogger.Info("catalog-request-completed", lager.Data{"catalog-services": cat.Services})
 
-		logger.Info("provision-instance-request-completed", lager.Data{"instance-id": params.InstanceID})
+	return catalog.NewCatalogOK().WithPayload(&cat)
 
-		return service_instances.NewCreateServiceInstanceCreated().WithPayload(&brokermodel.DashboardURL{})
-		//TODO create async
-	})
-	api.ServiceInstancesDeprovisionServiceInstanceHandler = service_instances.DeprovisionServiceInstanceHandlerFunc(func(params service_instances.DeprovisionServiceInstanceParams, principal interface{}) middleware.Responder {
-		servID, err := getServiceAfterLogin(csm, configProvider, params.DeprovisionParameters.ServiceID)
-		if err != nil {
-			return service_instances.NewDeprovisionServiceInstanceDefault(401).WithPayload(getBrokerError(err.Error()))
-		}
-		if servID == nil {
-			return service_instances.NewDeprovisionServiceInstanceDefault(410).WithPayload(getBrokerError(servID.ID + " not found"))
-		}
-		exists, err := csm.WorkspaceExists(params.InstanceID)
-		if err != nil {
-			return service_instances.NewDeprovisionServiceInstanceDefault(500).WithPayload(getBrokerError(err.Error()))
-		}
-		if !exists {
-			return service_instances.NewDeprovisionServiceInstanceGone()
-		}
-		err = csm.DeleteWorkspace(params.InstanceID)
-		if err != nil {
-			return service_instances.NewDeprovisionServiceInstanceDefault(500).WithPayload(getBrokerError(err.Error()))
-		}
-		logger.Info("deprovision-service--instance-request-completed", lager.Data{"instance-id": params.InstanceID, "service-id": params.DeprovisionParameters.ServiceID})
+}
 
-		return service_instances.NewDeprovisionServiceInstanceOK().WithPayload(&brokermodel.Empty{})
-	})
-	api.ServiceInstancesServiceBindHandler = service_instances.ServiceBindHandlerFunc(func(params service_instances.ServiceBindParams, principal interface{}) middleware.Responder {
+func createServiceInstanceHandler(params service_instances.CreateServiceInstanceParams, principal interface{}) middleware.Responder {
+	servID, err := getServiceAfterLogin(brokerCsm, brokerConfigProvider, params.Service.ServiceID)
 
-		servID, err := getServiceAfterLogin(csm, configProvider, params.Binding.ServiceID)
-		if err != nil {
-			return service_instances.NewServiceBindDefault(401).WithPayload(getBrokerError(err.Error()))
-		}
-		//if no service with this ID was found we send Gone HTTP header
-		if servID == nil {
-			return service_instances.NewServiceBindDefault(410).WithPayload(getBrokerError(servID.ID + " not found"))
-		}
+	if err != nil {
+		brokerLogger.Info("provision-instance-request-error", lager.Data{"error": err.Error()})
+		return service_instances.NewCreateServiceInstanceDefault(401).WithPayload(getBrokerError(err.Error()))
+	}
 
-		exists, err := csm.ConnectionExists(params.InstanceID, params.BindingID)
-		if err != nil {
-			return service_instances.NewServiceBindDefault(500).WithPayload(getBrokerError(err.Error()))
-		}
-		//if it allready exists we send it the OK - 200 HTTP header
-		if exists {
-			return service_instances.NewServiceBindOK()
-		}
-		results, err := csm.CreateConnection(params.InstanceID, params.BindingID)
-		if err != nil {
-			return service_instances.NewServiceBindDefault(500).WithPayload(getBrokerError(err.Error()))
-		}
+	if servID == nil {
+		brokerLogger.Info("provision-instance-request-not-in-catalog", lager.Data{"service-id": params.Service.ServiceID})
+		return service_instances.NewCreateServiceInstanceDefault(404).WithPayload(getBrokerError(params.Service.ServiceID + " not found"))
+	}
 
-		bindingResponse := brokermodel.BindingResponse{}
-		bindingResponse.Credentials = results
+	exists, err := brokerCsm.WorkspaceExists(params.InstanceID)
 
-		logger.Info("generate-credentials-request-completed", lager.Data{"binding-id": params.BindingID})
+	if err != nil {
+		brokerLogger.Info("provision-instance-request-error", lager.Data{"error": err.Error()})
+		return service_instances.NewCreateServiceInstanceDefault(500).WithPayload(getBrokerError(err.Error()))
+	}
 
-		return service_instances.NewServiceBindCreated().WithPayload(&bindingResponse)
+	if exists {
+		brokerLogger.Info("provision-instance-request-conflict", lager.Data{"instance-id": params.InstanceID, "service-id": params.Service.ServiceID})
+		return service_instances.NewCreateServiceInstanceConflict()
+	}
 
-	})
-	api.ServiceInstancesServiceUnbindHandler = service_instances.ServiceUnbindHandlerFunc(func(params service_instances.ServiceUnbindParams, principal interface{}) middleware.Responder {
-		servID, err := getServiceAfterLogin(csm, configProvider, params.UnbindParameters.ServiceID)
-		if err != nil {
-			return service_instances.NewServiceUnbindDefault(401).WithPayload(getBrokerError(err.Error()))
-		}
-		//if no service with this ID was found we send Gone HTTP header
-		if servID == nil {
-			return service_instances.NewServiceUnbindDefault(410).WithPayload(getBrokerError(servID.ID + " not found"))
-		}
+	err = brokerCsm.CreateWorkspace(params.InstanceID)
 
-		exists, err := csm.ConnectionExists(params.InstanceID, params.BindingID)
-		if err != nil {
-			return service_instances.NewServiceUnbindDefault(500).WithPayload(getBrokerError(err.Error()))
-		}
-		//if it does not exist we send it the Gone 410 HTTP header
-		if !exists {
-			return service_instances.NewServiceUnbindGone()
-		}
-		err = csm.DeleteConnection(params.InstanceID, params.BindingID)
-		if err != nil {
-			return service_instances.NewServiceUnbindDefault(500).WithPayload(getBrokerError(err.Error()))
-		}
+	if err != nil {
+		return service_instances.NewCreateServiceInstanceDefault(500).WithPayload(getBrokerError(err.Error()))
+	}
 
-		logger.Info("unbind-instance-completed", lager.Data{"binding-id": params.BindingID})
-		r := brokermodel.Empty{}
-		return service_instances.NewServiceUnbindOK().WithPayload(&r)
-	})
-	api.ServiceInstancesUpdateServiceInstanceHandler = service_instances.UpdateServiceInstanceHandlerFunc(func(params service_instances.UpdateServiceInstanceParams, principal interface{}) middleware.Responder {
-		return middleware.NotImplemented("operation service_instances.UpdateServiceInstance has not yet been implemented")
-	})
+	brokerLogger.Info("provision-instance-request-completed", lager.Data{"instance-id": params.InstanceID, "service-id": params.Service.ServiceID})
+
+	return service_instances.NewCreateServiceInstanceCreated().WithPayload(&brokermodel.DashboardURL{})
+	//TODO create async
+}
+
+func deprovisionServiceInstanceHandler(params service_instances.DeprovisionServiceInstanceParams, principal interface{}) middleware.Responder {
+	servID, err := getServiceAfterLogin(brokerCsm, brokerConfigProvider, params.ServiceID)
+
+	if err != nil {
+		brokerLogger.Info("deprovision-service-error", lager.Data{"error": err.Error()})
+		return service_instances.NewDeprovisionServiceInstanceDefault(401).WithPayload(getBrokerError(err.Error()))
+	}
+
+	if servID == nil {
+		brokerLogger.Info("deprovision-service-not-in-catalog", lager.Data{"service-id": params.ServiceID})
+		return service_instances.NewDeprovisionServiceInstanceDefault(404).WithPayload(getBrokerError(params.ServiceID + " not found"))
+	}
+
+	exists, err := brokerCsm.WorkspaceExists(params.InstanceID)
+
+	if err != nil {
+		brokerLogger.Info("deprovision-service-error", lager.Data{"error": err.Error()})
+		return service_instances.NewDeprovisionServiceInstanceDefault(500).WithPayload(getBrokerError(err.Error()))
+	}
+
+	if !exists {
+		brokerLogger.Info("deprovision-service-missing", lager.Data{"instance-id": params.InstanceID})
+		return service_instances.NewDeprovisionServiceInstanceDefault(404).WithPayload(getBrokerError("No bind with this name found"))
+	}
+
+	err = brokerCsm.DeleteWorkspace(params.InstanceID)
+
+	if err != nil {
+		brokerLogger.Info("deprovision-service-error", lager.Data{"error": err.Error()})
+		return service_instances.NewDeprovisionServiceInstanceDefault(500).WithPayload(getBrokerError(err.Error()))
+	}
+
+	brokerLogger.Info("deprovision-service-instance-request-completed", lager.Data{"instance-id": params.InstanceID, "service-id": params.ServiceID})
+
+	return service_instances.NewDeprovisionServiceInstanceOK().WithPayload(map[string]interface{}{})
+}
+
+func serviceBindHandler(params service_instances.ServiceBindParams, principal interface{}) middleware.Responder {
+
+	servID, err := getServiceAfterLogin(brokerCsm, brokerConfigProvider, params.Binding.ServiceID)
+
+	if err != nil {
+		brokerLogger.Info("generate-credentials-service-error", lager.Data{"error": err.Error()})
+		return service_instances.NewServiceBindDefault(401).WithPayload(getBrokerError(err.Error()))
+	}
+
+	//if no service with this ID was found we send not found HTTP header
+	if servID == nil {
+		brokerLogger.Info("generate-credentials-service-not-in-catalog", lager.Data{"service-id": params.Binding.ServiceID})
+		return service_instances.NewServiceBindDefault(404).WithPayload(getBrokerError(params.Binding.ServiceID + " not found"))
+	}
+
+	exists, err := brokerCsm.ConnectionExists(params.InstanceID, params.BindingID)
+
+	if err != nil {
+		brokerLogger.Info("generate-credentials-service-error", lager.Data{"error": err.Error()})
+		return service_instances.NewServiceBindDefault(500).WithPayload(getBrokerError(err.Error()))
+	}
+
+	//if it already exists we send it the OK - 200 HTTP header
+	if exists {
+		brokerLogger.Info("generate-credentials-service-allready exists", lager.Data{"instance-id": params.InstanceID, "binding-id": params.BindingID})
+		return service_instances.NewServiceBindOK()
+	}
+
+	results, err := brokerCsm.CreateConnection(params.InstanceID, params.BindingID)
+
+	if err != nil {
+		brokerLogger.Info("generate-credentials-service-error", lager.Data{"error": err.Error()})
+		return service_instances.NewServiceBindDefault(500).WithPayload(getBrokerError(err.Error()))
+	}
+
+	bindingResponse := brokermodel.BindingResponse{}
+	bindingResponse.Credentials = results
+
+	brokerLogger.Info("generate-credentials-request-completed", lager.Data{"binding-id": params.BindingID, "service-id": params.Binding.ServiceID})
+
+	return service_instances.NewServiceBindCreated().WithPayload(&bindingResponse)
+
+}
+
+func serviceUnbindHandler(params service_instances.ServiceUnbindParams, principal interface{}) middleware.Responder {
+	servID, err := getServiceAfterLogin(brokerCsm, brokerConfigProvider, params.ServiceID)
+
+	if err != nil {
+		brokerLogger.Info("unbind-instance-error", lager.Data{"error": err.Error()})
+		return service_instances.NewServiceUnbindDefault(401).WithPayload(getBrokerError(err.Error()))
+	}
+	//if no service with this ID was found we send Gone HTTP header
+	if servID == nil {
+		brokerLogger.Info("unbind-instance-not-in-catalog", lager.Data{"service-id": params.ServiceID})
+		return service_instances.NewServiceUnbindDefault(404).WithPayload(getBrokerError(params.ServiceID + " not found"))
+	}
+
+	exists, err := brokerCsm.ConnectionExists(params.InstanceID, params.BindingID)
+
+	if err != nil {
+		brokerLogger.Info("unbind-instance-error", lager.Data{"error": err.Error()})
+		return service_instances.NewServiceUnbindDefault(500).WithPayload(getBrokerError(err.Error()))
+	}
+	//if it does not exist we send it the Not found 404 HTTP header
+	if !exists {
+		brokerLogger.Info("unbind-instance-missing", lager.Data{"instance-id": params.InstanceID, "binding-id": params.BindingID})
+		return service_instances.NewServiceUnbindDefault(404).WithPayload(getBrokerError(fmt.Sprintf("Binding %s not found", params.BindingID)))
+	}
+
+	err = brokerCsm.DeleteConnection(params.InstanceID, params.BindingID)
+
+	if err != nil {
+		brokerLogger.Info("unbind-instance-error", lager.Data{"error": err.Error()})
+		return service_instances.NewServiceUnbindDefault(500).WithPayload(getBrokerError(err.Error()))
+	}
+
+	brokerLogger.Info("unbind-instance-completed", lager.Data{"binding-id": params.BindingID})
+
+	return service_instances.NewServiceUnbindOK().WithPayload(map[string]interface{}{})
+}
+
+func updateServiceInstanceHandler(params service_instances.UpdateServiceInstanceParams, principal interface{}) middleware.Responder {
+	brokerLogger.Info("unpdate-service-instance-not-implemented", lager.Data{"instance-id": params.InstanceID})
+	return middleware.NotImplemented("operation service_instances.UpdateServiceInstance has not yet been implemented")
+}
+
+func basicAuth(user string, pass string) (interface{}, error) {
+	conf, err := brokerConfigProvider.LoadConfiguration()
+
+	if err != nil {
+		return nil, err
+	}
+
+	if conf.BrokerAPI.Credentials.Username == user &&
+		conf.BrokerAPI.Credentials.Password == pass {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+//ConfigureAPI is the function that defines what functions will handle the requestss
+func ConfigureAPI(api *operations.BrokerAPI, csm csm.CSM, configProvider config.Provider, logger lager.Logger) http.Handler {
+
+	brokerCsm = csm
+	brokerLogger = logger
+	brokerConfigProvider = configProvider
+
+	api.ServeError = errors.ServeError
+	api.JSONConsumer = runtime.JSONConsumer()
+	api.JSONProducer = runtime.JSONProducer()
+
+	api.BasicAuth = basicAuth
+
+	api.GetServiceInstancesInstanceIDLastOperationHandler =
+		operations.GetServiceInstancesInstanceIDLastOperationHandlerFunc(idLastOperationHandler)
+
+	api.CatalogCatalogHandler =
+		catalog.CatalogHandlerFunc(catalogHandler)
+
+	api.ServiceInstancesCreateServiceInstanceHandler =
+		service_instances.CreateServiceInstanceHandlerFunc(createServiceInstanceHandler)
+
+	api.ServiceInstancesDeprovisionServiceInstanceHandler =
+		service_instances.DeprovisionServiceInstanceHandlerFunc(deprovisionServiceInstanceHandler)
+
+	api.ServiceInstancesServiceBindHandler =
+		service_instances.ServiceBindHandlerFunc(serviceBindHandler)
+
+	api.ServiceInstancesServiceUnbindHandler =
+		service_instances.ServiceUnbindHandlerFunc(serviceUnbindHandler)
+
+	api.ServiceInstancesUpdateServiceInstanceHandler =
+		service_instances.UpdateServiceInstanceHandlerFunc(updateServiceInstanceHandler)
 
 	api.ServerShutdown = func() {}
 
@@ -215,6 +300,7 @@ func getServiceAfterLogin(csm csm.CSM, configProvider config.Provider, serviceID
 		return nil, err
 	}
 	for _, driverInstance := range conf.Instances {
+		fmt.Printf("servID=%s, Service.ID = %s, TargetURL=%s, AuthenticationKey=%s\n", serviceID, driverInstance.Service.ID, driverInstance.TargetURL, driverInstance.AuthenticationKey)
 		if driverInstance.Service.ID == serviceID {
 			if driverInstance.TargetURL != "" {
 				err = csm.Login(driverInstance.TargetURL, driverInstance.AuthenticationKey)

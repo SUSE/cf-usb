@@ -70,8 +70,6 @@ func (usb *UsbApp) Run(configProvider config.Provider, logger lager.Logger) {
 	brokerAPI := brokerOps.NewBrokerAPI(swaggerSpec)
 	ccServiceBroker := broker.ConfigureAPI(brokerAPI, csmClient, configProvider, logger)
 
-	//usbService := lib.NewUsbBroker(configProvider, usb.logger, csmClient)
-
 	if usb.config.ManagementAPI != nil {
 		go func() {
 			logger := usb.logger.Session("management-api")
