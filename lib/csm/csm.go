@@ -10,6 +10,7 @@ import (
 	runtimeClient "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
 	"github.com/hpcloud/cf-usb/lib/csm/client/connection"
+	"github.com/hpcloud/cf-usb/lib/csm/client/status"
 	"github.com/hpcloud/cf-usb/lib/csm/client/workspace"
 	"github.com/hpcloud/cf-usb/lib/csm/models"
 	"github.com/pivotal-golang/lager"
@@ -19,6 +20,7 @@ type csmClient struct {
 	logger           lager.Logger
 	workspaceCient   *workspace.Client
 	connectionClient *connection.Client
+	statusClient     *status.Client
 	authInfoWriter   runtime.ClientAuthInfoWriter
 	loggedIn         bool
 }
@@ -39,6 +41,7 @@ func (csm *csmClient) Login(targetEndpoint string, token string) error {
 	}
 	transport := runtimeClient.New(target.Host, "/", []string{target.Scheme})
 	csm.workspaceCient = workspace.New(transport, strfmt.Default)
+	csm.statusClient = status.New(transport, strfmt.Default)
 	csm.connectionClient = connection.New(transport, strfmt.Default)
 	csm.authInfoWriter = runtimeClient.APIKeyAuth("x-csm-token", "header", token)
 	csm.loggedIn = true
@@ -187,4 +190,22 @@ func (csm *csmClient) DeleteConnection(workspaceID, connectionID string) error {
 	//TODO: in CSM this passes all the time, it does not take into consideration if a connection exists
 	return nil
 
+}
+
+func (csm *csmClient) GetStatus() error {
+	if !csm.loggedIn {
+		return errors.New("Not logged in")
+	}
+	params := status.NewStatusParams()
+	response, err := csm.statusClient.Status(params, csm.authInfoWriter)
+	if err != nil {
+		return err
+	}
+	csm.logger.Info("status-response", lager.Data{"Status ": response.Payload.Status, "Message": response.Payload.Message, "Processing Type": response.Payload.ProcessingType})
+	if response != nil {
+		if *response.Payload.Status == "failed" {
+			return fmt.Errorf(*response.Payload.Message)
+		}
+	}
+	return nil
 }

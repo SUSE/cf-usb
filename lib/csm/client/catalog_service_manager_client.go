@@ -10,6 +10,7 @@ import (
 	strfmt "github.com/go-openapi/strfmt"
 
 	"github.com/hpcloud/cf-usb/lib/csm/client/connection"
+	"github.com/hpcloud/cf-usb/lib/csm/client/status"
 	"github.com/hpcloud/cf-usb/lib/csm/client/workspace"
 )
 
@@ -32,6 +33,8 @@ func New(transport runtime.ClientTransport, formats strfmt.Registry) *CatalogSer
 
 	cli.Connection = connection.New(transport, formats)
 
+	cli.Status = status.New(transport, formats)
+
 	cli.Workspace = workspace.New(transport, formats)
 
 	return cli
@@ -40,6 +43,8 @@ func New(transport runtime.ClientTransport, formats strfmt.Registry) *CatalogSer
 // CatalogServiceManager is a client for catalog service manager
 type CatalogServiceManager struct {
 	Connection *connection.Client
+
+	Status *status.Client
 
 	Workspace *workspace.Client
 
@@ -51,6 +56,8 @@ func (c *CatalogServiceManager) SetTransport(transport runtime.ClientTransport) 
 	c.Transport = transport
 
 	c.Connection.SetTransport(transport)
+
+	c.Status.SetTransport(transport)
 
 	c.Workspace.SetTransport(transport)
 

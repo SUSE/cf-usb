@@ -14,6 +14,7 @@ import (
 	middleware "github.com/go-openapi/runtime/middleware"
 	"github.com/hpcloud/cf-usb/lib/brokermodel"
 	"github.com/hpcloud/cf-usb/lib/config"
+	"github.com/hpcloud/cf-usb/lib/csm"
 	"github.com/hpcloud/cf-usb/lib/genmodel"
 	"github.com/hpcloud/cf-usb/lib/mgmt/authentication"
 	"github.com/hpcloud/cf-usb/lib/mgmt/cc_integration/ccapi"
@@ -190,6 +191,19 @@ func ConfigureAPI(api *operations.UsbMgmtAPI, auth authentication.Authentication
 				metadata.DocumentationURL = params.DriverEndpoint.Metadata.DocumentationURL
 				metadata.SupportURL = params.DriverEndpoint.Metadata.SupportURL
 			}
+		}
+
+		csmClient := csm.NewCSMClient(log)
+		err = csmClient.Login(instance.TargetURL, instance.AuthenticationKey)
+		if err != nil {
+			log.Error("csm-login-failed", err)
+			return &operations.RegisterDriverEndpointInternalServerError{Payload: err.Error()}
+		}
+		log.Debug("get-status-information", lager.Data{"url": instance.TargetURL, "auth-key": instance.AuthenticationKey})
+		err = csmClient.GetStatus()
+		if err != nil {
+			log.Error("csm-get-status", err)
+			return &operations.RegisterDriverEndpointInternalServerError{Payload: err.Error()}
 		}
 
 		err = configProvider.SetInstance(instanceID, instance)
