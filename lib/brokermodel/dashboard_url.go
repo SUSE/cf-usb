@@ -11,7 +11,7 @@ import (
 
 /*DashboardURL The URL of a web-based management user interface for the service instance; we refer to this as a service dashboard. The URL should contain enough information for the dashboard to identify the resource being accessed ( in the example below). For information on how users can authenticate with service dashboards via SSO, [see Dashboard Single Sign-On](https://docs.cloudfoundry.org/services/dashboard-sso.html).
 
-swagger:model Dashboard_url
+swagger:model DashboardUrl
 */
 type DashboardURL struct {
 
@@ -20,7 +20,7 @@ type DashboardURL struct {
 	DashboardURL string `json:"dashboard_url,omitempty"`
 }
 
-// Validate validates this dashboard url
+// Validate validates this dashboard Url
 func (m *DashboardURL) Validate(formats strfmt.Registry) error {
 	var res []error
 

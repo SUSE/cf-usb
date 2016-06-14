@@ -44,7 +44,7 @@ type CatalogService struct {
 	 */
 	PlanUpdateable bool `json:"plan_updateable,omitempty"`
 
-	/* A list of plans for this service
+	/* A list of plans for this service as stored in the catalog
 	 */
 	Plans []*Plan `json:"plans,omitempty"`
 

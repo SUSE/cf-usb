@@ -17,7 +17,6 @@ import (
 	"github.com/go-openapi/swag"
 
 	"github.com/hpcloud/cf-usb/lib/broker/operations/catalog"
-	"github.com/hpcloud/cf-usb/lib/broker/operations/service_instances"
 )
 
 // NewBrokerAPI creates a new Broker instance
@@ -56,16 +55,16 @@ type BrokerAPI struct {
 	GetServiceInstancesInstanceIDLastOperationHandler GetServiceInstancesInstanceIDLastOperationHandler
 	// CatalogCatalogHandler sets the operation handler for the catalog operation
 	CatalogCatalogHandler catalog.CatalogHandler
-	// ServiceInstancesCreateServiceInstanceHandler sets the operation handler for the create service instance operation
-	ServiceInstancesCreateServiceInstanceHandler service_instances.CreateServiceInstanceHandler
-	// ServiceInstancesDeprovisionServiceInstanceHandler sets the operation handler for the deprovision service instance operation
-	ServiceInstancesDeprovisionServiceInstanceHandler service_instances.DeprovisionServiceInstanceHandler
-	// ServiceInstancesServiceBindHandler sets the operation handler for the service bind operation
-	ServiceInstancesServiceBindHandler service_instances.ServiceBindHandler
-	// ServiceInstancesServiceUnbindHandler sets the operation handler for the service unbind operation
-	ServiceInstancesServiceUnbindHandler service_instances.ServiceUnbindHandler
-	// ServiceInstancesUpdateServiceInstanceHandler sets the operation handler for the update service instance operation
-	ServiceInstancesUpdateServiceInstanceHandler service_instances.UpdateServiceInstanceHandler
+	// CreateServiceInstanceHandler sets the operation handler for the create service instance operation
+	CreateServiceInstanceHandler CreateServiceInstanceHandler
+	// DeprovisionServiceInstanceHandler sets the operation handler for the deprovision service instance operation
+	DeprovisionServiceInstanceHandler DeprovisionServiceInstanceHandler
+	// ServiceBindHandler sets the operation handler for the service bind operation
+	ServiceBindHandler ServiceBindHandler
+	// ServiceUnbindHandler sets the operation handler for the service unbind operation
+	ServiceUnbindHandler ServiceUnbindHandler
+	// UpdateServiceInstanceHandler sets the operation handler for the update service instance operation
+	UpdateServiceInstanceHandler UpdateServiceInstanceHandler
 
 	// ServeError is called when an error is received, there is a default handler
 	// but you can set your own with this
@@ -136,24 +135,24 @@ func (o *BrokerAPI) Validate() error {
 		unregistered = append(unregistered, "catalog.CatalogHandler")
 	}
 
-	if o.ServiceInstancesCreateServiceInstanceHandler == nil {
-		unregistered = append(unregistered, "service_instances.CreateServiceInstanceHandler")
+	if o.CreateServiceInstanceHandler == nil {
+		unregistered = append(unregistered, "CreateServiceInstanceHandler")
 	}
 
-	if o.ServiceInstancesDeprovisionServiceInstanceHandler == nil {
-		unregistered = append(unregistered, "service_instances.DeprovisionServiceInstanceHandler")
+	if o.DeprovisionServiceInstanceHandler == nil {
+		unregistered = append(unregistered, "DeprovisionServiceInstanceHandler")
 	}
 
-	if o.ServiceInstancesServiceBindHandler == nil {
-		unregistered = append(unregistered, "service_instances.ServiceBindHandler")
+	if o.ServiceBindHandler == nil {
+		unregistered = append(unregistered, "ServiceBindHandler")
 	}
 
-	if o.ServiceInstancesServiceUnbindHandler == nil {
-		unregistered = append(unregistered, "service_instances.ServiceUnbindHandler")
+	if o.ServiceUnbindHandler == nil {
+		unregistered = append(unregistered, "ServiceUnbindHandler")
 	}
 
-	if o.ServiceInstancesUpdateServiceInstanceHandler == nil {
-		unregistered = append(unregistered, "service_instances.UpdateServiceInstanceHandler")
+	if o.UpdateServiceInstanceHandler == nil {
+		unregistered = append(unregistered, "UpdateServiceInstanceHandler")
 	}
 
 	if len(unregistered) > 0 {
@@ -252,27 +251,27 @@ func (o *BrokerAPI) initHandlerCache() {
 	if o.handlers["PUT"] == nil {
 		o.handlers[strings.ToUpper("PUT")] = make(map[string]http.Handler)
 	}
-	o.handlers["PUT"]["/service_instances/{instance_id}"] = service_instances.NewCreateServiceInstance(o.context, o.ServiceInstancesCreateServiceInstanceHandler)
+	o.handlers["PUT"]["/service_instances/{instance_id}"] = NewCreateServiceInstance(o.context, o.CreateServiceInstanceHandler)
 
 	if o.handlers["DELETE"] == nil {
 		o.handlers[strings.ToUpper("DELETE")] = make(map[string]http.Handler)
 	}
-	o.handlers["DELETE"]["/service_instances/{instance_id}"] = service_instances.NewDeprovisionServiceInstance(o.context, o.ServiceInstancesDeprovisionServiceInstanceHandler)
+	o.handlers["DELETE"]["/service_instances/{instance_id}"] = NewDeprovisionServiceInstance(o.context, o.DeprovisionServiceInstanceHandler)
 
 	if o.handlers["PUT"] == nil {
 		o.handlers[strings.ToUpper("PUT")] = make(map[string]http.Handler)
 	}
-	o.handlers["PUT"]["/service_instances/{instance_id}/service_bindings/{binding_id}"] = service_instances.NewServiceBind(o.context, o.ServiceInstancesServiceBindHandler)
+	o.handlers["PUT"]["/service_instances/{instance_id}/service_bindings/{binding_id}"] = NewServiceBind(o.context, o.ServiceBindHandler)
 
 	if o.handlers["DELETE"] == nil {
 		o.handlers[strings.ToUpper("DELETE")] = make(map[string]http.Handler)
 	}
-	o.handlers["DELETE"]["/service_instances/{instance_id}/service_bindings/{binding_id}"] = service_instances.NewServiceUnbind(o.context, o.ServiceInstancesServiceUnbindHandler)
+	o.handlers["DELETE"]["/service_instances/{instance_id}/service_bindings/{binding_id}"] = NewServiceUnbind(o.context, o.ServiceUnbindHandler)
 
 	if o.handlers["PATCH"] == nil {
 		o.handlers[strings.ToUpper("PATCH")] = make(map[string]http.Handler)
 	}
-	o.handlers["PATCH"]["/service_instances/{instance_id}"] = service_instances.NewUpdateServiceInstance(o.context, o.ServiceInstancesUpdateServiceInstanceHandler)
+	o.handlers["PATCH"]["/service_instances/{instance_id}"] = NewUpdateServiceInstance(o.context, o.UpdateServiceInstanceHandler)
 
 }
 

@@ -11,7 +11,7 @@ import (
 
 /*DashboardClient Contains the data necessary to activate the [Dashboard SSO feature](https://docs.cloudfoundry.org/services/dashboard-sso.html) for this service
 
-swagger:model Dashboard_client
+swagger:model DashboardClient
 */
 type DashboardClient struct {
 

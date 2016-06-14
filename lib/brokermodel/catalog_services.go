@@ -10,7 +10,7 @@ import (
 	"github.com/go-openapi/errors"
 )
 
-/*CatalogServices list of services
+/*CatalogServices list of services stored in the catalog
 
 swagger:model CatalogServices
 */

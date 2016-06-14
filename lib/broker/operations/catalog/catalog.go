@@ -33,7 +33,6 @@ Gets services registered within the broker
 
 The first endpoint that a broker must implement is the service catalog. Cloud Controller will initially fetch this endpoint from all brokers and make adjustments to the user-facing service catalog stored in the Cloud Controller database.
 
-
 */
 type Catalog struct {
 	Context *middleware.Context

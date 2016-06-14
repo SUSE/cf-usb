@@ -7,7 +7,6 @@ import (
 	"github.com/hashicorp/consul/api"
 	"github.com/hpcloud/cf-usb/lib/broker"
 	"github.com/hpcloud/cf-usb/lib/broker/operations"
-	"github.com/hpcloud/cf-usb/lib/broker/operations/service_instances"
 	"github.com/hpcloud/cf-usb/lib/brokermodel"
 	"github.com/hpcloud/cf-usb/lib/config"
 	"github.com/hpcloud/cf-usb/lib/config/consul"
@@ -135,21 +134,21 @@ func TestBrokerAPIProvisionTest(t *testing.T) {
 	}
 
 	workspaceID := uuid.NewV4().String()
-	params := service_instances.CreateServiceInstanceParams{}
+	params := operations.CreateServiceInstanceParams{}
 	params.Service = &brokermodel.Service{}
 	params.Service.ServiceID = "83E94C97-C755-46A5-8653-461517EB442A"
 	params.InstanceID = workspaceID
 
-	response := brokerA.ServiceInstancesCreateServiceInstanceHandler.Handle(params, false)
+	response := brokerA.CreateServiceInstanceHandler.Handle(params, false)
 	assert.NotNil(response)
-	if reflect.TypeOf(response).String() == "*service_instances.CreateServiceInstanceDefault" {
-		resp := response.(*service_instances.CreateServiceInstanceDefault)
+	if reflect.TypeOf(response).String() == "*operations.CreateServiceInstanceDefault" {
+		resp := response.(*operations.CreateServiceInstanceDefault)
 		assert.Fail(*resp.Payload.Message)
 		return
 	}
 
 	assert.Equal(
-		reflect.TypeOf(service_instances.CreateServiceInstanceCreated{}),
+		reflect.TypeOf(operations.CreateServiceInstanceCreated{}),
 		reflect.ValueOf(response).Elem().Type(),
 		"Wrong response type while binding")
 }
@@ -162,30 +161,30 @@ func TestBrokerAPIBindTest(t *testing.T) {
 	}
 
 	workspaceID := uuid.NewV4().String()
-	params := service_instances.CreateServiceInstanceParams{}
+	params := operations.CreateServiceInstanceParams{}
 	params.Service = &brokermodel.Service{}
 	params.Service.ServiceID = "83E94C97-C755-46A5-8653-461517EB442A"
 	params.InstanceID = workspaceID
-	response := brokerA.ServiceInstancesCreateServiceInstanceHandler.Handle(params, false)
+	response := brokerA.CreateServiceInstanceHandler.Handle(params, false)
 
 	connectionID := uuid.NewV4().String()
 	if assert.NotNil(response) {
-		assert.Equal("*service_instances.CreateServiceInstanceCreated", reflect.TypeOf(response).String())
-		connParams := service_instances.ServiceBindParams{}
+		assert.Equal("*operations.CreateServiceInstanceCreated", reflect.TypeOf(response).String())
+		connParams := operations.ServiceBindParams{}
 		connParams.InstanceID = workspaceID
 		connParams.BindingID = connectionID
 		connParams.Binding = &brokermodel.Binding{}
 		connParams.Binding.ServiceID = "83E94C97-C755-46A5-8653-461517EB442A"
-		resp := brokerA.ServiceInstancesServiceBindHandler.Handle(connParams, false)
+		resp := brokerA.ServiceBindHandler.Handle(connParams, false)
 		assert.NotNil(resp)
 		t.Log(reflect.ValueOf(resp).Elem().Type())
 
 		switch resp.(type) {
-		case *service_instances.ServiceBindCreated:
+		case *operations.ServiceBindCreated:
 			break
-		case *service_instances.ServiceBindDefault:
+		case *operations.ServiceBindDefault:
 			assert.FailNow("Waiting for ServiceBindCreated, but got ServiceBindDefault")
-			resp := response.(*service_instances.ServiceBindDefault)
+			resp := response.(*operations.ServiceBindDefault)
 			assert.Fail(*resp.Payload.Message)
 			return
 		default:
@@ -193,7 +192,7 @@ func TestBrokerAPIBindTest(t *testing.T) {
 			return
 		}
 
-		assert.Equal(reflect.TypeOf(service_instances.ServiceBindCreated{}),
+		assert.Equal(reflect.TypeOf(operations.ServiceBindCreated{}),
 			reflect.ValueOf(resp).Elem().Type())
 	}
 }
@@ -208,40 +207,40 @@ func TestBrokerAPIUnbindTest(t *testing.T) {
 	workspaceID := uuid.NewV4().String()
 	connectionID := uuid.NewV4().String()
 
-	params := service_instances.CreateServiceInstanceParams{}
+	params := operations.CreateServiceInstanceParams{}
 	params.Service = &brokermodel.Service{}
 	params.Service.ServiceID = "83E94C97-C755-46A5-8653-461517EB442A"
 	params.InstanceID = workspaceID
 
-	response := brokerA.ServiceInstancesCreateServiceInstanceHandler.Handle(params, false)
+	response := brokerA.CreateServiceInstanceHandler.Handle(params, false)
 	if assert.NotNil(response) &&
 		assert.Equal(
-			reflect.TypeOf(service_instances.CreateServiceInstanceCreated{}),
+			reflect.TypeOf(operations.CreateServiceInstanceCreated{}),
 			reflect.ValueOf(response).Elem().Type(),
 			"Wrong response type while binding") {
-		assert.Equal("*service_instances.CreateServiceInstanceCreated", reflect.TypeOf(response).String())
-		connParams := service_instances.ServiceBindParams{}
+		assert.Equal("*operations.CreateServiceInstanceCreated", reflect.TypeOf(response).String())
+		connParams := operations.ServiceBindParams{}
 		connParams.InstanceID = workspaceID
 		connParams.BindingID = connectionID
 		connParams.Binding = &brokermodel.Binding{}
 		connParams.Binding.ServiceID = "83E94C97-C755-46A5-8653-461517EB442A"
-		resp := brokerA.ServiceInstancesServiceBindHandler.Handle(connParams, false)
-		if assert.NotNil(resp, "There should be an answer when binding") && assert.Equal(reflect.TypeOf(service_instances.ServiceBindCreated{}), reflect.ValueOf(resp).Elem().Type(), "Wrong response type while binding") {
-			unbindParams := service_instances.ServiceUnbindParams{}
+		resp := brokerA.ServiceBindHandler.Handle(connParams, false)
+		if assert.NotNil(resp, "There should be an answer when binding") && assert.Equal(reflect.TypeOf(operations.ServiceBindCreated{}), reflect.ValueOf(resp).Elem().Type(), "Wrong response type while binding") {
+			unbindParams := operations.ServiceUnbindParams{}
 			unbindParams.InstanceID = workspaceID
 			unbindParams.BindingID = connectionID
 			unbindParams.ServiceID = "83E94C97-C755-46A5-8653-461517EB442A"
-			respUnbind := brokerA.ServiceInstancesServiceUnbindHandler.Handle(unbindParams, false)
+			respUnbind := brokerA.ServiceUnbindHandler.Handle(unbindParams, false)
 			if assert.NotNil(respUnbind, "There should be an unswer when unbinding") {
 				switch respUnbind.(type) {
-				case *service_instances.ServiceUnbindOK:
+				case *operations.ServiceUnbindOK:
 					break
-				case *service_instances.ServiceUnbindDefault:
+				case *operations.ServiceUnbindDefault:
 					assert.Fail("Waiting for ServiceUnbindOK, but Got ServiceUnbindDefault")
-					resp := response.(*service_instances.ServiceUnbindDefault)
+					resp := response.(*operations.ServiceUnbindDefault)
 					assert.Fail(*resp.Payload.Message)
 					break
-				case *service_instances.ServiceUnbindGone:
+				case *operations.ServiceUnbindGone:
 					assert.Fail("Waiting for ServiceUnbindOK, but Got ServiceUnbindGone")
 					break
 				default:
@@ -262,30 +261,30 @@ func TestBrokerAPIDeprovisionTest(t *testing.T) {
 	}
 
 	workspaceID := uuid.NewV4().String()
-	params := service_instances.CreateServiceInstanceParams{}
+	params := operations.CreateServiceInstanceParams{}
 	params.Service = &brokermodel.Service{}
 	params.Service.ServiceID = "83E94C97-C755-46A5-8653-461517EB442A"
 	params.InstanceID = workspaceID
-	deprovisionParams := service_instances.DeprovisionServiceInstanceParams{}
+	deprovisionParams := operations.DeprovisionServiceInstanceParams{}
 	deprovisionParams.ServiceID = "83E94C97-C755-46A5-8653-461517EB442A"
 	deprovisionParams.InstanceID = workspaceID
 
-	response := brokerA.ServiceInstancesCreateServiceInstanceHandler.Handle(params, false)
+	response := brokerA.CreateServiceInstanceHandler.Handle(params, false)
 	t.Log(response)
 	if assert.NotNil(response, "There should be an answer when provisioning") &&
 		assert.Equal(
-			reflect.TypeOf(service_instances.CreateServiceInstanceCreated{}),
+			reflect.TypeOf(operations.CreateServiceInstanceCreated{}),
 			reflect.ValueOf(response).Elem().Type(),
 			"Wrong response type while binding") {
-		resp := brokerA.ServiceInstancesDeprovisionServiceInstanceHandler.Handle(deprovisionParams, false)
+		resp := brokerA.DeprovisionServiceInstanceHandler.Handle(deprovisionParams, false)
 		if assert.NotNil(resp, "There should be an unswer when unprovisioning") {
 			switch resp.(type) {
-			case *service_instances.DeprovisionServiceInstanceOK:
+			case *operations.DeprovisionServiceInstanceOK:
 				break
-			case *service_instances.DeprovisionServiceInstanceDefault:
+			case *operations.DeprovisionServiceInstanceDefault:
 				assert.Fail("Waiting for DeprovisionServiceInstanceOK, but Got DeprovisionServiceInstanceDefault")
 				break
-			case *service_instances.DeprovisionServiceInstanceGone:
+			case *operations.DeprovisionServiceInstanceGone:
 				assert.Fail("Waiting for DeprovisionServiceInstanceOK, but Got DeprovisionServiceInstanceGone")
 				break
 			default:

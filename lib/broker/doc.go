@@ -5,7 +5,7 @@ The Cloud Foundry services API defines the contract between the Cloud Controller
 
     Schemes:
       http
-    Host: 127.0.0.1:8888
+    Host: localhost
     BasePath: /v2
     Version: 2.8
 

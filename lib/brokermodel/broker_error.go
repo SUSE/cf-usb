@@ -16,7 +16,7 @@ swagger:model BrokerError
 */
 type BrokerError struct {
 
-	/* An error message explaining why the request failed. This message will be displayed to the user who initiated the request.
+	/* An error message explaining why the request failed.  This message will be displayed to the user who  initiated the request.
 
 	Required: true
 	*/

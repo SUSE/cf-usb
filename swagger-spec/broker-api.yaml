@@ -11,7 +11,6 @@ info:
     instances can be supported by a single broker using different URL prefixes
     and credentials. [Learn more about the Service Broker
     API.](http://docs.cloudfoundry.org/services/api.html)
-host: '127.0.0.1:8888'
 basePath: /v2
 securityDefinitions:
   Basic:
@@ -27,7 +26,7 @@ paths:
       summary: Gets services registered within the broker
       tags:
         - catalog
-      description: >
+      description: >-
         The first endpoint that a broker must implement is the service catalog.
         Cloud Controller will initially fetch this endpoint from all brokers and
         make adjustments to the user-facing service catalog stored in the Cloud
@@ -79,8 +78,6 @@ paths:
         - application/json
       consumes:
         - application/json
-      tags:
-        - service_instances
       description: >-
         When the broker receives a provision request from Cloud Controller, it
         should synchronously take whatever action is necessary to create a new
@@ -102,15 +99,15 @@ paths:
             requested parameters are identical to the existing service instance.
             The expected response body is below.
           schema:
-            $ref: '#/definitions/Dashboard_url'
+            $ref: '#/definitions/DashboardUrl'
         '201':
           description: Service instance has been created.
           schema:
-            $ref: '#/definitions/Dashboard_url'
+            $ref: '#/definitions/DashboardUrl'
         '202':
           description: Service instance creation has been accepted
           schema:
-            $ref: '#/definitions/Dashboard_url'
+            $ref: '#/definitions/DashboardUrl'
         '409':
           description: >-
             Should be returned if the requested service instance already exists.
@@ -142,8 +139,6 @@ paths:
         - application/json
       produces:
         - application/json
-      tags:
-        - service_instances
       parameters:
         - name: plan
           description: New Plan information.
@@ -187,19 +182,9 @@ paths:
         provisions.
       produces:
         - application/json
-      tags:
-        - service_instances
       parameters:
-        - name: service_id
-          required: true
-          in: query
-          description: the service id as stored in the catalog
-          type: string
-        - name: plan_id
-          required: true
-          in: query
-          description: the plan id as stored in the catalog
-          type: string
+        - $ref: '#/parameters/service_id'
+        - $ref: '#/parameters/plan_id'
       responses:
         '200':
           description: 'Service instance was deleted. The expected response body is {}.'
@@ -235,7 +220,6 @@ paths:
       - $ref: '#/parameters/binding_id'
     put:
       operationId: serviceBind
-      x-version: '2.6'
       summary: Binds to a service
       description: >-
         When the broker receives a bind request from the Cloud Controller, it
@@ -250,8 +234,6 @@ paths:
         - application/json
       consumes:
         - application/json
-      tags:
-        - service_instances
       parameters:
         - name: binding
           required: true
@@ -297,18 +279,8 @@ paths:
       produces:
         - application/json
       parameters:
-        - name: service_id
-          required: true
-          in: query
-          description: the service id as stored in the catalog
-          type: string
-        - name: plan_id
-          required: true
-          in: query
-          description: the plan id as stored in the catalog
-          type: string
-      tags:
-        - service_instances
+        - $ref: "#/parameters/service_id"
+        - $ref: "#/parameters/plan_id"
       responses:
         '200':
           description: 'Binding was deleted. The expected response body is {}.'
@@ -340,9 +312,21 @@ parameters:
     type: string
     in: path
     required: true
+  service_id:
+    name: service_id
+    description: the service id as stored in the catalog
+    type: string
+    in: query
+    required: true
+  plan_id:
+    name: plan_id
+    description: the plan id as stored in the catalog
+    type: string
+    in: query
+    required: true
 definitions:
   CatalogServices:
-    description: list of services
+    description: list of services stored in the catalog
     properties:
       services:
         type: array
@@ -363,7 +347,7 @@ definitions:
         items:
           type: string
       metadata:
-        $ref: '#/definitions/Meta_data'
+        $ref: '#/definitions/MetaData'
       requires:
         type: array
         items:
@@ -372,11 +356,11 @@ definitions:
         type: boolean
       plans:
         type: array
-        description: A list of plans for this service
+        description: A list of plans for this service as stored in the catalog
         items:
           $ref: '#/definitions/Plan'
       dashboard_client:
-        $ref: '#/definitions/Dashboard_client'
+        $ref: '#/definitions/DashboardClient'
   Plan:
     description: A plan for the service
     properties:
@@ -418,7 +402,7 @@ definitions:
           This field allows the plan to be limited by the
           non_basic_services_allowed field in a Cloud Foundry Quota, [see Quota
           Plans](http://docs.cloudfoundry.org/running/managing-cf/quota-plans.html).
-  Dashboard_client:
+  DashboardClient:
     description: >-
       Contains the data necessary to activate the [Dashboard SSO
       feature](https://docs.cloudfoundry.org/services/dashboard-sso.html) for
@@ -473,7 +457,7 @@ definitions:
           instance of the requested plan asynchronously, the broker should
           reject the request with a 422 as described below
         type: boolean
-  Dashboard_url:
+  DashboardUrl:
     description: >-
       The URL of a web-based management user interface for the service instance;
       we refer to this as a service dashboard. The URL should contain enough
@@ -602,7 +586,7 @@ definitions:
         description: >-
           A URL to which Cloud Foundry should proxy requests for the bound
           route.
-  Meta_data:
+  MetaData:
     description: metadata related to the service
     properties:
       displayName:
@@ -630,4 +614,7 @@ definitions:
     properties:
       message: 
         type: string
-        description: "An error message explaining why the request failed. This message will be displayed to the user who initiated the request."
+        description: >-
+          An error message explaining why the request failed. 
+          This message will be displayed to the user who 
+          initiated the request.

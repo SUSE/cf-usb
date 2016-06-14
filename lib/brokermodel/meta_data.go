@@ -11,7 +11,7 @@ import (
 
 /*MetaData metadata related to the service
 
-swagger:model Meta_data
+swagger:model MetaData
 */
 type MetaData struct {
 
