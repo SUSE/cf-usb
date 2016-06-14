@@ -3,8 +3,8 @@ package config
 import (
 	"encoding/json"
 
-	"github.com/frodenas/brokerapi"
 	_ "github.com/golang/protobuf/proto" //workaround for godep + gomega
+	"github.com/hpcloud/cf-usb/lib/brokermodel"
 
 	"io/ioutil"
 	"net/http"
@@ -146,11 +146,11 @@ func Test_IntDial(t *testing.T) {
 
 	var dialInfo Dial
 
-	var plan brokerapi.ServicePlan
+	var plan brokermodel.Plan
 	plan.Description = "testPlan desc"
 	plan.ID = "testPlanID"
 	plan.Name = "free"
-	plan.Metadata = &brokerapi.ServicePlanMetadata{DisplayName: "test plan"}
+	plan.Metadata = &brokermodel.PlanMetadata{Metadata: struct{ DisplayName string }{"test plan"}}
 
 	raw := json.RawMessage("{\"a1\":\"b1\"}")
 

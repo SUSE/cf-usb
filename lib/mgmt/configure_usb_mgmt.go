@@ -12,8 +12,7 @@ import (
 	errors "github.com/go-openapi/errors"
 	runtime "github.com/go-openapi/runtime"
 	middleware "github.com/go-openapi/runtime/middleware"
-
-	"github.com/frodenas/brokerapi"
+	"github.com/hpcloud/cf-usb/lib/brokermodel"
 	"github.com/hpcloud/cf-usb/lib/config"
 	"github.com/hpcloud/cf-usb/lib/genmodel"
 	"github.com/hpcloud/cf-usb/lib/mgmt/authentication"
@@ -180,7 +179,7 @@ func ConfigureAPI(api *operations.UsbMgmtAPI, auth authentication.Authentication
 		}
 		instance.Name = *params.DriverEndpoint.Name
 
-		metadata := brokerapi.ServiceMetadata{}
+		metadata := brokermodel.MetaData{}
 
 		if params.DriverEndpoint.Metadata != nil {
 			{
@@ -203,16 +202,18 @@ func ConfigureAPI(api *operations.UsbMgmtAPI, auth authentication.Authentication
 
 		defaultDialID := uuid.NewV4().String()
 
-		var plan brokerapi.ServicePlan
+		var plan brokermodel.Plan
 
 		plan.ID = uuid.NewV4().String()
 		plan.Description = "default plan"
 		plan.Name = "default"
 		plan.Free = true
 
-		var meta brokerapi.ServicePlanMetadata
+		var meta brokermodel.PlanMetadata
 
-		meta.DisplayName = "default plan"
+		meta.Name = "default plan"
+		meta.Description = "default plan"
+		meta.Metadata = struct{ DisplayName string }{"default plan"}
 
 		plan.Metadata = &meta
 
@@ -226,7 +227,7 @@ func ConfigureAPI(api *operations.UsbMgmtAPI, auth authentication.Authentication
 			return &operations.RegisterDriverEndpointInternalServerError{Payload: err.Error()}
 		}
 
-		var service brokerapi.Service
+		var service brokermodel.CatalogService
 
 		service.ID = uuid.NewV4().String()
 		service.Name = *params.DriverEndpoint.Name

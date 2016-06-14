@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/frodenas/brokerapi"
+	"github.com/hpcloud/cf-usb/lib/brokermodel"
 	"github.com/hpcloud/cf-usb/lib/config/redis"
 
 	"os"
@@ -119,7 +119,7 @@ func Test_RedisSetDriverInstance(t *testing.T) {
 	var instance Instance
 	instance.Name = "testDriverInstance"
 	instance.Dials = make(map[string]Dial)
-	instance.Service = brokerapi.Service{}
+	instance.Service = brokermodel.CatalogService{}
 
 	err = RedisIntegrationConfig.Provider.SetInstance("I0000000-0000-0000-0000-0000000000T1", instance)
 	assert.NoError(err)
@@ -133,20 +133,20 @@ func Test_RedisSetService(t *testing.T) {
 	err := initRedisProvider()
 	assert.NoError(err)
 
-	var service brokerapi.Service
+	var service = brokermodel.CatalogService{}
 	service.ID = "S0000000-0000-0000-0000-0000000000T1"
 	service.Name = "testService"
 	service.Tags = []string{"test"}
 	service.Bindable = true
 	service.Description = "test Service"
 
-	var plan brokerapi.ServicePlan
+	var plan = brokermodel.Plan{}
 
 	plan.ID = "P0000000-0000-0000-0000-0000000000T1"
 	plan.Name = "free"
 	plan.Free = true
 	plan.Description = " test plan"
-	plan.Metadata = &brokerapi.ServicePlanMetadata{DisplayName: "Test Service"}
+	plan.Metadata = &brokermodel.PlanMetadata{Metadata: struct{ DisplayName string }{"TestService"}} //.ServicePlanMetadata{DisplayName: "Test Service"}
 
 	err = RedisIntegrationConfig.Provider.SetService("A0000000-0000-0000-0000-000000000002", service)
 	assert.NoError(err)
@@ -160,13 +160,13 @@ func Test_RedisSetDial(t *testing.T) {
 	err := initRedisProvider()
 	assert.NoError(err)
 
-	var plan brokerapi.ServicePlan
+	var plan brokermodel.Plan
 
 	plan.ID = "P0000000-0000-0000-0000-0000000000T1"
 	plan.Name = "free"
 	plan.Free = true
 	plan.Description = " test plan"
-	plan.Metadata = &brokerapi.ServicePlanMetadata{DisplayName: "Test Service"}
+	plan.Metadata = &brokermodel.PlanMetadata{Metadata: struct{ DisplayName string }{"Test Service"}}
 
 	var dial Dial
 	dial.Plan = plan

@@ -1,7 +1,7 @@
 {
 	"ImportPath": "github.com/hpcloud/cf-usb",
 	"GoVersion": "go1.6",
-	"GodepVersion": "v62",
+	"GodepVersion": "v74",
 	"Packages": [
 		"./..."
 	],
@@ -50,14 +50,6 @@
 		{
 			"ImportPath": "github.com/fatih/structs",
 			"Rev": "e5ca5fe90dcf72d2903310c7d6e0e7c2a13ad7e4"
-		},
-		{
-			"ImportPath": "github.com/frodenas/brokerapi",
-			"Rev": "ac1ed76a08954bbd7b40a8794738539404a84313"
-		},
-		{
-			"ImportPath": "github.com/frodenas/brokerapi/auth",
-			"Rev": "ac1ed76a08954bbd7b40a8794738539404a84313"
 		},
 		{
 			"ImportPath": "github.com/go-openapi/analysis",
@@ -146,6 +138,18 @@
 			"ImportPath": "github.com/hashicorp/serf/coordinate",
 			"Comment": "v0.7.0-58-gdefb069",
 			"Rev": "defb069b1bad9f7cdebc647810cb6ae398a1b617"
+		},
+		{
+			"ImportPath": "github.com/mailru/easyjson/buffer",
+			"Rev": "cd72c97ec050da537393da76d6929cadcc2b5d1e"
+		},
+		{
+			"ImportPath": "github.com/mailru/easyjson/jlexer",
+			"Rev": "cd72c97ec050da537393da76d6929cadcc2b5d1e"
+		},
+		{
+			"ImportPath": "github.com/mailru/easyjson/jwriter",
+			"Rev": "cd72c97ec050da537393da76d6929cadcc2b5d1e"
 		},
 		{
 			"ImportPath": "github.com/naoina/denco",

@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/frodenas/brokerapi"
 	loads "github.com/go-openapi/loads"
 
-	"github.com/hpcloud/cf-usb/lib"
+	"github.com/hpcloud/cf-usb/lib/broker"
+	brokerOps "github.com/hpcloud/cf-usb/lib/broker/operations"
 	"github.com/hpcloud/cf-usb/lib/config"
 	"github.com/hpcloud/cf-usb/lib/csm"
 	"github.com/hpcloud/cf-usb/lib/mgmt"
@@ -60,13 +60,15 @@ func (usb *UsbApp) Run(configProvider config.Provider, logger lager.Logger) {
 
 	csmClient := csm.NewCSMClient(usb.logger)
 
-	usbService := lib.NewUsbBroker(configProvider, usb.logger, csmClient)
+	usb.logger.Info("initializing-broker")
 
-	usb.logger.Info("initializing-brokerapi")
+	swaggerSpec, err := loads.Analyzed(broker.SwaggerJSON, "")
+	if err != nil {
+		logger.Fatal("initializing-swagger-failed", err)
+	}
 
-	brokerAPI := brokerapi.New(usbService, usb.logger, usb.config.BrokerAPI.Credentials)
-
-	addr := usb.config.BrokerAPI.Listen
+	brokerAPI := brokerOps.NewBrokerAPI(swaggerSpec)
+	ccServiceBroker := broker.ConfigureAPI(brokerAPI, csmClient, configProvider, logger)
 
 	if usb.config.ManagementAPI != nil {
 		go func() {
@@ -122,9 +124,11 @@ func (usb *UsbApp) Run(configProvider config.Provider, logger lager.Logger) {
 		go usb.StartRouteRegistration(usb.config, usb.logger)
 	}
 
-	usb.logger.Info("start-listening-brokerapi", lager.Data{"address": addr})
-	err = http.ListenAndServe(addr, brokerAPI)
+	addr := usb.config.BrokerAPI.Listen
+
+	usb.logger.Info("start-listening-broker", lager.Data{"address": addr})
+	err = http.ListenAndServe(addr, ccServiceBroker)
 	if err != nil {
-		usb.logger.Fatal("listening-brokerapi-failed", err)
+		usb.logger.Fatal("listening-broker-failed", err)
 	}
 }

@@ -1,9 +1,10 @@
 package mocks
 
-import "github.com/hpcloud/cf-usb/lib/config"
-import "github.com/stretchr/testify/mock"
-
-import "github.com/frodenas/brokerapi"
+import (
+	"github.com/hpcloud/cf-usb/lib/brokermodel"
+	"github.com/hpcloud/cf-usb/lib/config"
+	"github.com/stretchr/testify/mock"
+)
 
 type Provider struct {
 	mock.Mock
@@ -137,11 +138,11 @@ func (_m *Provider) DeleteInstance(instanceid string) error {
 }
 
 // SetService provides a mock function with given fields: instanceid, service
-func (_m *Provider) SetService(instanceid string, service brokerapi.Service) error {
+func (_m *Provider) SetService(instanceid string, service brokermodel.CatalogService) error {
 	ret := _m.Called(instanceid, service)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(string, brokerapi.Service) error); ok {
+	if rf, ok := ret.Get(0).(func(string, brokermodel.CatalogService) error); ok {
 		r0 = rf(instanceid, service)
 	} else {
 		r0 = ret.Error(0)
@@ -151,15 +152,15 @@ func (_m *Provider) SetService(instanceid string, service brokerapi.Service) err
 }
 
 // GetService provides a mock function with given fields: serviceid
-func (_m *Provider) GetService(serviceid string) (*brokerapi.Service, string, error) {
+func (_m *Provider) GetService(serviceid string) (*brokermodel.CatalogService, string, error) {
 	ret := _m.Called(serviceid)
 
-	var r0 *brokerapi.Service
-	if rf, ok := ret.Get(0).(func(string) *brokerapi.Service); ok {
+	var r0 *brokermodel.CatalogService
+	if rf, ok := ret.Get(0).(func(string) *brokermodel.CatalogService); ok {
 		r0 = rf(serviceid)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*brokerapi.Service)
+			r0 = ret.Get(0).(*brokermodel.CatalogService)
 		}
 	}
 
@@ -274,15 +275,15 @@ func (_m *Provider) InstanceNameExists(driverInstanceName string) (bool, error) 
 }
 
 // GetPlan provides a mock function with given fields: plandid
-func (_m *Provider) GetPlan(plandid string) (*brokerapi.ServicePlan, string, string, error) {
+func (_m *Provider) GetPlan(plandid string) (*brokermodel.Plan, string, string, error) {
 	ret := _m.Called(plandid)
 
-	var r0 *brokerapi.ServicePlan
-	if rf, ok := ret.Get(0).(func(string) *brokerapi.ServicePlan); ok {
+	var r0 *brokermodel.Plan
+	if rf, ok := ret.Get(0).(func(string) *brokermodel.Plan); ok {
 		r0 = rf(plandid)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*brokerapi.ServicePlan)
+			r0 = ret.Get(0).(*brokermodel.Plan)
 		}
 	}
 
