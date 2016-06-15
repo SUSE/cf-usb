@@ -22,7 +22,7 @@ type StatusDiagnostic struct {
 	*/
 	Description *string `json:"description"`
 
-	/* Contains any details that inform the success or failure of the diagnostic that was perfomed.
+	/* Contains any detail that informs the success or failure of the diagnostic that was perfomed.
 
 	Required: true
 	*/

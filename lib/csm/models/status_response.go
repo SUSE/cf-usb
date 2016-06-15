@@ -30,8 +30,10 @@ type StatusResponse struct {
 	Message *string `json:"message"`
 
 	/* Processing type
-	 */
-	ProcessingType string `json:"processing_type,omitempty"`
+
+	Required: true
+	*/
+	ProcessingType *string `json:"processing_type"`
 
 	/* Status of the ping request. If the CSM implementation is confident that it can perform all functions correctly, it should return "successful". Otherwise, "failed"
 
@@ -76,6 +78,21 @@ func (m *StatusResponse) validateDiagnostics(formats strfmt.Registry) error {
 		return nil
 	}
 
+	for i := 0; i < len(m.Diagnostics); i++ {
+
+		if swag.IsZero(m.Diagnostics[i]) { // not required
+			continue
+		}
+
+		if m.Diagnostics[i] != nil {
+
+			if err := m.Diagnostics[i].Validate(formats); err != nil {
+				return err
+			}
+		}
+
+	}
+
 	return nil
 }
 
@@ -109,12 +126,12 @@ func (m *StatusResponse) validateProcessingTypeEnum(path, location string, value
 
 func (m *StatusResponse) validateProcessingType(formats strfmt.Registry) error {
 
-	if swag.IsZero(m.ProcessingType) { // not required
-		return nil
+	if err := validate.Required("processing_type", "body", m.ProcessingType); err != nil {
+		return err
 	}
 
 	// value enum
-	if err := m.validateProcessingTypeEnum("processing_type", "body", m.ProcessingType); err != nil {
+	if err := m.validateProcessingTypeEnum("processing_type", "body", *m.ProcessingType); err != nil {
 		return err
 	}
 

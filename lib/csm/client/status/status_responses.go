@@ -30,15 +30,12 @@ func (o *StatusReader) ReadResponse(response runtime.ClientResponse, consumer ru
 		}
 		return result, nil
 
-	case 500:
-		result := NewStatusInternalServerError()
+	default:
+		result := NewStatusDefault(response.Code())
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
 			return nil, err
 		}
 		return nil, result
-
-	default:
-		return nil, runtime.NewAPIError("unknown error", response, response.Code())
 	}
 }
 
@@ -49,7 +46,7 @@ func NewStatusOK() *StatusOK {
 
 /*StatusOK handles this case with default header values.
 
-Service is healthy
+Service health
 */
 type StatusOK struct {
 	Payload *models.StatusResponse
@@ -71,26 +68,35 @@ func (o *StatusOK) readResponse(response runtime.ClientResponse, consumer runtim
 	return nil
 }
 
-// NewStatusInternalServerError creates a StatusInternalServerError with default headers values
-func NewStatusInternalServerError() *StatusInternalServerError {
-	return &StatusInternalServerError{}
+// NewStatusDefault creates a StatusDefault with default headers values
+func NewStatusDefault(code int) *StatusDefault {
+	return &StatusDefault{
+		_statusCode: code,
+	}
 }
 
-/*StatusInternalServerError handles this case with default header values.
+/*StatusDefault handles this case with default header values.
 
-Service is unhealthy
+generic error response
 */
-type StatusInternalServerError struct {
-	Payload *models.StatusResponse
+type StatusDefault struct {
+	_statusCode int
+
+	Payload *models.Error
 }
 
-func (o *StatusInternalServerError) Error() string {
-	return fmt.Sprintf("[GET /status][%d] statusInternalServerError  %+v", 500, o.Payload)
+// Code gets the status code for the status default response
+func (o *StatusDefault) Code() int {
+	return o._statusCode
 }
 
-func (o *StatusInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+func (o *StatusDefault) Error() string {
+	return fmt.Sprintf("[GET /status][%d] status default  %+v", o._statusCode, o.Payload)
+}
 
-	o.Payload = new(models.StatusResponse)
+func (o *StatusDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	o.Payload = new(models.Error)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {

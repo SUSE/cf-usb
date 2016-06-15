@@ -199,9 +199,19 @@ func (csm *csmClient) GetStatus() error {
 	params := status.NewStatusParams()
 	response, err := csm.statusClient.Status(params, csm.authInfoWriter)
 	if err != nil {
-		return err
+		csmError, ok := err.(*status.StatusDefault)
+		if !ok {
+			return err
+		}
+		return fmt.Errorf(*csmError.Payload.Message)
 	}
+
 	csm.logger.Info("status-response", lager.Data{"Status ": response.Payload.Status, "Message": response.Payload.Message, "Processing Type": response.Payload.ProcessingType})
+
+	for _, diag := range response.Payload.Diagnostics {
+		csm.logger.Debug("status-response-diagnostics", lager.Data{"Status": diag.Status, "Message": diag.Message, "Name": diag.Name, "Description": diag.Description})
+	}
+
 	if response != nil {
 		if *response.Payload.Status == "failed" {
 			return fmt.Errorf(*response.Payload.Message)
