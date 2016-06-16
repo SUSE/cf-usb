@@ -21,13 +21,6 @@ import (
 	"testing"
 )
 
-var orgGuid string = uuid.NewV4().String()
-var spaceGuid string = uuid.NewV4().String()
-var serviceGuid string = uuid.NewV4().String()
-var serviceGuidAsync string = fmt.Sprintf("%[1]s-async", uuid.NewV4().String())
-var serviceBindingGuid string = uuid.NewV4().String()
-var instances []config.Instance
-
 var logger = lagertest.NewTestLogger("csm-client-test")
 var csmEndpoint = ""
 var authToken = ""
