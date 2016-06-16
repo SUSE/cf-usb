@@ -2,11 +2,13 @@
 
 OSES="linux darwin"
 
-set -o errexit
+set -e -o errexit
 
 . make/include/colors.sh
-#. make/include/versioning.sh
-APP_VERSION=1.3.0
+
+if [ -z "${APP_VERSION}" ]; then
+  . make/include/versioning.sh
+fi
 
 echo "${OK_COLOR}==> Building ${ERROR_COLOR}"
 

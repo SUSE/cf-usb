@@ -17,6 +17,8 @@ export GOROOT=$(readlink -nf /var/vcap/packages/golang)
 export PATH=$GOROOT/bin:$PATH
 
 cd ${REPO_DIR}
+. version.sh
+# Don't use make because it needs .git to figure out GIT_ROOT
 ./make/build
 
 mkdir -p ${BOSH_INSTALL_TARGET}/bin/
