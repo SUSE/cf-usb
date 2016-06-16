@@ -6,6 +6,7 @@ import (
 	"github.com/hpcloud/cf-usb/lib/brokermodel"
 )
 
+//BrokerCredentials represents the credentials used by the cloud controller to connect to the broker
 type BrokerCredentials struct {
 	Username string
 	Password string

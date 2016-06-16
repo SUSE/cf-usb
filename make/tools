@@ -13,6 +13,8 @@ echo "${OK_COLOR}==> Installing tools${NO_COLOR}"
 go get -u golang.org/x/tools/cmd/goimports
 go get -u golang.org/x/tools/cmd/cover
 go get -u github.com/golang/lint/golint
+go get github.com/AlekSi/gocov-xml
+
 	
 #Tools for the project
 go get -u github.com/axw/gocov/gocov
