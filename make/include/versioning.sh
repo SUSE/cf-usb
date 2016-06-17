@@ -17,6 +17,6 @@ GIT_SHA=${GIT_SHA:-$(echo ${GIT_DESCRIBE} | awk -F - '{ print $3 }' )}
 ARTIFACT_NAME=${ARTIFACT_NAME:-$(basename $(git config --get remote.origin.url) .git | sed s/^hcf-//)}
 ARTIFACT_VERSION=${GIT_TAG}+${GIT_COMMITS}.${GIT_SHA}.${GIT_BRANCH}
 
-APP_VERSION=${ARTIFACT_NAME}-${ARTIFACT_VERSION}
+APP_VERSION=${ARTIFACT_VERSION}
 
 set +o errexit +o nounset +o xtrace
