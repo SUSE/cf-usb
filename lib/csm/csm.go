@@ -208,13 +208,16 @@ func (csm *csmClient) GetStatus() error {
 
 	csm.logger.Info("status-response", lager.Data{"Status ": response.Payload.Status, "Message": response.Payload.Message, "Processing Type": response.Payload.ProcessingType})
 
-	for _, diag := range response.Payload.Diagnostics {
-		csm.logger.Debug("status-response-diagnostics", lager.Data{"Status": diag.Status, "Message": diag.Message, "Name": diag.Name, "Description": diag.Description})
-	}
-
 	if response != nil {
 		if *response.Payload.Status == "failed" {
-			return fmt.Errorf(*response.Payload.Message)
+
+			errTrace := *response.Payload.Message
+			for _, diag := range response.Payload.Diagnostics {
+				csm.logger.Debug("status-response-diagnostics", lager.Data{"Status": diag.Status, "Message": diag.Message, "Name": diag.Name, "Description": diag.Description})
+				errTrace = errTrace + fmt.Sprintf("\n Status: %s, Name: %s, Description: %s, Message: %s", *diag.Status, *diag.Name, *diag.Description, *diag.Message)
+			}
+
+			return fmt.Errorf(errTrace)
 		}
 	}
 	return nil
