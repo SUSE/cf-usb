@@ -175,10 +175,10 @@ func serviceBindHandler(params operations.ServiceBindParams, principal interface
 		return operations.NewServiceBindDefault(500).WithPayload(getBrokerError(err.Error()))
 	}
 
-	//if it already exists we send it the OK - 200 HTTP header
+	//if it already exists we send it the Conflict - 409 HTTP header
 	if exists {
 		brokerLogger.Info("generate-credentials-service-allready exists", lager.Data{"instance-id": params.InstanceID, "binding-id": params.BindingID})
-		return operations.NewServiceBindOK()
+		return operations.NewServiceBindConflict().WithPayload(map[string]interface{}{})
 	}
 
 	results, err := brokerCsm.CreateConnection(params.InstanceID, params.BindingID)
