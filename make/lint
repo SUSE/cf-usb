@@ -10,7 +10,7 @@ ISSUES=$(mktemp)
 
 trap "rm -f ${ISSUES}" HUP INT TERM
 
-go list -f '{{ .Dir }}' ./...| grep -v operations | grep -v /vendor/ | grep -v mocks | grep -v csmfakes | while read DIR; do
+go list -f '{{ .Dir }}' ./...| grep -v csm/client |  grep -v operations | grep -v /vendor/ | grep -v mocks | grep -v csmfakes | while read DIR; do
     golint ${DIR} | tee -a ${ISSUES}
 done
 

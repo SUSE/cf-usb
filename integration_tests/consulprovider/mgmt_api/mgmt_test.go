@@ -10,6 +10,7 @@ import (
 
 	loads "github.com/go-openapi/loads"
 	"github.com/hpcloud/cf-usb/lib/config"
+	"github.com/hpcloud/cf-usb/lib/csm"
 	"github.com/hpcloud/cf-usb/lib/genmodel"
 	"github.com/hpcloud/cf-usb/lib/mgmt"
 	"github.com/hpcloud/cf-usb/lib/mgmt/authentication/uaa"
@@ -92,7 +93,9 @@ func initMgmt(provider config.Provider) (*operations.UsbMgmtAPI, error) {
 		return nil, err
 	}
 
-	mgmt.ConfigureAPI(mgmtAPI, auth, provider, sbMocked, logger, "t.t.t")
+	csmClient := csm.NewCSMClient(logger)
+
+	mgmt.ConfigureAPI(mgmtAPI, auth, provider, sbMocked, csmClient, logger, "t.t.t")
 
 	return mgmtAPI, nil
 }

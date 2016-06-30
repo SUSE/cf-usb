@@ -28,7 +28,7 @@ const defaultBrokerName string = "usb"
 
 //ConfigureAPI configures UsbMgmtApi with Interface, config Provider, USBServiceBroker, Logger and a version string
 func ConfigureAPI(api *operations.UsbMgmtAPI, auth authentication.Authentication,
-	configProvider config.Provider, ccServiceBroker ccapi.USBServiceBroker,
+	configProvider config.Provider, ccServiceBroker ccapi.USBServiceBroker, csmClient csm.CSM,
 	logger lager.Logger, usbVersion string) http.Handler {
 
 	// configure the api here
@@ -193,7 +193,6 @@ func ConfigureAPI(api *operations.UsbMgmtAPI, auth authentication.Authentication
 			}
 		}
 
-		csmClient := csm.NewCSMClient(log)
 		err = csmClient.Login(instance.TargetURL, instance.AuthenticationKey)
 		if err != nil {
 			log.Error("csm-login-failed", err)

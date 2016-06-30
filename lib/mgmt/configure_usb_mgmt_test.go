@@ -8,8 +8,11 @@ import (
 	loads "github.com/go-openapi/loads"
 	"github.com/hpcloud/cf-usb/lib/config"
 	"github.com/hpcloud/cf-usb/lib/config/mocks"
+	//"github.com/hpcloud/cf-usb/lib/csm"
+	csmMocks "github.com/hpcloud/cf-usb/lib/csm/mocks"
 	"github.com/hpcloud/cf-usb/lib/genmodel"
 	"github.com/hpcloud/cf-usb/lib/mgmt/authentication/uaa"
+	//"github.com/hpcloud/cf-usb/lib/mgmt/cc_integration/ccapi"
 	sbMocks "github.com/hpcloud/cf-usb/lib/mgmt/cc_integration/ccapi/mocks"
 	"github.com/hpcloud/cf-usb/lib/mgmt/operations"
 	"github.com/pivotal-golang/lager/lagertest"
@@ -18,29 +21,32 @@ import (
 )
 
 var logger = lagertest.NewTestLogger("mgmt-api-test")
-var sbMocked = new(sbMocks.USBServiceBroker)
 
-var UnitTest = struct {
-	MgmtAPI *operations.UsbMgmtAPI
-}{}
+type mockObjects struct {
+	serviceBroker *sbMocks.USBServiceBroker
+	csmClient     *csmMocks.CSM
+	usbMgmt       *operations.UsbMgmtAPI
+}
 
-func initMgmt(provider config.Provider) error {
+func initMgmt(provider config.Provider) (mockObjects, error) {
 
+	mObjects := mockObjects{}
 	swaggerSpec, err := loads.Analyzed(SwaggerJSON, "")
 	if err != nil {
-		return err
+		return mObjects, err
 	}
-	mgmtAPI := operations.NewUsbMgmtAPI(swaggerSpec)
+	mObjects.usbMgmt = operations.NewUsbMgmtAPI(swaggerSpec)
+	mObjects.csmClient = new(csmMocks.CSM)
+	mObjects.serviceBroker = new(sbMocks.USBServiceBroker)
 
 	auth, err := uaa.NewUaaAuth("", "", "", true, logger)
 	if err != nil {
-		return err
+		return mObjects, err
 	}
 
-	ConfigureAPI(mgmtAPI, auth, provider, sbMocked, logger, "t.t.t")
+	ConfigureAPI(mObjects.usbMgmt, auth, provider, mObjects.serviceBroker, mObjects.csmClient, logger, "t.t.t")
 
-	UnitTest.MgmtAPI = mgmtAPI
-	return nil
+	return mObjects, nil
 }
 
 func TestGetInfo(t *testing.T) {
@@ -54,11 +60,11 @@ func TestGetInfo(t *testing.T) {
 		t.Errorf("Error loading config: %v", err)
 	}
 
-	err = initMgmt(fileConfig)
+	mObjects, err := initMgmt(fileConfig)
 	if err != nil {
 		t.Error(err)
 	}
-	response := UnitTest.MgmtAPI.GetInfoHandler.Handle(true)
+	response := mObjects.usbMgmt.GetInfoHandler.Handle(true)
 	assert.IsType(&operations.GetInfoOK{}, response)
 	info := response.(*operations.GetInfoOK).Payload
 
@@ -70,7 +76,7 @@ func Test_RegisterDriverEndpoint(t *testing.T) {
 	assert := assert.New(t)
 	provider := new(mocks.Provider)
 
-	err := initMgmt(provider)
+	mObjects, err := initMgmt(provider)
 	if err != nil {
 		t.Error(err)
 	}
@@ -104,13 +110,15 @@ func Test_RegisterDriverEndpoint(t *testing.T) {
 	provider.On("LoadConfiguration").Return(&testConfig, nil)
 	provider.On("SetDial", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	provider.On("SetService", mock.Anything, mock.Anything).Return(nil)
-	sbMocked.Mock.On("CheckServiceNameExists", mock.Anything).Return(false)
-	sbMocked.Mock.On("GetServiceBrokerGUIDByName", mock.Anything).Return("aguid", nil)
-	sbMocked.Mock.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-	sbMocked.Mock.On("Update", "aguid", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-	sbMocked.Mock.On("EnableServiceAccess", mock.Anything).Return(nil)
+	mObjects.serviceBroker.Mock.On("CheckServiceNameExists", mock.Anything).Return(false)
+	mObjects.serviceBroker.Mock.On("GetServiceBrokerGUIDByName", mock.Anything).Return("aguid", nil)
+	mObjects.serviceBroker.Mock.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	mObjects.serviceBroker.Mock.On("Update", "aguid", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	mObjects.serviceBroker.Mock.On("EnableServiceAccess", mock.Anything).Return(nil)
+	mObjects.csmClient.Mock.On("Login", params.DriverEndpoint.EndpointURL, params.DriverEndpoint.AuthenticationKey).Return(nil)
+	mObjects.csmClient.Mock.On("GetStatus").Return(nil)
 
-	response := UnitTest.MgmtAPI.RegisterDriverEndpointHandler.Handle(*params, true)
+	response := mObjects.usbMgmt.RegisterDriverEndpointHandler.Handle(*params, true)
 
 	assert.IsType(&operations.RegisterDriverEndpointCreated{}, response)
 }
@@ -119,7 +127,7 @@ func Test_UpdateInstanceEndpoint(t *testing.T) {
 	assert := assert.New(t)
 	provider := new(mocks.Provider)
 
-	err := initMgmt(provider)
+	mObjects, err := initMgmt(provider)
 	if err != nil {
 		t.Error(err)
 	}
@@ -146,7 +154,7 @@ func Test_UpdateInstanceEndpoint(t *testing.T) {
 
 	provider.On("InstanceNameExists", mock.Anything).Return(false, nil)
 	provider.On("SetInstance", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-	response := UnitTest.MgmtAPI.UpdateDriverEndpointHandler.Handle(*params, true)
+	response := mObjects.usbMgmt.UpdateDriverEndpointHandler.Handle(*params, true)
 	assert.IsType(&operations.UpdateDriverEndpointOK{}, response)
 }
 
@@ -155,7 +163,7 @@ func Test_GetDriverEndpoint(t *testing.T) {
 	assert := assert.New(t)
 	provider := new(mocks.Provider)
 
-	err := initMgmt(provider)
+	mObjects, err := initMgmt(provider)
 	if err != nil {
 		t.Error(err)
 	}
@@ -167,7 +175,7 @@ func Test_GetDriverEndpoint(t *testing.T) {
 	params := &operations.GetDriverEndpointParams{}
 	params.DriverEndpointID = "testInstanceID"
 
-	response := UnitTest.MgmtAPI.GetDriverEndpointHandler.Handle(*params, true)
+	response := mObjects.usbMgmt.GetDriverEndpointHandler.Handle(*params, true)
 	assert.IsType(&operations.GetDriverEndpointOK{}, response)
 
 }
@@ -176,7 +184,7 @@ func Test_GetDriverEndpoints(t *testing.T) {
 	assert := assert.New(t)
 	provider := new(mocks.Provider)
 
-	err := initMgmt(provider)
+	mObjects, err := initMgmt(provider)
 	if err != nil {
 		t.Error(err)
 	}
@@ -196,7 +204,7 @@ func Test_GetDriverEndpoints(t *testing.T) {
 	provider.On("LoadConfiguration").Return(&testConfig, nil)
 	provider.On("GetInstance", mock.Anything).Return(&instances, nil)
 
-	response := UnitTest.MgmtAPI.GetDriverEndpointsHandler.Handle(true)
+	response := mObjects.usbMgmt.GetDriverEndpointsHandler.Handle(true)
 	assert.IsType(&operations.GetDriverEndpointsOK{}, response)
 }
 
@@ -204,7 +212,7 @@ func Test_UnregisterDriverEndpoint(t *testing.T) {
 	assert := assert.New(t)
 	provider := new(mocks.Provider)
 
-	err := initMgmt(provider)
+	mObjects, err := initMgmt(provider)
 	if err != nil {
 		t.Error(err)
 	}
@@ -219,12 +227,12 @@ func Test_UnregisterDriverEndpoint(t *testing.T) {
 	provider.On("GetInstance", mock.Anything).Return(&instanceInfo, "testInstanceID", nil)
 	provider.On("DeleteInstance", mock.Anything).Return(nil)
 
-	sbMocked.Mock.On("Delete", testConfig.ManagementAPI.BrokerName).Return(nil)
-	sbMocked.Mock.On("CheckServiceInstancesExist", mock.Anything).Return(false)
+	mObjects.serviceBroker.Mock.On("Delete", testConfig.ManagementAPI.BrokerName).Return(nil)
+	mObjects.serviceBroker.Mock.On("CheckServiceInstancesExist", mock.Anything).Return(false)
 
 	params := &operations.UnregisterDriverInstanceParams{}
 	params.DriverEndpointID = "testInstanceID"
 
-	response := UnitTest.MgmtAPI.UnregisterDriverInstanceHandler.Handle(*params, true)
+	response := mObjects.usbMgmt.UnregisterDriverInstanceHandler.Handle(*params, true)
 	assert.IsType(&operations.UnregisterDriverInstanceNoContent{}, response)
 }
