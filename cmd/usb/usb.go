@@ -110,7 +110,6 @@ func (usb *UsbApp) Run(configProvider config.Provider, logger lager.Logger) {
 			ccServiceBroker := ccapi.NewServiceBroker(client, tokenGenerator, usb.config.ManagementAPI.CloudController.API, logger)
 
 			mgmtAPI := operations.NewUsbMgmtAPI(swaggerSpec)
-			csmClient := csm.NewCSMClient(logger)
 			api := mgmt.ConfigureAPI(mgmtAPI, auth, configProvider, ccServiceBroker, csmClient, logger, version)
 
 			logger.Info("start-listening", lager.Data{"address": mgmtaddr})
