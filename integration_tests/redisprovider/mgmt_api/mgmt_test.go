@@ -34,6 +34,9 @@ var RedisConfig = struct {
 	RedisPassword string
 }{}
 
+var csmEndpoint = ""
+var authToken = ""
+
 func initRedisProvider() (*config.Provider, error) {
 	RedisConfig.RedisAddress = os.Getenv("REDIS_ADDRESS")
 	RedisConfig.RedisDatabase = os.Getenv("REDIS_DATABASE")
@@ -57,6 +60,9 @@ func initRedisProvider() (*config.Provider, error) {
 	if err != nil {
 		return nil, err
 	}
+	csmEndpoint = os.Getenv("CSM_ENDPOINT")
+	authToken = os.Getenv("CSM_API_KEY")
+
 	configProvider := config.NewRedisConfig(provisioner)
 
 	return &configProvider, nil
@@ -134,8 +140,8 @@ func Test_RegisterDriverEndpoint(t *testing.T) {
 	params.DriverEndpoint.ID = uuid.NewV4().String()
 	name := "testInstance"
 	params.DriverEndpoint.Name = &name
-	params.DriverEndpoint.EndpointURL = "http://127.0.0.1:8080"
-	params.DriverEndpoint.AuthenticationKey = "authkey"
+	params.DriverEndpoint.EndpointURL = csmEndpoint
+	params.DriverEndpoint.AuthenticationKey = authToken
 
 	metadata := &genmodel.EndpointMetadata{}
 	metadata.DisplayName = "servicename"
@@ -174,8 +180,8 @@ func Test_UpdateInstanceEndpoint(t *testing.T) {
 	params.DriverEndpoint.ID = instanceID
 	name := "testInstanceForUpdate"
 	params.DriverEndpoint.Name = &name
-	params.DriverEndpoint.EndpointURL = "http://127.0.0.1:8080"
-	params.DriverEndpoint.AuthenticationKey = "authkey"
+	params.DriverEndpoint.EndpointURL = csmEndpoint
+	params.DriverEndpoint.AuthenticationKey = authToken
 
 	metadata := &genmodel.EndpointMetadata{}
 	metadata.DisplayName = "servicename"
@@ -205,8 +211,8 @@ func Test_UpdateInstanceEndpoint(t *testing.T) {
 	paramsUpdate.DriverEndpointID = updateInstanceID
 	name = "updateName"
 	paramsUpdate.DriverEndpoint.Name = &name
-	paramsUpdate.DriverEndpoint.EndpointURL = "http://127.0.0.1:8081"
-	paramsUpdate.DriverEndpoint.AuthenticationKey = "authkey"
+	params.DriverEndpoint.EndpointURL = csmEndpoint
+	params.DriverEndpoint.AuthenticationKey = authToken
 
 	responseUpdate := mgmtInterface.UpdateDriverEndpointHandler.Handle(*paramsUpdate, true)
 	assert.IsType(&operations.UpdateDriverEndpointOK{}, responseUpdate)
@@ -235,8 +241,8 @@ func Test_GetDriverEndpoint(t *testing.T) {
 	params.DriverEndpoint.ID = instanceID
 	name := "testGetInstance"
 	params.DriverEndpoint.Name = &name
-	params.DriverEndpoint.EndpointURL = "http://127.0.0.1:8080"
-	params.DriverEndpoint.AuthenticationKey = "authkey"
+	params.DriverEndpoint.EndpointURL = csmEndpoint
+	params.DriverEndpoint.AuthenticationKey = authToken
 
 	metadata := &genmodel.EndpointMetadata{}
 	metadata.DisplayName = "servicename"
@@ -307,8 +313,8 @@ func Test_UnregisterDriverEndpoint(t *testing.T) {
 	params.DriverEndpoint.ID = instanceID
 	name := "testUnregister"
 	params.DriverEndpoint.Name = &name
-	params.DriverEndpoint.EndpointURL = "http://127.0.0.1:8080"
-	params.DriverEndpoint.AuthenticationKey = "authkey"
+	params.DriverEndpoint.EndpointURL = csmEndpoint
+	params.DriverEndpoint.AuthenticationKey = authToken
 
 	metadata := &genmodel.EndpointMetadata{}
 	metadata.DisplayName = "servicename"
