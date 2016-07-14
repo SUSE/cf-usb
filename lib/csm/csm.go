@@ -48,9 +48,9 @@ func (csm *csmClient) Login(targetEndpoint string, token string) error {
 	return nil
 }
 
-func (csm *csmClient) CreateWorkspace(workspaceID string) (bool, error) {
+func (csm *csmClient) CreateWorkspace(workspaceID string) error {
 	if !csm.loggedIn {
-		return false, errors.New("Not logged in")
+		return errors.New("Not logged in")
 	}
 	csm.logger.Info("csm-create-workspace", lager.Data{"workspaceID": workspaceID})
 	request := models.ServiceManagerWorkspaceCreateRequest{
@@ -58,27 +58,17 @@ func (csm *csmClient) CreateWorkspace(workspaceID string) (bool, error) {
 	}
 	params := workspace.CreateWorkspaceParams{}
 	params.CreateWorkspaceRequest = &request
-	response, err := csm.workspaceCient.CreateWorkspace(&params, csm.authInfoWriter)
+	_, err := csm.workspaceCient.CreateWorkspace(&params, csm.authInfoWriter)
 
 	if err != nil {
 		csmError, ok := err.(*workspace.CreateWorkspaceDefault)
 		if !ok {
-			return false, err
+			return err
 		}
-		return false, fmt.Errorf(*csmError.Payload.Message)
-	}
-	if response != nil {
-		if response.Payload != nil {
-			if response.Payload.ProcessingType != nil && response.Payload.Status != nil {
-				if *response.Payload.ProcessingType == "none" && *response.Payload.Status == "none" {
-					return true, nil
-				}
-			}
-
-		}
+		return fmt.Errorf(*csmError.Payload.Message)
 	}
 
-	return false, nil
+	return nil
 
 }
 func (csm *csmClient) WorkspaceExists(workspaceID string) (bool, bool, error) {
@@ -116,9 +106,10 @@ func (csm *csmClient) WorkspaceExists(workspaceID string) (bool, bool, error) {
 	return true, false, nil
 
 }
-func (csm *csmClient) DeleteWorkspace(workspaceID string) (bool, error) {
+
+func (csm *csmClient) DeleteWorkspace(workspaceID string) error {
 	if !csm.loggedIn {
-		return false, errors.New("Not logged in")
+		return errors.New("Not logged in")
 	}
 	csm.logger.Info("csm-delete-workspace", lager.Data{"workspaceID": workspaceID})
 	params := workspace.DeleteWorkspaceParams{}
@@ -128,28 +119,19 @@ func (csm *csmClient) DeleteWorkspace(workspaceID string) (bool, error) {
 	if err != nil {
 		csmError, ok := err.(*workspace.DeleteWorkspaceDefault)
 		if !ok {
-			return false, err
+			return err
 		}
-		return false, fmt.Errorf(*csmError.Payload.Message)
+		return fmt.Errorf(*csmError.Payload.Message)
 	}
-	// there is no noop for delete
-	//	if response != nil {
-	//		if response.Payload != nil {
-	//			if response.Payload.ProcessingType != nil && response.Payload.Status != nil {
-	//				if *response.Payload.ProcessingType == "none" && *response.Payload.Status == "none" {
-	//					return true, nil
-	//				}
-	//			}
-	//		}
-	//	}
 
 	//TODO: does not throw an error if the workspace does not exist
-	return false, nil
+	return nil
 
 }
-func (csm *csmClient) CreateConnection(workspaceID, connectionID string) (interface{}, bool, error) {
+
+func (csm *csmClient) CreateConnection(workspaceID, connectionID string) (interface{}, error) {
 	if !csm.loggedIn {
-		return nil, false, errors.New("Not logged in")
+		return nil, errors.New("Not logged in")
 	}
 	csm.logger.Info("csm-create-connection", lager.Data{"workspaceID": workspaceID, "connectionID": connectionID})
 	params := connection.CreateConnectionParams{}
@@ -161,28 +143,18 @@ func (csm *csmClient) CreateConnection(workspaceID, connectionID string) (interf
 
 	params.ConnectionCreateRequest = &request
 	response, err := csm.connectionClient.CreateConnection(&params, csm.authInfoWriter)
-
 	if err != nil {
 		csmError, ok := err.(*connection.CreateConnectionDefault)
 		if !ok {
-			return nil, false, err
+			return nil, err
 		}
-		return nil, false, fmt.Errorf(*csmError.Payload.Message)
+		return nil, fmt.Errorf(*csmError.Payload.Message)
 	}
 
-	if response != nil {
-		if response.Payload != nil {
-			if response.Payload.ProcessingType != nil && response.Payload.Status != nil {
-				if *response.Payload.ProcessingType == "none" && *response.Payload.Status == "none" {
-					return nil, true, nil
-				}
-			}
-		}
-	}
-
-	return response.Payload.Details, false, nil
+	return response.Payload.Details, nil
 
 }
+
 func (csm *csmClient) ConnectionExists(workspaceID, connectionID string) (bool, bool, error) {
 	if !csm.loggedIn {
 		return false, false, errors.New("Not logged in")
@@ -219,9 +191,10 @@ func (csm *csmClient) ConnectionExists(workspaceID, connectionID string) (bool, 
 	return true, false, nil
 
 }
-func (csm *csmClient) DeleteConnection(workspaceID, connectionID string) (bool, error) {
+
+func (csm *csmClient) DeleteConnection(workspaceID, connectionID string) error {
 	if !csm.loggedIn {
-		return false, errors.New("Not logged in")
+		return errors.New("Not logged in")
 	}
 	csm.logger.Info("csm-delete-connection", lager.Data{"workspaceID": workspaceID, "connectionID": connectionID})
 	params := connection.DeleteConnectionParams{
@@ -233,20 +206,13 @@ func (csm *csmClient) DeleteConnection(workspaceID, connectionID string) (bool, 
 	if err != nil {
 		csmError, ok := err.(*connection.DeleteConnectionDefault)
 		if !ok {
-			return false, err
+			return err
 		}
-		return false, fmt.Errorf(*csmError.Payload.Message)
+		return fmt.Errorf(*csmError.Payload.Message)
 	}
 
-	//No noop for delete
-	//	if response.Payload != nil {
-	//		if response.Payload.ProcessingType == "none" && response.Payload.Status == "none" {
-	//			return true, nil
-	//		}
-	//	}
-
 	//TODO: in CSM this passes all the time, it does not take into consideration if a connection exists
-	return false, nil
+	return nil
 
 }
 

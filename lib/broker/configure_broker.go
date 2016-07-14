@@ -46,8 +46,7 @@ func idLastOperationHandler(params operations.GetServiceInstancesInstanceIDLastO
 		return operations.NewGetServiceInstancesInstanceIDLastOperationOK().WithPayload(payload)
 	}
 
-	payload.Description = fmt.Sprintf("resources exists = %t", exists)
-	payload.Description = fmt.Sprintf("is Noop exists = %t", isNoop)
+	payload.Description = fmt.Sprintf("resources exists = %t; Operation is noop = %t", exists, isNoop)
 	payload.State = succeded
 	brokerLogger.Info("last-operation-completed", lager.Data{"instance-id": params.InstanceID})
 	return operations.NewGetServiceInstancesInstanceIDLastOperationOK().WithPayload(payload)
@@ -105,8 +104,7 @@ func createServiceInstanceHandler(params operations.CreateServiceInstanceParams,
 		return operations.NewCreateServiceInstanceConflict()
 	}
 
-	//Not sure if we care about noop
-	_, err = brokerCsm.CreateWorkspace(params.InstanceID)
+	err = brokerCsm.CreateWorkspace(params.InstanceID)
 
 	if err != nil {
 		return operations.NewCreateServiceInstanceDefault(500).WithPayload(getBrokerError(err.Error()))
@@ -143,8 +141,7 @@ func deprovisionServiceInstanceHandler(params operations.DeprovisionServiceInsta
 		return operations.NewDeprovisionServiceInstanceDefault(404).WithPayload(getBrokerError("No bind with this name found"))
 	}
 
-	//
-	_, err = brokerCsm.DeleteWorkspace(params.InstanceID)
+	err = brokerCsm.DeleteWorkspace(params.InstanceID)
 
 	if err != nil {
 		brokerLogger.Info("deprovision-service-error", lager.Data{"error": err.Error()})
@@ -178,14 +175,13 @@ func serviceBindHandler(params operations.ServiceBindParams, principal interface
 		return operations.NewServiceBindDefault(500).WithPayload(getBrokerError(err.Error()))
 	}
 
-	//if it already exists we send it the OK - 200 HTTP header
+	//if it already exists we send it the Conflict - 409 HTTP header
 	if exists && !isNoop {
 		brokerLogger.Info("generate-credentials-service-allready exists", lager.Data{"instance-id": params.InstanceID, "binding-id": params.BindingID})
 		return operations.NewServiceBindConflict().WithPayload(map[string]interface{}{})
 	}
 
-	//Ignoring noop for now
-	results, _, err := brokerCsm.CreateConnection(params.InstanceID, params.BindingID)
+	results, err := brokerCsm.CreateConnection(params.InstanceID, params.BindingID)
 
 	if err != nil {
 		brokerLogger.Info("generate-credentials-service-error", lager.Data{"error": err.Error()})
@@ -226,8 +222,7 @@ func serviceUnbindHandler(params operations.ServiceUnbindParams, principal inter
 		return operations.NewServiceUnbindDefault(404).WithPayload(getBrokerError(fmt.Sprintf("Binding %s not found", params.BindingID)))
 	}
 
-	//Ignoring noop for now
-	_, err = brokerCsm.DeleteConnection(params.InstanceID, params.BindingID)
+	err = brokerCsm.DeleteConnection(params.InstanceID, params.BindingID)
 
 	if err != nil {
 		brokerLogger.Info("unbind-instance-error", lager.Data{"error": err.Error()})
