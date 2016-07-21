@@ -105,7 +105,7 @@ func (sb *ServiceBroker) Create(name, url, username, password string) error {
 	headers := make(map[string]string)
 	headers["Authorization"] = token
 
-	log.Debug("preparing-request", lager.Data{"request-content": string(values), "headers": headers})
+	log.Debug("preparing-request", lager.Data{"request-content": string(values)})
 
 	request := httpclient.Request{Verb: "POST", Endpoint: sb.ccAPI, APIURL: path, Body: strings.NewReader(string(values)), Headers: headers, StatusCode: 201}
 
@@ -142,7 +142,7 @@ func (sb *ServiceBroker) Update(serviceBrokerGUID, name, url, username, password
 		return err
 	}
 
-	log.Debug("preparing-request", lager.Data{"request-content": string(values), "headers": headers})
+	log.Debug("preparing-request", lager.Data{"request-content": string(values)})
 
 	request := httpclient.Request{Verb: "PUT", Endpoint: sb.ccAPI, APIURL: path, Body: strings.NewReader(string(values)), Headers: headers, StatusCode: 200}
 
@@ -188,11 +188,12 @@ func (sb *ServiceBroker) GetServiceBrokerGUIDByName(name string) (string, error)
 	path := fmt.Sprintf("/v2/service_brokers?q=name:%s", name)
 
 	headers := make(map[string]string)
-	headers["Authorization"] = token
 	headers["Content-Type"] = "application/x-www-form-urlencoded; charset=UTF-8"
 	headers["Accept"] = "application/json; charset=utf-8"
 
 	log.Debug("preparing-request", lager.Data{"path": path, "headers": headers})
+
+	headers["Authorization"] = token
 
 	findRequest := httpclient.Request{Verb: "GET", Endpoint: sb.ccAPI, APIURL: path, Headers: headers, StatusCode: 200}
 
@@ -328,7 +329,7 @@ func (sb *ServiceBroker) Delete(name string) error {
 	headers := make(map[string]string)
 	headers["Authorization"] = token
 
-	log.Debug("preparing-request", lager.Data{"request-content": string(values), "headers": headers})
+	log.Debug("preparing-request", lager.Data{"request-content": string(values)})
 
 	request := httpclient.Request{Verb: "DELETE", Endpoint: sb.ccAPI, APIURL: path, Body: strings.NewReader(string(values)), Headers: headers, StatusCode: 204}
 
