@@ -71,31 +71,42 @@ func (csm *csmClient) CreateWorkspace(workspaceID string) error {
 	return nil
 
 }
-func (csm *csmClient) WorkspaceExists(workspaceID string) (bool, error) {
+func (csm *csmClient) WorkspaceExists(workspaceID string) (bool, bool, error) {
 	if !csm.loggedIn {
-		return false, errors.New("Not logged in")
+		return false, false, errors.New("Not logged in")
 	}
 	csm.logger.Info("csm-workspace-exists", lager.Data{"workspaceID": workspaceID})
 
 	params := workspace.GetWorkspaceParams{}
 	params.WorkspaceID = workspaceID
-	_, err := csm.workspaceCient.GetWorkspace(&params, csm.authInfoWriter)
+	response, err := csm.workspaceCient.GetWorkspace(&params, csm.authInfoWriter)
 
 	if err != nil {
 		csmError, ok := err.(*workspace.GetWorkspaceDefault)
 		if !ok {
-			return false, err
+			return false, false, err
 		}
 
 		if csmError.Code() == http.StatusNotFound {
-			return false, nil
+			return false, false, nil
 		}
-		return false, fmt.Errorf(*csmError.Payload.Message)
+		return false, false, fmt.Errorf(*csmError.Payload.Message)
 	}
 
-	return true, nil
+	if response != nil {
+		if response.Payload != nil {
+			if response.Payload.ProcessingType != nil && response.Payload.Status != nil {
+				if *response.Payload.ProcessingType == "none" && *response.Payload.Status == "none" {
+					return false, true, nil
+				}
+			}
+		}
+	}
+
+	return true, false, nil
 
 }
+
 func (csm *csmClient) DeleteWorkspace(workspaceID string) error {
 	if !csm.loggedIn {
 		return errors.New("Not logged in")
@@ -117,6 +128,7 @@ func (csm *csmClient) DeleteWorkspace(workspaceID string) error {
 	return nil
 
 }
+
 func (csm *csmClient) CreateConnection(workspaceID, connectionID string) (interface{}, error) {
 	if !csm.loggedIn {
 		return nil, errors.New("Not logged in")
@@ -142,9 +154,10 @@ func (csm *csmClient) CreateConnection(workspaceID, connectionID string) (interf
 	return response.Payload.Details, nil
 
 }
-func (csm *csmClient) ConnectionExists(workspaceID, connectionID string) (bool, error) {
+
+func (csm *csmClient) ConnectionExists(workspaceID, connectionID string) (bool, bool, error) {
 	if !csm.loggedIn {
-		return false, errors.New("Not logged in")
+		return false, false, errors.New("Not logged in")
 	}
 	csm.logger.Info("csm-connection-exists", lager.Data{"workspaceID": workspaceID, "connectionID": connectionID})
 	params := connection.GetConnectionParams{
@@ -152,22 +165,33 @@ func (csm *csmClient) ConnectionExists(workspaceID, connectionID string) (bool, 
 		ConnectionID: connectionID,
 	}
 
-	_, err := csm.connectionClient.GetConnection(&params, csm.authInfoWriter)
+	response, err := csm.connectionClient.GetConnection(&params, csm.authInfoWriter)
 
 	if err != nil {
 		csmError, ok := err.(*connection.GetConnectionDefault)
 		if !ok {
-			return false, err
+			return false, false, err
 		}
 		if csmError.Code() == http.StatusNotFound {
-			return false, nil
+			return false, false, nil
 		}
-		return false, fmt.Errorf(*csmError.Payload.Message)
+		return false, false, fmt.Errorf(*csmError.Payload.Message)
 	}
 
-	return true, nil
+	if response != nil {
+		if response.Payload != nil {
+			if response.Payload.ProcessingType != nil && response.Payload.Status != nil {
+				if *response.Payload.ProcessingType == "none" && *response.Payload.Status == "none" {
+					return false, true, nil
+				}
+			}
+		}
+	}
+
+	return true, false, nil
 
 }
+
 func (csm *csmClient) DeleteConnection(workspaceID, connectionID string) error {
 	if !csm.loggedIn {
 		return errors.New("Not logged in")

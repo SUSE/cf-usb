@@ -42,16 +42,19 @@ func TestCSMClient(t *testing.T) {
 	err = client.CreateWorkspace(workspaceID)
 	assert.Nil(err)
 
-	exists, err := client.WorkspaceExists(workspaceID)
+	exists, isNoop, err := client.WorkspaceExists(workspaceID)
 	assert.Nil(err)
+
+	assert.False(isNoop)
 	assert.True(exists)
 
 	credentials, err := client.CreateConnection(workspaceID, connectionID)
 	assert.Nil(err)
 	assert.NotNil(credentials)
 
-	credExist, err := client.ConnectionExists(workspaceID, connectionID)
+	credExist, isNoop, err := client.ConnectionExists(workspaceID, connectionID)
 	assert.Nil(err)
+	assert.False(isNoop)
 	assert.True(credExist)
 
 	client.DeleteConnection(workspaceID, connectionID)
@@ -78,8 +81,9 @@ func TestGetConnectionDoesNotExist(t *testing.T) {
 		assert.Fail(err.Error())
 	}
 
-	credExist, err := client.ConnectionExists(workspaceID, connectionID)
+	credExist, isNoop, err := client.ConnectionExists(workspaceID, connectionID)
 	assert.Nil(err)
+	assert.False(isNoop)
 	assert.False(credExist)
 }
 
@@ -98,8 +102,9 @@ func TestGetWorkspaceDoesNotExist(t *testing.T) {
 		assert.Fail(err.Error())
 	}
 
-	exists, err := client.WorkspaceExists(workspaceID)
+	exists, isNoop, err := client.WorkspaceExists(workspaceID)
 	assert.Nil(err)
+	assert.False(isNoop)
 	assert.False(exists)
 }
 
