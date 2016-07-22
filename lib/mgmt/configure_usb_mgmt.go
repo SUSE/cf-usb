@@ -115,8 +115,8 @@ func ConfigureAPI(api *operations.UsbMgmtAPI, auth authentication.Authentication
 				Name:              &name,
 				EndpointURL:       endpoint.TargetURL,
 				AuthenticationKey: endpoint.AuthenticationKey,
-				SkipSsl:           &endpoint.SkipSsl,
-				CaCert:            endpoint.CaCert,
+				SkipSSLValidation: &endpoint.SkipSsl,
+				CaCertificate:     endpoint.CaCert,
 				Metadata:          metadata,
 			}
 
@@ -168,13 +168,13 @@ func ConfigureAPI(api *operations.UsbMgmtAPI, auth authentication.Authentication
 
 		instance.TargetURL = params.DriverEndpoint.EndpointURL
 		instance.AuthenticationKey = params.DriverEndpoint.AuthenticationKey
-		if params.DriverEndpoint.SkipSsl == nil {
+		if params.DriverEndpoint.SkipSSLValidation == nil {
 			instance.SkipSsl = false
 		} else {
-			instance.SkipSsl = *params.DriverEndpoint.SkipSsl
+			instance.SkipSsl = *params.DriverEndpoint.SkipSSLValidation
 		}
 
-		instance.CaCert = params.DriverEndpoint.CaCert
+		instance.CaCert = params.DriverEndpoint.CaCertificate
 
 		driverInstanceNameExist, err := configProvider.InstanceNameExists(*params.DriverEndpoint.Name)
 		if err != nil {
@@ -202,7 +202,7 @@ func ConfigureAPI(api *operations.UsbMgmtAPI, auth authentication.Authentication
 			}
 		}
 
-		err = csmClient.Login(instance.TargetURL, instance.AuthenticationKey)
+		err = csmClient.Login(instance.TargetURL, instance.AuthenticationKey, instance.CaCert, instance.SkipSsl)
 		if err != nil {
 			log.Error("csm-login-failed", err)
 			return &operations.RegisterDriverEndpointInternalServerError{Payload: err.Error()}

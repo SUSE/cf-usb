@@ -338,14 +338,14 @@
                 "metadata": {
                     "$ref": "#/definitions/endpointMetadata"
                 },
-                "skipSsl": {
+                "skipSSLValidation": {
                     "type": "boolean",
                     "default": false,
                     "description": "Indicates if SSL validation is skiped for a specified driver endpoint\n"
                 },
-                "caCert": {
+                "caCertificate": {
                     "type": "string",
-                    "description": "The certificate used for creating a secure TLS connection between USB and the driver endpoint\n"
+                    "description": "The certificate used to issue the certificate providing TLS\n"
                 }
             }
         }

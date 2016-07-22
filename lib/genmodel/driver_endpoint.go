@@ -23,10 +23,10 @@ type DriverEndpoint struct {
 	*/
 	AuthenticationKey string `json:"authenticationKey,omitempty"`
 
-	/* The certificate used for creating a secure TLS connection between USB and the driver endpoint
+	/* The certificate used to issue the certificate providing TLS
 
 	 */
-	CaCert string `json:"caCert,omitempty"`
+	CaCertificate string `json:"caCertificate,omitempty"`
 
 	/* URL for the driver endpoint. Used by the USB to create service
 	instances, generate credentials, discover plans and schemas.
@@ -54,7 +54,7 @@ type DriverEndpoint struct {
 	/* Indicates if SSL validation is skiped for a specified driver endpoint
 
 	 */
-	SkipSsl *bool `json:"skipSsl,omitempty"`
+	SkipSSLValidation *bool `json:"skipSSLValidation,omitempty"`
 }
 
 // Validate validates this driver endpoint

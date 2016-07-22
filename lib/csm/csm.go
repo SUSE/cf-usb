@@ -33,13 +33,14 @@ func NewCSMClient(logger lager.Logger) CSM {
 	return &csm
 }
 
-func (csm *csmClient) Login(targetEndpoint string, token string) error {
+func (csm *csmClient) Login(targetEndpoint string, token string, caCert string, skipTls bool) error {
 	csm.logger.Info("csm-login", lager.Data{"endpoint": targetEndpoint})
 	target, err := url.Parse(targetEndpoint)
 	if err != nil {
 		return err
 	}
 	transport := runtimeClient.New(target.Host, "/", []string{target.Scheme})
+	//runtimeClient.Runtime.Transport := http.Transport.
 	csm.workspaceCient = workspace.New(transport, strfmt.Default)
 	csm.statusClient = status.New(transport, strfmt.Default)
 	csm.connectionClient = connection.New(transport, strfmt.Default)
