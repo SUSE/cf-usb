@@ -339,7 +339,8 @@
                     "$ref": "#/definitions/endpointMetadata"
                 },
                 "skipSsl": {
-                    "type": "string",
+                    "type": "boolean",
+                    "default": false,
                     "description": "Indicates if SSL validation is skiped for a specified driver endpoint\n"
                 },
                 "caCert": {

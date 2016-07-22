@@ -115,6 +115,8 @@ func ConfigureAPI(api *operations.UsbMgmtAPI, auth authentication.Authentication
 				Name:              &name,
 				EndpointURL:       endpoint.TargetURL,
 				AuthenticationKey: endpoint.AuthenticationKey,
+				SkipSsl:           &endpoint.SkipSsl,
+				CaCert:            endpoint.CaCert,
 				Metadata:          metadata,
 			}
 
@@ -166,6 +168,13 @@ func ConfigureAPI(api *operations.UsbMgmtAPI, auth authentication.Authentication
 
 		instance.TargetURL = params.DriverEndpoint.EndpointURL
 		instance.AuthenticationKey = params.DriverEndpoint.AuthenticationKey
+		if params.DriverEndpoint.SkipSsl == nil {
+			instance.SkipSsl = false
+		} else {
+			instance.SkipSsl = *params.DriverEndpoint.SkipSsl
+		}
+
+		instance.CaCert = params.DriverEndpoint.CaCert
 
 		driverInstanceNameExist, err := configProvider.InstanceNameExists(*params.DriverEndpoint.Name)
 		if err != nil {

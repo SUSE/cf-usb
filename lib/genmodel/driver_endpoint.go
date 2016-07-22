@@ -54,7 +54,7 @@ type DriverEndpoint struct {
 	/* Indicates if SSL validation is skiped for a specified driver endpoint
 
 	 */
-	SkipSsl string `json:"skipSsl,omitempty"`
+	SkipSsl *bool `json:"skipSsl,omitempty"`
 }
 
 // Validate validates this driver endpoint

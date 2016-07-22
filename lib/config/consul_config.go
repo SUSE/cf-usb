@@ -3,6 +3,7 @@ package config
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/hpcloud/cf-usb/lib/brokermodel"
@@ -141,6 +142,25 @@ func (c *consulConfig) GetInstance(instanceID string) (*Instance, string, error)
 	if err != nil {
 		return nil, "", err
 	}
+
+	caCert, err := c.provisioner.GetValue(key + "/ca_cert")
+	if err != nil {
+		return nil, "", err
+	}
+	instance.CaCert = string(caCert)
+
+	skipSsl, err := c.provisioner.GetValue(key + "/skip_ssl")
+	if err != nil {
+		return nil, "", err
+	}
+
+	skipSslBool, err := strconv.ParseBool(string(skipSsl))
+	if err != nil {
+		return nil, "", err
+	}
+
+	instance.SkipSsl = skipSslBool
+
 	driverID := strings.Split(key, "/")[2]
 	return &instance, driverID, nil
 }
@@ -194,6 +214,17 @@ func (c *consulConfig) SetInstance(instanceID string, instance Instance) error {
 	}
 
 	err = c.provisioner.AddKV("usb/instances/"+instanceID+"/authentication_key", []byte(instance.AuthenticationKey), nil)
+	if err != nil {
+		return err
+	}
+
+	err = c.provisioner.AddKV("usb/instances/"+instanceID+"/ca_cert", []byte(instance.CaCert), nil)
+	if err != nil {
+		return err
+	}
+
+	skipSsl := strconv.FormatBool(instance.SkipSsl)
+	err = c.provisioner.AddKV("usb/instances/"+instanceID+"/skip_ssl", []byte(skipSsl), nil)
 	if err != nil {
 		return err
 	}
@@ -355,12 +386,10 @@ func (c *consulConfig) InstanceNameExists(driverInstanceName string) (bool, erro
 		return false, err
 	}
 	for _, instance := range instances {
-
-		value, err := c.provisioner.GetValue(instance + "Name")
+		value, err := c.provisioner.GetValue(instance + "name")
 		if err != nil {
 			return false, err
 		}
-
 		if string(value) == driverInstanceName {
 			return true, nil
 		}
