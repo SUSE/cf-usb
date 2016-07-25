@@ -302,7 +302,7 @@ func getServiceAfterLogin(csm csm.CSM, configProvider config.Provider, serviceID
 		fmt.Printf("servID=%s, Service.ID = %s, TargetURL=%s\n", serviceID, driverInstance.Service.ID, driverInstance.TargetURL)
 		if driverInstance.Service.ID == serviceID {
 			if driverInstance.TargetURL != "" {
-				err = csm.Login(driverInstance.TargetURL, driverInstance.AuthenticationKey)
+				err = csm.Login(driverInstance.TargetURL, driverInstance.AuthenticationKey, driverInstance.CaCert, driverInstance.SkipSsl)
 				if err != nil {
 					return nil, err
 				}

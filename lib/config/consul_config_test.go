@@ -47,6 +47,9 @@ func Test_GetDriverInstance(t *testing.T) {
 	provisioner.On("GetValue", "/usb/instances/testInstanceID/name").Return([]byte("MockedTestInstanceData"), nil)
 	provisioner.On("GetValue", "/usb/instances/testInstanceID/service").Return([]byte("{\"id\":\"a\",\"Name\":\"test\"}"), nil)
 
+	provisioner.On("GetValue", "/usb/instances/testInstanceID/ca_cert").Return([]byte(""), nil)
+	provisioner.On("GetValue", "/usb/instances/testInstanceID/skip_ssl").Return([]byte("true"), nil)
+
 	provisioner.On("GetAllKeys", "usb/instances/", "", qoptions).Return([]string{"/usb/instances/testInstanceID/name"}, nil)
 
 	TestConfig.Provider = NewConsulConfig(provisioner)
@@ -109,6 +112,9 @@ func Test_GetService(t *testing.T) {
 	provisioner := new(consulMock.Provisioner)
 
 	provisioner.On("GetValue", "usb/instances/testInstanceID/authentication_key").Return([]byte("secret_key"), nil)
+
+	provisioner.On("GetValue", "usb/instances/testInstanceID/ca_cert").Return([]byte(""), nil)
+	provisioner.On("GetValue", "usb/instances/testInstanceID/skip_ssl").Return([]byte("true"), nil)
 
 	provisioner.On("GetValue", "usb/api_version").Return([]byte("1.2"), nil)
 
@@ -224,6 +230,9 @@ func Test_ConsulLoadConfig(t *testing.T) {
 	var qoptions *api.QueryOptions
 
 	provisioner.On("GetValue", "usb/instances/testInstanceID/authentication_key").Return([]byte("secret_key"), nil)
+
+	provisioner.On("GetValue", "usb/instances/testInstanceID/ca_cert").Return([]byte(""), nil)
+	provisioner.On("GetValue", "usb/instances/testInstanceID/skip_ssl").Return([]byte("true"), nil)
 
 	provisioner.On("GetValue", "usb/api_version").Return([]byte("2.1"), nil)
 

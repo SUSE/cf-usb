@@ -2,7 +2,7 @@ package csm
 
 //CSM is the model to use for implementing a new CSM client
 type CSM interface {
-	Login(string, string) error
+	Login(string, string, string, bool) error
 	CreateWorkspace(string) error
 	WorkspaceExists(string) (bool, bool, error)
 	DeleteWorkspace(string) error

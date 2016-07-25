@@ -115,7 +115,7 @@ func Test_RegisterDriverEndpoint(t *testing.T) {
 	mObjects.serviceBroker.Mock.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	mObjects.serviceBroker.Mock.On("Update", "aguid", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	mObjects.serviceBroker.Mock.On("EnableServiceAccess", mock.Anything).Return(nil)
-	mObjects.csmClient.Mock.On("Login", params.DriverEndpoint.EndpointURL, params.DriverEndpoint.AuthenticationKey).Return(nil)
+	mObjects.csmClient.Mock.On("Login", params.DriverEndpoint.EndpointURL, params.DriverEndpoint.AuthenticationKey, "", false).Return(nil)
 	mObjects.csmClient.Mock.On("GetStatus").Return(nil)
 
 	response := mObjects.usbMgmt.RegisterDriverEndpointHandler.Handle(*params, true)

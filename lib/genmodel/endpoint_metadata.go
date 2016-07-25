@@ -9,11 +9,18 @@ import (
 	"github.com/go-openapi/errors"
 )
 
-/*EndpointMetadata endpoint metadata
+/*EndpointMetadata Optional metadata configuration used by graphical clients to display
+information about a service.
+
 
 swagger:model endpointMetadata
 */
 type EndpointMetadata struct {
+
+	/* The categories of a service
+
+	 */
+	Categories string `json:"categories,omitempty"`
 
 	/* The name of the service to be displayed in graphical clients
 
@@ -44,6 +51,11 @@ type EndpointMetadata struct {
 
 	 */
 	SupportURL string `json:"supportUrl,omitempty"`
+
+	/* The version of the service
+
+	 */
+	Version string `json:"version,omitempty"`
 }
 
 // Validate validates this endpoint metadata

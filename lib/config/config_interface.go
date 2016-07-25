@@ -64,6 +64,8 @@ type Instance struct {
 	Dials             map[string]Dial            `json:"dials"`
 	Service           brokermodel.CatalogService `json:"service"`
 	AuthenticationKey string                     `json:"authentication_key"`
+	CaCert            string                     `json:"ca_cert,omitempty"`
+	SkipSsl           bool                       `json:"skip_ssl"`
 }
 
 //RoutesRegister is the definition for RouteRegister

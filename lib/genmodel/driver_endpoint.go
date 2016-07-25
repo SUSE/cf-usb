@@ -23,6 +23,11 @@ type DriverEndpoint struct {
 	*/
 	AuthenticationKey string `json:"authenticationKey,omitempty"`
 
+	/* The certificate used to issue the certificate providing TLS
+
+	 */
+	CaCertificate string `json:"caCertificate,omitempty"`
+
 	/* URL for the driver endpoint. Used by the USB to create service
 	instances, generate credentials, discover plans and schemas.
 
@@ -34,10 +39,8 @@ type DriverEndpoint struct {
 	 */
 	ID string `json:"id,omitempty"`
 
-	/* Optional metadata configuration used by graphical clients to display
-	information about a service.
-
-	*/
+	/* metadata
+	 */
 	Metadata *EndpointMetadata `json:"metadata,omitempty"`
 
 	/* The name of the driver endpoint. It's displayed by the Cloud Foundry
@@ -47,6 +50,11 @@ type DriverEndpoint struct {
 	Required: true
 	*/
 	Name *string `json:"name"`
+
+	/* Indicates if SSL validation is skiped for a specified driver endpoint
+
+	 */
+	SkipSSLValidation *bool `json:"skipSSLValidation,omitempty"`
 }
 
 // Validate validates this driver endpoint

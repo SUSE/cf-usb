@@ -276,6 +276,7 @@
             }
         },
         "endpointMetadata": {
+            "description": "Optional metadata configuration used by graphical clients to display\ninformation about a service.\n",
             "type": "object",
             "properties": {
                 "displayName": {
@@ -301,6 +302,14 @@
                 "supportUrl": {
                     "type": "string",
                     "description": "Link to support information for the service\n"
+                },
+                "categories": {
+                    "type": "string",
+                    "description": "The categories of a service\n"
+                },
+                "version": {
+                    "type": "string",
+                    "description": "The version of the service\n"
                 }
             }
         },
@@ -327,8 +336,16 @@
                     "description": "An authentication key used by the USB when communicating with the \ndriver endpoint.\n"
                 },
                 "metadata": {
-                    "$ref": "#/definitions/endpointMetadata",
-                    "description": "Optional metadata configuration used by graphical clients to display\ninformation about a service.\n"
+                    "$ref": "#/definitions/endpointMetadata"
+                },
+                "skipSSLValidation": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Indicates if SSL validation is skiped for a specified driver endpoint\n"
+                },
+                "caCertificate": {
+                    "type": "string",
+                    "description": "The certificate used to issue the certificate providing TLS\n"
                 }
             }
         }

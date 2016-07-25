@@ -49,16 +49,11 @@ func initProvider() (bool, ifrit.Process, error) {
 		return false, nil, nil
 	}
 	consulConfig.Address = IntegrationConfig.consulAddress
-	consulConfig.Datacenter = IntegrationConfig.consulPassword
 
-	if consulConfig.Address == "" || consulConfig.Datacenter == "" {
+	if consulConfig.Address == "" {
 		return false, nil, nil
 	}
-	var auth api.HttpBasicAuth
-	auth.Username = IntegrationConfig.consulUser
-	auth.Password = IntegrationConfig.consulPassword
 
-	consulConfig.HttpAuth = &auth
 	consulConfig.Scheme = IntegrationConfig.consulSchema
 
 	consulConfig.Token = IntegrationConfig.consulToken
@@ -92,7 +87,7 @@ func Test_IntDriverInstance(t *testing.T) {
 
 	initialized, process, err := initProvider()
 	if initialized == false || err != nil {
-		t.Skip("Skipping Consul Set Driver test, environment variables not set: CONSUL_ADDRESS(host:port), CONSUL_DATACENTER, CONSUL_TOKEN / CONSUL_USER + CONSUL_PASSWORD, CONSUL_SCHEMA")
+		t.Skip("Skipping Consul Set Driver test, environment variables not set: CONSUL_ADDRESS(host:port), seting CONSUL_ADDRESS to 127.0.0.1:8500 will start a service on the local machine")
 		t.Log(err)
 	}
 
@@ -100,12 +95,18 @@ func Test_IntDriverInstance(t *testing.T) {
 
 	var instance Instance
 	instance.Name = "testInstance"
+	instance.CaCert = "-----BEGIN CERTIFICATE-----\nMIIFCzCCAvOgAwIBAgIBATANBgkqhkiG9w0BAQsFADAVMRMwEQYDVQQDEwppbnRl\ncm5hbENBMB4XDTE2MDcxODIxMjYxOVoXDTI2MDcxODIxMjYyMlowFTETMBEGA1UE\nAxMKaW50ZXJuYWxDQTCCAiIwDQYJKoZIhvcNAQEBBQADggIPADCCAgoCggIBAMPy\n1fazELUA0mi9ffXpCGamjZsvtv/agOastPN51LTJcdX7uPQWw0XgCVjJ1qdUfuy1\n6DG56YS7CTRgVZ66Rf3TQN0wRa7iMfz/Ngkfwy8qYi8VgiOms55aZwn+RfJAioac\n5GsLMUsXq7So6R5CW2RvEo47xTOYAoM3FhmniMsu7KJq/Iq9aldgtqrVkbicqzgq\n4Cqs4f5TlpzqvlT1pzgV55FbX5arqj9vldRXS32s0xDWvgAt7tdgV16tPYu6qyWa\nsFYBGQE1Fjl0edmR9WNCopZaZUHdTjJ6+hVQsEOyQ28JypO0dwtuzv/d/DwduhiU\nS1KApX4M03ChKKusJXw/Wc8GDmaWt82gd2LhptpEgL//4fzt39yCTGdfOZL/irjD\nl28jBnNYSdz019OsWqE3uPOKgEdimQNZnPGIGNu1R/yyb4BbvX8ZiT0fj4unjGd/\n77F7oVf4z8T4lUAgGArcsbIc3SgKBBi/uQwzJEOo7cg+p9PcE7e6PBRIBRQYeYgG\nPsBGMTJO+4BJrzcUgz3r7Fginn3cMhWofB0XYOP73u0h3hyJDe+GPedWiO0SFeZ2\nNZREF131Fods0vV5m1VcOTYDZxaAj9b1DvBMtJvwgR5J98aVx8OrihoNOcEGGHON\nHqsx/ik7cDShrHf2ZWKtdY1egoKwfFKKarhi552fAgMBAAGjZjBkMA4GA1UdDwEB\n/wQEAwIBBjASBgNVHRMBAf8ECDAGAQH/AgEAMB0GA1UdDgQWBBS4BaKkSHho/32t\nlFUCDKQlM/CPfDAfBgNVHSMEGDAWgBS4BaKkSHho/32tlFUCDKQlM/CPfDANBgkq\nhkiG9w0BAQsFAAOCAgEAi+OcyYCIA5cYoituIUXmQfAhh7qjOrcZNsPZq6KjrE5W\nhMwyEHrfWB0Rv2+WSIa4GvvMgkweGeY4s+3Y/3ml/AciYzolqlUUzAWudqi3gW9G\nMKY89boFgzcEAFeX0MJq9SSQuSlNmpHy4glPEKV1abevMAuiD3CRq7XoDdN68K4L\nULMfdrE78ae+Kd4xdCtJyccNGZ1PAPEIMfGIY+I1VbBre9M0z0YJi+O9EuBilxYb\ns4tuN5LVEaLk8AuC+Ik+nH+zWTKfLiSAe1r5Gvx5ERweYkvylYV5u7ERb/B6PXrN\nRwpmTkLGMr4bMNWGEpw/Z9mxHFxiJgNgZLg4IPkEYr2dtpO8s3FalT2DvOClsVIJ\njsSNZONumhdn2GVhOJoctTwh2kXSXDGsuNBhsAg6Q3F2ejNJCqKfqyW4PLnxi8/2\nrtYBKDRpjjSjX1MOkBluAuoxR6DjybldK2+cag9dPvAVYidxCH8j7y7eawBEBsFs\nIsuu+bom/Wv8zNDQpXXEUBEuJPRqsrLZdHCJH2e7hoKS03oXRXNkERRjekQLaUnc\n51Zrq5GowsmMSircZJPfufIltTurBK5uwX+iaxalb/ynqAzD2s8BxI5dzrRi2Jkv\nTk0STTyj0QVppy4kwJfI3vuAPTg45gNkhNDGAQ3pRnh3g4Jq9jgptcgahpkGoGs=\n-----END CERTIFICATE-----"
+
 	err = IntegrationConfig.Provider.SetInstance("testInstanceID", instance)
 	assert.NoError(err)
 
 	instanceInfo, _, err := IntegrationConfig.Provider.GetInstance("testInstanceID")
 
 	assert.Equal("testInstance", instanceInfo.Name)
+	//Test if default is false
+	assert.Equal(false, instance.SkipSsl)
+	assert.Equal("-----BEGIN CERTIFICATE-----\nMIIFCzCCAvOgAwIBAgIBATANBgkqhkiG9w0BAQsFADAVMRMwEQYDVQQDEwppbnRl\ncm5hbENBMB4XDTE2MDcxODIxMjYxOVoXDTI2MDcxODIxMjYyMlowFTETMBEGA1UE\nAxMKaW50ZXJuYWxDQTCCAiIwDQYJKoZIhvcNAQEBBQADggIPADCCAgoCggIBAMPy\n1fazELUA0mi9ffXpCGamjZsvtv/agOastPN51LTJcdX7uPQWw0XgCVjJ1qdUfuy1\n6DG56YS7CTRgVZ66Rf3TQN0wRa7iMfz/Ngkfwy8qYi8VgiOms55aZwn+RfJAioac\n5GsLMUsXq7So6R5CW2RvEo47xTOYAoM3FhmniMsu7KJq/Iq9aldgtqrVkbicqzgq\n4Cqs4f5TlpzqvlT1pzgV55FbX5arqj9vldRXS32s0xDWvgAt7tdgV16tPYu6qyWa\nsFYBGQE1Fjl0edmR9WNCopZaZUHdTjJ6+hVQsEOyQ28JypO0dwtuzv/d/DwduhiU\nS1KApX4M03ChKKusJXw/Wc8GDmaWt82gd2LhptpEgL//4fzt39yCTGdfOZL/irjD\nl28jBnNYSdz019OsWqE3uPOKgEdimQNZnPGIGNu1R/yyb4BbvX8ZiT0fj4unjGd/\n77F7oVf4z8T4lUAgGArcsbIc3SgKBBi/uQwzJEOo7cg+p9PcE7e6PBRIBRQYeYgG\nPsBGMTJO+4BJrzcUgz3r7Fginn3cMhWofB0XYOP73u0h3hyJDe+GPedWiO0SFeZ2\nNZREF131Fods0vV5m1VcOTYDZxaAj9b1DvBMtJvwgR5J98aVx8OrihoNOcEGGHON\nHqsx/ik7cDShrHf2ZWKtdY1egoKwfFKKarhi552fAgMBAAGjZjBkMA4GA1UdDwEB\n/wQEAwIBBjASBgNVHRMBAf8ECDAGAQH/AgEAMB0GA1UdDgQWBBS4BaKkSHho/32t\nlFUCDKQlM/CPfDAfBgNVHSMEGDAWgBS4BaKkSHho/32tlFUCDKQlM/CPfDANBgkq\nhkiG9w0BAQsFAAOCAgEAi+OcyYCIA5cYoituIUXmQfAhh7qjOrcZNsPZq6KjrE5W\nhMwyEHrfWB0Rv2+WSIa4GvvMgkweGeY4s+3Y/3ml/AciYzolqlUUzAWudqi3gW9G\nMKY89boFgzcEAFeX0MJq9SSQuSlNmpHy4glPEKV1abevMAuiD3CRq7XoDdN68K4L\nULMfdrE78ae+Kd4xdCtJyccNGZ1PAPEIMfGIY+I1VbBre9M0z0YJi+O9EuBilxYb\ns4tuN5LVEaLk8AuC+Ik+nH+zWTKfLiSAe1r5Gvx5ERweYkvylYV5u7ERb/B6PXrN\nRwpmTkLGMr4bMNWGEpw/Z9mxHFxiJgNgZLg4IPkEYr2dtpO8s3FalT2DvOClsVIJ\njsSNZONumhdn2GVhOJoctTwh2kXSXDGsuNBhsAg6Q3F2ejNJCqKfqyW4PLnxi8/2\nrtYBKDRpjjSjX1MOkBluAuoxR6DjybldK2+cag9dPvAVYidxCH8j7y7eawBEBsFs\nIsuu+bom/Wv8zNDQpXXEUBEuJPRqsrLZdHCJH2e7hoKS03oXRXNkERRjekQLaUnc\n51Zrq5GowsmMSircZJPfufIltTurBK5uwX+iaxalb/ynqAzD2s8BxI5dzrRi2Jkv\nTk0STTyj0QVppy4kwJfI3vuAPTg45gNkhNDGAQ3pRnh3g4Jq9jgptcgahpkGoGs=\n-----END CERTIFICATE-----", instanceInfo.CaCert)
+
 	assert.NoError(err)
 
 	exist, err := IntegrationConfig.Provider.InstanceNameExists("testInstance")
