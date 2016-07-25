@@ -11,6 +11,7 @@ import (
 	"github.com/hpcloud/cf-usb/lib/config"
 	"github.com/hpcloud/cf-usb/lib/config/consul"
 	"github.com/hpcloud/cf-usb/lib/csm"
+	"github.com/pivotal-golang/lager"
 	"github.com/pivotal-golang/lager/lagertest"
 	"github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
@@ -33,7 +34,16 @@ var logger = lagertest.NewTestLogger("csm-client-test")
 var csmEndpoint = ""
 var authToken = ""
 
-func setupEnv() (*operations.BrokerAPI, error) {
+func cleanupConsul(provisioner consul.Provisioner) {
+	err := provisioner.DeleteKVs("usb", nil)
+	if err != nil {
+		logger.Error("Failed to delete USB key", err)
+	}
+	logger.Info("cleanup_consul", lager.Data{"success": "finished cleaning consul"})
+
+}
+
+func setupEnv() (*operations.BrokerAPI, consul.Provisioner, error) {
 	ConsulConfig.ConsulAddress = os.Getenv("CONSUL_ADDRESS")
 	ConsulConfig.ConsulDatacenter = os.Getenv("CONSUL_DATACENTER")
 	ConsulConfig.ConsulPassword = os.Getenv("CONSUL_PASSWORD")
@@ -43,13 +53,13 @@ func setupEnv() (*operations.BrokerAPI, error) {
 	csmEndpoint = os.Getenv("CSM_ENDPOINT")
 	authToken = os.Getenv("CSM_API_KEY")
 	if ConsulConfig.ConsulAddress == "" {
-		return nil, fmt.Errorf("CONSUL configuration environment variables not set")
+		return nil, nil, fmt.Errorf("CONSUL configuration environment variables not set")
 	}
 	if csmEndpoint == "" {
-		return nil, fmt.Errorf("CSM_ENDPOINT not set")
+		return nil, nil, fmt.Errorf("CSM_ENDPOINT not set")
 	}
 	if authToken == "" {
-		return nil, fmt.Errorf("CSM_API_KEY not set")
+		return nil, nil, fmt.Errorf("CSM_API_KEY not set")
 	}
 
 	var consulConfig api.Config
@@ -67,7 +77,7 @@ func setupEnv() (*operations.BrokerAPI, error) {
 
 	provisioner, err := consul.New(&consulConfig)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	var list api.KVPairs
 	list = append(list, &api.KVPair{Key: "usb/api_version", Value: []byte("2.6")})
@@ -78,7 +88,7 @@ func setupEnv() (*operations.BrokerAPI, error) {
 
 	err = provisioner.PutKVs(&list, nil)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	instanceInfo := config.Instance{}
@@ -103,28 +113,29 @@ func setupEnv() (*operations.BrokerAPI, error) {
 	configProvider := config.NewConsulConfig(provisioner)
 	err = configProvider.SetInstance(uuid.NewV4().String(), instanceInfo)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	csmInterface := csm.NewCSMClient(logger)
 	swaggerSpec, err := loads.Analyzed(broker.SwaggerJSON, "")
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	brokerAPI := operations.NewBrokerAPI(swaggerSpec)
 
 	broker.ConfigureAPI(brokerAPI, csmInterface, configProvider, logger)
 
 	//broker := lib.NewUsbBroker(configProvider, logger, csmInterface)
-	return brokerAPI, nil
+	return brokerAPI, provisioner, nil
 }
 
 func TestBrokerAPIProvisionTest(t *testing.T) {
 	assert := assert.New(t)
-	brokerA, err := setupEnv()
+	brokerA, provisioner, err := setupEnv()
 	if err != nil {
 		t.Skip(err)
 	}
+	defer cleanupConsul(provisioner)
 
 	workspaceID := uuid.NewV4().String()
 	params := operations.CreateServiceInstanceParams{}
@@ -148,10 +159,11 @@ func TestBrokerAPIProvisionTest(t *testing.T) {
 
 func TestBrokerAPIBindTest(t *testing.T) {
 	assert := assert.New(t)
-	brokerA, err := setupEnv()
+	brokerA, provisioner, err := setupEnv()
 	if err != nil {
 		t.Skip(err)
 	}
+	defer cleanupConsul(provisioner)
 
 	workspaceID := uuid.NewV4().String()
 	params := operations.CreateServiceInstanceParams{}
@@ -192,10 +204,11 @@ func TestBrokerAPIBindTest(t *testing.T) {
 
 func TestBrokerAPIUnbindTest(t *testing.T) {
 	assert := assert.New(t)
-	brokerA, err := setupEnv()
+	brokerA, provisioner, err := setupEnv()
 	if err != nil {
 		t.Skip(err)
 	}
+	defer cleanupConsul(provisioner)
 
 	workspaceID := uuid.NewV4().String()
 	connectionID := uuid.NewV4().String()
@@ -248,10 +261,12 @@ func TestBrokerAPIUnbindTest(t *testing.T) {
 
 func TestBrokerAPIDeprovisionTest(t *testing.T) {
 	assert := assert.New(t)
-	brokerA, err := setupEnv()
+	brokerA, provisioner, err := setupEnv()
 	if err != nil {
 		t.Skip(err)
 	}
+
+	defer cleanupConsul(provisioner)
 
 	workspaceID := uuid.NewV4().String()
 	params := operations.CreateServiceInstanceParams{}

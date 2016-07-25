@@ -18,6 +18,7 @@ import (
 	sbMocks "github.com/hpcloud/cf-usb/lib/mgmt/cc_integration/ccapi/mocks"
 
 	"github.com/hpcloud/cf-usb/lib/mgmt/operations"
+	"github.com/pivotal-golang/lager"
 	"github.com/pivotal-golang/lager/lagertest"
 	"github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
@@ -39,7 +40,7 @@ var ConsulConfig = struct {
 var csmEndpoint = ""
 var authToken = ""
 
-func initConsulProvider() (*config.Provider, error) {
+func initiConsulProvisioner() (consul.Provisioner, error) {
 	ConsulConfig.ConsulAddress = os.Getenv("CONSUL_ADDRESS")
 	ConsulConfig.ConsulDatacenter = os.Getenv("CONSUL_DATACENTER")
 	ConsulConfig.ConsulPassword = os.Getenv("CONSUL_PASSWORD")
@@ -70,8 +71,46 @@ func initConsulProvider() (*config.Provider, error) {
 	if err != nil {
 		return nil, err
 	}
+	return provisioner, err
+}
+
+func cleanupConsul() {
+	provisioner, err := initiConsulProvisioner()
+	if err != nil {
+		logger.Error("Failed to cleanup", err)
+	}
+	err = provisioner.DeleteKVs("usb", nil)
+	if err != nil {
+		logger.Error("Failed to delete USB key", err)
+	}
+	logger.Info("cleanup_consul", lager.Data{"success": "finished cleaning consul"})
+
+}
+
+func initConsulProvider() (*config.Provider, error) {
+	provisioner, err := initiConsulProvisioner()
+	if err != nil {
+		return nil, err
+	}
+
+	var list api.KVPairs
+	list = append(list, &api.KVPair{Key: "usb/api_version", Value: []byte("2.6")})
+
+	list = append(list, &api.KVPair{Key: "usb/broker_api", Value: []byte("{\"listen\":\":54054\",\"credentials\":{\"username\":\"demouser\",\"password\":\"demopassword\"}}")})
+
+	list = append(list, &api.KVPair{Key: "usb/management_api", Value: []byte("{\"listen\":\":54053\",\"uaa_secret\":\"myuaasecret\",\"uaa_client\":\"myuaaclient\",\"authentication\":{\"uaa\":{\"adminscope\":\"usb.management.admin\",\"public_key\":\"\"}}}")})
+
+	err = provisioner.PutKVs(&list, nil)
+	if err != nil {
+		return nil, err
+	}
+
 	configProvider := config.NewConsulConfig(provisioner)
 	return &configProvider, nil
+}
+
+func cleanup(provider config.Provider) {
+
 }
 
 func initMgmt(provider config.Provider) (*operations.UsbMgmtAPI, error) {
@@ -113,6 +152,7 @@ func TestGetInfo(t *testing.T) {
 	if err != nil {
 		t.Skip(err)
 	}
+	defer cleanupConsul()
 	mgmtInterface, err := initMgmt(*consulProvider)
 	if err != nil {
 		t.Error(err)
@@ -130,6 +170,7 @@ func Test_RegisterDriverEndpoint(t *testing.T) {
 	if err != nil {
 		t.Skip(err)
 	}
+	defer cleanupConsul()
 
 	mgmtInterface, err := initMgmt(*consulProvider)
 	if err != nil {
@@ -167,6 +208,8 @@ func Test_RegisterDriverEndpoint(t *testing.T) {
 	response := mgmtInterface.RegisterDriverEndpointHandler.Handle(*params, true)
 
 	assert.IsType(&operations.RegisterDriverEndpointCreated{}, response)
+
+	//cleanup
 }
 
 func Test_UpdateInstanceEndpoint(t *testing.T) {
@@ -176,6 +219,7 @@ func Test_UpdateInstanceEndpoint(t *testing.T) {
 		t.Skip(err)
 	}
 
+	defer cleanupConsul()
 	mgmtInterface, err := initMgmt(*consulProvider)
 	if err != nil {
 		t.Error(err)
@@ -231,6 +275,7 @@ func Test_GetDriverEndpoint(t *testing.T) {
 	if err != nil {
 		t.Skip(err)
 	}
+	defer cleanupConsul()
 
 	mgmtInterface, err := initMgmt(*consulProvider)
 	if err != nil {
@@ -286,7 +331,7 @@ func Test_GetDriverEndpoints(t *testing.T) {
 	if err != nil {
 		t.Skip(err)
 	}
-
+	defer cleanupConsul()
 	mgmtInterface, err := initMgmt(*consulProvider)
 	if err != nil {
 		t.Error(err)
@@ -302,7 +347,7 @@ func Test_UnregisterDriverEndpoint(t *testing.T) {
 	if err != nil {
 		t.Skip(err)
 	}
-
+	defer cleanupConsul()
 	mgmtInterface, err := initMgmt(*consulProvider)
 	if err != nil {
 		t.Error(err)

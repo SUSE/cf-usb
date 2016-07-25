@@ -26,9 +26,9 @@ func getCSMClient() (CSM, error) {
 
 func TestCSMClient(t *testing.T) {
 	csmEndpoint = os.Getenv("CSM_ENDPOINT")
-	authToken = os.Getenv("CSM-AUTH-TOKEN")
+	authToken = os.Getenv("CSM_API_KEY")
 	if csmEndpoint == "" || authToken == "" {
-		t.Skipf("Skipping test TestCSMClient - missing CSM_ENDPOINT and CSM-AUTH-TOKEN")
+		t.Skipf("Skipping test TestCSMClient - missing CSM_ENDPOINT and CSM_API_KEY")
 	}
 	assert := assert.New(t)
 	workspaceID := uuid.NewV4().String()
@@ -68,9 +68,9 @@ func TestCSMClient(t *testing.T) {
 
 func TestGetConnectionDoesNotExist(t *testing.T) {
 	csmEndpoint = os.Getenv("CSM_ENDPOINT")
-	authToken = os.Getenv("CSM-AUTH-TOKEN")
+	authToken = os.Getenv("CSM_API_KEY")
 	if csmEndpoint == "" || authToken == "" {
-		t.Skipf("Skipping test TestCSMClient - missing CSM_ENDPOINT and CSM-AUTH-TOKEN")
+		t.Skipf("Skipping test TestCSMClient - missing CSM_ENDPOINT and CSM_API_KEY")
 	}
 	assert := assert.New(t)
 	workspaceID := uuid.NewV4().String()
@@ -90,9 +90,9 @@ func TestGetConnectionDoesNotExist(t *testing.T) {
 
 func TestGetWorkspaceDoesNotExist(t *testing.T) {
 	csmEndpoint = os.Getenv("CSM_ENDPOINT")
-	authToken = os.Getenv("CSM-AUTH-TOKEN")
+	authToken = os.Getenv("CSM_API_KEY")
 	if csmEndpoint == "" || authToken == "" {
-		t.Skipf("Skipping test TestCSMClient - missing CSM_ENDPOINT and CSM-AUTH-TOKEN")
+		t.Skipf("Skipping test TestCSMClient - missing CSM_ENDPOINT and CSM_API_KEY")
 	}
 	assert := assert.New(t)
 
@@ -111,9 +111,9 @@ func TestGetWorkspaceDoesNotExist(t *testing.T) {
 
 func TestDeleteWorkspaceNotExist(t *testing.T) {
 	csmEndpoint = os.Getenv("CSM_ENDPOINT")
-	authToken = os.Getenv("CSM-AUTH-TOKEN")
+	authToken = os.Getenv("CSM_API_KEY")
 	if csmEndpoint == "" || authToken == "" {
-		t.Skipf("Skipping test TestCSMClient - missing CSM_ENDPOINT and CSM-AUTH-TOKEN")
+		t.Skipf("Skipping test TestCSMClient - missing CSM_ENDPOINT and CSM_API_KEY")
 	}
 	assert := assert.New(t)
 
@@ -131,9 +131,9 @@ func TestDeleteWorkspaceNotExist(t *testing.T) {
 
 func TestCreateWorkspaceThatExists(t *testing.T) {
 	csmEndpoint = os.Getenv("CSM_ENDPOINT")
-	authToken = os.Getenv("CSM-AUTH-TOKEN")
+	authToken = os.Getenv("CSM_API_KEY")
 	if csmEndpoint == "" || authToken == "" {
-		t.Skipf("Skipping test TestCSMClient - missing CSM_ENDPOINT and CSM-AUTH-TOKEN")
+		t.Skipf("Skipping test TestCSMClient - missing CSM_ENDPOINT and CSM_API_KEY")
 	}
 	assert := assert.New(t)
 
