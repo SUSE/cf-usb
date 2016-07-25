@@ -1,7 +1,10 @@
 ---
 name: cf-usb
 templates:
-  cf-usb.ctl.erb:                       bin/cf-usb.ctl
+  cf-usb.ctl.erb: bin/cf-usb.ctl
+  broker.crt.erb: config/broker.crt
+  broker.key.erb: config/broker.key
+
 packages:
   - golang
   - cf-usb
@@ -18,6 +21,15 @@ properties:
   cf-usb.broker.port:
     description: The broker's port
     default: 54054
+  cf-usb.broker.require_tls:
+    description: If true the broker server will listen over TLS/HTTPS
+    default: true
+  cf-usb.broker.server_cert:
+    description: PEM-encoded broker server certificate
+    default: ""
+  cf-usb.broker.server_key:
+    description: PEM-encoded broker server key
+    default: ""
   cf-usb.management.dev_mode:
     description: Enable develop mode
     default: false

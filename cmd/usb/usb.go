@@ -126,9 +126,17 @@ func (usb *UsbApp) Run(configProvider config.Provider, logger lager.Logger) {
 
 	addr := usb.config.BrokerAPI.Listen
 
-	usb.logger.Info("start-listening-broker", lager.Data{"address": addr})
-	err = http.ListenAndServe(addr, ccServiceBroker)
-	if err != nil {
-		usb.logger.Fatal("listening-broker-failed", err)
+  if usb.config.BrokerAPI.RequireTLS {
+		usb.logger.Info("start-listening-broker-tls", lager.Data{"address": addr})
+		err = http.ListenAndServeTLS(addr, usb.config.BrokerAPI.ServerCertFile, usb.config.BrokerAPI.ServerKeyFile, ccServiceBroker)
+		if err != nil {
+			usb.logger.Fatal("listening-broker-tls-failed", err)
+		}
+  } else {
+		usb.logger.Info("start-listening-broker", lager.Data{"address": addr})
+		err = http.ListenAndServe(addr, ccServiceBroker)
+		if err != nil {
+			usb.logger.Fatal("listening-broker-failed", err)
+		}
 	}
 }

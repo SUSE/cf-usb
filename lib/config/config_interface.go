@@ -14,9 +14,12 @@ type BrokerCredentials struct {
 
 //BrokerAPI provides the type for definition of broker API
 type BrokerAPI struct {
-	ExternalURL string            `json:"external_url"`
-	Listen      string            `json:"listen"`
-	Credentials BrokerCredentials `json:"credentials"`
+	ExternalURL    string            `json:"external_url"`
+	Listen         string            `json:"listen"`
+	Credentials    BrokerCredentials `json:"credentials"`
+	RequireTLS     bool              `json:"require_tls"`
+	ServerCertFile string            `json:"server_cert_file"`
+	ServerKeyFile  string            `json:"server_key_file"`
 }
 
 //ManagementAPI provides the type for definition of management API
