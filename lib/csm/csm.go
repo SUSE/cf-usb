@@ -1,10 +1,13 @@
 package csm
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/go-openapi/runtime"
 	runtimeClient "github.com/go-openapi/runtime/client"
@@ -33,7 +36,7 @@ func NewCSMClient(logger lager.Logger) CSM {
 	return &csm
 }
 
-func (csm *csmClient) Login(targetEndpoint string, token string, caCert string, skipTls bool) error {
+func (csm *csmClient) Login(targetEndpoint string, token string, caCert string, skipSSLValidation bool) error {
 	csm.logger.Info("csm-login", lager.Data{"endpoint": targetEndpoint})
 	target, err := url.Parse(targetEndpoint)
 	if err != nil {
@@ -41,8 +44,16 @@ func (csm *csmClient) Login(targetEndpoint string, token string, caCert string, 
 	}
 	transport := runtimeClient.New(target.Host, "/", []string{target.Scheme})
 
-	//http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
-	//runtimeClient.Runtime.Transport := http.Transport.
+	if skipSSLValidation {
+		transport.Transport = &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
+	} else {
+		if strings.TrimSpace(caCert) != "" {
+			caCertPool := x509.NewCertPool()
+			caCertPool.AppendCertsFromPEM([]byte(caCert))
+			transport.Transport = &http.Transport{TLSClientConfig: &tls.Config{RootCAs: caCertPool}}
+		}
+	}
+
 	csm.workspaceCient = workspace.New(transport, strfmt.Default)
 	csm.statusClient = status.New(transport, strfmt.Default)
 	csm.connectionClient = connection.New(transport, strfmt.Default)
