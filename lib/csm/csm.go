@@ -40,6 +40,8 @@ func (csm *csmClient) Login(targetEndpoint string, token string, caCert string, 
 		return err
 	}
 	transport := runtimeClient.New(target.Host, "/", []string{target.Scheme})
+
+	//http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
 	//runtimeClient.Runtime.Transport := http.Transport.
 	csm.workspaceCient = workspace.New(transport, strfmt.Default)
 	csm.statusClient = status.New(transport, strfmt.Default)

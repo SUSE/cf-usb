@@ -16,7 +16,8 @@ var authToken string
 
 func getCSMClient() (CSM, error) {
 	client := NewCSMClient(logger)
-	err := client.Login(csmEndpoint, authToken)
+	//skipping SSL validation
+	err := client.Login(csmEndpoint, authToken, "", true)
 	if err != nil {
 		return nil, err
 	}
