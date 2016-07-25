@@ -4,7 +4,7 @@ GIT_ROOT:=$(shell git rev-parse --show-toplevel)
 
 .PHONY: all clean format lint vet build test tools dist
 
-all: clean format lint vet bindata build test
+all: clean format lint vet build test
 
 clean:
 	${GIT_ROOT}/make/clean

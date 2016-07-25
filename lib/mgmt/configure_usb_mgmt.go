@@ -198,7 +198,8 @@ func ConfigureAPI(api *operations.UsbMgmtAPI, auth authentication.Authentication
 			log.Error("csm-login-failed", err)
 			return &operations.RegisterDriverEndpointInternalServerError{Payload: err.Error()}
 		}
-		log.Debug("get-status-information", lager.Data{"url": instance.TargetURL, "auth-key": instance.AuthenticationKey})
+
+		log.Debug("get-status-information", lager.Data{"url": instance.TargetURL})
 		err = csmClient.GetStatus()
 		if err != nil {
 			log.Error("csm-get-status", err)

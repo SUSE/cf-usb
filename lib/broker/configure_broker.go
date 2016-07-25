@@ -299,7 +299,7 @@ func getServiceAfterLogin(csm csm.CSM, configProvider config.Provider, serviceID
 		return nil, err
 	}
 	for _, driverInstance := range conf.Instances {
-		fmt.Printf("servID=%s, Service.ID = %s, TargetURL=%s, AuthenticationKey=%s\n", serviceID, driverInstance.Service.ID, driverInstance.TargetURL, driverInstance.AuthenticationKey)
+		fmt.Printf("servID=%s, Service.ID = %s, TargetURL=%s\n", serviceID, driverInstance.Service.ID, driverInstance.TargetURL)
 		if driverInstance.Service.ID == serviceID {
 			if driverInstance.TargetURL != "" {
 				err = csm.Login(driverInstance.TargetURL, driverInstance.AuthenticationKey)

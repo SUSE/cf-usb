@@ -65,7 +65,6 @@ func (generator *Generator) GetToken() (string, error) {
 		return "", err
 	}
 
-	log.Debug("uaa-reponse", lager.Data{"response": string(response)})
 	log.Info("finished-uaa-request")
 
 	token := &Token{}
