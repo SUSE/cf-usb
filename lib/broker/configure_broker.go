@@ -37,6 +37,7 @@ func getBrokerError(s string) *brokermodel.BrokerError {
 func idLastOperationHandler(params operations.GetServiceInstancesInstanceIDLastOperationParams, principal interface{}) middleware.Responder {
 	//TODO add async
 	exists, isNoop, err := brokerCsm.WorkspaceExists(params.InstanceID)
+
 	payload := &brokermodel.LastOperation{}
 
 	if err != nil {
@@ -80,6 +81,7 @@ func catalogHandler(principal interface{}) middleware.Responder {
 }
 
 func createServiceInstanceHandler(params operations.CreateServiceInstanceParams, principal interface{}) middleware.Responder {
+
 	servID, err := getServiceAfterLogin(brokerCsm, brokerConfigProvider, params.Service.ServiceID)
 
 	if err != nil {
@@ -117,6 +119,7 @@ func createServiceInstanceHandler(params operations.CreateServiceInstanceParams,
 }
 
 func deprovisionServiceInstanceHandler(params operations.DeprovisionServiceInstanceParams, principal interface{}) middleware.Responder {
+
 	servID, err := getServiceAfterLogin(brokerCsm, brokerConfigProvider, params.ServiceID)
 
 	if err != nil {
@@ -198,6 +201,7 @@ func serviceBindHandler(params operations.ServiceBindParams, principal interface
 }
 
 func serviceUnbindHandler(params operations.ServiceUnbindParams, principal interface{}) middleware.Responder {
+
 	servID, err := getServiceAfterLogin(brokerCsm, brokerConfigProvider, params.ServiceID)
 
 	if err != nil {
@@ -251,7 +255,9 @@ func basicAuth(user string, pass string) (interface{}, error) {
 		return true, nil
 	}
 
-	return false, nil
+	brokerLogger.Info("Invalid username/pass", lager.Data{"message": "invalid username/password combination"})
+
+	return nil, fmt.Errorf("Not authorized")
 }
 
 //ConfigureAPI is the function that defines what functions will handle the requestss
@@ -294,12 +300,14 @@ func ConfigureAPI(api *operations.BrokerAPI, csm csm.CSM, configProvider config.
 }
 
 func getServiceAfterLogin(csm csm.CSM, configProvider config.Provider, serviceID string) (*brokermodel.CatalogService, error) {
+
 	conf, err := configProvider.LoadConfiguration()
+
 	if err != nil {
 		return nil, err
 	}
+
 	for _, driverInstance := range conf.Instances {
-		fmt.Printf("servID=%s, Service.ID = %s, TargetURL=%s\n", serviceID, driverInstance.Service.ID, driverInstance.TargetURL)
 		if driverInstance.Service.ID == serviceID {
 			if driverInstance.TargetURL != "" {
 				err = csm.Login(driverInstance.TargetURL, driverInstance.AuthenticationKey, driverInstance.CaCert, driverInstance.SkipSsl)
@@ -310,6 +318,7 @@ func getServiceAfterLogin(csm csm.CSM, configProvider config.Provider, serviceID
 			}
 		}
 	}
+
 	return nil, nil
 }
 
