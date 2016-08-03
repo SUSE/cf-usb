@@ -21,5 +21,5 @@ ${GIT_ROOT}/.tools/swagger generate server -f ${GIT_ROOT}/swagger-spec/managemen
 rm lib/mgmt/server.go
 
 echo "${OK_COLOR}==> Generating broker API ${NO_COLOR}"
-${GIT_ROOT}/.tools/swagger generate server -f ${GIT_ROOT}/swagger-spec/broker-api.yaml -m brokermodel -s "broker" -A broker -t ${GIT_ROOT}/lib --exclude-main
+${GIT_ROOT}/.tools/swagger generate server -f ${GIT_ROOT}/swagger-spec/broker-api.json -m brokermodel -s "broker" -A broker -t ${GIT_ROOT}/lib --exclude-main
 rm lib/broker/server.go

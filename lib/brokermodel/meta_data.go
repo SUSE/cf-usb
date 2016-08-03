@@ -15,6 +15,10 @@ swagger:model MetaData
 */
 type MetaData struct {
 
+	/* The categories of the service
+	 */
+	Categories string `json:"categories,omitempty"`
+
 	/* displayName of the service.
 	 */
 	DisplayName string `json:"displayName,omitempty"`
@@ -38,6 +42,10 @@ type MetaData struct {
 	/* Support URL
 	 */
 	SupportURL string `json:"supportURL,omitempty"`
+
+	/* The version of the service
+	 */
+	Version string `json:"version,omitempty"`
 }
 
 // Validate validates this meta data

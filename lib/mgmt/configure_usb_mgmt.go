@@ -73,6 +73,8 @@ func ConfigureAPI(api *operations.UsbMgmtAPI, auth authentication.Authentication
 				ProviderDisplayName: endpoint.Service.Metadata.ProviderDisplayName,
 				DocumentationURL:    endpoint.Service.Metadata.DocumentationURL,
 				SupportURL:          endpoint.Service.Metadata.SupportURL,
+				Categories:          endpoint.Service.Metadata.Categories,
+				Version:             endpoint.Service.Metadata.Version,
 			}
 		}
 
@@ -105,6 +107,8 @@ func ConfigureAPI(api *operations.UsbMgmtAPI, auth authentication.Authentication
 				metadata.ProviderDisplayName = endpoint.Service.Metadata.ProviderDisplayName
 				metadata.DocumentationURL = endpoint.Service.Metadata.DocumentationURL
 				metadata.SupportURL = endpoint.Service.Metadata.SupportURL
+				metadata.Categories = endpoint.Service.Metadata.Categories
+				metadata.Version = endpoint.Service.Metadata.Version
 			}
 
 			var name string
@@ -199,6 +203,8 @@ func ConfigureAPI(api *operations.UsbMgmtAPI, auth authentication.Authentication
 				metadata.ProviderDisplayName = params.DriverEndpoint.Metadata.ProviderDisplayName
 				metadata.DocumentationURL = params.DriverEndpoint.Metadata.DocumentationURL
 				metadata.SupportURL = params.DriverEndpoint.Metadata.SupportURL
+				metadata.Categories = params.DriverEndpoint.Metadata.Categories
+				metadata.Version = params.DriverEndpoint.Metadata.Version
 			}
 		}
 
@@ -450,6 +456,12 @@ func ConfigureAPI(api *operations.UsbMgmtAPI, auth authentication.Authentication
 			if params.DriverEndpoint.Metadata.SupportURL != "" {
 				instance.Service.Metadata.SupportURL = params.DriverEndpoint.Metadata.SupportURL
 			}
+			if params.DriverEndpoint.Metadata.Categories != "" {
+				instance.Service.Metadata.Categories = params.DriverEndpoint.Metadata.Categories
+			}
+			if params.DriverEndpoint.Metadata.Version != "" {
+				instance.Service.Metadata.Version = params.DriverEndpoint.Metadata.Version
+			}
 		}
 
 		err = configProvider.SetInstance(params.DriverEndpointID, instance)
@@ -467,6 +479,8 @@ func ConfigureAPI(api *operations.UsbMgmtAPI, auth authentication.Authentication
 				ProviderDisplayName: instance.Service.Metadata.ProviderDisplayName,
 				DocumentationURL:    instance.Service.Metadata.DocumentationURL,
 				SupportURL:          instance.Service.Metadata.SupportURL,
+				Categories:          instance.Service.Metadata.Categories,
+				Version:             instance.Service.Metadata.Version,
 			}
 		}
 
