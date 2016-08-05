@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"time"
 )
 
 var ConsulConfig = struct {
@@ -171,6 +172,7 @@ func TestBrokerAPIBindTest(t *testing.T) {
 	params.Service.ServiceID = "83E94C97-C755-46A5-8653-461517EB442A"
 	params.InstanceID = workspaceID
 	response := brokerA.CreateServiceInstanceHandler.Handle(params, false)
+	time.Sleep(120 * time.Second)
 
 	connectionID := uuid.NewV4().String()
 	if assert.NotNil(response) {
@@ -181,6 +183,8 @@ func TestBrokerAPIBindTest(t *testing.T) {
 		connParams.Binding = &brokermodel.Binding{}
 		connParams.Binding.ServiceID = "83E94C97-C755-46A5-8653-461517EB442A"
 		resp := brokerA.ServiceBindHandler.Handle(connParams, false)
+		time.Sleep(120 * time.Second)
+
 		assert.NotNil(resp)
 		t.Log(reflect.ValueOf(resp).Elem().Type())
 
@@ -190,6 +194,8 @@ func TestBrokerAPIBindTest(t *testing.T) {
 		case *operations.ServiceBindDefault:
 			assert.FailNow("Waiting for ServiceBindCreated, but got ServiceBindDefault")
 			resp := response.(*operations.ServiceBindDefault)
+			time.Sleep(120 * time.Second)
+
 			assert.Fail(*resp.Payload.Message)
 			return
 		default:
@@ -219,6 +225,8 @@ func TestBrokerAPIUnbindTest(t *testing.T) {
 	params.InstanceID = workspaceID
 
 	response := brokerA.CreateServiceInstanceHandler.Handle(params, false)
+	time.Sleep(120 * time.Second)
+
 	if assert.NotNil(response) &&
 		assert.Equal(
 			reflect.TypeOf(operations.CreateServiceInstanceCreated{}),
@@ -231,12 +239,16 @@ func TestBrokerAPIUnbindTest(t *testing.T) {
 		connParams.Binding = &brokermodel.Binding{}
 		connParams.Binding.ServiceID = "83E94C97-C755-46A5-8653-461517EB442A"
 		resp := brokerA.ServiceBindHandler.Handle(connParams, false)
+		time.Sleep(120 * time.Second)
+
 		if assert.NotNil(resp, "There should be an answer when binding") && assert.Equal(reflect.TypeOf(operations.ServiceBindCreated{}), reflect.ValueOf(resp).Elem().Type(), "Wrong response type while binding") {
 			unbindParams := operations.ServiceUnbindParams{}
 			unbindParams.InstanceID = workspaceID
 			unbindParams.BindingID = connectionID
 			unbindParams.ServiceID = "83E94C97-C755-46A5-8653-461517EB442A"
 			respUnbind := brokerA.ServiceUnbindHandler.Handle(unbindParams, false)
+			time.Sleep(120 * time.Second)
+
 			if assert.NotNil(respUnbind, "There should be an unswer when unbinding") {
 				switch respUnbind.(type) {
 				case *operations.ServiceUnbindOK:
@@ -244,6 +256,7 @@ func TestBrokerAPIUnbindTest(t *testing.T) {
 				case *operations.ServiceUnbindDefault:
 					assert.Fail("Waiting for ServiceUnbindOK, but Got ServiceUnbindDefault")
 					resp := response.(*operations.ServiceUnbindDefault)
+					time.Sleep(120 * time.Second)
 					assert.Fail(*resp.Payload.Message)
 					break
 				case *operations.ServiceUnbindGone:

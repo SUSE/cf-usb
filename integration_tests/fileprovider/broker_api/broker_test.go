@@ -19,6 +19,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 var logger = lagertest.NewTestLogger("csm-client-test")
@@ -125,6 +126,7 @@ func TestBrokerAPIBindTest(t *testing.T) {
 	params.Service.ServiceID = serviceID
 	params.InstanceID = workspaceID
 	response := brokerA.CreateServiceInstanceHandler.Handle(params, false)
+	time.Sleep(120 * time.Second)
 
 	connectionID := uuid.NewV4().String()
 	if assert.NotNil(response) {
@@ -135,6 +137,7 @@ func TestBrokerAPIBindTest(t *testing.T) {
 		connParams.Binding = &brokermodel.Binding{}
 		connParams.Binding.ServiceID = serviceID
 		resp := brokerA.ServiceBindHandler.Handle(connParams, false)
+		time.Sleep(120 * time.Second)
 		assert.NotNil(resp)
 		t.Log(reflect.ValueOf(resp).Elem().Type())
 
@@ -144,6 +147,7 @@ func TestBrokerAPIBindTest(t *testing.T) {
 		case *operations.ServiceBindDefault:
 			assert.FailNow("Waiting for ServiceBindCreated, but got ServiceBindDefault")
 			resp := response.(*operations.ServiceBindDefault)
+			time.Sleep(120 * time.Second)
 			assert.Fail(*resp.Payload.Message)
 			return
 		default:
@@ -174,6 +178,7 @@ func TestBrokerAPIUnbindTest(t *testing.T) {
 	params.InstanceID = workspaceID
 
 	response := brokerA.CreateServiceInstanceHandler.Handle(params, false)
+	time.Sleep(120 * time.Second)
 	if assert.NotNil(response) &&
 		assert.Equal(
 			reflect.TypeOf(operations.CreateServiceInstanceCreated{}),
@@ -186,6 +191,7 @@ func TestBrokerAPIUnbindTest(t *testing.T) {
 		connParams.Binding = &brokermodel.Binding{}
 		connParams.Binding.ServiceID = serviceID
 		resp := brokerA.ServiceBindHandler.Handle(connParams, false)
+		time.Sleep(120 * time.Second)
 		if assert.NotNil(resp, "There should be an answer when binding") && assert.Equal(reflect.TypeOf(operations.ServiceBindCreated{}), reflect.ValueOf(resp).Elem().Type(), "Wrong response type while binding") {
 			unbindParams := operations.ServiceUnbindParams{}
 			unbindParams.InstanceID = workspaceID
@@ -199,6 +205,7 @@ func TestBrokerAPIUnbindTest(t *testing.T) {
 				case *operations.ServiceUnbindDefault:
 					assert.Fail("Waiting for ServiceUnbindOK, but Got ServiceUnbindDefault")
 					resp := response.(*operations.ServiceUnbindDefault)
+					time.Sleep(120 * time.Second)
 					assert.Fail(*resp.Payload.Message)
 					break
 				case *operations.ServiceUnbindGone:
@@ -232,6 +239,7 @@ func TestBrokerAPIDeprovisionTest(t *testing.T) {
 	deprovisionParams.InstanceID = workspaceID
 
 	response := brokerA.CreateServiceInstanceHandler.Handle(params, false)
+	time.Sleep(120 * time.Second)
 	t.Log(response)
 	if assert.NotNil(response, "There should be an answer when provisioning") &&
 		assert.Equal(
@@ -239,6 +247,7 @@ func TestBrokerAPIDeprovisionTest(t *testing.T) {
 			reflect.ValueOf(response).Elem().Type(),
 			"Wrong response type while binding") {
 		resp := brokerA.DeprovisionServiceInstanceHandler.Handle(deprovisionParams, false)
+		time.Sleep(120 * time.Second)
 		if assert.NotNil(resp, "There should be an unswer when unprovisioning") {
 			switch resp.(type) {
 			case *operations.DeprovisionServiceInstanceOK:
