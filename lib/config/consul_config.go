@@ -390,7 +390,7 @@ func (c *consulConfig) InstanceNameExists(driverInstanceName string) (bool, erro
 		if err != nil {
 			return false, err
 		}
-		if string(value) == driverInstanceName {
+		if strings.ToLower(string(value)) == strings.ToLower(driverInstanceName) {
 			return true, nil
 		}
 	}

@@ -185,7 +185,10 @@ func ConfigureAPI(api *operations.UsbMgmtAPI, auth authentication.Authentication
 			return &operations.RegisterDriverEndpointInternalServerError{Payload: err.Error()}
 		}
 
-		serviceNameExist := ccServiceBroker.CheckServiceNameExists(*params.DriverEndpoint.Name)
+		serviceNameExist, err := ccServiceBroker.CheckServiceNameExists(*params.DriverEndpoint.Name)
+		if err != nil {
+			return &operations.RegisterDriverEndpointInternalServerError{Payload: err.Error()}
+		}
 		if driverInstanceNameExist || serviceNameExist {
 			err := fmt.Errorf("A driver instance with the same name already exists")
 			log.Error("check-driver-instance-name-exist", err)

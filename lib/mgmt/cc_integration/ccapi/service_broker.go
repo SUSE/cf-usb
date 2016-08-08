@@ -17,7 +17,7 @@ type USBServiceBroker interface {
 	Update(serviceBrokerGUID, name, url, username, password string) error
 	EnableServiceAccess(serviceID string) error
 	GetServiceBrokerGUIDByName(name string) (string, error)
-	CheckServiceNameExists(name string) bool
+	CheckServiceNameExists(name string) (bool, error)
 	CheckServiceInstancesExist(serviceName string) bool
 }
 
@@ -225,7 +225,7 @@ func (sb *ServiceBroker) GetServiceBrokerGUIDByName(name string) (string, error)
 }
 
 //CheckServiceNameExists checks if a service with the passed name is already defined
-func (sb *ServiceBroker) CheckServiceNameExists(name string) bool {
+func (sb *ServiceBroker) CheckServiceNameExists(name string) (bool, error) {
 	exist := false
 	log := sb.logger.Session("check-service-name-exists", lager.Data{"name": name})
 	log.Debug("starting")
@@ -233,20 +233,21 @@ func (sb *ServiceBroker) CheckServiceNameExists(name string) bool {
 	token, err := sb.tokenGenerator.GetToken()
 	if err != nil {
 		log.Error("check-service-name-exists", err)
-		return false
+		return false, err
 	}
 
 	sp := NewServicePlan(sb.client, sb.tokenGenerator, sb.ccAPI, log)
 	guid, err := sp.GetServiceGUIDByLabel(name, token)
 	if err != nil {
 		log.Error("get-service-guid-by-label", err)
+		return false, err
 	}
 	if guid != "" {
 		exist = true
 	}
 	log.Debug(fmt.Sprintf("check service name %s exists complete - returning %t", name, exist))
 
-	return exist
+	return exist, nil
 }
 
 //CheckServiceInstancesExist checks if a service instance with the passed name is already registered
