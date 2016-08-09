@@ -109,10 +109,6 @@ func initConsulProvider() (*config.Provider, error) {
 	return &configProvider, nil
 }
 
-func cleanup(provider config.Provider) {
-
-}
-
 func initMgmt(provider config.Provider) (*operations.UsbMgmtAPI, error) {
 
 	swaggerSpec, err := loads.Analyzed(mgmt.SwaggerJSON, "")
@@ -147,7 +143,6 @@ func initMgmt(provider config.Provider) (*operations.UsbMgmtAPI, error) {
 
 func TestGetInfo(t *testing.T) {
 	assert := assert.New(t)
-
 	consulProvider, err := initConsulProvider()
 	if err != nil {
 		t.Skip(err)
@@ -156,6 +151,12 @@ func TestGetInfo(t *testing.T) {
 	mgmtInterface, err := initMgmt(*consulProvider)
 	if err != nil {
 		t.Error(err)
+	}
+	if csmEndpoint == "" {
+		t.Skip("CSM_ENDPOINT not set")
+	}
+	if authToken == "" {
+		t.Skip("CSM_API_KEY not set")
 	}
 	response := mgmtInterface.GetInfoHandler.Handle(true)
 	assert.IsType(&operations.GetInfoOK{}, response)
@@ -176,8 +177,14 @@ func Test_RegisterDriverEndpoint(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+	if csmEndpoint == "" {
+		t.Skip("CSM_ENDPOINT not set")
+	}
+	if authToken == "" {
+		t.Skip("CSM_API_KEY not set")
+	}
 
-	sbMocked.Mock.On("CheckServiceNameExists", mock.Anything).Return(false)
+	sbMocked.Mock.On("CheckServiceNameExists", mock.Anything).Return(false, nil)
 	sbMocked.Mock.On("GetServiceBrokerGUIDByName", mock.Anything).Return("aguid", nil)
 	sbMocked.Mock.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	sbMocked.Mock.On("Update", "aguid", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
@@ -187,9 +194,12 @@ func Test_RegisterDriverEndpoint(t *testing.T) {
 	params.DriverEndpoint = &genmodel.DriverEndpoint{}
 	params.DriverEndpoint.ID = uuid.NewV4().String()
 	name := "testInstance"
+	skipTLS := true
+
 	params.DriverEndpoint.Name = &name
 	params.DriverEndpoint.EndpointURL = csmEndpoint
 	params.DriverEndpoint.AuthenticationKey = authToken
+	params.DriverEndpoint.SkipSSLValidation = &skipTLS
 
 	metadata := &genmodel.EndpointMetadata{}
 	metadata.DisplayName = "servicename"
@@ -208,8 +218,7 @@ func Test_RegisterDriverEndpoint(t *testing.T) {
 	response := mgmtInterface.RegisterDriverEndpointHandler.Handle(*params, true)
 
 	assert.IsType(&operations.RegisterDriverEndpointCreated{}, response)
-
-	//cleanup
+	t.Log(response)
 }
 
 func Test_UpdateInstanceEndpoint(t *testing.T) {
@@ -223,6 +232,12 @@ func Test_UpdateInstanceEndpoint(t *testing.T) {
 	mgmtInterface, err := initMgmt(*consulProvider)
 	if err != nil {
 		t.Error(err)
+	}
+	if csmEndpoint == "" {
+		t.Skip("CSM_ENDPOINT not set")
+	}
+	if authToken == "" {
+		t.Skip("CSM_API_KEY not set")
 	}
 
 	instanceID := uuid.NewV4().String()
@@ -281,7 +296,14 @@ func Test_GetDriverEndpoint(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	sbMocked.Mock.On("CheckServiceNameExists", mock.Anything).Return(false)
+	if csmEndpoint == "" {
+		t.Skip("CSM_ENDPOINT not set")
+	}
+	if authToken == "" {
+		t.Skip("CSM_API_KEY not set")
+	}
+
+	sbMocked.Mock.On("CheckServiceNameExists", mock.Anything).Return(false, nil)
 	sbMocked.Mock.On("GetServiceBrokerGUIDByName", mock.Anything).Return("aguid", nil)
 	sbMocked.Mock.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	sbMocked.Mock.On("Update", "aguid", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
@@ -337,12 +359,20 @@ func Test_GetDriverEndpoints(t *testing.T) {
 		t.Error(err)
 	}
 
+	if csmEndpoint == "" {
+		t.Skip("CSM_ENDPOINT not set")
+	}
+	if authToken == "" {
+		t.Skip("CSM_API_KEY not set")
+	}
+
 	response := mgmtInterface.GetDriverEndpointsHandler.Handle(true)
 	assert.IsType(&operations.GetDriverEndpointsOK{}, response)
 }
 
 func Test_UnregisterDriverEndpoint(t *testing.T) {
 	assert := assert.New(t)
+
 	consulProvider, err := initConsulProvider()
 	if err != nil {
 		t.Skip(err)
@@ -352,6 +382,14 @@ func Test_UnregisterDriverEndpoint(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+
+	if csmEndpoint == "" {
+		t.Skip("CSM_ENDPOINT not set")
+	}
+	if authToken == "" {
+		t.Skip("CSM_API_KEY not set")
+	}
+
 	sbMocked.Mock.On("GetServiceBrokerGUIDByName", mock.Anything).Return("aguid", nil)
 	sbMocked.Mock.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	sbMocked.Mock.On("Update", "aguid", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)

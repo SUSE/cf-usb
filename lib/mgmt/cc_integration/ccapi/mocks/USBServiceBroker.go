@@ -2,12 +2,11 @@ package mocks
 
 import "github.com/stretchr/testify/mock"
 
-//USBBrokerInterface mock type
 type USBServiceBroker struct {
 	mock.Mock
 }
 
-//Create returns a mock USBServiceBroker, to be used in tests
+// Create provides a mock function with given fields: name, url, username, password
 func (_m *USBServiceBroker) Create(name string, url string, username string, password string) error {
 	ret := _m.Called(name, url, username, password)
 
@@ -21,7 +20,7 @@ func (_m *USBServiceBroker) Create(name string, url string, username string, pas
 	return r0
 }
 
-//Delete is a mock Delete for ServiceBroker, to be used in tests
+// Delete provides a mock function with given fields: name
 func (_m *USBServiceBroker) Delete(name string) error {
 	ret := _m.Called(name)
 
@@ -35,7 +34,7 @@ func (_m *USBServiceBroker) Delete(name string) error {
 	return r0
 }
 
-//Update is a mock Update for ServiceBroker
+// Update provides a mock function with given fields: serviceBrokerGUID, name, url, username, password
 func (_m *USBServiceBroker) Update(serviceBrokerGUID string, name string, url string, username string, password string) error {
 	ret := _m.Called(serviceBrokerGUID, name, url, username, password)
 
@@ -49,7 +48,7 @@ func (_m *USBServiceBroker) Update(serviceBrokerGUID string, name string, url st
 	return r0
 }
 
-//EnableServiceAccess is a mock EnableServiceAccess for ServiceBroker, to be used in tests
+// EnableServiceAccess provides a mock function with given fields: serviceID
 func (_m *USBServiceBroker) EnableServiceAccess(serviceID string) error {
 	ret := _m.Called(serviceID)
 
@@ -63,7 +62,7 @@ func (_m *USBServiceBroker) EnableServiceAccess(serviceID string) error {
 	return r0
 }
 
-//GetServiceBrokerGUIDByName is a mock GetServiceBrokerGUIDByName for ServiceBroker, to be used in tests
+// GetServiceBrokerGUIDByName provides a mock function with given fields: name
 func (_m *USBServiceBroker) GetServiceBrokerGUIDByName(name string) (string, error) {
 	ret := _m.Called(name)
 
@@ -84,8 +83,8 @@ func (_m *USBServiceBroker) GetServiceBrokerGUIDByName(name string) (string, err
 	return r0, r1
 }
 
-//CheckServiceNameExists is a mock CheckServiceNameExists for ServiceBroker, to be used in tests
-func (_m *USBServiceBroker) CheckServiceNameExists(name string) bool {
+// CheckServiceNameExists provides a mock function with given fields: name
+func (_m *USBServiceBroker) CheckServiceNameExists(name string) (bool, error) {
 	ret := _m.Called(name)
 
 	var r0 bool
@@ -95,10 +94,17 @@ func (_m *USBServiceBroker) CheckServiceNameExists(name string) bool {
 		r0 = ret.Get(0).(bool)
 	}
 
-	return r0
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(name)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
-//CheckServiceInstancesExist is a mock CheckServiceInstanceExist for ServiceBroker, to be used in tests
+// CheckServiceInstancesExist provides a mock function with given fields: serviceName
 func (_m *USBServiceBroker) CheckServiceInstancesExist(serviceName string) bool {
 	ret := _m.Called(serviceName)
 

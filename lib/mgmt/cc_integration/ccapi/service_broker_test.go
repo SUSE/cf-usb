@@ -97,6 +97,7 @@ func TestCheckServiceNameExists(t *testing.T) {
 	sb := NewServiceBroker(client, tokenGenerator, "http://api.1.2.3.4.io", loggerSB)
 	assert.NotNil(sb)
 
-	exists := sb.CheckServiceNameExists("label-66")
+	exists, err := sb.CheckServiceNameExists("label-66")
+	assert.NoError(err)
 	assert.True(exists)
 }

@@ -158,7 +158,7 @@ func ConfigureAPI(api *operations.UsbMgmtAPI, auth authentication.Authentication
 
 	api.RegisterDriverEndpointHandler = operations.RegisterDriverEndpointHandlerFunc(func(params operations.RegisterDriverEndpointParams, principal interface{}) middleware.Responder {
 		log := log.Session("register-driver-endpoint")
-		log.Info("request", lager.Data{"id": params.DriverEndpoint.ID, "driver-endpoint-name": params.DriverEndpoint.Name})
+		log.Info("request", lager.Data{"id": params.DriverEndpoint.ID, "driver-endpoint-name": params.DriverEndpoint.Name, "driver-endpoint-url": params.DriverEndpoint.EndpointURL})
 
 		if strings.ContainsAny(*params.DriverEndpoint.Name, " ") {
 			return &operations.RegisterDriverEndpointInternalServerError{Payload: fmt.Sprintf("Driver endpoint name cannot contain spaces")}

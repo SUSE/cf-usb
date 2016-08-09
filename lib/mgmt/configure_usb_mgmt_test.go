@@ -110,7 +110,7 @@ func Test_RegisterDriverEndpoint(t *testing.T) {
 	provider.On("LoadConfiguration").Return(&testConfig, nil)
 	provider.On("SetDial", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	provider.On("SetService", mock.Anything, mock.Anything).Return(nil)
-	mObjects.serviceBroker.Mock.On("CheckServiceNameExists", mock.Anything).Return(false)
+	mObjects.serviceBroker.Mock.On("CheckServiceNameExists", mock.Anything).Return(false, nil)
 	mObjects.serviceBroker.Mock.On("GetServiceBrokerGUIDByName", mock.Anything).Return("aguid", nil)
 	mObjects.serviceBroker.Mock.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	mObjects.serviceBroker.Mock.On("Update", "aguid", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
