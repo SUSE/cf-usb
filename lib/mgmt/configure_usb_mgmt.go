@@ -158,7 +158,7 @@ func ConfigureAPI(api *operations.UsbMgmtAPI, auth authentication.Authentication
 
 	api.RegisterDriverEndpointHandler = operations.RegisterDriverEndpointHandlerFunc(func(params operations.RegisterDriverEndpointParams, principal interface{}) middleware.Responder {
 		log := log.Session("register-driver-endpoint")
-		log.Info("request", lager.Data{"id": params.DriverEndpoint.ID, "driver-endpoint-name": params.DriverEndpoint.Name})
+		log.Info("request", lager.Data{"id": params.DriverEndpoint.ID, "driver-endpoint-name": params.DriverEndpoint.Name, "driver-endpoint-url": params.DriverEndpoint.EndpointURL})
 
 		if strings.ContainsAny(*params.DriverEndpoint.Name, " ") {
 			return &operations.RegisterDriverEndpointInternalServerError{Payload: fmt.Sprintf("Driver endpoint name cannot contain spaces")}
@@ -185,7 +185,10 @@ func ConfigureAPI(api *operations.UsbMgmtAPI, auth authentication.Authentication
 			return &operations.RegisterDriverEndpointInternalServerError{Payload: err.Error()}
 		}
 
-		serviceNameExist := ccServiceBroker.CheckServiceNameExists(*params.DriverEndpoint.Name)
+		serviceNameExist, err := ccServiceBroker.CheckServiceNameExists(*params.DriverEndpoint.Name)
+		if err != nil {
+			return &operations.RegisterDriverEndpointInternalServerError{Payload: err.Error()}
+		}
 		if driverInstanceNameExist || serviceNameExist {
 			err := fmt.Errorf("A driver instance with the same name already exists")
 			log.Error("check-driver-instance-name-exist", err)

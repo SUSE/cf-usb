@@ -85,6 +85,10 @@ func (sp *ServicePlan) Update(serviceName string) error {
 		return err
 	}
 
+	if serviceGUID == "" {
+		return fmt.Errorf("Service %s not found", serviceName)
+	}
+
 	servicePlans, err := sp.GetServicePlans(serviceGUID, token)
 	if err != nil {
 		return err
@@ -152,7 +156,7 @@ func (sp *ServicePlan) GetServiceGUIDByLabel(serviceLabel, token string) (string
 	}
 
 	if len(resources.Resources) == 0 {
-		return "", fmt.Errorf("Service %s not found", serviceLabel)
+		return "", nil
 	}
 
 	guid := resources.Resources[0].Values.GUID
