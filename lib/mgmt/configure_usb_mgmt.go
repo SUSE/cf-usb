@@ -189,11 +189,21 @@ func ConfigureAPI(api *operations.UsbMgmtAPI, auth authentication.Authentication
 		if err != nil {
 			return &operations.RegisterDriverEndpointInternalServerError{Payload: err.Error()}
 		}
-		if driverInstanceNameExist || serviceNameExist {
-			err := fmt.Errorf("A driver instance with the same name already exists")
-			log.Error("check-driver-instance-name-exist", err)
-			return &operations.RegisterDriverEndpointConflict{}
+
+		var createInstanceError error
+		if driverInstanceNameExist && serviceNameExist {
+			createInstanceError = fmt.Errorf("A driver instance with the same name already exists.")
+		} else if driverInstanceNameExist && !serviceNameExist {
+			createInstanceError = fmt.Errorf("A driver instance with the same name already exists but is not registered with the Cloud Controller. This service may have been purged. Please consider deleting it from the USB.")
+		} else if !driverInstanceNameExist && serviceNameExist {
+			createInstanceError = fmt.Errorf("A service with the same name is already registered with the Cloud Controller.")
 		}
+
+		if createInstanceError != nil {
+			log.Error("check-driver-instance-name-exist", createInstanceError)
+			return &operations.RegisterDriverEndpointConflict{Payload: createInstanceError.Error()}
+		}
+
 		instance.Name = *params.DriverEndpoint.Name
 
 		metadata := brokermodel.MetaData{}
