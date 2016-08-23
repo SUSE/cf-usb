@@ -16,7 +16,7 @@ func TestUpdateServicePlanVisibility(t *testing.T) {
 	tokenGenerator.On("GetToken").Return("bearer atoken", nil)
 
 	client := new(mocks.HTTPClient)
-	client.Mock.On("Request", mock.Anything).Return([]byte(`{"resources":[{"metadata":{"guid":""},"entity":{"name":"","free":false,"description":"","public":false,"service_guid":""}}]}`), nil)
+	client.Mock.On("Request", mock.Anything).Return([]byte(`{"resources":[{"metadata":{"guid":"guid"},"entity":{"name":"","free":false,"description":"","public":false,"service_guid":""}}]}`), nil)
 	client.Mock.On("Request", mock.Anything).Return(nil, nil)
 
 	sp := NewServicePlan(client, tokenGenerator, "http://api.1.2.3.4.io", loggerSP)

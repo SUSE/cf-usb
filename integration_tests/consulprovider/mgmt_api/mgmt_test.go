@@ -201,8 +201,8 @@ func Test_RegisterDriverEndpoint(t *testing.T) {
 	params.DriverEndpoint.AuthenticationKey = authToken
 	params.DriverEndpoint.SkipSSLValidation = &skipTLS
 
-	metadata := &genmodel.EndpointMetadata{}
-	metadata.DisplayName = "servicename"
+	metadata := make(map[string]string)
+	metadata["display_name"] = "servicename"
 
 	params.DriverEndpoint.Metadata = metadata
 
@@ -249,8 +249,8 @@ func Test_UpdateInstanceEndpoint(t *testing.T) {
 	params.DriverEndpoint.EndpointURL = csmEndpoint
 	params.DriverEndpoint.AuthenticationKey = authToken
 
-	metadata := &genmodel.EndpointMetadata{}
-	metadata.DisplayName = "servicename"
+	metadata := make(map[string]string)
+	metadata["display_name"] = "servicename"
 
 	params.DriverEndpoint.Metadata = metadata
 
@@ -318,8 +318,8 @@ func Test_GetDriverEndpoint(t *testing.T) {
 	params.DriverEndpoint.EndpointURL = csmEndpoint
 	params.DriverEndpoint.AuthenticationKey = authToken
 
-	metadata := &genmodel.EndpointMetadata{}
-	metadata.DisplayName = "servicename"
+	metadata := make(map[string]string)
+	metadata["display_name"] = "servicename"
 
 	params.DriverEndpoint.Metadata = metadata
 
@@ -406,8 +406,8 @@ func Test_UnregisterDriverEndpoint(t *testing.T) {
 	params.DriverEndpoint.EndpointURL = csmEndpoint
 	params.DriverEndpoint.AuthenticationKey = authToken
 
-	metadata := &genmodel.EndpointMetadata{}
-	metadata.DisplayName = "servicename"
+	metadata := make(map[string]string)
+	metadata["display_name"] = "servicename"
 
 	params.DriverEndpoint.Metadata = metadata
 

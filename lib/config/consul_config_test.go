@@ -91,7 +91,9 @@ func Test_SetService(t *testing.T) {
 	serv.Bindable = true
 	serv.Description = "testService desc"
 	serv.ID = "testServiceID"
-	serv.Metadata = &brokermodel.MetaData{DisplayName: "test service"} //struct{DisplayName string}{"test service"} //&brokerapi.ServiceMetadata{DisplayName: "test service"}
+	metadata := make(map[string]string)
+	metadata["display_name"] = "test service"
+	serv.Metadata = metadata
 	serv.Name = "testService"
 	serv.Tags = []string{"serv1", "serv2"}
 

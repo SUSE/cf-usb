@@ -89,8 +89,8 @@ func Test_RegisterDriverEndpoint(t *testing.T) {
 	params.DriverEndpoint.EndpointURL = "http://127.0.0.1:8080"
 	params.DriverEndpoint.AuthenticationKey = "authkey"
 
-	metadata := &genmodel.EndpointMetadata{}
-	metadata.DisplayName = "servicename"
+	metadata := make(map[string]string)
+	metadata["display_name"] = "servicename"
 
 	params.DriverEndpoint.Metadata = metadata
 
