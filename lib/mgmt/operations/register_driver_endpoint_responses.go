@@ -53,6 +53,9 @@ func (o *RegisterDriverEndpointCreated) WriteResponse(rw http.ResponseWriter, pr
 swagger:response registerDriverEndpointConflict
 */
 type RegisterDriverEndpointConflict struct {
+
+	// In: body
+	Payload string `json:"body,omitempty"`
 }
 
 // NewRegisterDriverEndpointConflict creates RegisterDriverEndpointConflict with default headers values
@@ -60,10 +63,25 @@ func NewRegisterDriverEndpointConflict() *RegisterDriverEndpointConflict {
 	return &RegisterDriverEndpointConflict{}
 }
 
+// WithPayload adds the payload to the register driver endpoint conflict response
+func (o *RegisterDriverEndpointConflict) WithPayload(payload string) *RegisterDriverEndpointConflict {
+	o.Payload = payload
+	return o
+}
+
+// SetPayload sets the payload to the register driver endpoint conflict response
+func (o *RegisterDriverEndpointConflict) SetPayload(payload string) {
+	o.Payload = payload
+}
+
 // WriteResponse to the client
 func (o *RegisterDriverEndpointConflict) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(409)
+	if err := producer.Produce(rw, o.Payload); err != nil {
+		panic(err) // let the recovery middleware deal with this
+	}
+
 }
 
 /*RegisterDriverEndpointInternalServerError Unexpected error

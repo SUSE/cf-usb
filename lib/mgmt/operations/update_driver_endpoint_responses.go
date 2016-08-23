@@ -71,6 +71,9 @@ func (o *UpdateDriverEndpointNotFound) WriteResponse(rw http.ResponseWriter, pro
 swagger:response updateDriverEndpointConflict
 */
 type UpdateDriverEndpointConflict struct {
+
+	// In: body
+	Payload string `json:"body,omitempty"`
 }
 
 // NewUpdateDriverEndpointConflict creates UpdateDriverEndpointConflict with default headers values
@@ -78,10 +81,25 @@ func NewUpdateDriverEndpointConflict() *UpdateDriverEndpointConflict {
 	return &UpdateDriverEndpointConflict{}
 }
 
+// WithPayload adds the payload to the update driver endpoint conflict response
+func (o *UpdateDriverEndpointConflict) WithPayload(payload string) *UpdateDriverEndpointConflict {
+	o.Payload = payload
+	return o
+}
+
+// SetPayload sets the payload to the update driver endpoint conflict response
+func (o *UpdateDriverEndpointConflict) SetPayload(payload string) {
+	o.Payload = payload
+}
+
 // WriteResponse to the client
 func (o *UpdateDriverEndpointConflict) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(409)
+	if err := producer.Produce(rw, o.Payload); err != nil {
+		panic(err) // let the recovery middleware deal with this
+	}
+
 }
 
 /*UpdateDriverEndpointInternalServerError Unexpected error
