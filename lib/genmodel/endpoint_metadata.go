@@ -7,6 +7,7 @@ import (
 	strfmt "github.com/go-openapi/strfmt"
 
 	"github.com/go-openapi/errors"
+	"github.com/go-openapi/validate"
 )
 
 /*EndpointMetadata Optional metadata configuration used by graphical clients to display
@@ -15,52 +16,15 @@ information about a service.
 
 swagger:model endpointMetadata
 */
-type EndpointMetadata struct {
-
-	/* The categories of a service
-
-	 */
-	Categories string `json:"categories,omitempty"`
-
-	/* The name of the service to be displayed in graphical clients
-
-	 */
-	DisplayName string `json:"displayName,omitempty"`
-
-	/* Link to a documentation page for the service
-
-	 */
-	DocumentationURL string `json:"documentationUrl,omitempty"`
-
-	/* The URL to an image
-
-	 */
-	ImageURL string `json:"imageUrl,omitempty"`
-
-	/* Long description
-
-	 */
-	LongDescription string `json:"longDescription,omitempty"`
-
-	/* The name of the upstream entity providing the actual service
-
-	 */
-	ProviderDisplayName string `json:"providerDisplayName,omitempty"`
-
-	/* Link to support information for the service
-
-	 */
-	SupportURL string `json:"supportUrl,omitempty"`
-
-	/* The version of the service
-
-	 */
-	Version string `json:"version,omitempty"`
-}
+type EndpointMetadata map[string]string
 
 // Validate validates this endpoint metadata
-func (m *EndpointMetadata) Validate(formats strfmt.Registry) error {
+func (m EndpointMetadata) Validate(formats strfmt.Registry) error {
 	var res []error
+
+	if err := validate.Required("", "body", EndpointMetadata(m)); err != nil {
+		return err
+	}
 
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)

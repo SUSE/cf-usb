@@ -652,39 +652,8 @@
         },
         "MetaData": {
             "description": "metadata related to the service",
-            "properties": {
-                "displayName": {
-                    "type": "string",
-                    "description": "displayName of the service."
-                },
-                "imageUrl": {
-                    "description": "image URL.",
-                    "type": "string"
-                },
-                "longDescription": {
-                    "description": "Long Description",
-                    "type": "string"
-                },
-                "providerDisplayName": {
-                    "description": "Provider Display Name",
-                    "type": "string"
-                },
-                "documentationURL": {
-                    "description": "Documentation URL",
-                    "type": "string"
-                },
-                "supportURL": {
-                    "description": "Support URL",
-                    "type": "string"
-                },
-                "categories": {
-                    "description": "The categories of the service",
-                    "type": "string"
-                },
-                "version": {
-                    "description": "The version of the service",
-                    "type": "string"
-                }
+            "additionalProperties": {
+                "type": "string"
             }
         },
         "BrokerError": {

@@ -63,27 +63,13 @@ func ConfigureAPI(api *operations.UsbMgmtAPI, auth authentication.Authentication
 		if endpoint == nil {
 			return &operations.GetDriverEndpointNotFound{}
 		}
-		var metadata *genmodel.EndpointMetadata
-
-		if endpoint.Service.Metadata != nil {
-			metadata = &genmodel.EndpointMetadata{
-				DisplayName:         endpoint.Service.Metadata.DisplayName,
-				ImageURL:            endpoint.Service.Metadata.ImageURL,
-				LongDescription:     endpoint.Service.Metadata.LongDescription,
-				ProviderDisplayName: endpoint.Service.Metadata.ProviderDisplayName,
-				DocumentationURL:    endpoint.Service.Metadata.DocumentationURL,
-				SupportURL:          endpoint.Service.Metadata.SupportURL,
-				Categories:          endpoint.Service.Metadata.Categories,
-				Version:             endpoint.Service.Metadata.Version,
-			}
-		}
 
 		driverEndpoint := &genmodel.DriverEndpoint{
 			ID:                params.DriverEndpointID,
 			Name:              &endpoint.Name,
 			EndpointURL:       endpoint.TargetURL,
 			AuthenticationKey: endpoint.AuthenticationKey,
-			Metadata:          metadata,
+			Metadata:          map[string]string(endpoint.Service.Metadata),
 		}
 
 		return &operations.GetDriverEndpointOK{Payload: driverEndpoint}
@@ -98,18 +84,6 @@ func ConfigureAPI(api *operations.UsbMgmtAPI, auth authentication.Authentication
 
 		var response []*genmodel.DriverEndpoint
 		for id, endpoint := range config.Instances {
-			metadata := &genmodel.EndpointMetadata{}
-
-			if endpoint.Service.Metadata != nil {
-				metadata.DisplayName = endpoint.Service.Metadata.DisplayName
-				metadata.ImageURL = endpoint.Service.Metadata.ImageURL
-				metadata.LongDescription = endpoint.Service.Metadata.LongDescription
-				metadata.ProviderDisplayName = endpoint.Service.Metadata.ProviderDisplayName
-				metadata.DocumentationURL = endpoint.Service.Metadata.DocumentationURL
-				metadata.SupportURL = endpoint.Service.Metadata.SupportURL
-				metadata.Categories = endpoint.Service.Metadata.Categories
-				metadata.Version = endpoint.Service.Metadata.Version
-			}
 
 			var name string
 			name = endpoint.Name
@@ -121,7 +95,7 @@ func ConfigureAPI(api *operations.UsbMgmtAPI, auth authentication.Authentication
 				AuthenticationKey: endpoint.AuthenticationKey,
 				SkipSSLValidation: &endpoint.SkipSsl,
 				CaCertificate:     endpoint.CaCert,
-				Metadata:          metadata,
+				Metadata:          map[string]string(endpoint.Service.Metadata),
 			}
 
 			response = append(response, driverEndpoint)
@@ -206,21 +180,6 @@ func ConfigureAPI(api *operations.UsbMgmtAPI, auth authentication.Authentication
 
 		instance.Name = *params.DriverEndpoint.Name
 
-		metadata := brokermodel.MetaData{}
-
-		if params.DriverEndpoint.Metadata != nil {
-			{
-				metadata.DisplayName = params.DriverEndpoint.Metadata.DisplayName
-				metadata.ImageURL = params.DriverEndpoint.Metadata.ImageURL
-				metadata.LongDescription = params.DriverEndpoint.Metadata.LongDescription
-				metadata.ProviderDisplayName = params.DriverEndpoint.Metadata.ProviderDisplayName
-				metadata.DocumentationURL = params.DriverEndpoint.Metadata.DocumentationURL
-				metadata.SupportURL = params.DriverEndpoint.Metadata.SupportURL
-				metadata.Categories = params.DriverEndpoint.Metadata.Categories
-				metadata.Version = params.DriverEndpoint.Metadata.Version
-			}
-		}
-
 		err = csmClient.Login(instance.TargetURL, instance.AuthenticationKey, instance.CaCert, instance.SkipSsl)
 		if err != nil {
 			log.Error("csm-login-failed", err)
@@ -276,7 +235,7 @@ func ConfigureAPI(api *operations.UsbMgmtAPI, auth authentication.Authentication
 		service.Description = "Default service"
 		service.Tags = []string{service.Name}
 		service.Bindable = true
-		service.Metadata = &metadata
+		service.Metadata = map[string]string(params.DriverEndpoint.Metadata)
 
 		err = configProvider.SetService(instanceID, service)
 		if err != nil {
@@ -450,51 +409,11 @@ func ConfigureAPI(api *operations.UsbMgmtAPI, auth authentication.Authentication
 			instance.TargetURL = params.DriverEndpoint.EndpointURL
 		}
 
-		if params.DriverEndpoint.Metadata != nil {
-			if params.DriverEndpoint.Metadata.DisplayName != "" {
-				instance.Service.Metadata.DisplayName = params.DriverEndpoint.Metadata.DisplayName
-			}
-			if params.DriverEndpoint.Metadata.DocumentationURL != "" {
-				instance.Service.Metadata.DocumentationURL = params.DriverEndpoint.Metadata.DocumentationURL
-			}
-			if params.DriverEndpoint.Metadata.ImageURL != "" {
-				instance.Service.Metadata.ImageURL = params.DriverEndpoint.Metadata.ImageURL
-			}
-			if params.DriverEndpoint.Metadata.LongDescription != "" {
-				instance.Service.Metadata.LongDescription = params.DriverEndpoint.Metadata.LongDescription
-			}
-			if params.DriverEndpoint.Metadata.ProviderDisplayName != "" {
-				instance.Service.Metadata.ProviderDisplayName = params.DriverEndpoint.Metadata.ProviderDisplayName
-			}
-			if params.DriverEndpoint.Metadata.SupportURL != "" {
-				instance.Service.Metadata.SupportURL = params.DriverEndpoint.Metadata.SupportURL
-			}
-			if params.DriverEndpoint.Metadata.Categories != "" {
-				instance.Service.Metadata.Categories = params.DriverEndpoint.Metadata.Categories
-			}
-			if params.DriverEndpoint.Metadata.Version != "" {
-				instance.Service.Metadata.Version = params.DriverEndpoint.Metadata.Version
-			}
-		}
+		instance.Service.Metadata = map[string]string(params.DriverEndpoint.Metadata)
 
 		err = configProvider.SetInstance(params.DriverEndpointID, instance)
 		if err != nil {
 			return &operations.UpdateDriverEndpointInternalServerError{Payload: err.Error()}
-		}
-
-		var metadata *genmodel.EndpointMetadata
-
-		if instance.Service.Metadata != nil {
-			metadata = &genmodel.EndpointMetadata{
-				DisplayName:         instance.Service.Metadata.DisplayName,
-				ImageURL:            instance.Service.Metadata.ImageURL,
-				LongDescription:     instance.Service.Metadata.LongDescription,
-				ProviderDisplayName: instance.Service.Metadata.ProviderDisplayName,
-				DocumentationURL:    instance.Service.Metadata.DocumentationURL,
-				SupportURL:          instance.Service.Metadata.SupportURL,
-				Categories:          instance.Service.Metadata.Categories,
-				Version:             instance.Service.Metadata.Version,
-			}
 		}
 
 		driverEndpoint := &genmodel.DriverEndpoint{
@@ -502,7 +421,7 @@ func ConfigureAPI(api *operations.UsbMgmtAPI, auth authentication.Authentication
 			Name:              &instance.Name,
 			EndpointURL:       instance.TargetURL,
 			AuthenticationKey: instance.AuthenticationKey,
-			Metadata:          metadata,
+			Metadata:          map[string]string(params.DriverEndpoint.Metadata),
 		}
 
 		return &operations.UpdateDriverEndpointOK{Payload: driverEndpoint}

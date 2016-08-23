@@ -5,7 +5,6 @@ package genmodel
 
 import (
 	strfmt "github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/validate"
@@ -41,7 +40,7 @@ type DriverEndpoint struct {
 
 	/* metadata
 	 */
-	Metadata *EndpointMetadata `json:"metadata,omitempty"`
+	Metadata EndpointMetadata `json:"metadata,omitempty"`
 
 	/* The name of the driver endpoint. It's displayed by the Cloud Foundry
 	CLI when the user lists available service offerings.
@@ -61,11 +60,6 @@ type DriverEndpoint struct {
 func (m *DriverEndpoint) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateMetadata(formats); err != nil {
-		// prop
-		res = append(res, err)
-	}
-
 	if err := m.validateName(formats); err != nil {
 		// prop
 		res = append(res, err)
@@ -74,22 +68,6 @@ func (m *DriverEndpoint) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-	return nil
-}
-
-func (m *DriverEndpoint) validateMetadata(formats strfmt.Registry) error {
-
-	if swag.IsZero(m.Metadata) { // not required
-		return nil
-	}
-
-	if m.Metadata != nil {
-
-		if err := m.Metadata.Validate(formats); err != nil {
-			return err
-		}
-	}
-
 	return nil
 }
 

@@ -284,39 +284,8 @@
         "endpointMetadata": {
             "description": "Optional metadata configuration used by graphical clients to display\ninformation about a service.\n",
             "type": "object",
-            "properties": {
-                "displayName": {
-                    "type": "string",
-                    "description": "The name of the service to be displayed in graphical clients\n"
-                },
-                "imageUrl": {
-                    "type": "string",
-                    "description": "The URL to an image\n"
-                },
-                "longDescription": {
-                    "type": "string",
-                    "description": "Long description\n"
-                },
-                "providerDisplayName": {
-                    "type": "string",
-                    "description": "The name of the upstream entity providing the actual service\n"
-                },
-                "documentationUrl": {
-                    "type": "string",
-                    "description": "Link to a documentation page for the service\n"
-                },
-                "supportUrl": {
-                    "type": "string",
-                    "description": "Link to support information for the service\n"
-                },
-                "categories": {
-                    "type": "string",
-                    "description": "The categories of a service\n"
-                },
-                "version": {
-                    "type": "string",
-                    "description": "The version of the service\n"
-                }
+            "additionalProperties": {
+                "type": "string"
             }
         },
         "driverEndpoint": {

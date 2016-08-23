@@ -7,50 +7,22 @@ import (
 	strfmt "github.com/go-openapi/strfmt"
 
 	"github.com/go-openapi/errors"
+	"github.com/go-openapi/validate"
 )
 
 /*MetaData metadata related to the service
 
 swagger:model MetaData
 */
-type MetaData struct {
-
-	/* The categories of the service
-	 */
-	Categories string `json:"categories,omitempty"`
-
-	/* displayName of the service.
-	 */
-	DisplayName string `json:"displayName,omitempty"`
-
-	/* Documentation URL
-	 */
-	DocumentationURL string `json:"documentationURL,omitempty"`
-
-	/* image URL.
-	 */
-	ImageURL string `json:"imageUrl,omitempty"`
-
-	/* Long Description
-	 */
-	LongDescription string `json:"longDescription,omitempty"`
-
-	/* Provider Display Name
-	 */
-	ProviderDisplayName string `json:"providerDisplayName,omitempty"`
-
-	/* Support URL
-	 */
-	SupportURL string `json:"supportURL,omitempty"`
-
-	/* The version of the service
-	 */
-	Version string `json:"version,omitempty"`
-}
+type MetaData map[string]string
 
 // Validate validates this meta data
-func (m *MetaData) Validate(formats strfmt.Registry) error {
+func (m MetaData) Validate(formats strfmt.Registry) error {
 	var res []error
+
+	if err := validate.Required("", "body", MetaData(m)); err != nil {
+		return err
+	}
 
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
