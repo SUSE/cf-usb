@@ -34,7 +34,7 @@ type CatalogService struct {
 
 	/* metadata
 	 */
-	Metadata *MetaData `json:"metadata,omitempty"`
+	Metadata MetaData `json:"metadata,omitempty"`
 
 	/* name
 	 */
@@ -62,11 +62,6 @@ func (m *CatalogService) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateDashboardClient(formats); err != nil {
-		// prop
-		res = append(res, err)
-	}
-
-	if err := m.validateMetadata(formats); err != nil {
 		// prop
 		res = append(res, err)
 	}
@@ -101,22 +96,6 @@ func (m *CatalogService) validateDashboardClient(formats strfmt.Registry) error 
 	if m.DashboardClient != nil {
 
 		if err := m.DashboardClient.Validate(formats); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (m *CatalogService) validateMetadata(formats strfmt.Registry) error {
-
-	if swag.IsZero(m.Metadata) { // not required
-		return nil
-	}
-
-	if m.Metadata != nil {
-
-		if err := m.Metadata.Validate(formats); err != nil {
 			return err
 		}
 	}
