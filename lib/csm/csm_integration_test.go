@@ -3,6 +3,7 @@ package csm
 import (
 	"os"
 	"testing"
+	"time"
 
 	"github.com/pivotal-golang/lager/lagertest"
 	"github.com/satori/go.uuid"
@@ -41,6 +42,7 @@ func TestCSMClient(t *testing.T) {
 	}
 
 	err = client.CreateWorkspace(workspaceID)
+	time.Sleep(120 * time.Second)
 	assert.Nil(err)
 
 	exists, isNoop, err := client.WorkspaceExists(workspaceID)
@@ -50,6 +52,7 @@ func TestCSMClient(t *testing.T) {
 	}
 
 	credentials, err := client.CreateConnection(workspaceID, connectionID)
+	time.Sleep(120 * time.Second)
 	assert.Nil(err)
 	assert.NotNil(credentials)
 
@@ -60,9 +63,11 @@ func TestCSMClient(t *testing.T) {
 	}
 
 	client.DeleteConnection(workspaceID, connectionID)
+	time.Sleep(120 * time.Second)
 	assert.Nil(err)
 
 	err = client.DeleteWorkspace(workspaceID)
+	time.Sleep(120 * time.Second)
 	assert.Nil(err)
 
 }
