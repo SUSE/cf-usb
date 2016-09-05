@@ -96,6 +96,7 @@ func setupEnv() (*operations.BrokerAPI, consul.Provisioner, error) {
 	instanceInfo.AuthenticationKey = authToken
 	instanceInfo.Name = "testInstance"
 	instanceInfo.Dials = make(map[string]config.Dial)
+	instanceInfo.SkipSsl = true
 
 	dialInfo := config.Dial{}
 	dialInfo.Plan = brokermodel.Plan{}

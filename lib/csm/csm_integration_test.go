@@ -69,7 +69,6 @@ func TestCSMClient(t *testing.T) {
 	err = client.DeleteWorkspace(workspaceID)
 	time.Sleep(120 * time.Second)
 	assert.Nil(err)
-
 }
 
 func TestGetConnectionDoesNotExist(t *testing.T) {
@@ -135,27 +134,4 @@ func TestDeleteWorkspaceNotExist(t *testing.T) {
 	err = client.DeleteWorkspace(workspaceID)
 	//TODO: when is fixed in CSM uncomment the following line
 	//assert.NotNil(err)
-}
-
-func TestCreateWorkspaceThatExists(t *testing.T) {
-	csmEndpoint = os.Getenv("CSM_ENDPOINT")
-	authToken = os.Getenv("CSM_API_KEY")
-	if csmEndpoint == "" || authToken == "" {
-		t.Skipf("Skipping test TestCSMClient - missing CSM_ENDPOINT and CSM_API_KEY")
-	}
-	assert := assert.New(t)
-
-	workspaceID := uuid.NewV4().String()
-
-	client, err := getCSMClient()
-	if err != nil {
-		assert.Fail(err.Error())
-	}
-
-	err = client.CreateWorkspace(workspaceID)
-	assert.Nil(err)
-	err = client.CreateWorkspace(workspaceID)
-	assert.NotNil(err)
-	err = client.DeleteWorkspace(workspaceID)
-	assert.Nil(err)
 }

@@ -194,12 +194,12 @@ func Test_RegisterDriverEndpoint(t *testing.T) {
 	params.DriverEndpoint = &genmodel.DriverEndpoint{}
 	params.DriverEndpoint.ID = uuid.NewV4().String()
 	name := "testInstance"
-	skipTLS := true
+	skiptls := true
 
 	params.DriverEndpoint.Name = &name
 	params.DriverEndpoint.EndpointURL = csmEndpoint
 	params.DriverEndpoint.AuthenticationKey = authToken
-	params.DriverEndpoint.SkipSSLValidation = &skipTLS
+	params.DriverEndpoint.SkipSSLValidation = &skiptls
 
 	metadata := make(map[string]string)
 	metadata["display_name"] = "servicename"
@@ -233,12 +233,16 @@ func Test_UpdateInstanceEndpoint(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+
 	if csmEndpoint == "" {
 		t.Skip("CSM_ENDPOINT not set")
 	}
+
 	if authToken == "" {
 		t.Skip("CSM_API_KEY not set")
 	}
+
+	skiptls := true
 
 	instanceID := uuid.NewV4().String()
 	params := &operations.RegisterDriverEndpointParams{}
@@ -248,6 +252,7 @@ func Test_UpdateInstanceEndpoint(t *testing.T) {
 	params.DriverEndpoint.Name = &name
 	params.DriverEndpoint.EndpointURL = csmEndpoint
 	params.DriverEndpoint.AuthenticationKey = authToken
+	params.DriverEndpoint.SkipSSLValidation = &skiptls
 
 	metadata := make(map[string]string)
 	metadata["display_name"] = "servicename"
@@ -277,8 +282,10 @@ func Test_UpdateInstanceEndpoint(t *testing.T) {
 	paramsUpdate.DriverEndpointID = updateInstanceID
 	name = "updateName"
 	paramsUpdate.DriverEndpoint.Name = &name
+	paramsUpdate.DriverEndpoint.SkipSSLValidation = &skiptls
 	params.DriverEndpoint.EndpointURL = csmEndpoint
 	params.DriverEndpoint.AuthenticationKey = authToken
+	params.DriverEndpoint.SkipSSLValidation = &skiptls
 
 	responseUpdate := mgmtInterface.UpdateDriverEndpointHandler.Handle(*paramsUpdate, true)
 	assert.IsType(&operations.UpdateDriverEndpointOK{}, responseUpdate)
@@ -303,6 +310,8 @@ func Test_GetDriverEndpoint(t *testing.T) {
 		t.Skip("CSM_API_KEY not set")
 	}
 
+	skiptls := true
+
 	sbMocked.Mock.On("CheckServiceNameExists", mock.Anything).Return(false, nil)
 	sbMocked.Mock.On("GetServiceBrokerGUIDByName", mock.Anything).Return("aguid", nil)
 	sbMocked.Mock.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
@@ -317,6 +326,7 @@ func Test_GetDriverEndpoint(t *testing.T) {
 	params.DriverEndpoint.Name = &name
 	params.DriverEndpoint.EndpointURL = csmEndpoint
 	params.DriverEndpoint.AuthenticationKey = authToken
+	params.DriverEndpoint.SkipSSLValidation = &skiptls
 
 	metadata := make(map[string]string)
 	metadata["display_name"] = "servicename"
@@ -397,6 +407,8 @@ func Test_UnregisterDriverEndpoint(t *testing.T) {
 	sbMocked.Mock.On("Delete", "usb").Return(nil)
 	sbMocked.Mock.On("CheckServiceInstancesExist", mock.Anything).Return(false)
 
+	skiptls := true
+
 	instanceID := uuid.NewV4().String()
 	params := &operations.RegisterDriverEndpointParams{}
 	params.DriverEndpoint = &genmodel.DriverEndpoint{}
@@ -405,6 +417,7 @@ func Test_UnregisterDriverEndpoint(t *testing.T) {
 	params.DriverEndpoint.Name = &name
 	params.DriverEndpoint.EndpointURL = csmEndpoint
 	params.DriverEndpoint.AuthenticationKey = authToken
+	params.DriverEndpoint.SkipSSLValidation = &skiptls
 
 	metadata := make(map[string]string)
 	metadata["display_name"] = "servicename"
