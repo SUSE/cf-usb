@@ -35,6 +35,7 @@
 		"A0000000-0000-0000-0000-000000000002": {
 			"name": "dummy1",
 			"target": "http://127.0.0.1:8080",
+			"skip_ssl": true,
 			"authentication_key": "authkey",
 			"dials": {
 				"B0000000-0000-0000-0000-000000000001": {
@@ -77,6 +78,7 @@
 			"name": "dummy2",
 			"target": "http://127.0.0.1:8080",
 			"authentication_key": "authkey",
+			"skip_ssl": true,
 			"dials": {
 				"B0000000-0000-0000-0000-000000000011": {
 					"plan": {
