@@ -6,6 +6,7 @@ type CSM struct {
 	mock.Mock
 }
 
+// Login provides a mock function with given fields: _a0, _a1, _a2, _a3
 func (_m *CSM) Login(_a0 string, _a1 string, _a2 string, _a3 bool) error {
 	ret := _m.Called(_a0, _a1, _a2, _a3)
 
@@ -18,6 +19,8 @@ func (_m *CSM) Login(_a0 string, _a1 string, _a2 string, _a3 bool) error {
 
 	return r0
 }
+
+// CreateWorkspace provides a mock function with given fields: _a0
 func (_m *CSM) CreateWorkspace(_a0 string) error {
 	ret := _m.Called(_a0)
 
@@ -30,6 +33,8 @@ func (_m *CSM) CreateWorkspace(_a0 string) error {
 
 	return r0
 }
+
+// WorkspaceExists provides a mock function with given fields: _a0
 func (_m *CSM) WorkspaceExists(_a0 string) (bool, bool, error) {
 	ret := _m.Called(_a0)
 
@@ -56,6 +61,8 @@ func (_m *CSM) WorkspaceExists(_a0 string) (bool, bool, error) {
 
 	return r0, r1, r2
 }
+
+// DeleteWorkspace provides a mock function with given fields: _a0
 func (_m *CSM) DeleteWorkspace(_a0 string) error {
 	ret := _m.Called(_a0)
 
@@ -68,6 +75,8 @@ func (_m *CSM) DeleteWorkspace(_a0 string) error {
 
 	return r0
 }
+
+// CreateConnection provides a mock function with given fields: _a0, _a1
 func (_m *CSM) CreateConnection(_a0 string, _a1 string) (interface{}, error) {
 	ret := _m.Called(_a0, _a1)
 
@@ -89,6 +98,8 @@ func (_m *CSM) CreateConnection(_a0 string, _a1 string) (interface{}, error) {
 
 	return r0, r1
 }
+
+// ConnectionExists provides a mock function with given fields: _a0, _a1
 func (_m *CSM) ConnectionExists(_a0 string, _a1 string) (bool, bool, error) {
 	ret := _m.Called(_a0, _a1)
 
@@ -115,6 +126,8 @@ func (_m *CSM) ConnectionExists(_a0 string, _a1 string) (bool, bool, error) {
 
 	return r0, r1, r2
 }
+
+// DeleteConnection provides a mock function with given fields: _a0, _a1
 func (_m *CSM) DeleteConnection(_a0 string, _a1 string) error {
 	ret := _m.Called(_a0, _a1)
 
@@ -127,15 +140,24 @@ func (_m *CSM) DeleteConnection(_a0 string, _a1 string) error {
 
 	return r0
 }
-func (_m *CSM) GetStatus() error {
+
+// GetStatus provides a mock function with given fields:
+func (_m *CSM) GetStatus() (string, error) {
 	ret := _m.Called()
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func() error); ok {
+	var r0 string
+	if rf, ok := ret.Get(0).(func() string); ok {
 		r0 = rf()
 	} else {
-		r0 = ret.Error(0)
+		r0 = ret.Get(0).(string)
 	}
 
-	return r0
+	var r1 error
+	if rf, ok := ret.Get(1).(func() error); ok {
+		r1 = rf()
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }

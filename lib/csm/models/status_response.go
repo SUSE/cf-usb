@@ -19,7 +19,7 @@ swagger:model StatusResponse
 */
 type StatusResponse struct {
 
-	/* Optional array of diagnostics performed by the CSM during ping
+	/* Optional array of diagnostics performed by the SIDECAR during ping
 	 */
 	Diagnostics []*StatusDiagnostic `json:"diagnostics,omitempty"`
 
@@ -35,7 +35,11 @@ type StatusResponse struct {
 	*/
 	ProcessingType *string `json:"processing_type"`
 
-	/* Status of the ping request. If the CSM implementation is confident that it can perform all functions correctly, it should return "successful". Otherwise, "failed"
+	/* Contains information about the service type
+	 */
+	ServiceType string `json:"service_type,omitempty"`
+
+	/* Status of the ping request. If the SIDECAR implementation is confident that it can perform all functions correctly, it should return "successful". Otherwise, "failed"
 
 	Required: true
 	*/
