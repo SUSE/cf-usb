@@ -165,6 +165,10 @@ func (csm *csmClient) CreateConnection(workspaceID, connectionID string) (interf
 		return nil, fmt.Errorf(*csmError.Payload.Message)
 	}
 
+	if response.Payload.Details == nil {
+		response.Payload.Details = map[string]interface{}{}
+	}
+
 	return response.Payload.Details, nil
 
 }
