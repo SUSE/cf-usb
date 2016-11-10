@@ -43,6 +43,7 @@ func (usb *UsbApp) GetCommands() []CLICommandProvider {
 		&FileConfigProvider{},
 		&ConsulConfigProvider{},
 		&RedisConfigProvider{},
+		&MysqlConfigProvider{},
 	}
 }
 

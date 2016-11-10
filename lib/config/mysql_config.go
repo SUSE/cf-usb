@@ -1,0 +1,527 @@
+package config
+
+import (
+	"encoding/json"
+	"fmt"
+
+	"database/sql"
+	"strconv"
+
+	_ "github.com/go-sql-driver/mysql" //mysql driver needed for database connection
+	"github.com/hpcloud/cf-usb/lib/brokermodel"
+)
+
+type mysqlConfig struct {
+	db *sql.DB
+}
+
+type generalConfig struct {
+	key       string
+	value     string
+	component string
+}
+
+//NewMysqlConfig generates and returns a new mysql config provider
+func NewMysqlConfig(address string, username string, password string, database string) (Provider, error) {
+	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s)/%s", username, password, address, database))
+	if err != nil {
+		return nil, err
+	}
+	provisioner := mysqlConfig{}
+	provisioner.db = db
+	return &provisioner, nil
+}
+
+func (c *mysqlConfig) LoadConfiguration() (*Config, error) {
+	var configuration Config
+	var mgmt ManagementAPI
+	configuration.ManagementAPI = &mgmt
+	result, err := c.db.Query("SELECT * FROM Config")
+	if err != nil {
+		return nil, err
+	}
+	defer result.Close()
+
+	for result.Next() {
+		var item generalConfig
+		if err := result.Scan(&item.key, &item.value, &item.component); err != nil {
+			return nil, err
+		}
+
+		switch item.component {
+		case "BROKER_API":
+			{
+				switch item.key {
+				case "EXTERNAL_URL":
+					{
+						configuration.BrokerAPI.ExternalURL = item.value
+					}
+				case "LISTEN":
+					{
+						configuration.BrokerAPI.Listen = item.value
+					}
+				case "REQUIRE_TLS":
+					{
+						configuration.BrokerAPI.RequireTLS, err = strconv.ParseBool(item.value)
+						if err != nil {
+							return nil, err
+						}
+					}
+				case "SERVER_CERT_FILE":
+					{
+						configuration.BrokerAPI.ServerCertFile = item.value
+					}
+				case "SERVER_KEY_FILE":
+					{
+						configuration.BrokerAPI.ServerKeyFile = item.value
+					}
+				}
+			}
+		case "MANAGEMENT_API":
+			{
+				switch item.key {
+				case "LISTEN":
+					{
+						configuration.ManagementAPI.Listen = item.value
+					}
+				case "DEV_MODE":
+					{
+						configuration.ManagementAPI.DevMode, err = strconv.ParseBool(item.value)
+						if err != nil {
+							return nil, err
+						}
+					}
+				case "AUTHENTICATION":
+					{
+						auth := json.RawMessage(item.value)
+						configuration.ManagementAPI.Authentication = &auth
+					}
+				case "UAA_CLIENT":
+					{
+						configuration.ManagementAPI.UaaClient = item.value
+					}
+				case "UAA_SECRET":
+					{
+						configuration.ManagementAPI.UaaSecret = item.value
+					}
+				case "BROKER_NAME":
+					{
+						configuration.ManagementAPI.BrokerName = item.value
+					}
+				}
+			}
+		case "BROKER_CREDENTIALS":
+			{
+				if item.key == "USERNAME" {
+					configuration.BrokerAPI.Credentials.Username = item.value
+				}
+				if item.key == "PASSWORD" {
+					configuration.BrokerAPI.Credentials.Password = item.value
+				}
+			}
+		case "CLOUD_CONTROLLER":
+			{
+				if item.key == "API" {
+					configuration.ManagementAPI.CloudController.API = item.value
+				}
+				if item.key == "SKIP_TLS_VALIDATION" {
+					configuration.ManagementAPI.CloudController.SkipTLSValidation, err = strconv.ParseBool(item.value)
+					if err != nil {
+						return nil, err
+					}
+				}
+			}
+		case "API_VERSION":
+			{
+				configuration.APIVersion = item.value
+			}
+		case "ROUTES_REGISTER":
+			{
+				switch item.key {
+				case "BROKER_API_HOST":
+					{
+						configuration.RoutesRegister.BrokerAPIHost = item.value
+					}
+				case "MANAGEMENT_API_HOST":
+					{
+						configuration.RoutesRegister.ManagmentAPIHost = item.value
+					}
+				case "NATS_MEMBER":
+					{
+						configuration.RoutesRegister.NatsMembers = append(configuration.RoutesRegister.NatsMembers, item.value)
+					}
+				}
+			}
+		}
+
+	}
+
+	configuration.Instances = make(map[string]Instance)
+
+	instances, err := c.db.Query("SELECT Guid FROM Instances")
+	if err != nil {
+		return nil, err
+	}
+
+	defer instances.Close()
+
+	for instances.Next() {
+		var instanceGUID string
+		err := instances.Scan(&instanceGUID)
+		if err != nil {
+			return nil, err
+		}
+		instance, err := c.LoadDriverInstance(instanceGUID)
+		if err != nil {
+			return nil, err
+		}
+		configuration.Instances[instanceGUID] = *instance
+	}
+
+	return &configuration, nil
+}
+
+func (c *mysqlConfig) LoadDriverInstance(driverInstanceID string) (*Instance, error) {
+	var driver Instance
+	driver.Dials = make(map[string]Dial)
+
+	result, err := c.db.Query("SELECT * FROM Instances WHERE Guid=?", driverInstanceID)
+	if err != nil {
+		return nil, err
+	}
+	defer result.Close()
+
+	var instanceGUID string
+
+	for result.Next() {
+		if err := result.Scan(&instanceGUID, &driver.Name, &driver.TargetURL, &driver.AuthenticationKey, &driver.CaCert, &driver.SkipSsl); err != nil {
+			return nil, err
+		}
+	}
+
+	dials, err := c.db.Query("SELECT * FROM Dials WHERE Instances_Guid=?", instanceGUID)
+	if err != nil {
+		return nil, err
+	}
+	defer dials.Close()
+
+	for dials.Next() {
+		var dial Dial
+		var configuration []byte
+		var dialGUID string
+		var planGUID string
+
+		if err := dials.Scan(&dialGUID, &configuration, &planGUID, &instanceGUID); err != nil {
+			return nil, err
+		}
+		rawConfig := json.RawMessage(configuration)
+		dial.Configuration = &rawConfig
+
+		planRow := c.db.QueryRow("SELECT * FROM Plans WHERE Guid=?", planGUID)
+
+		var plan brokermodel.Plan
+		var metadata brokermodel.PlanMetadata
+		var meta []byte
+		if err := planRow.Scan(&planGUID, &plan.Name, &plan.Description, &plan.Free, &meta); err != nil {
+			return nil, err
+		}
+		err := json.Unmarshal(meta, &metadata)
+		if err != nil {
+			return nil, err
+		}
+		plan.Metadata = &metadata
+		plan.ID = planGUID
+		dial.Plan = plan
+
+		driver.Dials[dialGUID] = dial
+	}
+
+	serviceRow := c.db.QueryRow("SELECT * FROM Services WHERE Instances_Guid=?", instanceGUID)
+
+	var service brokermodel.CatalogService
+	var dashboard []byte
+	var metaService []byte
+	var tags []byte
+	if err := serviceRow.Scan(&service.ID, &service.Bindable, &dashboard, &service.Description, &metaService, &service.Name, &service.PlanUpdateable, &tags, &instanceGUID); err != nil {
+		return nil, err
+	}
+
+	err = json.Unmarshal(metaService, &service.Metadata)
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal(dashboard, &service.DashboardClient)
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal(tags, &service.Tags)
+	if err != nil {
+		return nil, err
+	}
+
+	driver.Service = service
+	return &driver, nil
+}
+
+func (c *mysqlConfig) GetUaaAuthConfig() (*UaaAuth, error) {
+	config, err := c.LoadConfiguration()
+	if err != nil {
+		return nil, err
+	}
+
+	conf := (*json.RawMessage)(config.ManagementAPI.Authentication)
+	fmt.Println(string(*conf))
+	uaa := Uaa{}
+	err = json.Unmarshal(*conf, &uaa)
+	if err != nil {
+		return nil, err
+	}
+	return &uaa.UaaAuth, nil
+}
+
+func (c *mysqlConfig) SetInstance(instanceID string, instance Instance) error {
+	_, err := c.db.Exec("INSERT INTO Instances VALUES(?, ?, ?,?,?,?)", instanceID, instance.Name, instance.TargetURL, instance.AuthenticationKey, instance.CaCert, instance.SkipSsl)
+	if err != nil {
+		return err
+	}
+
+	if len(instance.Dials) > 0 {
+		for dialKey, dialInfo := range instance.Dials {
+			err = c.SetDial(instanceID, dialKey, dialInfo)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	if instance.Service.Name != "" {
+		err = c.SetService(instanceID, instance.Service)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (c *mysqlConfig) GetInstance(instanceID string) (*Instance, string, error) {
+	instanceRow := c.db.QueryRow("SELECT * FROM Instances WHERE Guid=?", instanceID)
+	var instance Instance
+	var instanceGUID string
+
+	err := instanceRow.Scan(&instanceGUID, &instance.Name, &instance.TargetURL, &instance.AuthenticationKey, &instance.CaCert, &instance.SkipSsl)
+	if err != nil {
+		return nil, "", err
+	}
+	return &instance, instanceGUID, nil
+}
+
+func (c *mysqlConfig) DeleteInstance(instanceID string) error {
+	dials, err := c.db.Query("SELECT * FROM Dials WHERE Instances_Guid=?", instanceID)
+	defer dials.Close()
+
+	for dials.Next() {
+		var configuration []byte
+		var dialGUID string
+		var planGUID string
+		var instanceGUID string
+
+		if err := dials.Scan(&dialGUID, &configuration, &planGUID, &instanceGUID); err != nil {
+			return err
+		}
+		_, err = c.db.Exec("DELETE FROM Dials WHERE Guid=?", dialGUID)
+		if err != nil {
+			return err
+		}
+
+		_, err = c.db.Exec("DELETE FROM Plans WHERE Guid=?", planGUID)
+		if err != nil {
+			return err
+		}
+	}
+
+	_, err = c.db.Exec("DELETE FROM Services WHERE Instances_Guid=?", instanceID)
+	if err != nil {
+		return err
+	}
+
+	_, err = c.db.Exec("DELETE FROM Instances WHERE Guid=?", instanceID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *mysqlConfig) SetService(instanceID string, service brokermodel.CatalogService) error {
+	dashboard, err := json.Marshal(service.DashboardClient)
+	if err != nil {
+		return err
+	}
+	metadata, err := json.Marshal(service.Metadata)
+	if err != nil {
+		return err
+	}
+	tags, err := json.Marshal(service.Tags)
+	if err != nil {
+		return err
+	}
+	_, err = c.db.Exec("INSERT INTO Services VALUES(?, ?, ?,?,?,?,?,?,?)", service.ID, service.Bindable, dashboard, service.Description, metadata, service.Name, service.PlanUpdateable, tags, instanceID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *mysqlConfig) GetService(serviceID string) (*brokermodel.CatalogService, string, error) {
+
+	serviceRow := c.db.QueryRow("SELECT * FROM Services WHERE Guid=?", serviceID)
+	var service brokermodel.CatalogService
+	var dash []byte
+	var meta []byte
+	var tags []byte
+	var instanceID string
+	err := serviceRow.Scan(&service.ID, &service.Bindable, &dash, &service.Description, &meta, &service.Name, &service.PlanUpdateable, &tags, &instanceID)
+
+	var dashboard brokermodel.DashboardClient
+	err = json.Unmarshal(dash, &dashboard)
+	if err != nil {
+		return nil, "", err
+	}
+	service.DashboardClient = &dashboard
+
+	err = json.Unmarshal(meta, &service.Metadata)
+	if err != nil {
+		return nil, "", err
+	}
+	err = json.Unmarshal(tags, &service.Tags)
+	if err != nil {
+		return nil, "", err
+	}
+
+	return &service, instanceID, nil
+}
+
+func (c *mysqlConfig) DeleteService(instanceID string) error {
+	var serviceGUID string
+	if err := c.db.QueryRow("SELECT Services_Guid FROM Instances WHERE Guid=?", instanceID).Scan(&serviceGUID); err != nil {
+		return err
+	}
+
+	_, err := c.db.Exec("DELETE FROM Services WHERE Guid=?", serviceGUID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *mysqlConfig) SetDial(instanceID string, dialID string, dial Dial) error {
+	configuration, err := json.Marshal(dial.Configuration)
+	if err != nil {
+		return err
+	}
+
+	meta, err := json.Marshal(dial.Plan.Metadata)
+	if err != nil {
+		return err
+	}
+	_, err = c.db.Exec("INSERT INTO Plans VALUES(?, ?, ?,?, ?)", dial.Plan.ID, dial.Plan.Name, dial.Plan.Description, dial.Plan.Free, meta)
+	if err != nil {
+		return err
+	}
+
+	_, err = c.db.Exec("INSERT INTO Dials VALUES(?, ?, ?,?)", dialID, configuration, dial.Plan.ID, instanceID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *mysqlConfig) GetDial(dialID string) (*Dial, string, error) {
+
+	dialRow := c.db.QueryRow("SELECT * FROM Dials WHERE Guid=?", dialID)
+
+	var dialGUID string
+	var conf []byte
+	var planGUID string
+	var instanceGUID string
+	err := dialRow.Scan(&dialGUID, &conf, &planGUID, &instanceGUID)
+
+	var config json.RawMessage
+
+	err = json.Unmarshal(conf, &config)
+	if err != nil {
+		return nil, "", err
+	}
+
+	plan, _, _, err := c.GetPlan(planGUID)
+	if err != nil {
+		return nil, "", err
+	}
+	var result Dial
+	result.Configuration = &config
+	result.Plan = *plan
+	return &result, instanceGUID, nil
+}
+
+func (c *mysqlConfig) DeleteDial(dialID string) error {
+
+	dial, instanceID, err := c.GetDial(dialID)
+	if err != nil {
+		return err
+	}
+
+	_, err = c.db.Exec("DELETE FROM Plans WHERE Guid=?", dial.Plan.ID)
+	if err != nil {
+		return err
+	}
+
+	_, err = c.db.Exec("DELETE FROM Dials WHERE Instances_Guid=?", instanceID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *mysqlConfig) InstanceNameExists(driverInstanceName string) (bool, error) {
+	result := c.db.QueryRow("SELECT EXISTS(SELECT * FROM Instances WHERE Name=?)", driverInstanceName)
+	var exists bool
+
+	if err := result.Scan(&exists); err != nil {
+		return false, err
+	}
+
+	return exists, nil
+}
+
+func (c *mysqlConfig) GetPlan(planid string) (*brokermodel.Plan, string, string, error) {
+
+	planRow := c.db.QueryRow("SELECT * FROM Plans WHERE Guid=?", planid)
+
+	var plan brokermodel.Plan
+	var meta []byte
+	var planGUID string
+
+	err := planRow.Scan(&planGUID, &plan.Name, &plan.Description, &plan.Free, &meta)
+	if err != nil {
+		return nil, "", "", err
+	}
+	var metadata brokermodel.PlanMetadata
+	err = json.Unmarshal(meta, &metadata)
+	if err != nil {
+		return nil, "", "", err
+	}
+	plan.Metadata = &metadata
+	plan.ID = planGUID
+
+	var dialID string
+	var instanceID string
+
+	err = c.db.QueryRow("SELECT Guid,Instances_Guid FROM Dials WHERE Plans_Guid=?", planid).Scan(&dialID, &instanceID)
+	if err != nil {
+		return nil, "", "", err
+	}
+	return &plan, dialID, instanceID, nil
+}
