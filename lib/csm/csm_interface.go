@@ -9,5 +9,5 @@ type CSM interface {
 	CreateConnection(string, string) (interface{}, error)
 	ConnectionExists(string, string) (bool, bool, error)
 	DeleteConnection(string, string) error
-	GetStatus() error
+	GetStatus() (string, error)
 }

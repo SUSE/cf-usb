@@ -234,20 +234,19 @@ func (csm *csmClient) DeleteConnection(workspaceID, connectionID string) error {
 
 }
 
-func (csm *csmClient) GetStatus() error {
+func (csm *csmClient) GetStatus() (string, error) {
 	if !csm.loggedIn {
-		return errors.New("Not logged in")
+		return "", errors.New("Not logged in")
 	}
 	params := status.NewStatusParams()
 	response, err := csm.statusClient.Status(params, csm.authInfoWriter)
 	if err != nil {
 		csmError, ok := err.(*status.StatusDefault)
 		if !ok {
-			return err
+			return "", err
 		}
-		return fmt.Errorf(*csmError.Payload.Message)
+		return "", fmt.Errorf(*csmError.Payload.Message)
 	}
-
 	csm.logger.Info("status-response", lager.Data{"Status ": response.Payload.Status, "Message": response.Payload.Message, "Processing Type": response.Payload.ProcessingType})
 
 	if response != nil {
@@ -259,8 +258,8 @@ func (csm *csmClient) GetStatus() error {
 				errTrace = errTrace + fmt.Sprintf("\n Status: %s, Name: %s, Description: %s, Message: %s", *diag.Status, *diag.Name, *diag.Description, *diag.Message)
 			}
 
-			return fmt.Errorf(errTrace)
+			return "", fmt.Errorf(errTrace)
 		}
 	}
-	return nil
+	return response.Payload.ServiceType, nil
 }

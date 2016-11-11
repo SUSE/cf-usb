@@ -4,7 +4,6 @@ The Cloud Foundry services API defines the contract between the Cloud Controller
 
 
     Schemes:
-      https
       http
     Host: localhost
     BasePath: /v2

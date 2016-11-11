@@ -190,14 +190,29 @@ func serviceBindHandler(params operations.ServiceBindParams, principal interface
 		brokerLogger.Info("generate-credentials-service-error", lager.Data{"error": err.Error()})
 		return operations.NewServiceBindDefault(500).WithPayload(getBrokerError(err.Error()))
 	}
-
+	brokerLogger.Info("received-result", lager.Data{"result": results})
 	bindingResponse := brokermodel.BindingResponse{}
-	bindingResponse.Credentials = results
+
+	if routingService(servID.Requires) == true {
+		routeInfo := results.(map[string]interface{})
+		bindingResponse.RouteServiceURL = routeInfo["route_service_url"].(string)
+	} else {
+		bindingResponse.Credentials = results
+	}
 
 	brokerLogger.Info("generate-credentials-request-completed", lager.Data{"binding-id": params.BindingID, "service-id": params.Binding.ServiceID})
 
 	return operations.NewServiceBindCreated().WithPayload(&bindingResponse)
 
+}
+
+func routingService(serviceRequires []string) bool {
+	for _, req := range serviceRequires {
+		if req == "route_forwarding" {
+			return true
+		}
+	}
+	return false
 }
 
 func serviceUnbindHandler(params operations.ServiceUnbindParams, principal interface{}) middleware.Responder {

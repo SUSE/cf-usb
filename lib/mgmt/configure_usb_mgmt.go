@@ -187,7 +187,7 @@ func ConfigureAPI(api *operations.UsbMgmtAPI, auth authentication.Authentication
 		}
 
 		log.Debug("get-status-information", lager.Data{"url": instance.TargetURL})
-		err = csmClient.GetStatus()
+		serviceType, err := csmClient.GetStatus()
 		if err != nil {
 			log.Error("csm-get-status", err)
 			return &operations.RegisterDriverEndpointInternalServerError{Payload: err.Error()}
@@ -236,6 +236,10 @@ func ConfigureAPI(api *operations.UsbMgmtAPI, auth authentication.Authentication
 		service.Tags = []string{service.Name}
 		service.Bindable = true
 		service.Metadata = map[string]string(params.DriverEndpoint.Metadata)
+
+		if serviceType == "routing" {
+			service.Requires = []string{"route_forwarding"}
+		}
 
 		err = configProvider.SetService(instanceID, service)
 		if err != nil {
