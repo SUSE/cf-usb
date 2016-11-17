@@ -181,6 +181,112 @@ func (c *mysqlConfig) LoadConfiguration() (*Config, error) {
 	return &configuration, nil
 }
 
+func (c *mysqlConfig) SaveConfiguration(config Config, overwrite bool) error {
+	if overwrite == true {
+		_, err := c.db.Exec("DELETE FROM Config")
+		if err != nil {
+			return err
+		}
+
+		_, err = c.db.Exec("INSERT INTO Config VALUES(?,?,?)", "API", config.APIVersion, "API_VERSION")
+		if err != nil {
+			return err
+		}
+		_, err = c.db.Exec("INSERT INTO Config VALUES(?,?,?)", "EXTERNAL_URL", config.BrokerAPI.ExternalURL, "BROKER_API")
+		if err != nil {
+			return err
+		}
+		_, err = c.db.Exec("INSERT INTO Config VALUES(?,?,?)", "LISTEN", config.BrokerAPI.Listen, "BROKER_API")
+		if err != nil {
+			return err
+		}
+		_, err = c.db.Exec("INSERT INTO Config VALUES(?,?,?)", "REQUIRE_TLS", config.BrokerAPI.RequireTLS, "BROKER_API")
+		if err != nil {
+			return err
+		}
+		_, err = c.db.Exec("INSERT INTO Config VALUES(?,?,?)", "SERVER_CERT_FILE", config.BrokerAPI.ServerCertFile, "BROKER_API")
+		if err != nil {
+			return err
+		}
+		_, err = c.db.Exec("INSERT INTO Config VALUES(?,?,?)", "SERVER_KEY_FILE", config.BrokerAPI.ServerKeyFile, "BROKER_API")
+		if err != nil {
+			return err
+		}
+		_, err = c.db.Exec("INSERT INTO Config VALUES(?,?,?)", "USERNAME", config.BrokerAPI.Credentials.Username, "BROKER_CREDENTIALS")
+		if err != nil {
+			return err
+		}
+		_, err = c.db.Exec("INSERT INTO Config VALUES(?,?,?)", "PASSWORD", config.BrokerAPI.Credentials.Password, "BROKER_CREDENTIALS")
+		if err != nil {
+			return err
+		}
+		_, err = c.db.Exec("INSERT INTO Config VALUES(?,?,?)", "BROKER_NAME", config.ManagementAPI.BrokerName, "MANAGEMENT_API")
+		if err != nil {
+			return err
+		}
+		_, err = c.db.Exec("INSERT INTO Config VALUES(?,?,?)", "DEV_MODE", config.ManagementAPI.DevMode, "MANAGEMENT_API")
+		if err != nil {
+			return err
+		}
+		_, err = c.db.Exec("INSERT INTO Config VALUES(?,?,?)", "LISTEN", config.ManagementAPI.Listen, "MANAGEMENT_API")
+		if err != nil {
+			return err
+		}
+
+		_, err = c.db.Exec("INSERT INTO Config VALUES(?,?,?)", "UAA_CLIENT", config.ManagementAPI.UaaClient, "MANAGEMENT_API")
+		if err != nil {
+			return err
+		}
+
+		_, err = c.db.Exec("INSERT INTO Config VALUES(?,?,?)", "UAA_SECRET", config.ManagementAPI.UaaSecret, "MANAGEMENT_API")
+		if err != nil {
+			return err
+		}
+
+		_, err = c.db.Exec("INSERT INTO Config VALUES(?,?,?)", "API", config.ManagementAPI.CloudController.API, "CLOUD_CONTROLLER")
+		if err != nil {
+			return err
+		}
+
+		_, err = c.db.Exec("INSERT INTO Config VALUES(?,?,?)", "SKIP_TLS_VALIDATION", config.ManagementAPI.CloudController.SkipTLSValidation, "CLOUD_CONTROLLER")
+		if err != nil {
+			return err
+		}
+		if config.RoutesRegister != nil {
+			_, err = c.db.Exec("INSERT INTO Config VALUES(?,?,?)", "BROKER_API_HOST", config.RoutesRegister.BrokerAPIHost, "ROUTES_REGISTER")
+			if err != nil {
+				return err
+			}
+
+			_, err = c.db.Exec("INSERT INTO Config VALUES(?,?,?)", "MANAGEMENT_API_HOST", config.RoutesRegister.ManagmentAPIHost, "ROUTES_REGISTER")
+			if err != nil {
+				return err
+			}
+
+			for _, member := range config.RoutesRegister.NatsMembers {
+				_, err = c.db.Exec("INSERT INTO Config VALUES(?,?,?)", "NATS_MEMEBER", member, "ROUTES_REGISTER")
+				if err != nil {
+					return err
+				}
+			}
+		}
+
+		_, err = c.db.Exec("INSERT INTO Config VALUES(?,?,?)", "AUTHENTICATION", string(*config.ManagementAPI.Authentication), "MANAGEMENT_API")
+		if err != nil {
+			return err
+		}
+	}
+
+	for instanceID, instance := range config.Instances {
+		err := c.SetInstance(instanceID, instance)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (c *mysqlConfig) LoadDriverInstance(driverInstanceID string) (*Instance, error) {
 	var driver Instance
 	driver.Dials = make(map[string]Dial)

@@ -1,10 +1,9 @@
 package mocks
 
-import (
-	"github.com/hpcloud/cf-usb/lib/brokermodel"
-	"github.com/hpcloud/cf-usb/lib/config"
-	"github.com/stretchr/testify/mock"
-)
+import "github.com/hpcloud/cf-usb/lib/config"
+import "github.com/stretchr/testify/mock"
+
+import "github.com/hpcloud/cf-usb/lib/brokermodel"
 
 type Provider struct {
 	mock.Mock
@@ -31,6 +30,11 @@ func (_m *Provider) LoadConfiguration() (*config.Config, error) {
 	}
 
 	return r0, r1
+}
+
+// SaveConfiguration provides a mock function with given fields: config, overwrite
+func (_m *Provider) SaveConfiguration(config config.Config, overwrite bool) error {
+	return nil
 }
 
 // LoadDriverInstance provides a mock function with given fields: driverInstanceID

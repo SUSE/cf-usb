@@ -166,11 +166,11 @@ func ConfigureAPI(api *operations.UsbMgmtAPI, auth authentication.Authentication
 
 		var createInstanceError error
 		if driverInstanceNameExist && serviceNameExist {
-			createInstanceError = fmt.Errorf("A driver instance with the same name already exists.")
+			createInstanceError = fmt.Errorf("a driver instance with the same name already exists")
 		} else if driverInstanceNameExist && !serviceNameExist {
-			createInstanceError = fmt.Errorf("A driver instance with the same name already exists but is not registered with the Cloud Controller. This service may have been purged. Please consider deleting it from the USB.")
+			createInstanceError = fmt.Errorf("a driver instance with the same name already exists but is not registered with the Cloud Controller, this service may have been purged - please consider deleting it from the USB")
 		} else if !driverInstanceNameExist && serviceNameExist {
-			createInstanceError = fmt.Errorf("A service with the same name is already registered with the Cloud Controller.")
+			createInstanceError = fmt.Errorf("a service with the same name is already registered with the Cloud Controller")
 		}
 
 		if createInstanceError != nil {

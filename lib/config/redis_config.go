@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/hpcloud/cf-usb/lib/brokermodel"
 	"github.com/hpcloud/cf-usb/lib/config/redis"
@@ -18,6 +19,10 @@ func NewRedisConfig(provider redis.Provisioner) Provider {
 	provisioner := redisConfig{}
 	provisioner.provider = provider
 	return &provisioner
+}
+
+func (c *redisConfig) SaveConfiguration(config Config, overwrite bool) error {
+	return fmt.Errorf("Not implemented")
 }
 
 func (c *redisConfig) LoadConfiguration() (*Config, error) {
