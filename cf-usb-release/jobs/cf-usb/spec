@@ -1,12 +1,16 @@
 ---
 name: cf-usb
 templates:
+  cf-usb_mysql.ctl.erb: bin/pre-start
   cf-usb.ctl.erb: bin/cf-usb.ctl
   broker.crt.erb: config/broker.crt
   broker.key.erb: config/broker.key
+  usb_mysql_config.sql.erb: config/usb_mysql_config.sql
+  usb_mysql_create_db.sql.erb: config/usb_mysql_create_db.sql
 
 packages:
   - golang
+  - mariadb
   - cf-usb
 
 properties:
@@ -45,6 +49,10 @@ properties:
   cf-usb.management.broker_name:
     description: The broker's name
     default: usb
+  cf-usb.mysql_password:
+    description: Password to login to mysql for config
+  cf-usb.mysql_address:
+    description: The mysql server address and port
   cc.srv_api_uri:
     description: The cloudcontroller's api endpoint
   cf-usb.skip_tls_validation:
@@ -55,10 +63,10 @@ properties:
     default: debug
   cf-usb.override:
     description: Override the drivers ?
-    default: false
+    default: true
   cf-usb.configprovider:
     description: What configuration storage to use
-    default: consulConfigProvider
+    default: mysqlConfigProvider
   cf-usb.configconnectionstring:
     description: The connection string for the configuration storage
     default: "127.0.0.1:8500"
