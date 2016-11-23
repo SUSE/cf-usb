@@ -79,6 +79,20 @@ func main() {
 		}
 	}
 
+	existing, _ := mysqlConfiguration.LoadConfiguration()
+
+	if existing != nil {
+		if len(existing.Instances) > 0 {
+			for instanceID, _ := range existing.Instances {
+				err = mysqlConfiguration.DeleteInstance(instanceID)
+				if err != nil {
+					fmt.Println("Error cleaning up mysql instances", err)
+					os.Exit(1)
+				}
+			}
+		}
+	}
+
 	err = mysqlConfiguration.SaveConfiguration(*configData, overwrite)
 	if err != nil {
 		fmt.Println("save mysql configuration ", err)
