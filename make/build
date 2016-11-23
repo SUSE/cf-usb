@@ -19,3 +19,13 @@ for OS in ${OSES}; do \
 done
 
 echo "${NO_COLOR}\c"
+
+echo "${OK_COLOR}==> Building migration tool ${ERROR_COLOR}"
+
+for OS in ${OSES}; do \
+		 env GOOS=${OS} GOARCH=amd64 go build -o build/${OS}-amd64/usb/dbmigrate \
+		 -ldflags="-X main.version=${APP_VERSION}" \
+		 ./utils/dbmigrate/  
+done
+
+echo "${NO_COLOR}\c"

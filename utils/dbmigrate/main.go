@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/hashicorp/consul/api"
 	"github.com/hpcloud/cf-usb/lib/config"
@@ -47,11 +48,25 @@ func main() {
 	}
 
 	configuraiton := config.NewConsulConfig(provisioner)
-	configData, err := configuraiton.LoadConfiguration()
-	if err != nil {
-		fmt.Println("load consul configuration ", err)
-		os.Exit(1)
+
+	var configData *config.Config
+
+	//retry a few times until consul agent is up and running
+	for i := 0; i < 5; i++ {
+		configData, err = configuraiton.LoadConfiguration()
+		if err != nil {
+			fmt.Println("load consul configuration error: ", err)
+			time.Sleep(2 * time.Second)
+		} else {
+			break
+		}
 	}
+
+	if configData == nil {
+		fmt.Println("No configuration could be loaded from consul - stopping migration")
+		os.Exit(0)
+	}
+	fmt.Println("Configuration loaded succesfully from consul")
 
 	mysqlAddress := os.Getenv("MYSQL_ADDRESS")
 	mysqlDB := os.Getenv("MYSQL_DB")
@@ -98,5 +113,5 @@ func main() {
 		fmt.Println("save mysql configuration ", err)
 		os.Exit(1)
 	}
-
+	fmt.Println("Migration complete")
 }
