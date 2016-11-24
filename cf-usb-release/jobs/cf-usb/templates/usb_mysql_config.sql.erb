@@ -16,5 +16,5 @@ INSERT INTO usb.Config (`KEY`,VALUE,COMPONENT) VALUES
 ,('SKIP_TLS_VALIDATION','<%= p("cf-usb.skip_tls_validation") %>','CLOUD_CONTROLLER')
 ,('USERNAME','<%= p("cf-usb.broker.username") %>','BROKER_CREDENTIALS')
 ,('PASSWORD','<%= p("cf-usb.broker.password") %>','BROKER_CREDENTIALS')
-,('API','2.6','API_VERSION')
+,('API','<%= p("cf-usb.api_version") %>','API_VERSION')
 ;

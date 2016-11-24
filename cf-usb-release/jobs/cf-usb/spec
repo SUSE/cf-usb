@@ -70,3 +70,6 @@ properties:
   cf-usb.configconnectionstring:
     description: The connection string for the configuration storage
     default: "127.0.0.1:8500"
+  cf-usb.api_version:
+    description: The API version 
+    default: 2.6

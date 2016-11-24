@@ -20,8 +20,7 @@ function start()
 
     curl -s -S -X PUT -d "$broker_api" http://<%= p("cf-usb.configconnectionstring") %>/v1/kv/usb/broker_api
     curl -s -S -X PUT -d "$management_api" http://<%= p("cf-usb.configconnectionstring") %>/v1/kv/usb/management_api
-    # TODO: the 2.6 constant here is a hack
-    curl -s -S -X PUT -d "2.6" http://<%= p("cf-usb.configconnectionstring") %>/v1/kv/usb/api_version
+    curl -s -S -X PUT -d "<%= p("cf-usb.api_version") %>" http://<%= p("cf-usb.configconnectionstring") %>/v1/kv/usb/api_version
     # create the pidfile directory if it doesn't exist
     [ ! -d `dirname $pidfile` ] && mkdir -p `dirname $pidfile`
 
