@@ -20,19 +20,28 @@ function start()
 
     curl -s -S -X PUT -d "$broker_api" http://<%= p("cf-usb.configconnectionstring") %>/v1/kv/usb/broker_api
     curl -s -S -X PUT -d "$management_api" http://<%= p("cf-usb.configconnectionstring") %>/v1/kv/usb/management_api
-    # TODO: the 2.6 constant here is a hack
-    curl -s -S -X PUT -d "2.6" http://<%= p("cf-usb.configconnectionstring") %>/v1/kv/usb/api_version
-    <% end %>
-
+    curl -s -S -X PUT -d "<%= p("cf-usb.api_version") %>" http://<%= p("cf-usb.configconnectionstring") %>/v1/kv/usb/api_version
     # create the pidfile directory if it doesn't exist
     [ ! -d `dirname $pidfile` ] && mkdir -p `dirname $pidfile`
 
     # start cf-usb only if there's no other instance running
     pidof usb >/dev/null || \
     {
-	/var/vcap/packages/cf-usb/bin/usb <%= p("cf-usb.configprovider") %> -a <%= p("cf-usb.configconnectionstring") %> 1>>/var/vcap/sys/log/cf-usb/cf-usb.log 2>&1 &
-	echo $! >$pidfile
+	     /var/vcap/packages/cf-usb/bin/usb <%= p("cf-usb.configprovider") %> -a <%= p("cf-usb.configconnectionstring") %> 1>>/var/vcap/sys/log/cf-usb/cf-usb.log 2>&1 &
+       echo $! >$pidfile
+     }
+    <% elsif p("cf-usb.configprovider") == "mysqlConfigProvider" %>
+    # create the pidfile directory if it doesn't exist
+    [ ! -d `dirname $pidfile` ] && mkdir -p `dirname $pidfile`
+
+    # start cf-usb only if there's no other instance running
+    pidof usb >/dev/null || \
+    {
+      /var/vcap/packages/cf-usb/bin/usb <%= p("cf-usb.configprovider") %> -a <%= p("cf-usb.mysql_address") %>:3306 --username usb -p <%= p("cf-usb.mysql_password") %> --database usb 1>>/var/vcap/sys/log/cf-usb/cf-usb.log 2>&1 &
+      echo $! >$pidfile
     }
+    <% end %>
+
 }
 
 function stop()

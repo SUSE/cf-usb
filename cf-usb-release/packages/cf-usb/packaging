@@ -24,5 +24,6 @@ cd ${REPO_DIR}
 mkdir -p ${BOSH_INSTALL_TARGET}/bin/
 
 cp build/linux-amd64/usb/usb ${BOSH_INSTALL_TARGET}/bin/
+cp build/linux-amd64/usb/dbmigrate ${BOSH_INSTALL_TARGET}/bin/
 
 rm -rf ${BOSH_INSTALL_TARGET}/src

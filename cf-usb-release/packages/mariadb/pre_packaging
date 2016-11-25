@@ -1,0 +1,9 @@
+set -e
+
+cd ${BUILD_DIR}
+
+MARIADB_VERSION=10.1.18
+
+mkdir mariadb
+
+curl -L -o mariadb/mariadb-${MARIADB_VERSION}-linux-x86_64.tar.gz http://mirrors.supportex.net/mariadb/mariadb-${MARIADB_VERSION}/bintar-linux-x86_64/mariadb-${MARIADB_VERSION}-linux-x86_64.tar.gz

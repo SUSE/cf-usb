@@ -1,0 +1,20 @@
+INSERT INTO usb.Config (`KEY`,VALUE,COMPONENT) VALUES
+('EXTERNAL_URL','<%= p("cf-usb.broker.external_url") %>','BROKER_API')
+,('LISTEN',':<%= p("cf-usb.broker.port") %>','BROKER_API')
+,('REQUIRE_TLS','<%= p("cf-usb.broker.require_tls") %>','BROKER_API')
+,('SERVER_CERT_FILE','/var/vcap/jobs/cf-usb/config/broker.crt','BROKER_API')
+,('SERVER_KEY_FILE','/var/vcap/jobs/cf-usb/config/broker.key','BROKER_API')
+,('DEV_MODE','<%= p("cf-usb.management.dev_mode") %>','MANAGEMENT_API')
+,('LISTEN',':<%= p("cf-usb.management.port") %>','MANAGEMENT_API')
+,('AUTHENTICATION','{"uaa":{"adminscope":"usb.management.admin","public_key":"<%= p("cf-usb.management.public_key").gsub("        ","").gsub("\n","\\\\\\n") %>"}}','MANAGEMENT_API')
+,('UAA_CLIENT','<%= p("cf-usb.management.uaa.client") %>','MANAGEMENT_API')
+,('UAA_SECRET','<%= p("cf-usb.management.uaa.secret") %>','MANAGEMENT_API')
+;
+INSERT INTO usb.Config (`KEY`,VALUE,COMPONENT) VALUES
+('BROKER_NAME','<%= p("cf-usb.management.broker_name") %>','MANAGEMENT_API')
+,('API','<%= p("cc.srv_api_uri") %>','CLOUD_CONTROLLER')
+,('SKIP_TLS_VALIDATION','<%= p("cf-usb.skip_tls_validation") %>','CLOUD_CONTROLLER')
+,('USERNAME','<%= p("cf-usb.broker.username") %>','BROKER_CREDENTIALS')
+,('PASSWORD','<%= p("cf-usb.broker.password") %>','BROKER_CREDENTIALS')
+,('API','<%= p("cf-usb.api_version") %>','API_VERSION')
+;
