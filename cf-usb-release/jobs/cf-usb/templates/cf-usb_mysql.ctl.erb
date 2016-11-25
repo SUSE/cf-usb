@@ -3,8 +3,10 @@
 <% if p("cf-usb.configprovider") == "mysqlConfigProvider" %>
 
 function createMysqlConfig {
+  set -e
   /var/vcap/packages/mariadb/mysql -h <%= p("cf-usb.mysql_address") %> -u usb -p<%= p("cf-usb.mysql_password") %> < /var/vcap/jobs/cf-usb/config/usb_mysql_create_db.sql
   /var/vcap/packages/mariadb/mysql -h <%= p("cf-usb.mysql_address") %> -u usb -p<%= p("cf-usb.mysql_password") %> < /var/vcap/jobs/cf-usb/config/usb_mysql_config.sql
+  set +e
 }
 
 

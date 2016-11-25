@@ -98,7 +98,7 @@ func main() {
 
 	if existing != nil {
 		if len(existing.Instances) > 0 {
-			for instanceID, _ := range existing.Instances {
+			for instanceID := range existing.Instances {
 				err = mysqlConfiguration.DeleteInstance(instanceID)
 				if err != nil {
 					fmt.Println("Error cleaning up mysql instances", err)
