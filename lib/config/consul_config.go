@@ -25,6 +25,10 @@ func NewConsulConfig(provisioner consul.Provisioner) Provider {
 	return &consulStruct
 }
 
+func (c *consulConfig) SaveConfiguration(config Config, overwrite bool) error {
+	return fmt.Errorf("Not implemented")
+}
+
 func (c *consulConfig) LoadConfiguration() (*Config, error) {
 	var config Config
 

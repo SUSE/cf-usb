@@ -87,6 +87,7 @@ type Config struct {
 //Provider is the definition for a config provider
 type Provider interface {
 	LoadConfiguration() (*Config, error)
+	SaveConfiguration(config Config, overwrite bool) error
 	LoadDriverInstance(driverInstanceID string) (*Instance, error)
 	GetUaaAuthConfig() (*UaaAuth, error)
 	SetInstance(instanceid string, driverInstance Instance) error
