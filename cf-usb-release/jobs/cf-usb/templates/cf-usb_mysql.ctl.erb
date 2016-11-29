@@ -10,9 +10,9 @@ function createMysqlConfig {
 }
 
 
-  dbUsb=$(/var/vcap/packages/mariadb/mysql -h <%= p("cf-usb.mysql_address") %> -u usb -p<%= p("cf-usb.mysql_password") %> -e "SHOW DATABASES;" | grep "usb")
+  dbUsb=$(/var/vcap/packages/mariadb/mysql -h <%= p("cf-usb.mysql_address") %> -u usb -p<%= p("cf-usb.mysql_password") %> -e "SHOW DATABASES;" | grep "usb"  || : )
   if [ $dbUsb=="usb" ]; then
-    tableConfig=$(/var/vcap/packages/mariadb/mysql usb -h <%= p("cf-usb.mysql_address") %> -u usb -p<%= p("cf-usb.mysql_password") %> -e "SHOW TABLES;" | grep "Config")
+    tableConfig=$(/var/vcap/packages/mariadb/mysql usb -h <%= p("cf-usb.mysql_address") %> -u usb -p<%= p("cf-usb.mysql_password") %> -e "SHOW TABLES;" | grep "Config"  || : )
       <% if p("cf-usb.override") == false %>
       if [ -z $tableConfig ]; then
         createMysqlConfig
@@ -22,5 +22,5 @@ function createMysqlConfig {
       <% end %>
   else
     createMysqlConfig
-  fi  
+  fi
 <% end %>

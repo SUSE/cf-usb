@@ -32,30 +32,30 @@ function start()
      }
     <% elsif p("cf-usb.configprovider") == "mysqlConfigProvider" %>
 
-    pidfile="/var/vcap/sys/run/cf-usb/cf-usb-migrate.pid"
+    pidfile_migrate="/var/vcap/sys/run/cf-usb/cf-usb-migrate.pid"
 
     # create log directory if it doesn't exist
     [ ! -d /var/vcap/sys/log/cf-usb-migrate/ ] && mkdir -p /var/vcap/sys/log/cf-usb-migrate/
 
-    # create the pidfile directory if it doesn't exist
-    [ ! -d `dirname $pidfile` ] && mkdir -p `dirname $pidfile`
+    # create the pidfile_migrate directory if it doesn't exist
+    [ ! -d `dirname $pidfile_migrate` ] && mkdir -p `dirname $pidfile_migrate`
 
     # start cf-usb migration only if there's no other instance running
-    pidof usb-migrate >/dev/null || \
+    pidof dbmigrate >/dev/null || \
       {
        #export mysql and consul environment variables and do migration
 	   export MYSQL_ADDRESS=<%= p("cf-usb.mysql_address") %>:3306
 	   export MYSQL_DB=usb
 	   export MYSQL_USER=usb
 	   export MYSQL_PASSWORD=<%= p("cf-usb.mysql_password") %>
-	
+
 	   export CONSUL_ADDRESS=127.0.0.1:8500
-	
+
 	   export OVERWRITE_CONFIG=<%= p("cf-usb.override") %>
 
 	   /var/vcap/packages/cf-usb/bin/dbmigrate 1>>/var/vcap/sys/log/cf-usb-migrate/cf-usb.log 2>&1 &
-	
-	   echo $! >$pidfile
+
+	   echo $! >$pidfile_migrate
     }
 
 
