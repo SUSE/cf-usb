@@ -4,20 +4,16 @@ set -o errexit
 
 . make/include/colors.sh
 
-echo "${OK_COLOR}==> Linting${ERROR_COLOR}"
+printf "%b==> Linting%b\n" "${OK_COLOR}" "${ERROR_COLOR}"
 
-ISSUES=$(mktemp /tmp/XXXXX)
+ISSUES=$(mktemp)
 
-trap "rm -f ${ISSUES}" HUP INT TERM
+trap "cat ${ISSUES} ; rm -f ${ISSUES}" EXIT
 
-go list -f '{{ .Dir }}' ./...| grep -v csm/client |  grep -v operations | grep -v /vendor/ | grep -v mocks | grep -v csmfakes | while read DIR; do
-    golint ${DIR} | tee -a ${ISSUES}
+go list -f '{{ .Dir }}' ./... | grep -v csm/client |  grep -v operations | grep -v /vendor/ | grep -v mocks | grep -v csmfakes | while read DIR; do
+    golint "${DIR}" >> "${ISSUES}"
 done
 
-ISSUE_COUNT=$(cat ${ISSUES} | wc -l)
+printf "%b" "${NO_COLOR}"
 
-rm -f ${ISSUES}
-
-echo "${NO_COLOR}\c"
-test ${ISSUE_COUNT} -eq 0
-
+test ! -s "${ISSUES}"
