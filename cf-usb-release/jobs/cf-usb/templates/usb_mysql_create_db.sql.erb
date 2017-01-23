@@ -101,6 +101,7 @@ CREATE TABLE IF NOT EXISTS `usb`.`Services` (
 	  `PlanUpdateable` TINYINT(1) NULL,
 	  `Tags` BLOB NULL,
 	  `Instances_Guid` VARCHAR(32) NOT NULL,
+	  `Requires` BLOB NULL,
 	  PRIMARY KEY (`Guid`),
 	  INDEX `fk_Services_Instances1_idx` (`Instances_Guid` ASC),
 	  CONSTRAINT `fk_Services_Instances1`

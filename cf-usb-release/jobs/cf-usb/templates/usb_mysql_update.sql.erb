@@ -1,0 +1,11 @@
+-- -----------------------------------------------------
+-- Update database to allow routing services
+-- -----------------------------------------------------
+IF NOT EXISTS( SELECT NULL
+            FROM INFORMATION_SCHEMA.COLUMNS
+           WHERE table_name = 'Services'
+             AND table_schema = 'usb'
+             AND column_name = 'Requires')  THEN
+
+  ALTER TABLE usb.Services ADD `Requires` BLOB NULL;
+END IF;
