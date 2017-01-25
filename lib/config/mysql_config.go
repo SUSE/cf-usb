@@ -314,7 +314,7 @@ func (c *mysqlConfig) LoadDriverInstance(driverInstanceID string) (*Instance, er
 	}
 	err = json.Unmarshal(requires, &service.Requires)
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
 
 	driver.Service = service
