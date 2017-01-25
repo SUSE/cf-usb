@@ -420,7 +420,11 @@ func (c *mysqlConfig) SetService(instanceID string, service brokermodel.CatalogS
 	if err != nil {
 		return err
 	}
-	_, err = c.db.Exec("INSERT INTO Services VALUES(?, ?, ?,?,?,?,?,?,?)", service.ID, service.Bindable, dashboard, service.Description, metadata, service.Name, service.PlanUpdateable, tags, instanceID)
+	requires, err := json.Marshal(service.Requires)
+	if err != nil {
+		return err
+	}
+	_, err = c.db.Exec("INSERT INTO Services VALUES(?,?,?,?,?,?,?,?,?,?)", service.ID, service.Bindable, dashboard, service.Description, metadata, service.Name, service.PlanUpdateable, tags, instanceID, requires)
 	if err != nil {
 		return err
 	}
@@ -434,8 +438,9 @@ func (c *mysqlConfig) GetService(serviceID string) (*brokermodel.CatalogService,
 	var dash []byte
 	var meta []byte
 	var tags []byte
+	var requires []byte
 	var instanceID string
-	err := serviceRow.Scan(&service.ID, &service.Bindable, &dash, &service.Description, &meta, &service.Name, &service.PlanUpdateable, &tags, &instanceID)
+	err := serviceRow.Scan(&service.ID, &service.Bindable, &dash, &service.Description, &meta, &service.Name, &service.PlanUpdateable, &tags, &instanceID, &requires)
 
 	var dashboard brokermodel.DashboardClient
 	err = json.Unmarshal(dash, &dashboard)
@@ -449,6 +454,11 @@ func (c *mysqlConfig) GetService(serviceID string) (*brokermodel.CatalogService,
 		return nil, "", err
 	}
 	err = json.Unmarshal(tags, &service.Tags)
+	if err != nil {
+		return nil, "", err
+	}
+
+	err = json.Unmarshal(requires, &service.Requires)
 	if err != nil {
 		return nil, "", err
 	}

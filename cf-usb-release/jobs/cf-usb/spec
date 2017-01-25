@@ -7,6 +7,7 @@ templates:
   broker.key.erb: config/broker.key
   usb_mysql_config.sql.erb: config/usb_mysql_config.sql
   usb_mysql_create_db.sql.erb: config/usb_mysql_create_db.sql
+  usb_mysql_update.sql.erb: config/usb_mysql_update.sql
 
 packages:
   - golang
