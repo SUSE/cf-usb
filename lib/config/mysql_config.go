@@ -295,7 +295,8 @@ func (c *mysqlConfig) LoadDriverInstance(driverInstanceID string) (*Instance, er
 	var dashboard []byte
 	var metaService []byte
 	var tags []byte
-	if err := serviceRow.Scan(&service.ID, &service.Bindable, &dashboard, &service.Description, &metaService, &service.Name, &service.PlanUpdateable, &tags, &instanceGUID); err != nil {
+	var requires []byte
+	if err := serviceRow.Scan(&service.ID, &service.Bindable, &dashboard, &service.Description, &metaService, &service.Name, &service.PlanUpdateable, &tags, &instanceGUID, &requires); err != nil {
 		return nil, err
 	}
 
@@ -310,6 +311,10 @@ func (c *mysqlConfig) LoadDriverInstance(driverInstanceID string) (*Instance, er
 	err = json.Unmarshal(tags, &service.Tags)
 	if err != nil {
 		return nil, err
+	}
+	err = json.Unmarshal(requires, &service.Requires)
+	if err != nil {
+		return nil, "", err
 	}
 
 	driver.Service = service
