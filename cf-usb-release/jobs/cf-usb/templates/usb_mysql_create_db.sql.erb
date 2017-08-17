@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS `usb`.`Config` (
 DROP TABLE IF EXISTS `usb`.`Instances` ;
 
 CREATE TABLE IF NOT EXISTS `usb`.`Instances` (
-	  `Guid` VARCHAR(32) NOT NULL,
+	  `Guid` VARCHAR(36) NOT NULL,
 	  `Name` VARCHAR(45) NULL,
 	  `TargetURL` TEXT NULL,
 	  `AuthKey` VARCHAR(45) NULL,
@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS `usb`.`Dials` (
 	  `Guid` VARCHAR(36) NOT NULL,
 	  `Configuration` BLOB NULL,
 	  `Plans_Guid` VARCHAR(36) NOT NULL,
-	  `Instances_Guid` VARCHAR(32) NOT NULL,
+	  `Instances_Guid` VARCHAR(36) NOT NULL,
 	  PRIMARY KEY (`Guid`),
 	  INDEX `fk_Dials_Plans1_idx` (`Plans_Guid` ASC),
 	  INDEX `fk_Dials_Instances1_idx` (`Instances_Guid` ASC),
@@ -100,7 +100,7 @@ CREATE TABLE IF NOT EXISTS `usb`.`Services` (
 	  `Name` TEXT(255) NULL,
 	  `PlanUpdateable` TINYINT(1) NULL,
 	  `Tags` BLOB NULL,
-	  `Instances_Guid` VARCHAR(32) NOT NULL,
+	  `Instances_Guid` VARCHAR(36) NOT NULL,
 	  `Requires` BLOB NULL,
 	  PRIMARY KEY (`Guid`),
 	  INDEX `fk_Services_Instances1_idx` (`Instances_Guid` ASC),
