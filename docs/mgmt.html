@@ -5,7 +5,7 @@
   <head>
     <title>USB management api</title>
     <style type="text/css">
-      body { 
+      body {
 	font-family: Trebuchet MS, sans-serif;
 	font-size: 15px;
 	color: #444;
@@ -183,1308 +183,1308 @@ font-style: italic;
   <body>
   <h1>USB management api</h1>
     <div class="app-desc">Universal service broker management API</div>
-    
-    <div class="app-desc">Contact Info: <a href="hcf-dev@hpe.com">hcf-dev@hpe.com</a></div>
+
+    <div class="app-desc">Contact Info: <a href="support@suse.com">support@suse.com</a></div>
     <div class="app-desc">Version: 0.0.1</div>
     <div class="license-info">Apache 2.0</div>
     <div class="license-url">http://www.apache.org/licenses/LICENSE-2.0.html</div>
   <h2>Access</h2>
-  
+
 
   <h2><a name="__Methods">Methods</a></h2>
   [ Jump to <a href="#__Models">Models</a> ]
 
-  
+
   <h2>Table of Contents </h2>
   <div class="method-summary"></div>
-  
-  <ol>
-  
-  
-  
-  <li><a href="#getAllDials"><code><span class="http-method">get</span> /dials</code></a></li>
-  
-  <li><a href="#createDial"><code><span class="http-method">post</span> /dials</code></a></li>
-  
-  <li><a href="#getDial"><code><span class="http-method">get</span> /dials/{dial_id}</code></a></li>
-  
-  <li><a href="#updateDial"><code><span class="http-method">put</span> /dials/{dial_id}</code></a></li>
-  
-  <li><a href="#deleteDial"><code><span class="http-method">delete</span> /dials/{dial_id}</code></a></li>
-  
-  <li><a href="#getDriverInstances"><code><span class="http-method">get</span> /driver_instances</code></a></li>
-  
-  <li><a href="#createDriverInstance"><code><span class="http-method">post</span> /driver_instances</code></a></li>
-  
-  <li><a href="#getDriverInstance"><code><span class="http-method">get</span> /driver_instances/{driver_instance_id}</code></a></li>
-  
-  <li><a href="#updateDriverInstance"><code><span class="http-method">put</span> /driver_instances/{driver_instance_id}</code></a></li>
-  
-  <li><a href="#deleteDriverInstance"><code><span class="http-method">delete</span> /driver_instances/{driver_instance_id}</code></a></li>
-  
-  <li><a href="#pingDriverInstance"><code><span class="http-method">get</span> /driver_instances/{driver_instance_id}/ping</code></a></li>
-  
-  <li><a href="#getDrivers"><code><span class="http-method">get</span> /drivers</code></a></li>
-  
-  <li><a href="#createDriver"><code><span class="http-method">post</span> /drivers</code></a></li>
-  
-  <li><a href="#getDriver"><code><span class="http-method">get</span> /drivers/{driver_id}</code></a></li>
-  
-  <li><a href="#updateDriver"><code><span class="http-method">put</span> /drivers/{driver_id}</code></a></li>
-  
-  <li><a href="#deleteDriver"><code><span class="http-method">delete</span> /drivers/{driver_id}</code></a></li>
-  
-  <li><a href="#uploadDriver"><code><span class="http-method">put</span> /drivers/{driver_id}/bits</code></a></li>
-  
-  <li><a href="#getDriverSchema"><code><span class="http-method">get</span> /drivers/{driver_id}/config_schema</code></a></li>
-  
-  <li><a href="#getDialSchema"><code><span class="http-method">get</span> /drivers/{driver_id}/dial_schema</code></a></li>
-  
-  <li><a href="#getInfo"><code><span class="http-method">get</span> /info</code></a></li>
-  
-  <li><a href="#getServicePlans"><code><span class="http-method">get</span> /plans</code></a></li>
-  
-  <li><a href="#createServicePlan"><code><span class="http-method">post</span> /plans</code></a></li>
-  
-  <li><a href="#getServicePlan"><code><span class="http-method">get</span> /plans/{plan_id}</code></a></li>
-  
-  <li><a href="#updateServicePlan"><code><span class="http-method">put</span> /plans/{plan_id}</code></a></li>
-  
-  <li><a href="#deleteServicePlan"><code><span class="http-method">delete</span> /plans/{plan_id}</code></a></li>
-  
-  <li><a href="#getServiceByInstanceId"><code><span class="http-method">get</span> /services</code></a></li>
-  
-  <li><a href="#getService"><code><span class="http-method">get</span> /services/{service_id}</code></a></li>
-  
-  <li><a href="#updateService"><code><span class="http-method">put</span> /services/{service_id}</code></a></li>
-  
-  <li><a href="#updateCatalog"><code><span class="http-method">post</span> /update_catalog</code></a></li>
-  
-  
-  
-  </ol>
-  
 
-  
-  
-  
-  
+  <ol>
+
+
+
+  <li><a href="#getAllDials"><code><span class="http-method">get</span> /dials</code></a></li>
+
+  <li><a href="#createDial"><code><span class="http-method">post</span> /dials</code></a></li>
+
+  <li><a href="#getDial"><code><span class="http-method">get</span> /dials/{dial_id}</code></a></li>
+
+  <li><a href="#updateDial"><code><span class="http-method">put</span> /dials/{dial_id}</code></a></li>
+
+  <li><a href="#deleteDial"><code><span class="http-method">delete</span> /dials/{dial_id}</code></a></li>
+
+  <li><a href="#getDriverInstances"><code><span class="http-method">get</span> /driver_instances</code></a></li>
+
+  <li><a href="#createDriverInstance"><code><span class="http-method">post</span> /driver_instances</code></a></li>
+
+  <li><a href="#getDriverInstance"><code><span class="http-method">get</span> /driver_instances/{driver_instance_id}</code></a></li>
+
+  <li><a href="#updateDriverInstance"><code><span class="http-method">put</span> /driver_instances/{driver_instance_id}</code></a></li>
+
+  <li><a href="#deleteDriverInstance"><code><span class="http-method">delete</span> /driver_instances/{driver_instance_id}</code></a></li>
+
+  <li><a href="#pingDriverInstance"><code><span class="http-method">get</span> /driver_instances/{driver_instance_id}/ping</code></a></li>
+
+  <li><a href="#getDrivers"><code><span class="http-method">get</span> /drivers</code></a></li>
+
+  <li><a href="#createDriver"><code><span class="http-method">post</span> /drivers</code></a></li>
+
+  <li><a href="#getDriver"><code><span class="http-method">get</span> /drivers/{driver_id}</code></a></li>
+
+  <li><a href="#updateDriver"><code><span class="http-method">put</span> /drivers/{driver_id}</code></a></li>
+
+  <li><a href="#deleteDriver"><code><span class="http-method">delete</span> /drivers/{driver_id}</code></a></li>
+
+  <li><a href="#uploadDriver"><code><span class="http-method">put</span> /drivers/{driver_id}/bits</code></a></li>
+
+  <li><a href="#getDriverSchema"><code><span class="http-method">get</span> /drivers/{driver_id}/config_schema</code></a></li>
+
+  <li><a href="#getDialSchema"><code><span class="http-method">get</span> /drivers/{driver_id}/dial_schema</code></a></li>
+
+  <li><a href="#getInfo"><code><span class="http-method">get</span> /info</code></a></li>
+
+  <li><a href="#getServicePlans"><code><span class="http-method">get</span> /plans</code></a></li>
+
+  <li><a href="#createServicePlan"><code><span class="http-method">post</span> /plans</code></a></li>
+
+  <li><a href="#getServicePlan"><code><span class="http-method">get</span> /plans/{plan_id}</code></a></li>
+
+  <li><a href="#updateServicePlan"><code><span class="http-method">put</span> /plans/{plan_id}</code></a></li>
+
+  <li><a href="#deleteServicePlan"><code><span class="http-method">delete</span> /plans/{plan_id}</code></a></li>
+
+  <li><a href="#getServiceByInstanceId"><code><span class="http-method">get</span> /services</code></a></li>
+
+  <li><a href="#getService"><code><span class="http-method">get</span> /services/{service_id}</code></a></li>
+
+  <li><a href="#updateService"><code><span class="http-method">put</span> /services/{service_id}</code></a></li>
+
+  <li><a href="#updateCatalog"><code><span class="http-method">post</span> /update_catalog</code></a></li>
+
+
+
+  </ol>
+
+
+
+
+
+
   <div class="method"><a name="getAllDials"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
     <pre class="get"><code class="huge"><span class="http-method">get</span> /dials</code></pre></div>
     <div class="method-summary"> (<span class="nickname">getAllDials</span>)</div>
-    
+
     <div class="method-notes">Gets `dials`</div>
 
-    
 
-    
+
+
     <h3 class="field-label">Consumes</h3>
     This API call consumes the following media types via the <span class="heaader">Content-Type</span> request header:
     <ul>
-    
+
       <li><code>application/json</code></li>
-    
+
     </ul>
-    
 
-    
 
-    
 
-    
+
+
+
+
     <h3 class="field-label">Query parameters</h3>
     <div class="field-items">
       <div class="param">driverInstanceId (optional)</div>
 
       <div class="param-desc"><span class="param-type">Query Parameter</span> &mdash; Driver instance ID </div>
     </div>  <!-- field-items -->
-    
 
-    
 
-    
+
+
+
     <h3 class="field-label">Return type</h3>
     <div class="return-type">
       array[<a href="#dial">dial</a>]
-      
+
     </div>
-    
+
 
     <!--Todo: process Response Object and its headers, schema, examples -->
 
-    
 
-    
+
+
     <h3 class="field-label">Produces</h3>
     This API call produces the following media types according to the <span class="header">Accept</span> request header;
     the media type will be conveyed by the <span class="heaader">Content-Type</span> response header.
     <ul>
-    
+
       <li><code>application/json</code></li>
-    
+
     </ul>
-    
+
 
     <h3 class="field-label">Responses</h3>
-    
+
     <h4 class="field-label">200</h4>
     Sucessfull response
-    
-    
+
+
     <h4 class="field-label">500</h4>
     Unexpected error
-    
-    
+
+
   </div> <!-- method -->
   <hr/>
-  
+
   <div class="method"><a name="createDial"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
     <pre class="post"><code class="huge"><span class="http-method">post</span> /dials</code></pre></div>
     <div class="method-summary"> (<span class="nickname">createDial</span>)</div>
-    
+
     <div class="method-notes">Create a dial for</div>
 
-    
 
-    
+
+
     <h3 class="field-label">Consumes</h3>
     This API call consumes the following media types via the <span class="heaader">Content-Type</span> request header:
     <ul>
-    
-      <li><code>application/json</code></li>
-    
-    </ul>
-    
 
-    
+      <li><code>application/json</code></li>
+
+    </ul>
+
+
+
     <h3 class="field-label">Request body</h3>
     <div class="field-items">
       <div class="param">dial (required)</div>
 
       <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash; New dial </div>
     </div>  <!-- field-items -->
-    
 
-    
 
-    
 
-    
 
-    
+
+
+
+
+
     <h3 class="field-label">Return type</h3>
     <div class="return-type">
       <a href="#dial">dial</a>
-      
+
     </div>
-    
+
 
     <!--Todo: process Response Object and its headers, schema, examples -->
 
-    
 
-    
+
+
     <h3 class="field-label">Produces</h3>
     This API call produces the following media types according to the <span class="header">Accept</span> request header;
     the media type will be conveyed by the <span class="heaader">Content-Type</span> response header.
     <ul>
-    
+
       <li><code>application/json</code></li>
-    
+
     </ul>
-    
+
 
     <h3 class="field-label">Responses</h3>
-    
+
     <h4 class="field-label">201</h4>
     Sucessfull response
-    
-    
+
+
     <h4 class="field-label">500</h4>
     Unexpected error
-    
-    
+
+
   </div> <!-- method -->
   <hr/>
-  
+
   <div class="method"><a name="getDial"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
     <pre class="get"><code class="huge"><span class="http-method">get</span> /dials/{dial_id}</code></pre></div>
     <div class="method-summary"> (<span class="nickname">getDial</span>)</div>
-    
+
     <div class="method-notes">Gets the `dial` with the **dial_id**</div>
 
-    
+
     <h3 class="field-label">Path parameters</h3>
     <div class="field-items">
       <div class="param">dialId (required)</div>
 
       <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash; ID of the dial </div>
     </div>  <!-- field-items -->
-    
 
-    
+
+
     <h3 class="field-label">Consumes</h3>
     This API call consumes the following media types via the <span class="heaader">Content-Type</span> request header:
     <ul>
-    
+
       <li><code>application/json</code></li>
-    
+
     </ul>
-    
 
-    
 
-    
 
-    
 
-    
 
-    
+
+
+
+
+
+
     <h3 class="field-label">Return type</h3>
     <div class="return-type">
       <a href="#dial">dial</a>
-      
+
     </div>
-    
+
 
     <!--Todo: process Response Object and its headers, schema, examples -->
 
-    
 
-    
+
+
     <h3 class="field-label">Produces</h3>
     This API call produces the following media types according to the <span class="header">Accept</span> request header;
     the media type will be conveyed by the <span class="heaader">Content-Type</span> response header.
     <ul>
-    
+
       <li><code>application/json</code></li>
-    
+
     </ul>
-    
+
 
     <h3 class="field-label">Responses</h3>
-    
+
     <h4 class="field-label">200</h4>
     Sucessfull response
-    
-    
+
+
     <h4 class="field-label">404</h4>
     Not Found
-    
-    
+
+
     <h4 class="field-label">500</h4>
     Unexpected error
-    
-    
+
+
   </div> <!-- method -->
   <hr/>
-  
+
   <div class="method"><a name="updateDial"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
     <pre class="put"><code class="huge"><span class="http-method">put</span> /dials/{dial_id}</code></pre></div>
     <div class="method-summary"> (<span class="nickname">updateDial</span>)</div>
-    
+
     <div class="method-notes">Updates the dial with the id **dial_id**</div>
 
-    
+
     <h3 class="field-label">Path parameters</h3>
     <div class="field-items">
       <div class="param">dialId (required)</div>
 
       <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash; ID of the dial </div>
     </div>  <!-- field-items -->
-    
 
-    
+
+
     <h3 class="field-label">Consumes</h3>
     This API call consumes the following media types via the <span class="heaader">Content-Type</span> request header:
     <ul>
-    
-      <li><code>application/json</code></li>
-    
-    </ul>
-    
 
-    
+      <li><code>application/json</code></li>
+
+    </ul>
+
+
+
     <h3 class="field-label">Request body</h3>
     <div class="field-items">
       <div class="param">dial (required)</div>
 
       <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash; Updated dial </div>
     </div>  <!-- field-items -->
-    
 
-    
 
-    
 
-    
 
-    
+
+
+
+
+
     <h3 class="field-label">Return type</h3>
     <div class="return-type">
       <a href="#dial">dial</a>
-      
+
     </div>
-    
+
 
     <!--Todo: process Response Object and its headers, schema, examples -->
 
-    
 
-    
+
+
     <h3 class="field-label">Produces</h3>
     This API call produces the following media types according to the <span class="header">Accept</span> request header;
     the media type will be conveyed by the <span class="heaader">Content-Type</span> response header.
     <ul>
-    
+
       <li><code>application/json</code></li>
-    
+
     </ul>
-    
+
 
     <h3 class="field-label">Responses</h3>
-    
+
     <h4 class="field-label">200</h4>
     Sucessfull response
-    
-    
+
+
     <h4 class="field-label">404</h4>
     Not Found
-    
-    
+
+
     <h4 class="field-label">500</h4>
     Unexpected error
-    
-    
+
+
   </div> <!-- method -->
   <hr/>
-  
+
   <div class="method"><a name="deleteDial"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
     <pre class="delete"><code class="huge"><span class="http-method">delete</span> /dials/{dial_id}</code></pre></div>
     <div class="method-summary"> (<span class="nickname">deleteDial</span>)</div>
-    
+
     <div class="method-notes">Delets the `dial` with the **dial_id**</div>
 
-    
+
     <h3 class="field-label">Path parameters</h3>
     <div class="field-items">
       <div class="param">dialId (required)</div>
 
       <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash; ID of the dial </div>
     </div>  <!-- field-items -->
-    
 
-    
+
+
     <h3 class="field-label">Consumes</h3>
     This API call consumes the following media types via the <span class="heaader">Content-Type</span> request header:
     <ul>
-    
+
       <li><code>application/json</code></li>
-    
+
     </ul>
-    
 
-    
 
-    
 
-    
 
-    
 
-    
+
+
+
+
+
+
 
     <!--Todo: process Response Object and its headers, schema, examples -->
 
-    
 
-    
+
+
     <h3 class="field-label">Produces</h3>
     This API call produces the following media types according to the <span class="header">Accept</span> request header;
     the media type will be conveyed by the <span class="heaader">Content-Type</span> response header.
     <ul>
-    
+
       <li><code>application/json</code></li>
-    
+
     </ul>
-    
+
 
     <h3 class="field-label">Responses</h3>
-    
+
     <h4 class="field-label">204</h4>
     Sucessfull response
-    
-    
+
+
     <h4 class="field-label">404</h4>
     Not Found
-    
-    
+
+
     <h4 class="field-label">500</h4>
     Unexpected error
-    
-    
+
+
   </div> <!-- method -->
   <hr/>
-  
+
   <div class="method"><a name="getDriverInstances"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
     <pre class="get"><code class="huge"><span class="http-method">get</span> /driver_instances</code></pre></div>
     <div class="method-summary"> (<span class="nickname">getDriverInstances</span>)</div>
-    
+
     <div class="method-notes">Gets driver instances for a driver</div>
 
-    
 
-    
+
+
     <h3 class="field-label">Consumes</h3>
     This API call consumes the following media types via the <span class="heaader">Content-Type</span> request header:
     <ul>
-    
+
       <li><code>application/json</code></li>
-    
+
     </ul>
-    
 
-    
 
-    
 
-    
+
+
+
+
     <h3 class="field-label">Query parameters</h3>
     <div class="field-items">
       <div class="param">driverId (required)</div>
 
       <div class="param-desc"><span class="param-type">Query Parameter</span> &mdash; Driver ID </div>
     </div>  <!-- field-items -->
-    
 
-    
 
-    
+
+
+
     <h3 class="field-label">Return type</h3>
     <div class="return-type">
       array[<a href="#driver_instance">driver_instance</a>]
-      
+
     </div>
-    
+
 
     <!--Todo: process Response Object and its headers, schema, examples -->
 
-    
 
-    
+
+
     <h3 class="field-label">Produces</h3>
     This API call produces the following media types according to the <span class="header">Accept</span> request header;
     the media type will be conveyed by the <span class="heaader">Content-Type</span> response header.
     <ul>
-    
+
       <li><code>application/json</code></li>
-    
+
     </ul>
-    
+
 
     <h3 class="field-label">Responses</h3>
-    
+
     <h4 class="field-label">200</h4>
     OK
-    
-    
+
+
     <h4 class="field-label">500</h4>
     Unexpected error
-    
-    
+
+
   </div> <!-- method -->
   <hr/>
-  
+
   <div class="method"><a name="createDriverInstance"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
     <pre class="post"><code class="huge"><span class="http-method">post</span> /driver_instances</code></pre></div>
     <div class="method-summary"> (<span class="nickname">createDriverInstance</span>)</div>
-    
+
     <div class="method-notes">Create a driver instance</div>
 
-    
 
-    
+
+
     <h3 class="field-label">Consumes</h3>
     This API call consumes the following media types via the <span class="heaader">Content-Type</span> request header:
     <ul>
-    
-      <li><code>application/json</code></li>
-    
-    </ul>
-    
 
-    
+      <li><code>application/json</code></li>
+
+    </ul>
+
+
+
     <h3 class="field-label">Request body</h3>
     <div class="field-items">
       <div class="param">driverInstance (required)</div>
 
       <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash; driver instance to be created </div>
     </div>  <!-- field-items -->
-    
 
-    
 
-    
 
-    
 
-    
+
+
+
+
+
     <h3 class="field-label">Return type</h3>
     <div class="return-type">
       <a href="#driver_instance">driver_instance</a>
-      
+
     </div>
-    
+
 
     <!--Todo: process Response Object and its headers, schema, examples -->
 
-    
 
-    
+
+
     <h3 class="field-label">Produces</h3>
     This API call produces the following media types according to the <span class="header">Accept</span> request header;
     the media type will be conveyed by the <span class="heaader">Content-Type</span> response header.
     <ul>
-    
+
       <li><code>application/json</code></li>
-    
+
     </ul>
-    
+
 
     <h3 class="field-label">Responses</h3>
-    
+
     <h4 class="field-label">201</h4>
     Instance created
-    
-    
+
+
     <h4 class="field-label">409</h4>
     Conflict
-    
-    
+
+
     <h4 class="field-label">500</h4>
     Unexpected error
-    
-    
+
+
   </div> <!-- method -->
   <hr/>
-  
+
   <div class="method"><a name="getDriverInstance"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
     <pre class="get"><code class="huge"><span class="http-method">get</span> /driver_instances/{driver_instance_id}</code></pre></div>
     <div class="method-summary"> (<span class="nickname">getDriverInstance</span>)</div>
-    
+
     <div class="method-notes">Gets driver configurations</div>
 
-    
+
     <h3 class="field-label">Path parameters</h3>
     <div class="field-items">
       <div class="param">driverInstanceId (required)</div>
 
       <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash; Driver Instance ID </div>
     </div>  <!-- field-items -->
-    
 
-    
+
+
     <h3 class="field-label">Consumes</h3>
     This API call consumes the following media types via the <span class="heaader">Content-Type</span> request header:
     <ul>
-    
+
       <li><code>application/json</code></li>
-    
+
     </ul>
-    
 
-    
 
-    
 
-    
 
-    
 
-    
+
+
+
+
+
+
     <h3 class="field-label">Return type</h3>
     <div class="return-type">
       <a href="#driver_instance">driver_instance</a>
-      
+
     </div>
-    
+
 
     <!--Todo: process Response Object and its headers, schema, examples -->
 
-    
 
-    
+
+
     <h3 class="field-label">Produces</h3>
     This API call produces the following media types according to the <span class="header">Accept</span> request header;
     the media type will be conveyed by the <span class="heaader">Content-Type</span> response header.
     <ul>
-    
+
       <li><code>application/json</code></li>
-    
+
     </ul>
-    
+
 
     <h3 class="field-label">Responses</h3>
-    
+
     <h4 class="field-label">200</h4>
     OK
-    
-    
+
+
     <h4 class="field-label">404</h4>
     Not Found
-    
-    
+
+
     <h4 class="field-label">500</h4>
     Unexpected error
-    
-    
+
+
   </div> <!-- method -->
   <hr/>
-  
+
   <div class="method"><a name="updateDriverInstance"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
     <pre class="put"><code class="huge"><span class="http-method">put</span> /driver_instances/{driver_instance_id}</code></pre></div>
     <div class="method-summary"> (<span class="nickname">updateDriverInstance</span>)</div>
-    
+
     <div class="method-notes">Update a driver instance</div>
 
-    
+
     <h3 class="field-label">Path parameters</h3>
     <div class="field-items">
       <div class="param">driverInstanceId (required)</div>
 
       <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash; Driver Instance ID </div>
     </div>  <!-- field-items -->
-    
 
-    
+
+
     <h3 class="field-label">Consumes</h3>
     This API call consumes the following media types via the <span class="heaader">Content-Type</span> request header:
     <ul>
-    
-      <li><code>application/json</code></li>
-    
-    </ul>
-    
 
-    
+      <li><code>application/json</code></li>
+
+    </ul>
+
+
+
     <h3 class="field-label">Request body</h3>
     <div class="field-items">
       <div class="param">driverConfig (required)</div>
 
       <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash; Add driver_config </div>
     </div>  <!-- field-items -->
-    
 
-    
 
-    
 
-    
 
-    
+
+
+
+
+
     <h3 class="field-label">Return type</h3>
     <div class="return-type">
       <a href="#driver_instance">driver_instance</a>
-      
+
     </div>
-    
+
 
     <!--Todo: process Response Object and its headers, schema, examples -->
 
-    
 
-    
+
+
     <h3 class="field-label">Produces</h3>
     This API call produces the following media types according to the <span class="header">Accept</span> request header;
     the media type will be conveyed by the <span class="heaader">Content-Type</span> response header.
     <ul>
-    
+
       <li><code>application/json</code></li>
-    
+
     </ul>
-    
+
 
     <h3 class="field-label">Responses</h3>
-    
+
     <h4 class="field-label">200</h4>
     Sucessfull response
-    
-    
+
+
     <h4 class="field-label">404</h4>
     Not Found
-    
-    
+
+
     <h4 class="field-label">409</h4>
     Conflict
-    
-    
+
+
     <h4 class="field-label">500</h4>
     Unexpected error
-    
-    
+
+
   </div> <!-- method -->
   <hr/>
-  
+
   <div class="method"><a name="deleteDriverInstance"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
     <pre class="delete"><code class="huge"><span class="http-method">delete</span> /driver_instances/{driver_instance_id}</code></pre></div>
     <div class="method-summary"> (<span class="nickname">deleteDriverInstance</span>)</div>
-    
+
     <div class="method-notes">Delete a driver instance</div>
 
-    
+
     <h3 class="field-label">Path parameters</h3>
     <div class="field-items">
       <div class="param">driverInstanceId (required)</div>
 
       <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash; Driver Instance ID </div>
     </div>  <!-- field-items -->
-    
 
-    
+
+
     <h3 class="field-label">Consumes</h3>
     This API call consumes the following media types via the <span class="heaader">Content-Type</span> request header:
     <ul>
-    
+
       <li><code>application/json</code></li>
-    
+
     </ul>
-    
 
-    
 
-    
 
-    
 
-    
 
-    
+
+
+
+
+
+
 
     <!--Todo: process Response Object and its headers, schema, examples -->
 
-    
 
-    
+
+
     <h3 class="field-label">Produces</h3>
     This API call produces the following media types according to the <span class="header">Accept</span> request header;
     the media type will be conveyed by the <span class="heaader">Content-Type</span> response header.
     <ul>
-    
+
       <li><code>application/json</code></li>
-    
+
     </ul>
-    
+
 
     <h3 class="field-label">Responses</h3>
-    
+
     <h4 class="field-label">204</h4>
     Driver deleted
-    
-    
+
+
     <h4 class="field-label">404</h4>
     Not Found
-    
-    
+
+
     <h4 class="field-label">500</h4>
     Unexpected error
-    
-    
+
+
   </div> <!-- method -->
   <hr/>
-  
+
   <div class="method"><a name="pingDriverInstance"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
     <pre class="get"><code class="huge"><span class="http-method">get</span> /driver_instances/{driver_instance_id}/ping</code></pre></div>
     <div class="method-summary"> (<span class="nickname">pingDriverInstance</span>)</div>
-    
+
     <div class="method-notes">Pings the driver</div>
 
-    
+
     <h3 class="field-label">Path parameters</h3>
     <div class="field-items">
       <div class="param">driverInstanceId (required)</div>
 
       <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash; Driver Instance ID </div>
     </div>  <!-- field-items -->
-    
 
-    
+
+
     <h3 class="field-label">Consumes</h3>
     This API call consumes the following media types via the <span class="heaader">Content-Type</span> request header:
     <ul>
-    
+
       <li><code>application/json</code></li>
-    
+
     </ul>
-    
 
-    
 
-    
 
-    
 
-    
 
-    
+
+
+
+
+
+
 
     <!--Todo: process Response Object and its headers, schema, examples -->
 
-    
 
-    
+
+
     <h3 class="field-label">Produces</h3>
     This API call produces the following media types according to the <span class="header">Accept</span> request header;
     the media type will be conveyed by the <span class="heaader">Content-Type</span> response header.
     <ul>
-    
+
       <li><code>application/json</code></li>
-    
+
     </ul>
-    
+
 
     <h3 class="field-label">Responses</h3>
-    
+
     <h4 class="field-label">200</h4>
     OK
-    
-    
+
+
     <h4 class="field-label">404</h4>
     Not Found
-    
-    
+
+
     <h4 class="field-label">500</h4>
     Unexpected error
-    
-    
+
+
   </div> <!-- method -->
   <hr/>
-  
+
   <div class="method"><a name="getDrivers"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
     <pre class="get"><code class="huge"><span class="http-method">get</span> /drivers</code></pre></div>
     <div class="method-summary"> (<span class="nickname">getDrivers</span>)</div>
-    
+
     <div class="method-notes">Gets information about the available `drivers`</div>
 
-    
 
-    
+
+
     <h3 class="field-label">Consumes</h3>
     This API call consumes the following media types via the <span class="heaader">Content-Type</span> request header:
     <ul>
-    
+
       <li><code>application/json</code></li>
-    
+
     </ul>
-    
 
-    
 
-    
 
-    
 
-    
 
-    
+
+
+
+
+
+
     <h3 class="field-label">Return type</h3>
     <div class="return-type">
       array[<a href="#driver">driver</a>]
-      
+
     </div>
-    
+
 
     <!--Todo: process Response Object and its headers, schema, examples -->
 
-    
 
-    
+
+
     <h3 class="field-label">Produces</h3>
     This API call produces the following media types according to the <span class="header">Accept</span> request header;
     the media type will be conveyed by the <span class="heaader">Content-Type</span> response header.
     <ul>
-    
+
       <li><code>application/json</code></li>
-    
+
     </ul>
-    
+
 
     <h3 class="field-label">Responses</h3>
-    
+
     <h4 class="field-label">200</h4>
     Successful response
-    
-    
+
+
     <h4 class="field-label">500</h4>
     Unexpected error
-    
-    
+
+
   </div> <!-- method -->
   <hr/>
-  
+
   <div class="method"><a name="createDriver"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
     <pre class="post"><code class="huge"><span class="http-method">post</span> /drivers</code></pre></div>
     <div class="method-summary"> (<span class="nickname">createDriver</span>)</div>
-    
+
     <div class="method-notes">Create a new driver</div>
 
-    
 
-    
+
+
     <h3 class="field-label">Consumes</h3>
     This API call consumes the following media types via the <span class="heaader">Content-Type</span> request header:
     <ul>
-    
-      <li><code>application/json</code></li>
-    
-    </ul>
-    
 
-    
+      <li><code>application/json</code></li>
+
+    </ul>
+
+
+
     <h3 class="field-label">Request body</h3>
     <div class="field-items">
       <div class="param">driver (required)</div>
 
       <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash; Driver to be created </div>
     </div>  <!-- field-items -->
-    
 
-    
 
-    
 
-    
 
-    
+
+
+
+
+
     <h3 class="field-label">Return type</h3>
     <div class="return-type">
       <a href="#driver">driver</a>
-      
+
     </div>
-    
+
 
     <!--Todo: process Response Object and its headers, schema, examples -->
 
-    
 
-    
+
+
     <h3 class="field-label">Produces</h3>
     This API call produces the following media types according to the <span class="header">Accept</span> request header;
     the media type will be conveyed by the <span class="heaader">Content-Type</span> response header.
     <ul>
-    
+
       <li><code>application/json</code></li>
-    
+
     </ul>
-    
+
 
     <h3 class="field-label">Responses</h3>
-    
+
     <h4 class="field-label">201</h4>
     Driver created
-    
-    
+
+
     <h4 class="field-label">409</h4>
     A driver with the same type already exists
-    
-    
+
+
     <h4 class="field-label">500</h4>
     Unexpected error
-    
-    
+
+
   </div> <!-- method -->
   <hr/>
-  
+
   <div class="method"><a name="getDriver"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
     <pre class="get"><code class="huge"><span class="http-method">get</span> /drivers/{driver_id}</code></pre></div>
     <div class="method-summary"> (<span class="nickname">getDriver</span>)</div>
-    
+
     <div class="method-notes">Get driver</div>
 
-    
+
     <h3 class="field-label">Path parameters</h3>
     <div class="field-items">
       <div class="param">driverId (required)</div>
 
       <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash; Driver ID </div>
     </div>  <!-- field-items -->
-    
 
-    
+
+
     <h3 class="field-label">Consumes</h3>
     This API call consumes the following media types via the <span class="heaader">Content-Type</span> request header:
     <ul>
-    
+
       <li><code>application/json</code></li>
-    
+
     </ul>
-    
 
-    
 
-    
 
-    
 
-    
 
-    
+
+
+
+
+
+
     <h3 class="field-label">Return type</h3>
     <div class="return-type">
       <a href="#driver">driver</a>
-      
+
     </div>
-    
+
 
     <!--Todo: process Response Object and its headers, schema, examples -->
 
-    
 
-    
+
+
     <h3 class="field-label">Produces</h3>
     This API call produces the following media types according to the <span class="header">Accept</span> request header;
     the media type will be conveyed by the <span class="heaader">Content-Type</span> response header.
     <ul>
-    
+
       <li><code>application/json</code></li>
-    
+
     </ul>
-    
+
 
     <h3 class="field-label">Responses</h3>
-    
+
     <h4 class="field-label">200</h4>
     OK
-    
-    
+
+
     <h4 class="field-label">404</h4>
     Not Found
-    
-    
+
+
     <h4 class="field-label">500</h4>
     Unexpected error
-    
-    
+
+
   </div> <!-- method -->
   <hr/>
-  
+
   <div class="method"><a name="updateDriver"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
     <pre class="put"><code class="huge"><span class="http-method">put</span> /drivers/{driver_id}</code></pre></div>
     <div class="method-summary"> (<span class="nickname">updateDriver</span>)</div>
-    
+
     <div class="method-notes">Update driver</div>
 
-    
+
     <h3 class="field-label">Path parameters</h3>
     <div class="field-items">
       <div class="param">driverId (required)</div>
 
       <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash; Driver ID </div>
     </div>  <!-- field-items -->
-    
 
-    
+
+
     <h3 class="field-label">Consumes</h3>
     This API call consumes the following media types via the <span class="heaader">Content-Type</span> request header:
     <ul>
-    
-      <li><code>application/json</code></li>
-    
-    </ul>
-    
 
-    
+      <li><code>application/json</code></li>
+
+    </ul>
+
+
+
     <h3 class="field-label">Request body</h3>
     <div class="field-items">
       <div class="param">driver (required)</div>
 
       <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash; Driver to be updated </div>
     </div>  <!-- field-items -->
-    
 
-    
 
-    
 
-    
 
-    
+
+
+
+
+
     <h3 class="field-label">Return type</h3>
     <div class="return-type">
       <a href="#driver">driver</a>
-      
+
     </div>
-    
+
 
     <!--Todo: process Response Object and its headers, schema, examples -->
 
-    
 
-    
+
+
     <h3 class="field-label">Produces</h3>
     This API call produces the following media types according to the <span class="header">Accept</span> request header;
     the media type will be conveyed by the <span class="heaader">Content-Type</span> response header.
     <ul>
-    
+
       <li><code>application/json</code></li>
-    
+
     </ul>
-    
+
 
     <h3 class="field-label">Responses</h3>
-    
+
     <h4 class="field-label">200</h4>
     Driver updated
-    
-    
+
+
     <h4 class="field-label">404</h4>
     Not Found
-    
-    
+
+
     <h4 class="field-label">409</h4>
     A driver with the same type already exists
-    
-    
+
+
     <h4 class="field-label">500</h4>
     Unexpected error
-    
-    
+
+
   </div> <!-- method -->
   <hr/>
-  
+
   <div class="method"><a name="deleteDriver"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
     <pre class="delete"><code class="huge"><span class="http-method">delete</span> /drivers/{driver_id}</code></pre></div>
     <div class="method-summary"> (<span class="nickname">deleteDriver</span>)</div>
-    
+
     <div class="method-notes">Update driver</div>
 
-    
+
     <h3 class="field-label">Path parameters</h3>
     <div class="field-items">
       <div class="param">driverId (required)</div>
 
       <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash; Driver ID </div>
     </div>  <!-- field-items -->
-    
 
-    
+
+
     <h3 class="field-label">Consumes</h3>
     This API call consumes the following media types via the <span class="heaader">Content-Type</span> request header:
     <ul>
-    
+
       <li><code>application/json</code></li>
-    
+
     </ul>
-    
 
-    
 
-    
 
-    
 
-    
 
-    
+
+
+
+
+
+
 
     <!--Todo: process Response Object and its headers, schema, examples -->
 
-    
 
-    
+
+
     <h3 class="field-label">Produces</h3>
     This API call produces the following media types according to the <span class="header">Accept</span> request header;
     the media type will be conveyed by the <span class="heaader">Content-Type</span> response header.
     <ul>
-    
+
       <li><code>application/json</code></li>
-    
+
     </ul>
-    
+
 
     <h3 class="field-label">Responses</h3>
-    
+
     <h4 class="field-label">204</h4>
     Driver deleted
-    
-    
+
+
     <h4 class="field-label">404</h4>
     Not Found
-    
-    
+
+
     <h4 class="field-label">500</h4>
     Unexpected error
-    
-    
+
+
   </div> <!-- method -->
   <hr/>
-  
+
   <div class="method"><a name="uploadDriver"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
     <pre class="put"><code class="huge"><span class="http-method">put</span> /drivers/{driver_id}/bits</code></pre></div>
     <div class="method-summary"> (<span class="nickname">uploadDriver</span>)</div>
-    
+
     <div class="method-notes">Upload driver bits</div>
 
-    
+
     <h3 class="field-label">Path parameters</h3>
     <div class="field-items">
       <div class="param">driverId (required)</div>
 
       <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash; Driver ID </div>
     </div>  <!-- field-items -->
-    
 
-    
+
+
     <h3 class="field-label">Consumes</h3>
     This API call consumes the following media types via the <span class="heaader">Content-Type</span> request header:
     <ul>
-    
+
       <li><code>multipart/form-data</code></li>
-    
+
     </ul>
-    
 
-    
 
-    
 
-    
 
-    
+
+
+
+
+
     <h3 class="field-label">Form parameters</h3>
     <div class="field-items">
       <div class="param">sha (required)</div>
@@ -1493,917 +1493,917 @@ font-style: italic;
 
       <div class="param-desc"><span class="param-type">Form Parameter</span> &mdash; Driver executable </div>
     </div>  <!-- field-items -->
-    
 
-    
+
+
 
     <!--Todo: process Response Object and its headers, schema, examples -->
 
-    
 
-    
+
+
     <h3 class="field-label">Produces</h3>
     This API call produces the following media types according to the <span class="header">Accept</span> request header;
     the media type will be conveyed by the <span class="heaader">Content-Type</span> response header.
     <ul>
-    
+
       <li><code>application/json</code></li>
-    
+
     </ul>
-    
+
 
     <h3 class="field-label">Responses</h3>
-    
+
     <h4 class="field-label">200</h4>
     Driver uploaded
-    
-    
+
+
     <h4 class="field-label">404</h4>
     Not Found
-    
-    
+
+
     <h4 class="field-label">500</h4>
     Unexpected error
-    
-    
+
+
   </div> <!-- method -->
   <hr/>
-  
+
   <div class="method"><a name="getDriverSchema"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
     <pre class="get"><code class="huge"><span class="http-method">get</span> /drivers/{driver_id}/config_schema</code></pre></div>
     <div class="method-summary"> (<span class="nickname">getDriverSchema</span>)</div>
-    
+
     <div class="method-notes">Get driver config schema</div>
 
-    
+
     <h3 class="field-label">Path parameters</h3>
     <div class="field-items">
       <div class="param">driverId (required)</div>
 
       <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash; Driver ID </div>
     </div>  <!-- field-items -->
-    
 
-    
+
+
     <h3 class="field-label">Consumes</h3>
     This API call consumes the following media types via the <span class="heaader">Content-Type</span> request header:
     <ul>
-    
+
       <li><code>application/json</code></li>
-    
+
     </ul>
-    
 
-    
 
-    
 
-    
 
-    
 
-    
+
+
+
+
+
+
     <h3 class="field-label">Return type</h3>
     <div class="return-type">
       <a href="#driver_schema">driver_schema</a>
-      
+
     </div>
-    
+
 
     <!--Todo: process Response Object and its headers, schema, examples -->
 
-    
 
-    
+
+
     <h3 class="field-label">Produces</h3>
     This API call produces the following media types according to the <span class="header">Accept</span> request header;
     the media type will be conveyed by the <span class="heaader">Content-Type</span> response header.
     <ul>
-    
+
       <li><code>application/json</code></li>
-    
+
     </ul>
-    
+
 
     <h3 class="field-label">Responses</h3>
-    
+
     <h4 class="field-label">200</h4>
     OK
-    
-    
+
+
     <h4 class="field-label">404</h4>
     Not Found
-    
-    
+
+
     <h4 class="field-label">500</h4>
     Unexpected error
-    
-    
+
+
   </div> <!-- method -->
   <hr/>
-  
+
   <div class="method"><a name="getDialSchema"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
     <pre class="get"><code class="huge"><span class="http-method">get</span> /drivers/{driver_id}/dial_schema</code></pre></div>
     <div class="method-summary"> (<span class="nickname">getDialSchema</span>)</div>
-    
+
     <div class="method-notes">Get dial schema</div>
 
-    
+
     <h3 class="field-label">Path parameters</h3>
     <div class="field-items">
       <div class="param">driverId (required)</div>
 
       <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash; Driver ID </div>
     </div>  <!-- field-items -->
-    
 
-    
+
+
     <h3 class="field-label">Consumes</h3>
     This API call consumes the following media types via the <span class="heaader">Content-Type</span> request header:
     <ul>
-    
+
       <li><code>application/json</code></li>
-    
+
     </ul>
-    
 
-    
 
-    
 
-    
 
-    
 
-    
+
+
+
+
+
+
     <h3 class="field-label">Return type</h3>
     <div class="return-type">
       <a href="#dial_schema">dial_schema</a>
-      
+
     </div>
-    
+
 
     <!--Todo: process Response Object and its headers, schema, examples -->
 
-    
 
-    
+
+
     <h3 class="field-label">Produces</h3>
     This API call produces the following media types according to the <span class="header">Accept</span> request header;
     the media type will be conveyed by the <span class="heaader">Content-Type</span> response header.
     <ul>
-    
+
       <li><code>application/json</code></li>
-    
+
     </ul>
-    
+
 
     <h3 class="field-label">Responses</h3>
-    
+
     <h4 class="field-label">200</h4>
     OK
-    
-    
+
+
     <h4 class="field-label">404</h4>
     Not Found
-    
-    
+
+
     <h4 class="field-label">500</h4>
     Unexpected error
-    
-    
+
+
   </div> <!-- method -->
   <hr/>
-  
+
   <div class="method"><a name="getInfo"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
     <pre class="get"><code class="huge"><span class="http-method">get</span> /info</code></pre></div>
     <div class="method-summary"> (<span class="nickname">getInfo</span>)</div>
-    
+
     <div class="method-notes">Gets information about the USB.</div>
 
-    
 
-    
+
+
     <h3 class="field-label">Consumes</h3>
     This API call consumes the following media types via the <span class="heaader">Content-Type</span> request header:
     <ul>
-    
+
       <li><code>application/json</code></li>
-    
+
     </ul>
-    
 
-    
 
-    
 
-    
 
-    
 
-    
+
+
+
+
+
+
     <h3 class="field-label">Return type</h3>
     <div class="return-type">
       <a href="#info">info</a>
-      
+
     </div>
-    
+
 
     <!--Todo: process Response Object and its headers, schema, examples -->
 
-    
 
-    
+
+
     <h3 class="field-label">Produces</h3>
     This API call produces the following media types according to the <span class="header">Accept</span> request header;
     the media type will be conveyed by the <span class="heaader">Content-Type</span> response header.
     <ul>
-    
+
       <li><code>application/json</code></li>
-    
+
     </ul>
-    
+
 
     <h3 class="field-label">Responses</h3>
-    
+
     <h4 class="field-label">200</h4>
     Successful response
-    
-    
+
+
     <h4 class="field-label">500</h4>
     Unexpected error
-    
-    
+
+
   </div> <!-- method -->
   <hr/>
-  
+
   <div class="method"><a name="getServicePlans"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
     <pre class="get"><code class="huge"><span class="http-method">get</span> /plans</code></pre></div>
     <div class="method-summary"> (<span class="nickname">getServicePlans</span>)</div>
-    
+
     <div class="method-notes">Gets `plans`</div>
 
-    
 
-    
+
+
     <h3 class="field-label">Consumes</h3>
     This API call consumes the following media types via the <span class="heaader">Content-Type</span> request header:
     <ul>
-    
+
       <li><code>application/json</code></li>
-    
+
     </ul>
-    
 
-    
 
-    
 
-    
+
+
+
+
     <h3 class="field-label">Query parameters</h3>
     <div class="field-items">
       <div class="param">driverInstanceId (optional)</div>
 
       <div class="param-desc"><span class="param-type">Query Parameter</span> &mdash; Driver Instance ID </div>
     </div>  <!-- field-items -->
-    
 
-    
 
-    
+
+
+
     <h3 class="field-label">Return type</h3>
     <div class="return-type">
       array[<a href="#plan">plan</a>]
-      
+
     </div>
-    
+
 
     <!--Todo: process Response Object and its headers, schema, examples -->
 
-    
 
-    
+
+
     <h3 class="field-label">Produces</h3>
     This API call produces the following media types according to the <span class="header">Accept</span> request header;
     the media type will be conveyed by the <span class="heaader">Content-Type</span> response header.
     <ul>
-    
+
       <li><code>application/json</code></li>
-    
+
     </ul>
-    
+
 
     <h3 class="field-label">Responses</h3>
-    
+
     <h4 class="field-label">200</h4>
     Sucessfull response
-    
-    
+
+
     <h4 class="field-label">500</h4>
     Unexpected error
-    
-    
+
+
   </div> <!-- method -->
   <hr/>
-  
+
   <div class="method"><a name="createServicePlan"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
     <pre class="post"><code class="huge"><span class="http-method">post</span> /plans</code></pre></div>
     <div class="method-summary"> (<span class="nickname">createServicePlan</span>)</div>
-    
+
     <div class="method-notes">Create a plan</div>
 
-    
 
-    
+
+
     <h3 class="field-label">Consumes</h3>
     This API call consumes the following media types via the <span class="heaader">Content-Type</span> request header:
     <ul>
-    
-      <li><code>application/json</code></li>
-    
-    </ul>
-    
 
-    
+      <li><code>application/json</code></li>
+
+    </ul>
+
+
+
     <h3 class="field-label">Request body</h3>
     <div class="field-items">
       <div class="param">plan (required)</div>
 
       <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash; Add a plan for a **dialID** </div>
     </div>  <!-- field-items -->
-    
 
-    
 
-    
 
-    
 
-    
+
+
+
+
+
     <h3 class="field-label">Return type</h3>
     <div class="return-type">
       <a href="#plan">plan</a>
-      
+
     </div>
-    
+
 
     <!--Todo: process Response Object and its headers, schema, examples -->
 
-    
 
-    
+
+
     <h3 class="field-label">Produces</h3>
     This API call produces the following media types according to the <span class="header">Accept</span> request header;
     the media type will be conveyed by the <span class="heaader">Content-Type</span> response header.
     <ul>
-    
+
       <li><code>application/json</code></li>
-    
+
     </ul>
-    
+
 
     <h3 class="field-label">Responses</h3>
-    
+
     <h4 class="field-label">201</h4>
     Sucessfull response
-    
-    
+
+
     <h4 class="field-label">500</h4>
     Unexpected error
-    
-    
+
+
   </div> <!-- method -->
   <hr/>
-  
+
   <div class="method"><a name="getServicePlan"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
     <pre class="get"><code class="huge"><span class="http-method">get</span> /plans/{plan_id}</code></pre></div>
     <div class="method-summary"> (<span class="nickname">getServicePlan</span>)</div>
-    
+
     <div class="method-notes">Gets the `plan` with the **planID**</div>
 
-    
+
     <h3 class="field-label">Path parameters</h3>
     <div class="field-items">
       <div class="param">planId (required)</div>
 
       <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash; ID of the plan </div>
     </div>  <!-- field-items -->
-    
 
-    
+
+
     <h3 class="field-label">Consumes</h3>
     This API call consumes the following media types via the <span class="heaader">Content-Type</span> request header:
     <ul>
-    
+
       <li><code>application/json</code></li>
-    
+
     </ul>
-    
 
-    
 
-    
 
-    
 
-    
 
-    
+
+
+
+
+
+
     <h3 class="field-label">Return type</h3>
     <div class="return-type">
       <a href="#plan">plan</a>
-      
+
     </div>
-    
+
 
     <!--Todo: process Response Object and its headers, schema, examples -->
 
-    
 
-    
+
+
     <h3 class="field-label">Produces</h3>
     This API call produces the following media types according to the <span class="header">Accept</span> request header;
     the media type will be conveyed by the <span class="heaader">Content-Type</span> response header.
     <ul>
-    
+
       <li><code>application/json</code></li>
-    
+
     </ul>
-    
+
 
     <h3 class="field-label">Responses</h3>
-    
+
     <h4 class="field-label">200</h4>
     Sucessfull response
-    
-    
+
+
     <h4 class="field-label">404</h4>
     Not Found
-    
-    
+
+
     <h4 class="field-label">500</h4>
     Unexpected error
-    
-    
+
+
   </div> <!-- method -->
   <hr/>
-  
+
   <div class="method"><a name="updateServicePlan"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
     <pre class="put"><code class="huge"><span class="http-method">put</span> /plans/{plan_id}</code></pre></div>
     <div class="method-summary"> (<span class="nickname">updateServicePlan</span>)</div>
-    
+
     <div class="method-notes">Updates the plan with the id **planID** for the service id **serviceID**</div>
 
-    
+
     <h3 class="field-label">Path parameters</h3>
     <div class="field-items">
       <div class="param">planId (required)</div>
 
       <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash; ID of the plan </div>
     </div>  <!-- field-items -->
-    
 
-    
+
+
     <h3 class="field-label">Consumes</h3>
     This API call consumes the following media types via the <span class="heaader">Content-Type</span> request header:
     <ul>
-    
-      <li><code>application/json</code></li>
-    
-    </ul>
-    
 
-    
+      <li><code>application/json</code></li>
+
+    </ul>
+
+
+
     <h3 class="field-label">Request body</h3>
     <div class="field-items">
       <div class="param">plan (required)</div>
 
       <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash; Update plan </div>
     </div>  <!-- field-items -->
-    
 
-    
 
-    
 
-    
 
-    
+
+
+
+
+
     <h3 class="field-label">Return type</h3>
     <div class="return-type">
       <a href="#plan">plan</a>
-      
+
     </div>
-    
+
 
     <!--Todo: process Response Object and its headers, schema, examples -->
 
-    
 
-    
+
+
     <h3 class="field-label">Produces</h3>
     This API call produces the following media types according to the <span class="header">Accept</span> request header;
     the media type will be conveyed by the <span class="heaader">Content-Type</span> response header.
     <ul>
-    
+
       <li><code>application/json</code></li>
-    
+
     </ul>
-    
+
 
     <h3 class="field-label">Responses</h3>
-    
+
     <h4 class="field-label">200</h4>
     Sucessfull response
-    
-    
+
+
     <h4 class="field-label">404</h4>
     Not Found
-    
-    
+
+
     <h4 class="field-label">500</h4>
     Unexpected error
-    
-    
+
+
   </div> <!-- method -->
   <hr/>
-  
+
   <div class="method"><a name="deleteServicePlan"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
     <pre class="delete"><code class="huge"><span class="http-method">delete</span> /plans/{plan_id}</code></pre></div>
     <div class="method-summary"> (<span class="nickname">deleteServicePlan</span>)</div>
-    
+
     <div class="method-notes">Delets the `plan` with the **planID** for the **serviceID**</div>
 
-    
+
     <h3 class="field-label">Path parameters</h3>
     <div class="field-items">
       <div class="param">planId (required)</div>
 
       <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash; ID of the plan </div>
     </div>  <!-- field-items -->
-    
 
-    
+
+
     <h3 class="field-label">Consumes</h3>
     This API call consumes the following media types via the <span class="heaader">Content-Type</span> request header:
     <ul>
-    
+
       <li><code>application/json</code></li>
-    
+
     </ul>
-    
 
-    
 
-    
 
-    
 
-    
 
-    
+
+
+
+
+
+
 
     <!--Todo: process Response Object and its headers, schema, examples -->
 
-    
 
-    
+
+
     <h3 class="field-label">Produces</h3>
     This API call produces the following media types according to the <span class="header">Accept</span> request header;
     the media type will be conveyed by the <span class="heaader">Content-Type</span> response header.
     <ul>
-    
+
       <li><code>application/json</code></li>
-    
+
     </ul>
-    
+
 
     <h3 class="field-label">Responses</h3>
-    
+
     <h4 class="field-label">204</h4>
     Sucessfull response
-    
-    
+
+
     <h4 class="field-label">404</h4>
     Not Found
-    
-    
+
+
     <h4 class="field-label">500</h4>
     Unexpected error
-    
-    
+
+
   </div> <!-- method -->
   <hr/>
-  
+
   <div class="method"><a name="getServiceByInstanceId"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
     <pre class="get"><code class="huge"><span class="http-method">get</span> /services</code></pre></div>
     <div class="method-summary"> (<span class="nickname">getServiceByInstanceId</span>)</div>
-    
+
     <div class="method-notes">Gets the existing `service`</div>
 
-    
 
-    
+
+
     <h3 class="field-label">Consumes</h3>
     This API call consumes the following media types via the <span class="heaader">Content-Type</span> request header:
     <ul>
-    
+
       <li><code>application/json</code></li>
-    
+
     </ul>
-    
 
-    
 
-    
 
-    
+
+
+
+
     <h3 class="field-label">Query parameters</h3>
     <div class="field-items">
       <div class="param">driverInstanceId (required)</div>
 
       <div class="param-desc"><span class="param-type">Query Parameter</span> &mdash; Driver instance ID </div>
     </div>  <!-- field-items -->
-    
 
-    
 
-    
+
+
+
     <h3 class="field-label">Return type</h3>
     <div class="return-type">
       <a href="#service">service</a>
-      
+
     </div>
-    
+
 
     <!--Todo: process Response Object and its headers, schema, examples -->
 
-    
 
-    
+
+
     <h3 class="field-label">Produces</h3>
     This API call produces the following media types according to the <span class="header">Accept</span> request header;
     the media type will be conveyed by the <span class="heaader">Content-Type</span> response header.
     <ul>
-    
+
       <li><code>application/json</code></li>
-    
+
     </ul>
-    
+
 
     <h3 class="field-label">Responses</h3>
-    
+
     <h4 class="field-label">200</h4>
     Sucessfull response
-    
-    
+
+
     <h4 class="field-label">500</h4>
     Unexpected error
-    
-    
+
+
   </div> <!-- method -->
   <hr/>
-  
+
   <div class="method"><a name="getService"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
     <pre class="get"><code class="huge"><span class="http-method">get</span> /services/{service_id}</code></pre></div>
     <div class="method-summary"> (<span class="nickname">getService</span>)</div>
-    
+
     <div class="method-notes">Gets the `service` with the id **serviceID**</div>
 
-    
+
     <h3 class="field-label">Path parameters</h3>
     <div class="field-items">
       <div class="param">serviceId (required)</div>
 
       <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash; ID of the service </div>
     </div>  <!-- field-items -->
-    
 
-    
+
+
     <h3 class="field-label">Consumes</h3>
     This API call consumes the following media types via the <span class="heaader">Content-Type</span> request header:
     <ul>
-    
+
       <li><code>application/json</code></li>
-    
+
     </ul>
-    
 
-    
 
-    
 
-    
 
-    
 
-    
+
+
+
+
+
+
     <h3 class="field-label">Return type</h3>
     <div class="return-type">
       <a href="#service">service</a>
-      
+
     </div>
-    
+
 
     <!--Todo: process Response Object and its headers, schema, examples -->
 
-    
 
-    
+
+
     <h3 class="field-label">Produces</h3>
     This API call produces the following media types according to the <span class="header">Accept</span> request header;
     the media type will be conveyed by the <span class="heaader">Content-Type</span> response header.
     <ul>
-    
+
       <li><code>application/json</code></li>
-    
+
     </ul>
-    
+
 
     <h3 class="field-label">Responses</h3>
-    
+
     <h4 class="field-label">200</h4>
     Sucessfull response
-    
-    
+
+
     <h4 class="field-label">404</h4>
     Not Found
-    
-    
+
+
     <h4 class="field-label">500</h4>
     Unexpected error
-    
-    
+
+
   </div> <!-- method -->
   <hr/>
-  
+
   <div class="method"><a name="updateService"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
     <pre class="put"><code class="huge"><span class="http-method">put</span> /services/{service_id}</code></pre></div>
     <div class="method-summary"> (<span class="nickname">updateService</span>)</div>
-    
+
     <div class="method-notes">Updates the `service` with the id **serviceID**</div>
 
-    
+
     <h3 class="field-label">Path parameters</h3>
     <div class="field-items">
       <div class="param">serviceId (required)</div>
 
       <div class="param-desc"><span class="param-type">Path Parameter</span> &mdash; ID of the service </div>
     </div>  <!-- field-items -->
-    
 
-    
+
+
     <h3 class="field-label">Consumes</h3>
     This API call consumes the following media types via the <span class="heaader">Content-Type</span> request header:
     <ul>
-    
-      <li><code>application/json</code></li>
-    
-    </ul>
-    
 
-    
+      <li><code>application/json</code></li>
+
+    </ul>
+
+
+
     <h3 class="field-label">Request body</h3>
     <div class="field-items">
       <div class="param">service (required)</div>
 
       <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash; Update service </div>
     </div>  <!-- field-items -->
-    
 
-    
 
-    
 
-    
 
-    
+
+
+
+
+
     <h3 class="field-label">Return type</h3>
     <div class="return-type">
       <a href="#service">service</a>
-      
+
     </div>
-    
+
 
     <!--Todo: process Response Object and its headers, schema, examples -->
 
-    
 
-    
+
+
     <h3 class="field-label">Produces</h3>
     This API call produces the following media types according to the <span class="header">Accept</span> request header;
     the media type will be conveyed by the <span class="heaader">Content-Type</span> response header.
     <ul>
-    
+
       <li><code>application/json</code></li>
-    
+
     </ul>
-    
+
 
     <h3 class="field-label">Responses</h3>
-    
+
     <h4 class="field-label">200</h4>
     Sucessfull response
-    
-    
+
+
     <h4 class="field-label">404</h4>
     Not Found
-    
-    
+
+
     <h4 class="field-label">409</h4>
     Conflict
-    
-    
+
+
     <h4 class="field-label">500</h4>
     Unexpected error
-    
-    
+
+
   </div> <!-- method -->
   <hr/>
-  
+
   <div class="method"><a name="updateCatalog"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
     <pre class="post"><code class="huge"><span class="http-method">post</span> /update_catalog</code></pre></div>
     <div class="method-summary"> (<span class="nickname">updateCatalog</span>)</div>
-    
+
     <div class="method-notes">Updates the broker catalog</div>
 
-    
 
-    
+
+
     <h3 class="field-label">Consumes</h3>
     This API call consumes the following media types via the <span class="heaader">Content-Type</span> request header:
     <ul>
-    
+
       <li><code>application/json</code></li>
-    
+
     </ul>
-    
 
-    
 
-    
 
-    
 
-    
 
-    
+
+
+
+
+
+
 
     <!--Todo: process Response Object and its headers, schema, examples -->
 
-    
 
-    
+
+
     <h3 class="field-label">Produces</h3>
     This API call produces the following media types according to the <span class="header">Accept</span> request header;
     the media type will be conveyed by the <span class="heaader">Content-Type</span> response header.
     <ul>
-    
+
       <li><code>application/json</code></li>
-    
+
     </ul>
-    
+
 
     <h3 class="field-label">Responses</h3>
-    
+
     <h4 class="field-label">200</h4>
     Successful response
-    
-    
+
+
     <h4 class="field-label">500</h4>
     Unexpected error
-    
-    
+
+
   </div> <!-- method -->
   <hr/>
-  
-  
-  
-  
+
+
+
+
 
   <div class="up"><a href="#__Models">Up</a></div>
   <h2><a name="__Models">Models</a></h2>
@@ -2411,167 +2411,167 @@ font-style: italic;
 
   <h2>Table of Contents</h2>
   <ol>
-  
-  
+
+
     <li><a href="#Info"><code>Info</code></a></li>
-  
-  
-  
+
+
+
     <li><a href="#Service"><code>Service</code></a></li>
-  
-  
-  
+
+
+
     <li><a href="#Plan"><code>Plan</code></a></li>
-  
-  
-  
+
+
+
     <li><a href="#Dial"><code>Dial</code></a></li>
-  
-  
-  
+
+
+
     <li><a href="#Driver_instance"><code>Driver_instance</code></a></li>
-  
-  
-  
+
+
+
     <li><a href="#Driver"><code>Driver</code></a></li>
-  
-  
-  
+
+
+
     <li><a href="#Dial_schema"><code>Dial_schema</code></a></li>
-  
-  
-  
+
+
+
     <li><a href="#Driver_schema"><code>Driver_schema</code></a></li>
-  
-  
+
+
   </ol>
 
-  
-  
+
+
   <div class="model">
     <h3 class="field-label"><a name="Info">Info</a> <a class="up" href="#__Models">Up</a></h3>
     <div class="field-items">
       <div class="param">version </div><div class="param-desc"><span class="param-type">String</span> </div>
-      
-      
+
+
     </div>  <!-- field-items -->
   </div>
-  
-  
-  
+
+
+
   <div class="model">
     <h3 class="field-label"><a name="Service">Service</a> <a class="up" href="#__Models">Up</a></h3>
     <div class="field-items">
       <div class="param">id </div><div class="param-desc"><span class="param-type">String</span> </div>
-      
+
       <div class="param">driver_instance_id </div><div class="param-desc"><span class="param-type">String</span> </div>
-      
+
       <div class="param">bindable </div><div class="param-desc"><span class="param-type">Boolean</span> </div>
-      
+
       <div class="param">name </div><div class="param-desc"><span class="param-type">String</span> </div>
-      
+
       <div class="param">description </div><div class="param-desc"><span class="param-type">String</span> </div>
-      
+
       <div class="param">tags </div><div class="param-desc"><span class="param-type">array[String]</span> </div>
-      
+
       <div class="param">metadata </div><div class="param-desc"><span class="param-type">Object</span> </div>
-      
-      
+
+
     </div>  <!-- field-items -->
   </div>
-  
-  
-  
+
+
+
   <div class="model">
     <h3 class="field-label"><a name="Plan">Plan</a> <a class="up" href="#__Models">Up</a></h3>
     <div class="field-items">
       <div class="param">name </div><div class="param-desc"><span class="param-type">String</span> </div>
-      
+
       <div class="param">id </div><div class="param-desc"><span class="param-type">String</span> </div>
-      
+
       <div class="param">dial_id </div><div class="param-desc"><span class="param-type">String</span> </div>
-      
+
       <div class="param">description </div><div class="param-desc"><span class="param-type">String</span> </div>
-      
+
       <div class="param">free </div><div class="param-desc"><span class="param-type">Boolean</span> </div>
-      
-      
+
+
     </div>  <!-- field-items -->
   </div>
-  
-  
-  
+
+
+
   <div class="model">
     <h3 class="field-label"><a name="Dial">Dial</a> <a class="up" href="#__Models">Up</a></h3>
     <div class="field-items">
       <div class="param">id </div><div class="param-desc"><span class="param-type">String</span> </div>
-      
+
       <div class="param">driver_instance_id </div><div class="param-desc"><span class="param-type">String</span> </div>
-      
+
       <div class="param">configuration </div><div class="param-desc"><span class="param-type">Object</span> </div>
-      
+
       <div class="param">plan </div><div class="param-desc"><span class="param-type">String</span> </div>
-      
-      
+
+
     </div>  <!-- field-items -->
   </div>
-  
-  
-  
+
+
+
   <div class="model">
     <h3 class="field-label"><a name="Driver_instance">Driver_instance</a> <a class="up" href="#__Models">Up</a></h3>
     <div class="field-items">
       <div class="param">id </div><div class="param-desc"><span class="param-type">String</span> </div>
-      
+
       <div class="param">driver_id </div><div class="param-desc"><span class="param-type">String</span> </div>
-      
+
       <div class="param">name </div><div class="param-desc"><span class="param-type">String</span> </div>
-      
+
       <div class="param">configuration </div><div class="param-desc"><span class="param-type">Object</span> </div>
-      
+
       <div class="param">dials </div><div class="param-desc"><span class="param-type">array[String]</span> </div>
-      
+
       <div class="param">service </div><div class="param-desc"><span class="param-type">String</span> </div>
-      
-      
+
+
     </div>  <!-- field-items -->
   </div>
-  
-  
-  
+
+
+
   <div class="model">
     <h3 class="field-label"><a name="Driver">Driver</a> <a class="up" href="#__Models">Up</a></h3>
     <div class="field-items">
       <div class="param">id </div><div class="param-desc"><span class="param-type">String</span> </div>
-      
+
       <div class="param">name </div><div class="param-desc"><span class="param-type">String</span> </div>
-      
+
       <div class="param">driver_type </div><div class="param-desc"><span class="param-type">String</span> </div>
-      
+
       <div class="param">driver_instances </div><div class="param-desc"><span class="param-type">array[String]</span> </div>
-      
-      
+
+
     </div>  <!-- field-items -->
   </div>
-  
-  
-  
+
+
+
   <div class="model">
     <h3 class="field-label"><a name="Dial_schema">Dial_schema</a> <a class="up" href="#__Models">Up</a></h3>
     <div class="field-items">
-      
+
     </div>  <!-- field-items -->
   </div>
-  
-  
-  
+
+
+
   <div class="model">
     <h3 class="field-label"><a name="Driver_schema">Driver_schema</a> <a class="up" href="#__Models">Up</a></h3>
     <div class="field-items">
-      
+
     </div>  <!-- field-items -->
   </div>
-  
-  
+
+
   </body>
 </html>
