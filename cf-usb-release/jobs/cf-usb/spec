@@ -54,7 +54,7 @@ properties:
     description: Password to login to mysql for config
   cf-usb.mysql_address:
     description: The mysql server address and port
-  cc.srv_api_uri:
+  cf.api_url:
     description: The cloudcontroller's api endpoint
   cf-usb.skip_tls_validation:
     description: Skip TLS validation
