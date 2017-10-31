@@ -12,7 +12,7 @@ INSERT INTO usb.Config (`KEY`,VALUE,COMPONENT) VALUES
 ;
 INSERT INTO usb.Config (`KEY`,VALUE,COMPONENT) VALUES
 ('BROKER_NAME','<%= p("cf-usb.management.broker_name") %>','MANAGEMENT_API')
-,('API','<%= p("cf.api_url") %>','CLOUD_CONTROLLER')
+,('API','<%= p("cf.insecure_api_url") %>','CLOUD_CONTROLLER')
 ,('SKIP_TLS_VALIDATION','<%= p("cf-usb.skip_tls_validation") %>','CLOUD_CONTROLLER')
 ,('USERNAME','<%= p("cf-usb.broker.username") %>','BROKER_CREDENTIALS')
 ,('PASSWORD','<%= p("cf-usb.broker.password") %>','BROKER_CREDENTIALS')
