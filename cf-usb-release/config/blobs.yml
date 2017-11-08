@@ -11,3 +11,7 @@ golang/go1.6.linux-amd64.tar.gz:
   object_id: 303c7ecb-6a2c-4289-90b9-b0297d30f07f
   sha: 01a6a28dbe31a53103b600979bbbbd63a8104456
   size: 84799480
+mariadb/mariadb-10.1.18-linux-x86_64.tar.gz:
+  object_id: mariadb-10.1.18-linux-x86_64.tar.gz
+  sha: 09163b73cad8542667d9a7f1a75524296573f03d
+  size: 353318699
