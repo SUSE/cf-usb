@@ -1,13 +1,8 @@
-# abort script on any command that exits with a non zero value
 set -e
 
 MARIADB_VERSION=10.1.18
-MY_DIR=$(pwd)
 
-cd mariadb
-tar xvf mariadb-${MARIADB_VERSION}-linux-x86_64.tar.gz
-cp mariadb-${MARIADB_VERSION}-linux-x86_64/bin/mysql ${BOSH_INSTALL_TARGET}/mysql
-
-rm -rf mariadb-${MARIADB_VERSION}-linux-x86_64
-rm mariadb-${MARIADB_VERSION}-linux-x86_64.tar.gz
-cd ${MY_DIR}
+tar xvf mariadb/mariadb-${MARIADB_VERSION}-linux-x86_64.tar.gz \
+    -C ${BOSH_INSTALL_TARGET}/ \
+    --strip-components=2 \
+    mariadb-${MARIADB_VERSION}-linux-x86_64/bin/mysql
