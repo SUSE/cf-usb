@@ -4,4 +4,4 @@ name: mariadb
 dependencies:
 
 files:
-- dummy
+- mariadb/mariadb-10.1.18-linux-x86_64.tar.gz
