@@ -5,9 +5,9 @@ templates:
   cf-usb.ctl.erb: bin/cf-usb.ctl
   broker.crt.erb: config/broker.crt
   broker.key.erb: config/broker.key
-  usb_mysql_config.sql.erb: config/usb_mysql_config.sql
   usb_mysql_create_db.sql.erb: config/usb_mysql_create_db.sql
   usb_mysql_update.sql.erb: config/usb_mysql_update.sql
+  fetch_uaa_verification_key.sh.erb: bin/fetch_uaa_verification_key.sh
 
 packages:
   - golang
@@ -41,8 +41,6 @@ properties:
   cf-usb.management.port:
     description: The management port
     default: 54053
-  cf-usb.management.public_key:
-    description: Management public key
   cf-usb.management.uaa.secret:
     description: UAA secret
   cf-usb.management.uaa.client:
@@ -74,3 +72,5 @@ properties:
   cf-usb.api_version:
     description: The API version 
     default: 2.6
+  uaa.url:
+    description: "URL of the UAA server"
