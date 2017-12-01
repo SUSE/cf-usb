@@ -15,53 +15,7 @@ function start()
     # create log directory if it doesn't exist
     [ ! -d /var/vcap/sys/log/cf-usb/ ] && mkdir -p /var/vcap/sys/log/cf-usb/
 
-    <% if p("cf-usb.configprovider") == "consulConfigProvider" %>
-
-    broker_api='{"external_url":"<%= p("cf-usb.broker.external_url") %>","listen":":<%= p("cf-usb.broker.port") %>","credentials":{"username":"<%= p("cf-usb.broker.username") %>","password":"<%= p("cf-usb.broker.password") %>"},"require_tls":<%= p("cf-usb.broker.require_tls") %>,"server_cert_file":"/var/vcap/jobs/cf-usb/config/broker.crt","server_key_file":"/var/vcap/jobs/cf-usb/config/broker.key"}'
-
-    management_api='{"broker_name":"<%= p("cf-usb.management.broker_name") %>","listen":":<%= p("cf-usb.management.port") %>","dev_mode":<%= p("cf-usb.management.dev_mode") %>,"uaa_secret":"<%= p("cf-usb.management.uaa.secret") %>","uaa_client":"<%= p("cf-usb.management.uaa.client") %>","authentication":{"uaa":{"adminscope":"usb.management.admin","public_key":"'"${JWT_SIGNING_PUB}"'"}},"cloud_controller":{"api":"<%= p("cc.srv_api_uri") %>","skip_tls_validation":<%= p("cf-usb.skip_tls_validation") %>}}'
-
-    curl -s -S -X PUT -d "$broker_api" http://<%= p("cf-usb.configconnectionstring") %>/v1/kv/usb/broker_api
-    curl -s -S -X PUT -d "$management_api" http://<%= p("cf-usb.configconnectionstring") %>/v1/kv/usb/management_api
-    curl -s -S -X PUT -d "<%= p("cf-usb.api_version") %>" http://<%= p("cf-usb.configconnectionstring") %>/v1/kv/usb/api_version
-    # create the pidfile directory if it doesn't exist
-    [ ! -d `dirname $pidfile` ] && mkdir -p `dirname $pidfile`
-
-    # start cf-usb only if there's no other instance running
-    pidof usb >/dev/null || \
-    {
-	     /var/vcap/packages/cf-usb/bin/usb <%= p("cf-usb.configprovider") %> -a <%= p("cf-usb.configconnectionstring") %> 1>>/var/vcap/sys/log/cf-usb/cf-usb.log 2>&1 &
-       echo $! >$pidfile
-     }
-    <% elsif p("cf-usb.configprovider") == "mysqlConfigProvider" %>
-
-    pidfile_migrate="/var/vcap/sys/run/cf-usb/cf-usb-migrate.pid"
-
-    # create log directory if it doesn't exist
-    [ ! -d /var/vcap/sys/log/cf-usb-migrate/ ] && mkdir -p /var/vcap/sys/log/cf-usb-migrate/
-
-    # create the pidfile_migrate directory if it doesn't exist
-    [ ! -d `dirname $pidfile_migrate` ] && mkdir -p `dirname $pidfile_migrate`
-
-    # start cf-usb migration only if there's no other instance running
-    pidof dbmigrate >/dev/null || \
-      {
-       #export mysql and consul environment variables and do migration
-	   export MYSQL_ADDRESS=<%= p("cf-usb.mysql_address") %>:3306
-	   export MYSQL_DB=usb
-	   export MYSQL_USER=usb
-	   export MYSQL_PASSWORD=<%= p("cf-usb.mysql_password") %>
-
-	   export CONSUL_ADDRESS=127.0.0.1:8500
-
-	   export OVERWRITE_CONFIG=<%= p("cf-usb.override") %>
-
-	   /var/vcap/packages/cf-usb/bin/dbmigrate 1>>/var/vcap/sys/log/cf-usb-migrate/cf-usb.log 2>&1 &
-
-	   echo $! >$pidfile_migrate
-    }
-
-
+    <% if p("cf-usb.configprovider") == "mysqlConfigProvider" %>
 
     # create the pidfile directory if it doesn't exist
     [ ! -d `dirname $pidfile` ] && mkdir -p `dirname $pidfile`
