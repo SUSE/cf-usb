@@ -26,7 +26,7 @@ func (NT NullToken) DecodeToken(r string, r1 ...string) error {
 	return nil
 }
 
-//CheckPublicToken for a null token the punlic token will never return an error
+//CheckPublicToken for a null token the public token will never return an error
 func (NT NullToken) CheckPublicToken() error {
 	return nil
 }

@@ -39,7 +39,7 @@ func initMgmt(provider config.Provider) (mockObjects, error) {
 	mObjects.csmClient = new(csmMocks.CSM)
 	mObjects.serviceBroker = new(sbMocks.USBServiceBroker)
 
-	auth, err := uaa.NewUaaAuth("", "", "", true, logger)
+	auth, err := uaa.NewUaaAuth("", "", "", "", true, logger)
 	if err != nil {
 		return mObjects, err
 	}

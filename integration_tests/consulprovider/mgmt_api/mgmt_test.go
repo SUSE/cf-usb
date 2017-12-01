@@ -127,6 +127,7 @@ func initMgmt(provider config.Provider) (*operations.UsbMgmtAPI, error) {
 		uaaAuthConfig.PublicKey,
 		uaaAuthConfig.SymmetricVerificationKey,
 		uaaAuthConfig.Scope,
+		"",
 		true,
 		logger)
 	if err != nil {
