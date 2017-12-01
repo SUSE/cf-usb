@@ -14,7 +14,7 @@ GIT_TAG=${GIT_TAG:-$(echo ${GIT_DESCRIBE} | awk -F - '{ print $1 }' )}
 GIT_COMMITS=${GIT_COMMITS:-$(echo ${GIT_DESCRIBE} | awk -F - '{ print $2 }' )}
 GIT_SHA=${GIT_SHA:-$(echo ${GIT_DESCRIBE} | awk -F - '{ print $3 }' )}
 
-ARTIFACT_NAME=${ARTIFACT_NAME:-$(basename $(git config --get remote.origin.url) .git | sed s/^hcf-//)}
+ARTIFACT_NAME=${ARTIFACT_NAME:-$(basename $(git config --get remote.origin.url) .git | sed s/^scf-//)}
 
 if [ -z "${GIT_COMMITS}" ] && [ -z "${GIT_SHA}" ] 
     then
