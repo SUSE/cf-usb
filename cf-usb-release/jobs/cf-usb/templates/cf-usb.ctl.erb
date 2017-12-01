@@ -23,7 +23,13 @@ function start()
     # start cf-usb only if there's no other instance running
     pidof usb >/dev/null || \
     {
-      /var/vcap/packages/cf-usb/bin/usb <%= p("cf-usb.configprovider") %> -a <%= p("cf-usb.mysql_address") %>:3306 --username usb -p <%= p("cf-usb.mysql_password") %> --database usb 1>>/var/vcap/sys/log/cf-usb/cf-usb.log 2>&1 &
+      /var/vcap/packages/cf-usb/bin/usb \
+        <%= p("cf-usb.configprovider") %> \
+        -a <%= p("cf-usb.mysql_address") %>:3306 \
+        --username usb \
+        -p <%= p("cf-usb.mysql_password") %> \
+        --database usb \
+        1>>/var/vcap/sys/log/cf-usb/cf-usb.log 2>&1 &
       echo $! >$pidfile
     }
     <% end %>

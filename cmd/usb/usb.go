@@ -41,7 +41,6 @@ func NewUsbApp() Usb {
 func (usb *UsbApp) GetCommands() []CLICommandProvider {
 	return []CLICommandProvider{
 		&FileConfigProvider{},
-		&ConsulConfigProvider{},
 		&RedisConfigProvider{},
 		&MysqlConfigProvider{},
 	}
