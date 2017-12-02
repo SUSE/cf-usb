@@ -2,7 +2,7 @@
 
 GIT_ROOT:=$(shell git rev-parse --show-toplevel)
 
-.PHONY: all clean format lint vet build test tools dist
+.PHONY: all clean format genswagger genbindata lint vet build test tools dist
 
 all: clean format lint vet build test
 
@@ -18,7 +18,7 @@ lint:
 vet:
 	${GIT_ROOT}/make/vet
 
-build: 
+build: genbindata
 	${GIT_ROOT}/make/build
 
 test:
@@ -30,6 +30,9 @@ tools:
 
 genswagger:
 	${GIT_ROOT}/make/genswagger
-	
+
+genbindata:
+	${GIT_ROOT}/make/genbindata
+
 dist:  
 	${GIT_ROOT}/make/dist

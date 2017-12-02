@@ -21,6 +21,11 @@ func NewFileConfig(path string) Provider {
 	return &fileConfig{path: path, loaded: false}
 }
 
+func (c *fileConfig) InitializeConfiguration() error {
+	// Nothing to do here
+	return nil
+}
+
 func (c *fileConfig) SaveConfiguration(config Config, overwrite bool) error {
 	return fmt.Errorf("Not implemented")
 }

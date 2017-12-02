@@ -1,0 +1,1 @@
+-- It makes no sense to migrate down past database initialization

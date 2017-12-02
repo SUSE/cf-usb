@@ -1,8 +1,0 @@
-set -e
-
-MARIADB_VERSION=10.1.18
-
-tar xvf mariadb/mariadb-${MARIADB_VERSION}-linux-x86_64.tar.gz \
-    -C ${BOSH_INSTALL_TARGET}/ \
-    --strip-components=2 \
-    mariadb-${MARIADB_VERSION}-linux-x86_64/bin/mysql

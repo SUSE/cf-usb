@@ -21,6 +21,10 @@ func NewRedisConfig(provider redis.Provisioner) Provider {
 	return &provisioner
 }
 
+func (c *redisConfig) InitializeConfiguration() error {
+	return fmt.Errorf("Not implemented")
+}
+
 func (c *redisConfig) SaveConfiguration(config Config, overwrite bool) error {
 	return fmt.Errorf("Not implemented")
 }

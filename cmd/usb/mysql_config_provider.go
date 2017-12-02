@@ -36,8 +36,12 @@ func (k *MysqlConfigProvider) GetCLICommands(app Usb) []cli.Command {
 					Usage: "Mysql username",
 				},
 				cli.StringFlag{
-					Name:  "password,p",
+					Name:  "password, p",
 					Usage: "Mysql password",
+				},
+				cli.StringFlag{
+					Name:  "config, c",
+					Usage: "Initial JSON configuration file",
 				},
 			},
 			Action: mysqlConfigProviderCommand(app),
@@ -60,10 +64,15 @@ func mysqlConfigProviderCommand(app Usb) func(c *cli.Context) {
 		mysqlDatabase := c.String("database")
 		mysqlUser := c.String("username")
 		mysqlPass := c.String("password")
+		configPath := c.String("config")
 
-		configuration, err := config.NewMysqlConfig(mysqlAddress, mysqlUser, mysqlPass, mysqlDatabase)
+		configuration, err := config.NewMysqlConfig(mysqlAddress, mysqlUser, mysqlPass, mysqlDatabase, configPath)
 		if err != nil {
 			logger.Fatal("mysql-config-provider-init", err)
+		}
+		err = configuration.InitializeConfiguration()
+		if err != nil {
+			logger.Fatal("mysql-config-provider-migrate", err)
 		}
 		app.Run(configuration, logger)
 	}

@@ -9,6 +9,11 @@ type Provider struct {
 	mock.Mock
 }
 
+// InitializeConfiguration does nothing for the mock provider
+func (_m *Provider) InitializeConfiguration() error {
+	return nil
+}
+
 // LoadConfiguration provides a mock function with given fields:
 func (_m *Provider) LoadConfiguration() (*config.Config, error) {
 	ret := _m.Called()

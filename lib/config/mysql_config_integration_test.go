@@ -28,7 +28,7 @@ func initMysql() (bool, error) {
 		return true, nil
 	}
 
-	provider, err := NewMysqlConfig(MysqlIntegrationConfig.address, MysqlIntegrationConfig.username, MysqlIntegrationConfig.password, MysqlIntegrationConfig.db)
+	provider, err := NewMysqlConfig(MysqlIntegrationConfig.address, MysqlIntegrationConfig.username, MysqlIntegrationConfig.password, MysqlIntegrationConfig.db, "")
 	if err != nil {
 		return true, err
 	}

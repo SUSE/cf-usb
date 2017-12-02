@@ -25,9 +25,10 @@ function start()
     {
       /var/vcap/packages/cf-usb/bin/usb \
         <%= p("cf-usb.configprovider") %> \
-        -a <%= p("cf-usb.mysql_address") %>:3306 \
+        --config /var/vcap/jobs/cf-usb/config/config.json \
+        --address <%= p("cf-usb.mysql_address") %>:3306 \
         --username usb \
-        -p <%= p("cf-usb.mysql_password") %> \
+        --password <%= p("cf-usb.mysql_password") %> \
         --database usb \
         1>>/var/vcap/sys/log/cf-usb/cf-usb.log 2>&1 &
       echo $! >$pidfile

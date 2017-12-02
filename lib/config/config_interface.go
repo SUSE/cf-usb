@@ -86,6 +86,7 @@ type Config struct {
 
 //Provider is the definition for a config provider
 type Provider interface {
+	InitializeConfiguration() error
 	LoadConfiguration() (*Config, error)
 	SaveConfiguration(config Config, overwrite bool) error
 	LoadDriverInstance(driverInstanceID string) (*Instance, error)

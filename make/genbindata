@@ -1,0 +1,19 @@
+#!/bin/sh
+
+set -o errexit
+
+. make/include/colors.sh
+
+GIT_ROOT=${GIT_ROOT:-$(git rev-parse --show-toplevel)}
+
+printf "%b==> Creating %b\n" "${OK_COLOR}" "${NO_COLOR}"
+
+rm -f "${GIT_ROOT}/lib/config/mysql/migrations/"*.go
+
+cd "${GIT_ROOT}/lib/config/mysql/migrations/"
+go run "${GIT_ROOT}/vendor/github.com/jteeuwen/go-bindata/go-bindata/"*.go \
+    -o "migrations.go" \
+    -pkg migrations \
+    *.sql
+
+printf "%b==> Done%b\n" "${OK_COLOR}" "${NO_COLOR}"
