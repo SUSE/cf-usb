@@ -1,12 +1,16 @@
 package uaa
 
 import (
+	"encoding/json"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
-	"github.com/pivotal-golang/lager/lagertest"
+	accessToken "github.com/hpcloud/cf-usb/lib/mgmt/authentication/uaa/token"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/pivotal-golang/lager/lagertest"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -46,14 +50,37 @@ var logger = lagertest.NewTestLogger("mgmt-api")
 func TestInitWrongUaaAuth(t *testing.T) {
 	assert := assert.New(t)
 
-	_, err := NewUaaAuth(wrongUaaPublicKey, "", "usb.management.admin", false, logger)
+	_, err := NewUaaAuth(wrongUaaPublicKey, "", "usb.management.admin", "", false, logger)
 	assert.Error(err, "Public uaa token must be PEM encoded")
+}
+
+func TestInitFetchTokenKey(t *testing.T) {
+	assert := assert.New(t)
+
+	handler := http.NewServeMux()
+	handler.HandleFunc("/token_key", func(w http.ResponseWriter, req *http.Request) {
+		payload := map[string]string{"value": uaaPublicKey}
+		body, err := json.Marshal(payload)
+		assert.NoError(err)
+		_, err = w.Write(body)
+		assert.NoError(err)
+	})
+	server := httptest.NewServer(handler)
+	defer server.Close()
+
+	uaaauth, err := NewUaaAuth("", "", "usb.management.admin", server.URL, false, logger)
+	if assert.NoError(err, "Error initialising UAA auth") {
+		token := uaaauth.(*Auth).accessToken
+		if assert.IsType(accessToken.AccessToken{}, token, "Expected a real UAA token") {
+			assert.NoError(token.CheckPublicToken(), "token public key should be valid")
+		}
+	}
 }
 
 func TestDecodeExpiredToken(t *testing.T) {
 	assert := assert.New(t)
 
-	uaaauth, err := NewUaaAuth(uaaPublicKey, "", "usb.management.admin", false, logger)
+	uaaauth, err := NewUaaAuth(uaaPublicKey, "", "usb.management.admin", "", false, logger)
 	if err != nil {
 		t.Errorf("Error initialising uaa auth: %v", err)
 	}
@@ -64,7 +91,7 @@ func TestDecodeExpiredToken(t *testing.T) {
 
 func TestDecodeInvalidToken(t *testing.T) {
 	assert := assert.New(t)
-	uaaauth, err := NewUaaAuth(uaaPublicKey, "", "usb.management.admin", false, logger)
+	uaaauth, err := NewUaaAuth(uaaPublicKey, "", "usb.management.admin", "", false, logger)
 	if err != nil {
 		t.Errorf("Error initialising uaa auth: %v", err)
 	}
@@ -74,7 +101,7 @@ func TestDecodeInvalidToken(t *testing.T) {
 }
 
 func TestCodeDecodeToken(t *testing.T) {
-	uaaauth, err := NewUaaAuth(uaaPublicKey, "", "usb.management.admin", false, logger)
+	uaaauth, err := NewUaaAuth(uaaPublicKey, "", "usb.management.admin", "", false, logger)
 	if err != nil {
 		t.Errorf("Error initialising uaa auth: %v", err)
 	}
@@ -108,7 +135,7 @@ func TestCodeDecodeToken(t *testing.T) {
 
 func TestCodeDecodeWrongScopeToken(t *testing.T) {
 	testScope := "a.scope"
-	uaaauth, err := NewUaaAuth(uaaPublicKey, "", testScope, false, logger)
+	uaaauth, err := NewUaaAuth(uaaPublicKey, "", testScope, "", false, logger)
 	if err != nil {
 		t.Errorf("Error initialising uaa auth: %v", err)
 	}
@@ -139,7 +166,7 @@ func TestCodeDecodeWrongScopeToken(t *testing.T) {
 }
 
 func TestSymmetricCodeDecodeToken(t *testing.T) {
-	uaaauth, err := NewUaaAuth("", symmetricKey, "usb.management.admin", false, logger)
+	uaaauth, err := NewUaaAuth("", symmetricKey, "usb.management.admin", "", false, logger)
 	if err != nil {
 		t.Errorf("Error initialising uaa auth: %v", err)
 	}

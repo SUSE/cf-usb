@@ -8,7 +8,7 @@ set -o errexit
 . make/include/versioning.sh
 
 
-echo "${OK_COLOR}==> Disting all${NO_COLOR}"; \
+printf "${OK_COLOR}==> Disting all${NO_COLOR}\n"
 for OS in ${OSES}; do \
 	cd build/${OS}-amd64/ 1> /dev/null; tar czf ../../cf-usb-${APP_VERSION}-${OS}-amd64.tgz ./; cd - 1> /dev/null; \
 done; 

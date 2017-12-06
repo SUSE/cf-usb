@@ -84,6 +84,13 @@ func (usb *UsbApp) Run(configProvider config.Provider, logger lager.Logger) {
 				logger.Fatal("initializing-swagger-failed", err)
 			}
 
+			client := httpclient.NewHTTPClient(usb.config.ManagementAPI.CloudController.SkipTLSValidation)
+			info := ccapi.NewGetInfo(usb.config.ManagementAPI.CloudController.API, client, logger)
+			tokenURL, err := info.GetTokenEndpoint()
+			if err != nil {
+				logger.Fatal("retrieving-uaa-endpoint-failed", err)
+			}
+
 			uaaAuthConfig, err := configProvider.GetUaaAuthConfig()
 			if err != nil {
 				logger.Error("initializing-uaa-config-failed", err)
@@ -93,17 +100,11 @@ func (usb *UsbApp) Run(configProvider config.Provider, logger lager.Logger) {
 				uaaAuthConfig.PublicKey,
 				uaaAuthConfig.SymmetricVerificationKey,
 				uaaAuthConfig.Scope,
+				tokenURL,
 				usb.config.ManagementAPI.DevMode,
 				logger)
 			if err != nil {
 				logger.Fatal("initializing-uaa-auth-failed", err)
-			}
-
-			client := httpclient.NewHTTPClient(usb.config.ManagementAPI.CloudController.SkipTLSValidation)
-			info := ccapi.NewGetInfo(usb.config.ManagementAPI.CloudController.API, client, logger)
-			tokenURL, err := info.GetTokenEndpoint()
-			if err != nil {
-				logger.Fatal("retrieving-uaa-endpoint-failed", err)
 			}
 
 			tokenGenerator := uaaapi.NewTokenGenerator(tokenURL, usb.config.ManagementAPI.UaaClient, usb.config.ManagementAPI.UaaSecret, client, logger)

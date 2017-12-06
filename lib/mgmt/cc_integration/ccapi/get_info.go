@@ -59,5 +59,8 @@ func (info *GetInfo) GetTokenEndpoint() (string, error) {
 		return "", err
 	}
 
+	if data.TokenEndpoint == "" {
+		return "", fmt.Errorf("UAA token endpoint missing")
+	}
 	return data.TokenEndpoint, nil
 }
