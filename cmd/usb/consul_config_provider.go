@@ -5,10 +5,10 @@ import (
 	"strings"
 
 	"github.com/codegangsta/cli"
-	"github.com/hpcloud/cf-usb/lib/config"
+	"github.com/SUSE/cf-usb/lib/config"
 
 	"github.com/hashicorp/consul/api"
-	"github.com/hpcloud/cf-usb/lib/config/consul"
+	"github.com/SUSE/cf-usb/lib/config/consul"
 )
 
 //ConsulConfigProvider provides a consul config

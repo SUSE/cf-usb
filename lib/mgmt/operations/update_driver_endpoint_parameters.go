@@ -13,7 +13,7 @@ import (
 
 	strfmt "github.com/go-openapi/strfmt"
 
-	"github.com/hpcloud/cf-usb/lib/genmodel"
+	"github.com/SUSE/cf-usb/lib/genmodel"
 )
 
 // NewUpdateDriverEndpointParams creates a new UpdateDriverEndpointParams object

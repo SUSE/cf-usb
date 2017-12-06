@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/hpcloud/cf-usb/lib/brokermodel"
+	"github.com/SUSE/cf-usb/lib/brokermodel"
 )
 
 type fileConfig struct {

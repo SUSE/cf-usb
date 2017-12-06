@@ -16,7 +16,7 @@ import (
 	strfmt "github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 
-	"github.com/hpcloud/cf-usb/lib/broker/operations/catalog"
+	"github.com/SUSE/cf-usb/lib/broker/operations/catalog"
 )
 
 // NewBrokerAPI creates a new Broker instance

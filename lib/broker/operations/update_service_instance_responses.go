@@ -8,7 +8,7 @@ import (
 
 	"github.com/go-openapi/runtime"
 
-	"github.com/hpcloud/cf-usb/lib/brokermodel"
+	"github.com/SUSE/cf-usb/lib/brokermodel"
 )
 
 /*UpdateServiceInstanceOK New plan is effective. The expected response body is {}.

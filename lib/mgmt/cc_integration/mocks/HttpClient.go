@@ -1,6 +1,6 @@
 package mocks
 
-import "github.com/hpcloud/cf-usb/lib/mgmt/cc_integration/httpclient"
+import "github.com/SUSE/cf-usb/lib/mgmt/cc_integration/httpclient"
 import "github.com/stretchr/testify/mock"
 
 //HTTPClient is a mock http client

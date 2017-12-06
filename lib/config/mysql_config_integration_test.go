@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/hpcloud/cf-usb/lib/brokermodel"
+	"github.com/SUSE/cf-usb/lib/brokermodel"
 	"github.com/stretchr/testify/assert"
 
 	"os"

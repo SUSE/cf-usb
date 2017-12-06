@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 
 	_ "github.com/golang/protobuf/proto" //workaround for godep + gomega
-	"github.com/hpcloud/cf-usb/lib/brokermodel"
+	"github.com/SUSE/cf-usb/lib/brokermodel"
 
 	"io/ioutil"
 	"net/http"
@@ -15,7 +15,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/consul/api"
-	"github.com/hpcloud/cf-usb/lib/config/consul"
+	"github.com/SUSE/cf-usb/lib/config/consul"
 	. "github.com/onsi/gomega"
 	"github.com/stretchr/testify/assert"
 	"github.com/tedsuo/ifrit"

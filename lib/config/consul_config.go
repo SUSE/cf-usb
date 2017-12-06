@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/hpcloud/cf-usb/lib/brokermodel"
-	"github.com/hpcloud/cf-usb/lib/config/consul"
+	"github.com/SUSE/cf-usb/lib/brokermodel"
+	"github.com/SUSE/cf-usb/lib/config/consul"
 )
 
 type consulConfig struct {

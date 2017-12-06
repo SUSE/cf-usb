@@ -5,11 +5,11 @@ import (
 	"log"
 	"testing"
 
-	"github.com/hpcloud/cf-usb/lib/brokermodel"
+	"github.com/SUSE/cf-usb/lib/brokermodel"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/hashicorp/consul/api"
-	consulMock "github.com/hpcloud/cf-usb/lib/config/consul/mocks"
+	consulMock "github.com/SUSE/cf-usb/lib/config/consul/mocks"
 	"github.com/stretchr/testify/mock"
 )
 

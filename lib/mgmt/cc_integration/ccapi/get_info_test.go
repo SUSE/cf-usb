@@ -3,7 +3,7 @@ package ccapi
 import (
 	"testing"
 
-	"github.com/hpcloud/cf-usb/lib/mgmt/cc_integration/mocks"
+	"github.com/SUSE/cf-usb/lib/mgmt/cc_integration/mocks"
 	"github.com/pivotal-golang/lager/lagertest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"

@@ -8,7 +8,7 @@ import (
 
 	"github.com/go-openapi/runtime"
 
-	"github.com/hpcloud/cf-usb/lib/brokermodel"
+	"github.com/SUSE/cf-usb/lib/brokermodel"
 )
 
 /*CreateServiceInstanceOK May be returned if the service instance already exists and the requested parameters are identical to the existing service instance. The expected response body is below.

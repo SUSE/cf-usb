@@ -8,7 +8,7 @@ import (
 	"strconv"
 
 	_ "github.com/go-sql-driver/mysql" //mysql driver needed for database connection
-	"github.com/hpcloud/cf-usb/lib/brokermodel"
+	"github.com/SUSE/cf-usb/lib/brokermodel"
 )
 
 type mysqlConfig struct {

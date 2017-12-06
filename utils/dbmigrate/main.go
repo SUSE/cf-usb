@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/hashicorp/consul/api"
-	"github.com/hpcloud/cf-usb/lib/config"
-	"github.com/hpcloud/cf-usb/lib/config/consul"
+	"github.com/SUSE/cf-usb/lib/config"
+	"github.com/SUSE/cf-usb/lib/config/consul"
 )
 
 //Migration tool to allow data migration from consul kv store to mysql database

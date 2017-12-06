@@ -7,8 +7,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/hpcloud/cf-usb/lib/brokermodel"
-	"github.com/hpcloud/cf-usb/lib/config/redis"
+	"github.com/SUSE/cf-usb/lib/brokermodel"
+	"github.com/SUSE/cf-usb/lib/config/redis"
 
 	"os"
 	"strconv"

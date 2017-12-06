@@ -4,7 +4,7 @@ Universal Service Broker Management API
 
 Terms Of Service:
 
-https://github.com/hpcloud/cf-usb
+https://github.com/SUSE/cf-usb
 
 
     Schemes:

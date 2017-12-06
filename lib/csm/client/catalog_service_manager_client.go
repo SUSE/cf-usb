@@ -9,9 +9,9 @@ import (
 
 	strfmt "github.com/go-openapi/strfmt"
 
-	"github.com/hpcloud/cf-usb/lib/csm/client/connection"
-	"github.com/hpcloud/cf-usb/lib/csm/client/status"
-	"github.com/hpcloud/cf-usb/lib/csm/client/workspace"
+	"github.com/SUSE/cf-usb/lib/csm/client/connection"
+	"github.com/SUSE/cf-usb/lib/csm/client/status"
+	"github.com/SUSE/cf-usb/lib/csm/client/workspace"
 )
 
 // Default catalog service manager HTTP client.

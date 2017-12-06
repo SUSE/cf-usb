@@ -8,7 +8,7 @@ import (
 
 	"github.com/go-openapi/runtime"
 
-	"github.com/hpcloud/cf-usb/lib/brokermodel"
+	"github.com/SUSE/cf-usb/lib/brokermodel"
 )
 
 /*GetServiceInstancesInstanceIDLastOperationOK Valid state values are 'in progress', 'succeeded', and 'failed'

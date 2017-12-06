@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/hpcloud/cf-usb/lib/brokermodel"
-	redisMock "github.com/hpcloud/cf-usb/lib/config/redis/mocks"
+	"github.com/SUSE/cf-usb/lib/brokermodel"
+	redisMock "github.com/SUSE/cf-usb/lib/config/redis/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )

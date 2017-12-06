@@ -7,16 +7,16 @@ import (
 
 	loads "github.com/go-openapi/loads"
 
-	"github.com/hpcloud/cf-usb/lib/broker"
-	brokerOps "github.com/hpcloud/cf-usb/lib/broker/operations"
-	"github.com/hpcloud/cf-usb/lib/config"
-	"github.com/hpcloud/cf-usb/lib/csm"
-	"github.com/hpcloud/cf-usb/lib/mgmt"
-	"github.com/hpcloud/cf-usb/lib/mgmt/authentication/uaa"
-	"github.com/hpcloud/cf-usb/lib/mgmt/cc_integration/ccapi"
-	"github.com/hpcloud/cf-usb/lib/mgmt/cc_integration/httpclient"
-	"github.com/hpcloud/cf-usb/lib/mgmt/cc_integration/uaaapi"
-	"github.com/hpcloud/cf-usb/lib/mgmt/operations"
+	"github.com/SUSE/cf-usb/lib/broker"
+	brokerOps "github.com/SUSE/cf-usb/lib/broker/operations"
+	"github.com/SUSE/cf-usb/lib/config"
+	"github.com/SUSE/cf-usb/lib/csm"
+	"github.com/SUSE/cf-usb/lib/mgmt"
+	"github.com/SUSE/cf-usb/lib/mgmt/authentication/uaa"
+	"github.com/SUSE/cf-usb/lib/mgmt/cc_integration/ccapi"
+	"github.com/SUSE/cf-usb/lib/mgmt/cc_integration/httpclient"
+	"github.com/SUSE/cf-usb/lib/mgmt/cc_integration/uaaapi"
+	"github.com/SUSE/cf-usb/lib/mgmt/operations"
 	"github.com/pivotal-golang/lager"
 )
 

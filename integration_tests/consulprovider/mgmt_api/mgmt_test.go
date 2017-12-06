@@ -6,18 +6,18 @@ import (
 	"testing"
 
 	"github.com/hashicorp/consul/api"
-	"github.com/hpcloud/cf-usb/lib/config/consul"
+	"github.com/SUSE/cf-usb/lib/config/consul"
 
 	loads "github.com/go-openapi/loads"
-	"github.com/hpcloud/cf-usb/lib/config"
-	"github.com/hpcloud/cf-usb/lib/csm"
-	"github.com/hpcloud/cf-usb/lib/genmodel"
-	"github.com/hpcloud/cf-usb/lib/mgmt"
-	"github.com/hpcloud/cf-usb/lib/mgmt/authentication/uaa"
+	"github.com/SUSE/cf-usb/lib/config"
+	"github.com/SUSE/cf-usb/lib/csm"
+	"github.com/SUSE/cf-usb/lib/genmodel"
+	"github.com/SUSE/cf-usb/lib/mgmt"
+	"github.com/SUSE/cf-usb/lib/mgmt/authentication/uaa"
 
-	sbMocks "github.com/hpcloud/cf-usb/lib/mgmt/cc_integration/ccapi/mocks"
+	sbMocks "github.com/SUSE/cf-usb/lib/mgmt/cc_integration/ccapi/mocks"
 
-	"github.com/hpcloud/cf-usb/lib/mgmt/operations"
+	"github.com/SUSE/cf-usb/lib/mgmt/operations"
 	"github.com/pivotal-golang/lager"
 	"github.com/pivotal-golang/lager/lagertest"
 	"github.com/satori/go.uuid"

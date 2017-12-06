@@ -3,7 +3,7 @@ package config
 import (
 	"encoding/json"
 
-	"github.com/hpcloud/cf-usb/lib/brokermodel"
+	"github.com/SUSE/cf-usb/lib/brokermodel"
 )
 
 //BrokerCredentials represents the credentials used by the cloud controller to connect to the broker
