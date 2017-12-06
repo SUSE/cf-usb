@@ -9,7 +9,7 @@ import (
 
 	strfmt "github.com/go-openapi/strfmt"
 
-	"github.com/hpcloud/cf-usb/lib/csm/models"
+	"github.com/SUSE/cf-usb/lib/csm/models"
 )
 
 // NewCreateWorkspaceParams creates a new CreateWorkspaceParams object

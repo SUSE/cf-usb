@@ -53,7 +53,7 @@ Basic auth can be used when making calls to the USB management API.
 
 #### API Definition
 
-The usb management API is described [here](https://github.com/hpcloud/cf-usb/blob/b84f846eedc13c2cf9215c53f323b01c545aab42/docs/mgmt.html)
+The usb management API is described [here](https://github.com/SUSE/cf-usb/blob/b84f846eedc13c2cf9215c53f323b01c545aab42/docs/mgmt.html)
 
 ### fissile
 
@@ -333,13 +333,13 @@ Deprovisions the instance having the specified *instanceID*
 ## Building and running
 
 ### Requirements:
-- Go 1.4
+- Go 1.6
 
 ### Building:
 ```sh
-mkdir -p $GOPATH/src/github.com/hpcloud
-cd $GOPATH/src/github.com/hpcloud
-git clone git@github.com:hpcloud/cf-usb.git
+mkdir -p $GOPATH/src/github.com/SUSE
+cd $GOPATH/src/github.com/SUSE
+git clone git@github.com:SUSE/cf-usb.git
 
 make tools
 godep restore

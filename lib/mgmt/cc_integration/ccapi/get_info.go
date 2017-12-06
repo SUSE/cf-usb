@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/hpcloud/cf-usb/lib/mgmt/cc_integration/httpclient"
+	"github.com/SUSE/cf-usb/lib/mgmt/cc_integration/httpclient"
 	"github.com/pivotal-golang/lager"
 )
 
@@ -59,5 +59,8 @@ func (info *GetInfo) GetTokenEndpoint() (string, error) {
 		return "", err
 	}
 
+	if data.TokenEndpoint == "" {
+		return "", fmt.Errorf("UAA token endpoint missing")
+	}
 	return data.TokenEndpoint, nil
 }

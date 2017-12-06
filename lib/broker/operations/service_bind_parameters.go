@@ -13,7 +13,7 @@ import (
 
 	strfmt "github.com/go-openapi/strfmt"
 
-	"github.com/hpcloud/cf-usb/lib/brokermodel"
+	"github.com/SUSE/cf-usb/lib/brokermodel"
 )
 
 // NewServiceBindParams creates a new ServiceBindParams object

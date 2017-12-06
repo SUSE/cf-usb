@@ -7,16 +7,16 @@ import (
 
 	loads "github.com/go-openapi/loads"
 
-	"github.com/hpcloud/cf-usb/lib/broker"
-	brokerOps "github.com/hpcloud/cf-usb/lib/broker/operations"
-	"github.com/hpcloud/cf-usb/lib/config"
-	"github.com/hpcloud/cf-usb/lib/csm"
-	"github.com/hpcloud/cf-usb/lib/mgmt"
-	"github.com/hpcloud/cf-usb/lib/mgmt/authentication/uaa"
-	"github.com/hpcloud/cf-usb/lib/mgmt/cc_integration/ccapi"
-	"github.com/hpcloud/cf-usb/lib/mgmt/cc_integration/httpclient"
-	"github.com/hpcloud/cf-usb/lib/mgmt/cc_integration/uaaapi"
-	"github.com/hpcloud/cf-usb/lib/mgmt/operations"
+	"github.com/SUSE/cf-usb/lib/broker"
+	brokerOps "github.com/SUSE/cf-usb/lib/broker/operations"
+	"github.com/SUSE/cf-usb/lib/config"
+	"github.com/SUSE/cf-usb/lib/csm"
+	"github.com/SUSE/cf-usb/lib/mgmt"
+	"github.com/SUSE/cf-usb/lib/mgmt/authentication/uaa"
+	"github.com/SUSE/cf-usb/lib/mgmt/cc_integration/ccapi"
+	"github.com/SUSE/cf-usb/lib/mgmt/cc_integration/httpclient"
+	"github.com/SUSE/cf-usb/lib/mgmt/cc_integration/uaaapi"
+	"github.com/SUSE/cf-usb/lib/mgmt/operations"
 	"github.com/pivotal-golang/lager"
 )
 
@@ -83,6 +83,13 @@ func (usb *UsbApp) Run(configProvider config.Provider, logger lager.Logger) {
 				logger.Fatal("initializing-swagger-failed", err)
 			}
 
+			client := httpclient.NewHTTPClient(usb.config.ManagementAPI.CloudController.SkipTLSValidation)
+			info := ccapi.NewGetInfo(usb.config.ManagementAPI.CloudController.API, client, logger)
+			tokenURL, err := info.GetTokenEndpoint()
+			if err != nil {
+				logger.Fatal("retrieving-uaa-endpoint-failed", err)
+			}
+
 			uaaAuthConfig, err := configProvider.GetUaaAuthConfig()
 			if err != nil {
 				logger.Error("initializing-uaa-config-failed", err)
@@ -92,17 +99,11 @@ func (usb *UsbApp) Run(configProvider config.Provider, logger lager.Logger) {
 				uaaAuthConfig.PublicKey,
 				uaaAuthConfig.SymmetricVerificationKey,
 				uaaAuthConfig.Scope,
+				tokenURL,
 				usb.config.ManagementAPI.DevMode,
 				logger)
 			if err != nil {
 				logger.Fatal("initializing-uaa-auth-failed", err)
-			}
-
-			client := httpclient.NewHTTPClient(usb.config.ManagementAPI.CloudController.SkipTLSValidation)
-			info := ccapi.NewGetInfo(usb.config.ManagementAPI.CloudController.API, client, logger)
-			tokenURL, err := info.GetTokenEndpoint()
-			if err != nil {
-				logger.Fatal("retrieving-uaa-endpoint-failed", err)
 			}
 
 			tokenGenerator := uaaapi.NewTokenGenerator(tokenURL, usb.config.ManagementAPI.UaaClient, usb.config.ManagementAPI.UaaSecret, client, logger)

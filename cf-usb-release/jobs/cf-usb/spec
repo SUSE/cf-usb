@@ -5,7 +5,12 @@ templates:
   config.json.erb: config/config.json
   broker.crt.erb: config/broker.crt
   broker.key.erb: config/broker.key
+<<<<<<< HEAD
   fetch_uaa_verification_key.sh.erb: bin/fetch_uaa_verification_key.sh
+=======
+  usb_mysql_create_db.sql.erb: config/usb_mysql_create_db.sql
+  usb_mysql_update.sql.erb: config/usb_mysql_update.sql
+>>>>>>> origin/alexh/update-to-suse-org
 
 packages:
   - golang

@@ -3,7 +3,7 @@
 set -x -e
 
 
-REPO_NAME=github.com/hpcloud/cf-usb
+REPO_NAME=github.com/SUSE/cf-usb
 REPO_DIR=${BOSH_INSTALL_TARGET}/src/${REPO_NAME}
 
 mkdir -p $REPO_DIR

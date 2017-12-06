@@ -10,7 +10,7 @@ if [ -z "${APP_VERSION}" ]; then
   . make/include/versioning.sh
 fi
 
-echo "${OK_COLOR}==> Building ${ERROR_COLOR}"
+printf "${OK_COLOR}==> Building ${ERROR_COLOR}\n"
 
 for OS in ${OSES}; do \
 		 env GOOS=${OS} GOARCH=amd64 go build -o build/${OS}-amd64/usb/usb \
@@ -18,4 +18,4 @@ for OS in ${OSES}; do \
 		 ./cmd/usb/  
 done
 
-echo "${NO_COLOR}\c"
+printf "${NO_COLOR}"

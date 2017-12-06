@@ -9,9 +9,6 @@ function random_uuid()
 
 function start()
 {
-    # Get the JWT verification key from UAA
-    source ./fetch_uaa_verification_key.sh
-
     # create log directory if it doesn't exist
     [ ! -d /var/vcap/sys/log/cf-usb/ ] && mkdir -p /var/vcap/sys/log/cf-usb/
 

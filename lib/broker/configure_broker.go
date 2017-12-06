@@ -9,11 +9,11 @@ import (
 	runtime "github.com/go-openapi/runtime"
 	middleware "github.com/go-openapi/runtime/middleware"
 
-	"github.com/hpcloud/cf-usb/lib/broker/operations"
-	"github.com/hpcloud/cf-usb/lib/broker/operations/catalog"
-	"github.com/hpcloud/cf-usb/lib/brokermodel"
-	"github.com/hpcloud/cf-usb/lib/config"
-	"github.com/hpcloud/cf-usb/lib/csm"
+	"github.com/SUSE/cf-usb/lib/broker/operations"
+	"github.com/SUSE/cf-usb/lib/broker/operations/catalog"
+	"github.com/SUSE/cf-usb/lib/brokermodel"
+	"github.com/SUSE/cf-usb/lib/config"
+	"github.com/SUSE/cf-usb/lib/csm"
 	"github.com/pivotal-golang/lager"
 )
 

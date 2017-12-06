@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/SUSE/cf-usb/lib/brokermodel"
+	"github.com/SUSE/cf-usb/lib/config/mysql/migrations"
 	_ "github.com/go-sql-driver/mysql" // mysql driver needed for database connection
-	"github.com/hpcloud/cf-usb/lib/brokermodel"
-	"github.com/hpcloud/cf-usb/lib/config/mysql/migrations"
 	"github.com/mattes/migrate"
 	"github.com/mattes/migrate/database/mysql"
 	bindata "github.com/mattes/migrate/source/go-bindata"

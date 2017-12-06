@@ -1,9 +1,9 @@
 package mocks
 
-import "github.com/hpcloud/cf-usb/lib/config"
+import "github.com/SUSE/cf-usb/lib/config"
 import "github.com/stretchr/testify/mock"
 
-import "github.com/hpcloud/cf-usb/lib/brokermodel"
+import "github.com/SUSE/cf-usb/lib/brokermodel"
 
 type Provider struct {
 	mock.Mock

@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/codegangsta/cli"
-	"github.com/hpcloud/cf-usb/lib/config"
+	"github.com/SUSE/cf-usb/lib/config"
 )
 
 //MysqlConfigProvider provides a mysql config

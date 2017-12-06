@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/hpcloud/cf-usb/lib/brokermodel"
-	"github.com/hpcloud/cf-usb/lib/config/redis"
+	"github.com/SUSE/cf-usb/lib/brokermodel"
+	"github.com/SUSE/cf-usb/lib/config/redis"
 )
 
 const usbKey = "usb"

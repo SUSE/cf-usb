@@ -6,9 +6,9 @@ import (
 	"strings"
 
 	"github.com/codegangsta/cli"
-	"github.com/hpcloud/cf-usb/lib/config"
+	"github.com/SUSE/cf-usb/lib/config"
 
-	"github.com/hpcloud/cf-usb/lib/config/redis"
+	"github.com/SUSE/cf-usb/lib/config/redis"
 )
 
 //RedisConfigProvider provides a config held in redis for usb

@@ -11,7 +11,7 @@ import (
 
 	strfmt "github.com/go-openapi/strfmt"
 
-	"github.com/hpcloud/cf-usb/lib/csm/models"
+	"github.com/SUSE/cf-usb/lib/csm/models"
 )
 
 // GetWorkspaceReader is a Reader for the GetWorkspace structure.

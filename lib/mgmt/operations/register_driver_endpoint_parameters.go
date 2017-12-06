@@ -11,7 +11,7 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
 
-	"github.com/hpcloud/cf-usb/lib/genmodel"
+	"github.com/SUSE/cf-usb/lib/genmodel"
 )
 
 // NewRegisterDriverEndpointParams creates a new RegisterDriverEndpointParams object

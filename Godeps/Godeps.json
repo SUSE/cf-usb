@@ -1,5 +1,5 @@
 {
-	"ImportPath": "github.com/hpcloud/cf-usb",
+	"ImportPath": "github.com/SUSE/cf-usb",
 	"GoVersion": "go1.8",
 	"GodepVersion": "v79",
 	"Packages": [

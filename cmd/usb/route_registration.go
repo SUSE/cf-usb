@@ -5,7 +5,7 @@ import (
 
 	"strconv"
 
-	"github.com/hpcloud/cf-usb/lib/config"
+	"github.com/SUSE/cf-usb/lib/config"
 	"github.com/pivotal-golang/lager"
 	"github.com/pivotal-golang/localip"
 
