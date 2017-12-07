@@ -17,6 +17,9 @@ type mysqlConfig struct {
 	db         *sql.DB
 	dbName     string
 	configPath string
+	username   string
+	password   string
+	address    string
 }
 
 type generalConfig struct {
@@ -31,10 +34,17 @@ func NewMysqlConfig(address, username, password, database, configPath string) (P
 	if err != nil {
 		return nil, err
 	}
+	if err = db.Ping(); err != nil {
+		return nil, err
+	}
+
 	return &mysqlConfig{
 		db:         db,
 		dbName:     database,
 		configPath: configPath,
+		username:   username,
+		password:   password,
+		address:    address,
 	}, nil
 }
 
@@ -44,14 +54,21 @@ func (c *mysqlConfig) InitializeConfiguration() error {
 	}
 
 	// Create the database if it doesn't exist
-	if _, err := c.db.Exec("CREATE SCHEMA IF NOT EXISTS ? DEFAULT CHARACTER SET utf8", c.dbName); err != nil {
-		return err
-	}
-	if _, err := c.db.Exec("USE ?", c.dbName); err != nil {
+	_, err := c.db.Exec("CREATE SCHEMA IF NOT EXISTS " + c.dbName + " DEFAULT CHARACTER SET utf8")
+	if err != nil {
 		return err
 	}
 
-	target, err := mysql.WithInstance(c.db, &mysql.Config{DatabaseName: c.dbName})
+	// Reopen the connection with the name in the URL
+	c.db, err = sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s)/%s?multiStatements=true", c.username, c.password, c.address, c.dbName))
+	if err != nil {
+		return err
+	}
+	if err = c.db.Ping(); err != nil {
+		return err
+	}
+
+	target, err := mysql.WithInstance(c.db, &mysql.Config{})
 	if err != nil {
 		return err
 	}
@@ -67,7 +84,11 @@ func (c *mysqlConfig) InitializeConfiguration() error {
 		return err
 	}
 
-	return migration.Up()
+	err = migration.Up()
+	if err != nil && err != migrate.ErrNoChange {
+		return err
+	}
+	return nil
 }
 
 func (c *mysqlConfig) LoadConfiguration() (*Config, error) {
