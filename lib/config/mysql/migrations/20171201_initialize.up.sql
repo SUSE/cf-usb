@@ -1,6 +1,6 @@
 -- Initialize the database
 
-BEGIN
+BEGIN;
 
 -- -----------------------------------------------------
 -- Table `Instances`
@@ -76,4 +76,4 @@ CREATE TABLE IF NOT EXISTS `Services` (
 	    ON UPDATE NO ACTION)
 	ENGINE = InnoDB;
 
-COMMIT
+COMMIT;
