@@ -7,7 +7,7 @@ templates:
   broker.key.erb: config/broker.key
 
 packages:
-  - golang
+  - golang1.9
   - cf-usb
 
 properties:

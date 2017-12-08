@@ -13,7 +13,7 @@ cd cf-usb
 cp -R * $REPO_DIR
 
 export GOPATH=$BOSH_INSTALL_TARGET:${REPO_DIR}/vendor
-export GOROOT=$(readlink -nf /var/vcap/packages/golang)
+export GOROOT=$(readlink -nf /var/vcap/packages/golang1.9)
 export PATH=$GOROOT/bin:$PATH
 export GIT_ROOT="${REPO_DIR}"
 

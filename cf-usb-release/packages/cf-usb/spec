@@ -10,4 +10,4 @@ files:
   - cf-usb/vendor/**/*
 
 dependencies:
-  - golang
+  - golang1.9
