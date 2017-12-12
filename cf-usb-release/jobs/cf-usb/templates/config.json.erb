@@ -1,0 +1,32 @@
+<%= {
+    api_version: p("cf-usb.api_version"),
+    broker_api: {
+        external_url: p("cf-usb.broker.external_url"),
+        listen: p("cf-usb.broker.port"),
+        require_tls: p("cf-usb.broker.require_tls"),
+        server_cert_file: '/var/vcap/jobs/cf-usb/config/broker.crt',
+        server_key_file: '/var/vcap/jobs/cf-usb/config/broker.key',
+    },
+    management_api: {
+        dev_mode: p("cf-usb.management.dev_mode"),
+        listen: p("cf-usb.management.port"),
+        authentication: {
+            uaa: {
+                adminscope: 'usb.management.admin'
+            },
+        },
+        uaa_client: p("cf-usb.management.uaa.client"),
+        uaa_secret: p("cf-usb.management.uaa.secret"),
+        broker_name: p("cf-usb.management.broker_name"),
+        cloud_controller: {
+            api: p("cf.insecure_api_url"),
+            skip_tls_validation: p("cf-usb.skip_tls_validation"),
+        }
+    },
+    broker_api: {
+        credentials: {
+            username: p("cf-usb.broker.username"),
+            password: p("cf-usb.broker.password"),
+        }
+    }
+}.to_json %>

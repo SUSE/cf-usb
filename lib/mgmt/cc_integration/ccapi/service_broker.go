@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/hpcloud/cf-usb/lib/mgmt/cc_integration/httpclient"
-	"github.com/hpcloud/cf-usb/lib/mgmt/cc_integration/uaaapi"
+	"github.com/SUSE/cf-usb/lib/mgmt/cc_integration/httpclient"
+	"github.com/SUSE/cf-usb/lib/mgmt/cc_integration/uaaapi"
 	"github.com/pivotal-golang/lager"
 )
 

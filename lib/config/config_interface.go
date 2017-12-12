@@ -3,7 +3,7 @@ package config
 import (
 	"encoding/json"
 
-	"github.com/hpcloud/cf-usb/lib/brokermodel"
+	"github.com/SUSE/cf-usb/lib/brokermodel"
 )
 
 //BrokerCredentials represents the credentials used by the cloud controller to connect to the broker
@@ -86,6 +86,7 @@ type Config struct {
 
 //Provider is the definition for a config provider
 type Provider interface {
+	InitializeConfiguration() error
 	LoadConfiguration() (*Config, error)
 	SaveConfiguration(config Config, overwrite bool) error
 	LoadDriverInstance(driverInstanceID string) (*Instance, error)

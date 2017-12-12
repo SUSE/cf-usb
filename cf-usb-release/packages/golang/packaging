@@ -1,4 +1,6 @@
 set -e
 
-tar xzf golang/go1.6.linux-amd64.tar.gz
+VERSION=1.9.1
+
+tar xzf golang/go${VERSION}.linux-amd64.tar.gz
 cp -R go/* ${BOSH_INSTALL_TARGET}

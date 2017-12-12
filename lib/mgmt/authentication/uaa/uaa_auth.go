@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/hpcloud/cf-usb/lib/mgmt/authentication"
-	accessToken "github.com/hpcloud/cf-usb/lib/mgmt/authentication/uaa/token"
+	"github.com/SUSE/cf-usb/lib/mgmt/authentication"
+	accessToken "github.com/SUSE/cf-usb/lib/mgmt/authentication/uaa/token"
 	"github.com/pivotal-golang/lager"
 )
 

@@ -10,7 +10,7 @@ ISSUES=$(mktemp)
 
 trap "cat ${ISSUES} ; rm -f ${ISSUES}" EXIT
 
-go list -f '{{ .Dir }}' ./... | grep -v /vendor/ | while read DIR; do
+go list -f '{{ .Dir }}' ./... | grep -v /vendor/ | grep -v migrations | while read DIR; do
     goimports -d -e "${DIR}"/*.go >> "${ISSUES}"
 done
 

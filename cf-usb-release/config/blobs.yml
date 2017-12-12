@@ -1,17 +1,5 @@
 ---
-consul/consul-template_0.9.0_linux_amd64.tar.gz:
-  object_id: e83bcdcd-2f31-4b73-8cf8-516d54e8f59a
-  sha: a44e441f9347abe64956e5bb30c4d4b0464d1f73
-  size: 2460384
-consul/consul_0.5.2_linux_amd64.zip:
-  object_id: 74107b66-7502-4e06-bdc2-d2dbea1e73c6
-  sha: b3ae610c670fc3b81737d44724ebde969da66ebf
-  size: 4803609
-golang/go1.6.linux-amd64.tar.gz:
-  object_id: 303c7ecb-6a2c-4289-90b9-b0297d30f07f
-  sha: 01a6a28dbe31a53103b600979bbbbd63a8104456
-  size: 84799480
-mariadb/mariadb-10.1.18-linux-x86_64.tar.gz:
-  object_id: mariadb-10.1.18-linux-x86_64.tar.gz
-  sha: 09163b73cad8542667d9a7f1a75524296573f03d
-  size: 353318699
+golang/go1.9.1.linux-amd64.tar.gz:
+  object_id: go1.9.1.linux-amd64.tar.gz
+  sha: 8ab67607ac917684560e699b76b3121f5799e24e
+  size: 104197862

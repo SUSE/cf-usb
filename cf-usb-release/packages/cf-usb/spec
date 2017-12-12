@@ -7,8 +7,7 @@ files:
   - cf-usb/lib/**/*
   - cf-usb/make/**/*
   - cf-usb/cmd/**/*
-  - cf-usb/utils/**/*
   - cf-usb/vendor/**/*
 
 dependencies:
-  - golang
+  - golang1.9

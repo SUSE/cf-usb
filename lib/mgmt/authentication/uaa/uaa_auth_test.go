@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	accessToken "github.com/hpcloud/cf-usb/lib/mgmt/authentication/uaa/token"
+	accessToken "github.com/SUSE/cf-usb/lib/mgmt/authentication/uaa/token"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/pivotal-golang/lager/lagertest"

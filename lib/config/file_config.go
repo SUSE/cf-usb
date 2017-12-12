@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/hpcloud/cf-usb/lib/brokermodel"
+	"github.com/SUSE/cf-usb/lib/brokermodel"
 )
 
 type fileConfig struct {
@@ -19,6 +19,11 @@ type fileConfig struct {
 //NewFileConfig builds and returns a new file config Provider
 func NewFileConfig(path string) Provider {
 	return &fileConfig{path: path, loaded: false}
+}
+
+func (c *fileConfig) InitializeConfiguration() error {
+	// Nothing to do here
+	return nil
 }
 
 func (c *fileConfig) SaveConfiguration(config Config, overwrite bool) error {

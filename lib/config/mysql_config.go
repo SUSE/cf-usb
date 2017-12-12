@@ -1,18 +1,25 @@
 package config
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 
-	"database/sql"
-	"strconv"
-
-	_ "github.com/go-sql-driver/mysql" //mysql driver needed for database connection
-	"github.com/hpcloud/cf-usb/lib/brokermodel"
+	"github.com/SUSE/cf-usb/lib/brokermodel"
+	"github.com/SUSE/cf-usb/lib/config/mysql/migrations"
+	_ "github.com/go-sql-driver/mysql" // mysql driver needed for database connection
+	"github.com/mattes/migrate"
+	"github.com/mattes/migrate/database/mysql"
+	bindata "github.com/mattes/migrate/source/go-bindata"
 )
 
 type mysqlConfig struct {
-	db *sql.DB
+	db         *sql.DB
+	dbName     string
+	configPath string
+	username   string
+	password   string
+	address    string
 }
 
 type generalConfig struct {
@@ -22,138 +29,88 @@ type generalConfig struct {
 }
 
 //NewMysqlConfig generates and returns a new mysql config provider
-func NewMysqlConfig(address string, username string, password string, database string) (Provider, error) {
-	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s)/%s", username, password, address, database))
+func NewMysqlConfig(address, username, password, database, configPath string) (Provider, error) {
+	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s)/?multiStatements=true", username, password, address))
 	if err != nil {
 		return nil, err
 	}
-	provisioner := mysqlConfig{}
-	provisioner.db = db
-	return &provisioner, nil
+	if err = db.Ping(); err != nil {
+		return nil, err
+	}
+
+	return &mysqlConfig{
+		db:         db,
+		dbName:     database,
+		configPath: configPath,
+		username:   username,
+		password:   password,
+		address:    address,
+	}, nil
+}
+
+func (c *mysqlConfig) InitializeConfiguration() error {
+	if c.db == nil {
+		return fmt.Errorf("Database connection not opened")
+	}
+
+	// Create the database if it doesn't exist
+	_, err := c.db.Exec("CREATE SCHEMA IF NOT EXISTS " + c.dbName + " DEFAULT CHARACTER SET utf8")
+	if err != nil {
+		return err
+	}
+
+	// Reopen the connection with the name in the URL
+	c.db, err = sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s)/%s?multiStatements=true", c.username, c.password, c.address, c.dbName))
+	if err != nil {
+		return err
+	}
+	if err = c.db.Ping(); err != nil {
+		return err
+	}
+
+	target, err := mysql.WithInstance(c.db, &mysql.Config{})
+	if err != nil {
+		return err
+	}
+	assets := bindata.Resource(migrations.AssetNames(), func(name string) ([]byte, error) {
+		return migrations.Asset(name)
+	})
+	source, err := bindata.WithInstance(assets)
+	if err != nil {
+		return err
+	}
+	migration, err := migrate.NewWithInstance("go-bindata", source, "mysql", target)
+	if err != nil {
+		return err
+	}
+
+	err = migration.Up()
+	if err != nil && err != migrate.ErrNoChange {
+		return err
+	}
+	return nil
 }
 
 func (c *mysqlConfig) LoadConfiguration() (*Config, error) {
-	var configuration Config
-	var mgmt ManagementAPI
-	configuration.ManagementAPI = &mgmt
-	result, err := c.db.Query("SELECT * FROM Config")
-	if err != nil {
-		return nil, err
-	}
-	defer result.Close()
+	var configuration *Config
+	var err error
 
-	for result.Next() {
-		var item generalConfig
-		if err := result.Scan(&item.key, &item.value, &item.component); err != nil {
+	if c.configPath != "" {
+		// Load it via the file provider
+		configuration, err = NewFileConfig(c.configPath).LoadConfiguration()
+		if err != nil {
 			return nil, err
 		}
-
-		switch item.component {
-		case "BROKER_API":
-			{
-				switch item.key {
-				case "EXTERNAL_URL":
-					{
-						configuration.BrokerAPI.ExternalURL = item.value
-					}
-				case "LISTEN":
-					{
-						configuration.BrokerAPI.Listen = item.value
-					}
-				case "REQUIRE_TLS":
-					{
-						configuration.BrokerAPI.RequireTLS, err = strconv.ParseBool(item.value)
-						if err != nil {
-							return nil, err
-						}
-					}
-				case "SERVER_CERT_FILE":
-					{
-						configuration.BrokerAPI.ServerCertFile = item.value
-					}
-				case "SERVER_KEY_FILE":
-					{
-						configuration.BrokerAPI.ServerKeyFile = item.value
-					}
-				}
-			}
-		case "MANAGEMENT_API":
-			{
-				switch item.key {
-				case "LISTEN":
-					{
-						configuration.ManagementAPI.Listen = item.value
-					}
-				case "DEV_MODE":
-					{
-						configuration.ManagementAPI.DevMode, err = strconv.ParseBool(item.value)
-						if err != nil {
-							return nil, err
-						}
-					}
-				case "AUTHENTICATION":
-					{
-						auth := json.RawMessage(item.value)
-						configuration.ManagementAPI.Authentication = &auth
-					}
-				case "UAA_CLIENT":
-					{
-						configuration.ManagementAPI.UaaClient = item.value
-					}
-				case "UAA_SECRET":
-					{
-						configuration.ManagementAPI.UaaSecret = item.value
-					}
-				case "BROKER_NAME":
-					{
-						configuration.ManagementAPI.BrokerName = item.value
-					}
-				}
-			}
-		case "BROKER_CREDENTIALS":
-			{
-				if item.key == "USERNAME" {
-					configuration.BrokerAPI.Credentials.Username = item.value
-				}
-				if item.key == "PASSWORD" {
-					configuration.BrokerAPI.Credentials.Password = item.value
-				}
-			}
-		case "CLOUD_CONTROLLER":
-			{
-				if item.key == "API" {
-					configuration.ManagementAPI.CloudController.API = item.value
-				}
-				if item.key == "SKIP_TLS_VALIDATION" {
-					configuration.ManagementAPI.CloudController.SkipTLSValidation, err = strconv.ParseBool(item.value)
-					if err != nil {
-						return nil, err
-					}
-				}
-			}
-		case "API_VERSION":
-			{
-				configuration.APIVersion = item.value
-			}
-		case "ROUTES_REGISTER":
-			{
-				switch item.key {
-				case "BROKER_API_HOST":
-					{
-						configuration.RoutesRegister.BrokerAPIHost = item.value
-					}
-				case "MANAGEMENT_API_HOST":
-					{
-						configuration.RoutesRegister.ManagmentAPIHost = item.value
-					}
-				case "NATS_MEMBER":
-					{
-						configuration.RoutesRegister.NatsMembers = append(configuration.RoutesRegister.NatsMembers, item.value)
-					}
-				}
-			}
+		if configuration.ManagementAPI == nil {
+			configuration.ManagementAPI = &ManagementAPI{}
 		}
+	}
 
+	if configuration == nil {
+		configuration = &Config{}
+	}
+	if configuration.ManagementAPI == nil {
+		configuration.ManagementAPI = &ManagementAPI{}
 	}
 
 	configuration.Instances = make(map[string]Instance)
@@ -178,7 +135,7 @@ func (c *mysqlConfig) LoadConfiguration() (*Config, error) {
 		configuration.Instances[instanceGUID] = *instance
 	}
 
-	return &configuration, nil
+	return configuration, nil
 }
 
 func (c *mysqlConfig) SaveConfiguration(config Config, overwrite bool) error {

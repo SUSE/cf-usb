@@ -1,16 +1,13 @@
 ---
 name: cf-usb
 templates:
-  cf-usb_mysql.ctl.erb: bin/pre-start
   cf-usb.ctl.erb: bin/cf-usb.ctl
+  config.json.erb: config/config.json
   broker.crt.erb: config/broker.crt
   broker.key.erb: config/broker.key
-  usb_mysql_create_db.sql.erb: config/usb_mysql_create_db.sql
-  usb_mysql_update.sql.erb: config/usb_mysql_update.sql
 
 packages:
-  - golang
-  - mariadb
+  - golang1.9
   - cf-usb
 
 properties:

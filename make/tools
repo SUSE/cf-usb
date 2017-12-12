@@ -18,8 +18,6 @@ go get github.com/AlekSi/gocov-xml
 	
 #Tools for the project
 go get -u github.com/axw/gocov/gocov
-	
-#go get github.com/hashicorp/consul
 
 echo "Fetching go-swagger"
 

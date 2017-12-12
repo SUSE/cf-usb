@@ -2,12 +2,11 @@ package config
 
 import (
 	"encoding/json"
+	"os"
 	"testing"
 
-	"github.com/hpcloud/cf-usb/lib/brokermodel"
+	"github.com/SUSE/cf-usb/lib/brokermodel"
 	"github.com/stretchr/testify/assert"
-
-	"os"
 )
 
 var MysqlIntegrationConfig = struct {
@@ -28,8 +27,11 @@ func initMysql() (bool, error) {
 		return true, nil
 	}
 
-	provider, err := NewMysqlConfig(MysqlIntegrationConfig.address, MysqlIntegrationConfig.username, MysqlIntegrationConfig.password, MysqlIntegrationConfig.db)
+	provider, err := NewMysqlConfig(MysqlIntegrationConfig.address, MysqlIntegrationConfig.username, MysqlIntegrationConfig.password, MysqlIntegrationConfig.db, "")
 	if err != nil {
+		return true, err
+	}
+	if err = provider.InitializeConfiguration(); err != nil {
 		return true, err
 	}
 	MysqlIntegrationConfig.Provider = provider

@@ -53,7 +53,7 @@ Basic auth can be used when making calls to the USB management API.
 
 #### API Definition
 
-The usb management API is described [here](https://github.com/hpcloud/cf-usb/blob/b84f846eedc13c2cf9215c53f323b01c545aab42/docs/mgmt.html)
+The usb management API is described [here](https://github.com/SUSE/cf-usb/blob/b84f846eedc13c2cf9215c53f323b01c545aab42/docs/mgmt.html)
 
 ### fissile
 
@@ -63,7 +63,7 @@ TODO:
 
 **cf-usb** works with multiple configuration providers:
 
-###File configuration provider###
+### File configuration provider
 **cf-usb** can take it's configuration from a .json file. The json file format is similar to a standard broker configuration file. 
 To start the broker with a file configuration provider you must provide the following cli options:
 
@@ -75,21 +75,16 @@ To start the broker with a file configuration provider you must provide the foll
 
 `driver_configs`
 
-### Consul configuration provider###
-The state and the configuration of USB can be stored in consul.
-To start the broker using a consul provider you must provide the following cli options:
+### MySQL configuration provider
+The state and the configuration of USB can be stored in a MySQL database.
+To start the broker using a MySQL provider you must provide the following cli options:
 
-```sh
-./usb consulConfigProvider  -with the following options, depending on the consul server configuration:
-
-OPTIONS:
---address, -a 	Consul address and port (mandatory)
---datacenter, -d 	Consul datacenter
---username, -u 	Consul username
---password, -p 	Consul password
---schema, -s 	Consul schema
---token, -t 		Consul token
-```
+| Option              | Description |
+| ------------------- | --- |
+| `--address`,  `-a`  | server address and port (mandatory) |
+| `--database`, `-db` | database name |
+| `--username`, `-u`  | username |
+| `--password`, `-p`  | password |
 
 ## Drivers
 
@@ -338,13 +333,13 @@ Deprovisions the instance having the specified *instanceID*
 ## Building and running
 
 ### Requirements:
-- Go 1.4
+- Go 1.6
 
 ### Building:
 ```sh
-mkdir -p $GOPATH/src/github.com/hpcloud
-cd $GOPATH/src/github.com/hpcloud
-git clone git@github.com:hpcloud/cf-usb.git
+mkdir -p $GOPATH/src/github.com/SUSE
+cd $GOPATH/src/github.com/SUSE
+git clone git@github.com:SUSE/cf-usb.git
 
 make tools
 godep restore

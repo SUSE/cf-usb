@@ -3,7 +3,7 @@
 set -x -e
 
 
-REPO_NAME=github.com/hpcloud/cf-usb
+REPO_NAME=github.com/SUSE/cf-usb
 REPO_DIR=${BOSH_INSTALL_TARGET}/src/${REPO_NAME}
 
 mkdir -p $REPO_DIR
@@ -13,17 +13,18 @@ cd cf-usb
 cp -R * $REPO_DIR
 
 export GOPATH=$BOSH_INSTALL_TARGET:${REPO_DIR}/vendor
-export GOROOT=$(readlink -nf /var/vcap/packages/golang)
+export GOROOT=$(readlink -nf /var/vcap/packages/golang1.9)
 export PATH=$GOROOT/bin:$PATH
+export GIT_ROOT="${REPO_DIR}"
 
 cd ${REPO_DIR}
 . version.sh
 # Don't use make because it needs .git to figure out GIT_ROOT
+./make/genbindata
 ./make/build
 
 mkdir -p ${BOSH_INSTALL_TARGET}/bin/
 
 cp build/linux-amd64/usb/usb ${BOSH_INSTALL_TARGET}/bin/
-cp build/linux-amd64/usb/dbmigrate ${BOSH_INSTALL_TARGET}/bin/
 
 rm -rf ${BOSH_INSTALL_TARGET}/src

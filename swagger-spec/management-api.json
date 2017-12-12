@@ -4,7 +4,7 @@
         "description": "Universal Service Broker Management API",
         "version": "1.0.1",
         "title": "USB Management API",
-        "termsOfService": "https://github.com/hpcloud/cf-usb",
+        "termsOfService": "https://github.com/SUSE/cf-usb",
         "contact": {
             "email": "support@suse.com"
         },
