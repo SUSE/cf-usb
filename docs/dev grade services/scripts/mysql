@@ -17,9 +17,9 @@ docker run --name ${MYSQL_CONTAINER_NAME} \
     CONTAINER_ID=`docker ps|grep -w ${MYSQL_CONTAINER_NAME}|awk '{print $1}'`
     echo "container id: ${CONTAINER_ID}"
 
-    docker network connect hcf ${CONTAINER_ID}
+    docker network connect scf ${CONTAINER_ID}
 
-    CONTAINER_IP=`docker inspect --format '{{ .NetworkSettings.Networks.hcf.IPAddress }}' ${CONTAINER_ID}`
+    CONTAINER_IP=`docker inspect --format '{{ .NetworkSettings.Networks.scf.IPAddress }}' ${CONTAINER_ID}`
     echo "container ip: ${CONTAINER_IP}"
 
     sleep 10
