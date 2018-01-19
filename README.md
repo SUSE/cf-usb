@@ -110,6 +110,8 @@ TIP:  Use 'cf marketplace -s SERVICE' to view descriptions of individual plans o
 At this point, services can be made available to apps. In this case we're going to use the `django-cms` app.
 
 ```
+git clone https://github.com/scf-samples/django-cms
+cd django-cms
 cf create-service postgres default django-cms-db
 cf push --no-start django-cms
 cf set-env django-cms DISABLE_COLLECTSTATIC 1
