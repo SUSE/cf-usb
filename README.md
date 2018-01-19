@@ -1,13 +1,121 @@
-# Universal service broker
-
-[TOC]
+# Universal Service Broker
 
 ## Summary
 The cf-usb project implements and exposes the Cloud Foundry [Service Broker API](http://docs.cloudfoundry.org/services/api.html). 
 
 It uses plugins (drivers) to connect to different services.
 
-![cf-usb](https://region-b.geo-1.objects.hpcloudsvc.com/v1/11899734124432/imgs/usb.png)
+### Related Projects
+
+* [cf-usb-plugin](https://github.com/SUSE/cf-usb-plugin)
+* [cf-usb-sidecar](https://github.com/SUSE/cf-usb-sidecar)
+
+## Configuration and Usage
+
+The Universal Service Broker has three main components:
+
+* Universal Service Broker
+* Sidecars
+* cf CLI plugin
+
+The USB runs as a component within Cloud Foundry. Its [BOSH release](https://github.com/SUSE/cf-usb/tree/develop/cf-usb-release)
+is inside the USB main repo. This is included as a submodule in the SUSE CF project, and runs by default.
+
+These usage instructions assume:
+* A working SUSE CAP instance is available
+* The SUSE CAP instance is able to connect to a Docker registry
+* The user is able to access the Kubernetes cluster with the `kubectl` tool
+* The user has admin access to the SUSE CAP cluster
+
+### Sidecar Setup
+
+The USB itself is just a broker, and doesn't run any actual services. These are
+provided by the [sidecars](https://github.com/SUSE/cf-usb-sidecar/tree/develop/csm-extensions/services), and run outside of the CF cluster.
+
+To build the sidecar, check out the sidecar project:
+
+```
+mkdir -p $GOPATH/src/github.com/SUSE
+git clone https://github.com/SUSE/cf-usb-sidecar $GOPATH/src/github.com/SUSE/cf-usb-sidecar
+cd $GOPATH/src/github.com/SUSE/cf-usb-sidecar
+```
+
+Configure your Docker repository information:
+
+```
+export DOCKER_REPOSITORY=docker.io
+export DOCKER_ORGANIZATION=splatform
+
+docker login # if authorization is required
+```
+
+Then build the top level dependencies and the sidecar:
+
+```
+make tools
+make build-image
+cd csm-extensions/services/dev-mysql
+make build-image public-image helm
+```
+
+The generated Helm chart will be available in the `chart/` directory.
+
+Install the Helm chart:
+
+```
+# You will need to know the namespaces and domain for your cluster:
+UAA_NAMESPACE=uaa
+CF_NAMESPACE=cf
+CF_DOMAIN=cf-dev.io
+
+SIDECAR_NAMESPACE=mysql
+
+UAA_CA_CERT="$(kubectl get secret secret --namespace ${UAA_NAMESPACE} -o jsonpath="{.data['internal-ca-cert']}" | base64 --decode -)"
+CF_CA_CERT="$(kubectl get secret secret --namespace ${CF_NAMESPACE} -o jsonpath="{.data['internal-ca-cert']}" | base64 --decode -)"
+CF_PASSWORD="$(kubectl get secret secret --namespace ${CF_NAMESPACE} -o jsonpath="{.data['cluster-admin-password']}" | base64 --decode -)"
+
+helm install ./chart --name mysql-instance --namespace ${SIDECAR_NAMESPACE} \
+	--set "env.UAA_CA_CERT=${UAA_CA_CERT}" \
+	--set "env.CF_CA_CERT=${CF_CA_CERT}" \
+	--set "env.SERVICE_LOCATION=http://cf-usb-sidecar-mysql.${SIDECAR_NAMESPACE}.svc.cluster.local:8081" \
+	--set "env.SERVICE_MYSQL_HOST=AUTO" \
+	--set "env.CF_ADMIN_USER=admin" \
+	--set "env.CF_ADMIN_PASSWORD=${CF_PASSWORD}" \
+	--set "env.CF_DOMAIN=${CF_DOMAIN}"
+```
+
+Eventually you should see two pods start in the `SIDECAR_NAMESPACE`:
+
+```
+kubectl get pods --namespace ${SIDECAR_NAMESPACE}
+NAME                                      READY     STATUS    RESTARTS   AGE
+cf-usb-sidecar-mysql-b44d4d66f-d27qb      1/1       Running   0          2m
+mysql-0                                   1/1       Running   0          2m
+```
+
+Once the pods are ready, it should be available in the marketplace:
+
+```
+$ cf marketplace
+Getting services from marketplace in org org / space space as admin...
+OK
+
+service    plans     description
+postgres   default   Default service
+mysql      default   Default service
+
+TIP:  Use 'cf marketplace -s SERVICE' to view descriptions of individual plans of a given service.
+```
+
+At this point, services can be made available to apps. In this case we're going to use the `django-cms` app.
+
+```
+cf create-service postgres default django-cms-db
+cf push --no-start django-cms
+cf set-env django-cms DISABLE_COLLECTSTATIC 1
+cf set-env django-cms DJANGO_SETTINGS_MODULE settings
+cf restart django-cms
+```
 
 ## Unmanaged USB
 
@@ -18,7 +126,7 @@ Constraints:
 - does not automatically register to the Cloud Controller.
 - only `fileConfigProvider` can be used as a configuration provider.
 - it does not expose a management API.
-- if a `driver` fails to start, the connection between the `driver` and the server cannot be establised or if the configuration/dials schema can not be validated, the USB exists with an exitcode != 0.
+- if a `driver` fails to start, the connection between the `driver` and the server cannot be establised or if the configuration/dials schema can not be validated, the USB exits with an exitcode != 0.
 
 ### Deployment strategies
 
@@ -37,9 +145,9 @@ The managed USB provides a management API for configuration and update.
 Constraints:
 - it can not use `fileConfigProvider` as a configuration provider
 
-###Management API
+### Management API
 
-####Authorization
+#### Authorization
 
 ##### 1. UAA
 USB uses UAA as an authorization provider. It requires the `cc_usb_management` OAuth client to be configured with the following properties:
