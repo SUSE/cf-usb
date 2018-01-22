@@ -87,7 +87,7 @@ helm install ./chart --name mysql-instance --namespace ${SIDECAR_NAMESPACE} \
 Eventually you should see two pods start in the `SIDECAR_NAMESPACE`:
 
 ```
-kubectl get pods --namespace ${SIDECAR_NAMESPACE}
+$ kubectl get pods --namespace ${SIDECAR_NAMESPACE}
 NAME                                      READY     STATUS    RESTARTS   AGE
 cf-usb-sidecar-mysql-b44d4d66f-d27qb      1/1       Running   0          2m
 mysql-0                                   1/1       Running   0          2m
@@ -107,10 +107,10 @@ mysql      default   Default service
 TIP:  Use 'cf marketplace -s SERVICE' to view descriptions of individual plans of a given service.
 ```
 
-At this point, services can be made available to apps. In this case we're going to use the `django-cms` app.
+At this point, services can be made available to apps. In this case we're going to use the [django-cms](https://github.com/scf-samples/django-cms) app.
 
 ```
-git clone https://github.com/scf-samples/django-cms
+git clone https://github.com/scf-samples/django-cms -b scf
 cd django-cms
 cf create-service postgres default django-cms-db
 cf push --no-start django-cms
