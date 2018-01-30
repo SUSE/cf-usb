@@ -3,7 +3,7 @@
 [TOC]
 
 ## Summary
-The cf-usb project implements and exposes the Cloud Foundry [Service Broker API](http://docs.cloudfoundry.org/services/api.html). 
+The cf-usb project implements and exposes the [Open Service Broker API](https://github.com/openservicebrokerapi/servicebroker). 
 
 It uses plugins (drivers) to connect to different services.
 
