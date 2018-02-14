@@ -93,6 +93,8 @@ cf-usb-sidecar-mysql-b44d4d66f-d27qb      1/1       Running   0          2m
 mysql-0                                   1/1       Running   0          2m
 ```
 
+There will also be a 'setup' pod that starts an errand, but it will finish and exit.
+
 Once the pods are ready, it should be available in the marketplace:
 
 ```
