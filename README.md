@@ -55,7 +55,7 @@ Then build the top level dependencies and the sidecar:
 make tools
 make build-image
 cd csm-extensions/services/dev-mysql
-make build-image public-image helm
+make build-image publish-image helm
 ```
 
 The generated Helm chart will be available in the `chart/` directory.
