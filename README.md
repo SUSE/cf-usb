@@ -26,6 +26,7 @@ These usage instructions assume:
 * The SUSE CAP instance is able to connect to a Docker registry
 * The user is able to access the Kubernetes cluster with the `kubectl` tool
 * The user has admin access to the SUSE CAP cluster
+* A MySQL or Postgres server is available (manual sidecar setup)
 
 ### Sidecar Setup
 
