@@ -1,7 +1,7 @@
 # Universal Service Broker
 
 ## Summary
-The cf-usb project implements and exposes the Cloud Foundry [Service Broker API](http://docs.cloudfoundry.org/services/api.html). 
+The cf-usb project implements and exposes the Cloud Foundry [Service Broker API](http://docs.cloudfoundry.org/services/api.html).
 
 It uses plugins (drivers) to connect to different services.
 
@@ -38,6 +38,7 @@ To build the sidecar, check out the sidecar project:
 mkdir -p $GOPATH/src/github.com/SUSE
 git clone https://github.com/SUSE/cf-usb-sidecar $GOPATH/src/github.com/SUSE/cf-usb-sidecar
 cd $GOPATH/src/github.com/SUSE/cf-usb-sidecar
+git submodule update --init --recursive
 ```
 
 Configure your Docker repository information:
@@ -55,12 +56,18 @@ Then build the top level dependencies and the sidecar:
 make tools
 make build-image
 cd csm-extensions/services/dev-mysql
-make build-image publish-image helm
+make build-image build-service-image publish-image helm
 ```
 
-The generated Helm chart will be available in the `chart/` directory.
+The generated Helm chart will be available in the `output/helm` directory.
 
-Install the Helm chart:
+There are two ways to set up the sidecar: automatic, or manual.
+* Automatic is 'dev-grade', which creates a database instance as part of the setup.
+  This is useful for testing, but is not meant for production.
+* Manual is meant for a production cluster, which will point to a
+  database instance that is already configured.
+
+#### Automatic
 
 ```
 # You will need to know the namespaces and domain for your cluster:
@@ -74,14 +81,16 @@ UAA_CA_CERT="$(kubectl get secret secret --namespace ${UAA_NAMESPACE} -o jsonpat
 CF_CA_CERT="$(kubectl get secret secret --namespace ${CF_NAMESPACE} -o jsonpath="{.data['internal-ca-cert']}" | base64 --decode -)"
 CF_PASSWORD="$(kubectl get secret secret --namespace ${CF_NAMESPACE} -o jsonpath="{.data['cluster-admin-password']}" | base64 --decode -)"
 
-helm install ./chart --name mysql-instance --namespace ${SIDECAR_NAMESPACE} \
+helm install ./output/helm --name mysql-instance --namespace ${SIDECAR_NAMESPACE} \
 	--set "env.UAA_CA_CERT=${UAA_CA_CERT}" \
 	--set "env.CF_CA_CERT=${CF_CA_CERT}" \
 	--set "env.SERVICE_LOCATION=http://cf-usb-sidecar-mysql.${SIDECAR_NAMESPACE}.svc.cluster.local:8081" \
 	--set "env.SERVICE_MYSQL_HOST=AUTO" \
 	--set "env.CF_ADMIN_USER=admin" \
 	--set "env.CF_ADMIN_PASSWORD=${CF_PASSWORD}" \
-	--set "env.CF_DOMAIN=${CF_DOMAIN}"
+	--set "env.CF_DOMAIN=${CF_DOMAIN}" \
+	--set "kube.organization=${DOCKER_ORGANIZATION}" \
+	--set "kube.registry.hostname=${DOCKER_REPOSITORY}"
 ```
 
 Eventually you should see two pods start in the `SIDECAR_NAMESPACE`:
@@ -94,6 +103,53 @@ mysql-0                                   1/1       Running   0          2m
 ```
 
 There will also be a 'setup' pod that starts an errand, but it will finish and exit.
+
+#### Manual
+
+```
+# You will need to know the namespaces and domain for your cluster:
+UAA_NAMESPACE=uaa
+CF_NAMESPACE=cf
+CF_DOMAIN=cf-dev.io
+
+# Authentication details are needed for the external database service:
+MYSQL_HOST=mysql-host
+MYSQL_PASS=mysql-password
+MYSQL_PORT=3306
+MYSQL_USER=root
+
+SIDECAR_NAMESPACE=mysql
+
+UAA_CA_CERT="$(kubectl get secret secret --namespace ${UAA_NAMESPACE} -o jsonpath="{.data['internal-ca-cert']}" | base64 --decode -)"
+CF_CA_CERT="$(kubectl get secret secret --namespace ${CF_NAMESPACE} -o jsonpath="{.data['internal-ca-cert']}" | base64 --decode -)"
+CF_PASSWORD="$(kubectl get secret secret --namespace ${CF_NAMESPACE} -o jsonpath="{.data['cluster-admin-password']}" | base64 --decode -)"
+
+helm install ./output/helm --name mysql-instance --namespace ${SIDECAR_NAMESPACE} \
+	--set "env.UAA_CA_CERT=${UAA_CA_CERT}" \
+	--set "env.CF_CA_CERT=${CF_CA_CERT}" \
+	--set "env.SERVICE_LOCATION=http://cf-usb-sidecar-mysql.${SIDECAR_NAMESPACE}.svc.cluster.local:8081" \
+	--set "env.SERVICE_MYSQL_HOST=${MYSQL_HOST}" \
+	--set "env.SERVICE_MYSQL_PASS=${MYSQL_PASS}" \
+	--set "env.SERVICE_MYSQL_PORT=${MYSQL_PORT}" \
+	--set "env.SERVICE_MYSQL_USER=${MYSQL_USER}" \
+	--set "env.CF_ADMIN_USER=admin" \
+	--set "env.CF_ADMIN_PASSWORD=${CF_PASSWORD}" \
+	--set "env.CF_DOMAIN=${CF_DOMAIN}" \
+	--set "kube.organization=${DOCKER_ORGANIZATION}" \
+	--set "kube.registry.hostname=${DOCKER_REPOSITORY}"
+```
+
+Eventually you should see one pod start in the `SIDECAR_NAMESPACE`:
+
+```
+$ kubectl get pods --namespace ${SIDECAR_NAMESPACE}
+NAME                                    READY     STATUS    RESTARTS   AGE
+cf-usb-sidecar-mysql-75947994f9-ffh6l   1/1       Running   0          1m
+```
+
+There will also be a 'setup' pod that starts an errand, but it will finish and exit.
+
+### Marketplace
 
 Once the pods are ready, it should be available in the marketplace:
 
@@ -108,6 +164,8 @@ mysql      default   Default service
 
 TIP:  Use 'cf marketplace -s SERVICE' to view descriptions of individual plans of a given service.
 ```
+
+### Using the service with an app
 
 At this point, services can be made available to apps. In this case we're going to use the [django-cms](https://github.com/scf-samples/django-cms) app.
 
@@ -158,7 +216,7 @@ USB uses UAA as an authorization provider. It requires the `cc_usb_management` O
 - secret: {clientsecret}
 - scope: cloud_controller.write,openid,cloud_controller.read,cloud_controller_service_permissions.read, cloud_controller_service_permissions.write
 - authorities: usb.management.admin
-- authorized-grant-types: client_credentials 
+- authorized-grant-types: client_credentials
 
 ##### 2. Basic auth
 Basic auth can be used when making calls to the USB management API.
@@ -176,7 +234,7 @@ TODO:
 **cf-usb** works with multiple configuration providers:
 
 ### File configuration provider
-**cf-usb** can take it's configuration from a .json file. The json file format is similar to a standard broker configuration file. 
+**cf-usb** can take it's configuration from a .json file. The json file format is similar to a standard broker configuration file.
 To start the broker with a file configuration provider you must provide the following cli options:
 
 ```sh
@@ -224,7 +282,7 @@ To start the broker using a MySQL provider you must provide the following cli op
 ### Ping
 Checks if the driver can reach the server.
 
-**Request** 
+**Request**
 
 | Type | Description |
 | :---: | :---: |
@@ -240,7 +298,7 @@ Checks if the driver can reach the server.
 
 ### GetDialsSchema
 
-**Request** 
+**Request**
 
 | Type | Description |
 | :---: | :---: |
@@ -271,7 +329,7 @@ Example schema for MSSQL *dials*
 
 Gets the JSON schema for the *driver_config*
 
-**Request** 
+**Request**
 
 | Type | Description |
 | :---: | :---: |
@@ -458,7 +516,7 @@ godep restore
 make
 ```
 ### Running:
-To run one or more drivers, you need to copy the driver executable to *{path_to_usb}/drivers/* or set the USB_DRIVER_PATH environment variable with the path to the driver executable 
+To run one or more drivers, you need to copy the driver executable to *{path_to_usb}/drivers/* or set the USB_DRIVER_PATH environment variable with the path to the driver executable
 ```sh
 ./usb {ConfigProvider} --{options}
 ```
