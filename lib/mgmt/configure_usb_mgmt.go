@@ -9,9 +9,6 @@ import (
 
 	uuid "github.com/satori/go.uuid"
 
-	errors "github.com/go-openapi/errors"
-	runtime "github.com/go-openapi/runtime"
-	middleware "github.com/go-openapi/runtime/middleware"
 	"github.com/SUSE/cf-usb/lib/brokermodel"
 	"github.com/SUSE/cf-usb/lib/config"
 	"github.com/SUSE/cf-usb/lib/csm"
@@ -19,6 +16,9 @@ import (
 	"github.com/SUSE/cf-usb/lib/mgmt/authentication"
 	"github.com/SUSE/cf-usb/lib/mgmt/cc_integration/ccapi"
 	"github.com/SUSE/cf-usb/lib/mgmt/operations"
+	errors "github.com/go-openapi/errors"
+	runtime "github.com/go-openapi/runtime"
+	middleware "github.com/go-openapi/runtime/middleware"
 	"github.com/pivotal-golang/lager"
 )
 

@@ -9,13 +9,13 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/go-openapi/runtime"
-	runtimeClient "github.com/go-openapi/runtime/client"
-	"github.com/go-openapi/strfmt"
 	"github.com/SUSE/cf-usb/lib/csm/client/connection"
 	"github.com/SUSE/cf-usb/lib/csm/client/status"
 	"github.com/SUSE/cf-usb/lib/csm/client/workspace"
 	"github.com/SUSE/cf-usb/lib/csm/models"
+	"github.com/go-openapi/runtime"
+	runtimeClient "github.com/go-openapi/runtime/client"
+	"github.com/go-openapi/strfmt"
 	"github.com/pivotal-golang/lager"
 )
 

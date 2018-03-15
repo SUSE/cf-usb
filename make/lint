@@ -10,7 +10,18 @@ ISSUES=$(mktemp)
 
 trap "cat ${ISSUES} ; rm -f ${ISSUES}" EXIT
 
-go list -f '{{ .Dir }}' ./... | grep -v csm/client |  grep -v operations | grep -v /vendor/ | grep -v mocks | grep -v csmfakes | while read DIR; do
+go list -f '{{ .Dir }}' ./... | while read DIR; do
+    # There's a bunch of generated files we don't need to lint
+    case "${DIR#${PWD}}" in
+        /lib/broker/operations/catalog)    continue;;
+        /lib/brokermodel)                  continue;;
+        /lib/config/mysql/migrations)      continue;;
+        /lib/csm/client|/lib/csm/client/*) continue;;
+        /lib/csm/models)                   continue;;
+        /lib/genmodel)                     continue;;
+        /vendor/*)                         continue;;
+        */mocks)                           continue;;
+    esac
     golint "${DIR}" >> "${ISSUES}"
 done
 
