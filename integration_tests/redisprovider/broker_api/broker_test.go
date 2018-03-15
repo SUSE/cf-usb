@@ -3,13 +3,13 @@ package brokertest
 import (
 	"reflect"
 
-	loads "github.com/go-openapi/loads"
 	"github.com/SUSE/cf-usb/lib/broker"
 	"github.com/SUSE/cf-usb/lib/broker/operations"
 	"github.com/SUSE/cf-usb/lib/brokermodel"
 	"github.com/SUSE/cf-usb/lib/config"
 	"github.com/SUSE/cf-usb/lib/config/redis"
 	"github.com/SUSE/cf-usb/lib/csm"
+	loads "github.com/go-openapi/loads"
 	"github.com/pivotal-golang/lager/lagertest"
 	"github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"

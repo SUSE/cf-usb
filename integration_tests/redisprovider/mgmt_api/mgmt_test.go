@@ -9,12 +9,12 @@ import (
 
 	"github.com/SUSE/cf-usb/lib/config/redis"
 
-	loads "github.com/go-openapi/loads"
 	"github.com/SUSE/cf-usb/lib/config"
 	"github.com/SUSE/cf-usb/lib/csm"
 	"github.com/SUSE/cf-usb/lib/genmodel"
 	"github.com/SUSE/cf-usb/lib/mgmt"
 	"github.com/SUSE/cf-usb/lib/mgmt/authentication/uaa"
+	loads "github.com/go-openapi/loads"
 
 	sbMocks "github.com/SUSE/cf-usb/lib/mgmt/cc_integration/ccapi/mocks"
 
