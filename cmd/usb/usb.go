@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"time"
 
 	loads "github.com/go-openapi/loads"
 
@@ -112,6 +113,21 @@ func (usb *UsbApp) Run(configProvider config.Provider, logger lager.Logger) {
 
 			mgmtAPI := operations.NewUsbMgmtAPI(swaggerSpec)
 			api := mgmt.ConfigureAPI(mgmtAPI, auth, configProvider, ccServiceBroker, csmClient, logger, version)
+
+			go func() {
+				config, err := configProvider.LoadConfiguration()
+				if err != nil {
+					logger.Fatal("config-not-loaded", err)
+				}
+				for {
+					err = ccServiceBroker.UpdateAll(config.BrokerAPI.ExternalURL, config.BrokerAPI.Credentials.Username, config.BrokerAPI.Credentials.Password)
+					if err == nil {
+						break
+					}
+					logger.Error("brokers-not-updated", err)
+					time.Sleep(30 * time.Second)
+				}
+			}()
 
 			logger.Info("start-listening", lager.Data{"address": mgmtaddr})
 			err = http.ListenAndServe(mgmtaddr, api)
