@@ -263,6 +263,7 @@ func ConfigureAPI(api *operations.UsbMgmtAPI, auth authentication.Authentication
 			log.Error("get-service-broker-failed", err)
 			return &operations.RegisterDriverEndpointInternalServerError{Payload: err.Error()}
 		}
+		log.Info("create-or-update-service-broker", lager.Data{"guid": guid})
 
 		if guid == "" {
 			err = ccServiceBroker.Create(brokerName, config.BrokerAPI.ExternalURL, config.BrokerAPI.Credentials.Username, config.BrokerAPI.Credentials.Password)

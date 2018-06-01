@@ -15,6 +15,7 @@ type USBServiceBroker interface {
 	Create(name, url, username, password string) error
 	Delete(name string) error
 	Update(serviceBrokerGUID, name, url, username, password string) error
+	UpdateAll(url, username, password string) error
 	EnableServiceAccess(serviceID string) error
 	GetServiceBrokerGUIDByName(name string) (string, error)
 	CheckServiceNameExists(name string) (bool, error)
@@ -31,7 +32,7 @@ type ServiceBroker struct {
 
 //BrokerValues is the type defining BrokerValues and maped to json values for BrokerValues
 type BrokerValues struct {
-	Name         string `json:"name"`
+	Name         string `json:"name,omitempty"`
 	BrokerURL    string `json:"broker_url"`
 	AuthUsername string `json:"auth_username"`
 	AuthPassword string `json:"auth_password"`
@@ -44,7 +45,8 @@ type BrokerResources struct {
 
 //BrokerResource holds the broker metadata. Is mapped to json:metadata
 type BrokerResource struct {
-	Values BrokerMetadata `json:"metadata"`
+	Meta  BrokerMetadata `json:"metadata"`
+	Value BrokerValues   `json:"entity"`
 }
 
 //BrokerMetadata mapped to json:guid
@@ -158,6 +160,50 @@ func (sb *ServiceBroker) Update(serviceBrokerGUID, name, url, username, password
 	return nil
 }
 
+//UpdateAll updates all services with the given url and username to the given password
+func (sb *ServiceBroker) UpdateAll(url, username, password string) error {
+	log := sb.logger.Session("update-all-brokers", lager.Data{"url": url})
+	log.Debug("starting")
+
+	token, err := sb.tokenGenerator.GetToken()
+	if err != nil {
+		return err
+	}
+
+	headers := make(map[string]string)
+	headers["Authorization"] = token
+
+	path := "/v2/service_brokers"
+	request := httpclient.Request{Verb: "GET", Endpoint: sb.ccAPI, APIURL: path, Headers: headers, StatusCode: 200}
+	log.Info("list-brokers", lager.Data{"path": path})
+	response, err := sb.client.Request(request)
+	if err != nil {
+		return err
+	}
+
+	log.Debug("cc-response", lager.Data{"response": string(response)})
+
+	resources := &BrokerResources{}
+	err = json.Unmarshal(response, resources)
+	if err != nil {
+		return err
+	}
+
+	for _, resource := range resources.Resources {
+		if resource.Value.BrokerURL == url && resource.Value.AuthUsername == username {
+			err = sb.Update(resource.Meta.GUID, resource.Value.Name, url, username, password)
+			if err != nil {
+				return err
+			}
+		} else {
+			log.Debug("skipping-broker", lager.Data{"broker": resource.Value})
+		}
+	}
+
+	log.Info("finished-cc-request")
+	return nil
+}
+
 //EnableServiceAccess enables service access for the service having serviceName
 func (sb *ServiceBroker) EnableServiceAccess(serviceName string) error {
 	log := sb.logger.Session("enableservice-access", lager.Data{"service-name": serviceName})
@@ -218,7 +264,7 @@ func (sb *ServiceBroker) GetServiceBrokerGUIDByName(name string) (string, error)
 		return "", nil
 	}
 
-	guid := resources.Resources[0].Values.GUID
+	guid := resources.Resources[0].Meta.GUID
 	log.Debug("found", lager.Data{"service-broker-guid": guid})
 
 	return guid, nil
