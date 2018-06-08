@@ -315,14 +315,14 @@ Checks if the driver can reach the server.
 Example schema for MSSQL *dials*
 ```sh
 {
-"type": "object",
-"properties": {
-"max_dbsize_mb": {
-"type": "integer",
-"minimum": 0
-}
-},
-"required": ["max_dbsize_mb"]
+	"type": "object",
+	"properties": {
+		"max_dbsize_mb": {
+			"type": "integer",
+			"minimum": 0
+		}
+	},
+	"required": ["max_dbsize_mb"]
 }
 ```
 
@@ -346,36 +346,36 @@ Gets the JSON schema for the *driver_config*
 Example schema for MSSQL *driver_config*
 ```sh
 {
-"type": "object",
-"properties": {
-"brokerGoSqlDriver": {
-"type": "string"
-},
-"brokerMssqlConnection": {
-"type": "object",
-"properties": {
-"server": {
-"type": "string"
-},
-"port": {
-"type": "string"
-},
-"database": {
-"type": "string"
-},
-"user id": {
-"type": "string"
-},
-"password": {
-"type": "string"
-}
-}
-}
-},
-"required": [
-"brokerGoSqlDriver",
-"brokerMssqlConnection"
-]
+	"type": "object",
+	"properties": {
+		"brokerGoSqlDriver": {
+		"type": "string"
+		},
+		"brokerMssqlConnection": {
+			"type": "object",
+			"properties": {
+				"server": {
+					"type": "string"
+				},
+				"port": {
+					"type": "string"
+				},
+				"database": {
+					"type": "string"
+				},
+				"user id": {
+					"type": "string"
+				},
+				"password": {
+					"type": "string"
+				}
+			}
+		}
+	},
+	"required": [
+		"brokerGoSqlDriver",
+		"brokerMssqlConnection"
+	]
 }
 ```
 
@@ -392,7 +392,7 @@ Dials are restrictions that can be applied to instances.
 Example for MSSQL:
 ```sh
 {
-"max_dbsize_mb": 1500
+	"max_dbsize_mb": 1500
 }
 ```
 
@@ -440,12 +440,12 @@ Example for MSSQL:
 
 ```sh
 type MssqlCredentials struct {
-Hostname         string `json:"hostname"`
-Port             int    `json:"port"`
-Name             string `json:"name"`
-Username         string `json:"username"`
-Password         string `json:"password"`
-ConnectionString string `json:"connectionString"`
+	Hostname         string `json:"hostname"`
+	Port             int    `json:"port"`
+	Name             string `json:"name"`
+	Username         string `json:"username"`
+	Password         string `json:"password"`
+	ConnectionString string `json:"connectionString"`
 }
 ```
 
