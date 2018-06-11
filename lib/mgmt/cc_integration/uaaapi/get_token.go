@@ -48,6 +48,7 @@ func NewTokenGenerator(tokenURL, clientID, clientSecret string, client httpclien
 func (generator *Generator) GetToken() (BearerToken, error) {
 	log := generator.logger.Session("fetch-token", lager.Data{"uaa-api": generator.tokenURL})
 	log.Debug("starting")
+	defer log.Debug("finished")
 
 	valuesBody := url.Values{}
 	valuesBody.Add("grant_type", "client_credentials")

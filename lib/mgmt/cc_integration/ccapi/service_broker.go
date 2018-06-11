@@ -91,6 +91,7 @@ func NewServiceBroker(client httpclient.HTTPClient, token uaaapi.GetTokenInterfa
 func (sb *ServiceBroker) Create(name BrokerName, url, username, password string) error {
 	log := sb.logger.Session("create-broker", lager.Data{"name": name, "url": url})
 	log.Debug("starting")
+	defer log.Debug("finished")
 
 	path := "/v2/service_brokers"
 	body := &BrokerEntity{Name: name, BrokerURL: url, AuthUsername: username, AuthPassword: password}
@@ -117,6 +118,7 @@ func (sb *ServiceBroker) Create(name BrokerName, url, username, password string)
 
 	_, err = sb.client.Request(request)
 	if err != nil {
+		log.Debug("Error", lager.Data{"error": err})
 		return err
 	}
 
@@ -129,6 +131,7 @@ func (sb *ServiceBroker) Create(name BrokerName, url, username, password string)
 func (sb *ServiceBroker) Update(serviceBrokerGUID BrokerGUID, name BrokerName, url, username, password string) error {
 	log := sb.logger.Session("update-broker", lager.Data{"name": name, "url": url})
 	log.Debug("starting")
+	defer log.Debug("finished")
 
 	token, err := sb.tokenGenerator.GetToken()
 	if err != nil {
@@ -167,6 +170,7 @@ func (sb *ServiceBroker) Update(serviceBrokerGUID BrokerGUID, name BrokerName, u
 func (sb *ServiceBroker) UpdateAll(url, username, password string) error {
 	log := sb.logger.Session("update-all-brokers", lager.Data{"url": url})
 	log.Debug("starting")
+	defer log.Debug("finished")
 
 	token, err := sb.tokenGenerator.GetToken()
 	if err != nil {
@@ -212,15 +216,15 @@ func (sb *ServiceBroker) UpdateAll(url, username, password string) error {
 func (sb *ServiceBroker) EnableServiceAccess(serviceGUID ServiceGUID) error {
 	log := sb.logger.Session("enableservice-access", lager.Data{"service": serviceGUID})
 	log.Debug("starting")
+	defer log.Debug("finished")
 
 	sp := NewServicePlan(sb.client, sb.tokenGenerator, sb.ccAPI, log)
 
 	err := sp.Update(serviceGUID)
 	if err != nil {
+		log.Debug("error", lager.Data{"error": err})
 		return err
 	}
-
-	log.Debug("finished")
 
 	return nil
 }
@@ -229,6 +233,7 @@ func (sb *ServiceBroker) EnableServiceAccess(serviceGUID ServiceGUID) error {
 func (sb *ServiceBroker) GetServiceBrokerGUIDByName(name BrokerName) (BrokerGUID, error) {
 	log := sb.logger.Session("get-service-broker-guid-by-name", lager.Data{"name": name})
 	log.Debug("starting")
+	defer log.Debug("finished")
 
 	token, err := sb.tokenGenerator.GetToken()
 	if err != nil {
@@ -279,6 +284,7 @@ func (sb *ServiceBroker) GetServiceBrokerGUIDByName(name BrokerName) (BrokerGUID
 func (sb *ServiceBroker) GetServiceGUIDByName(name ServiceName) (ServiceGUID, error) {
 	log := sb.logger.Session("get-service-guid-by-name", lager.Data{"name": name})
 	log.Debug("starting")
+	defer log.Debug("finished")
 
 	token, err := sb.tokenGenerator.GetToken()
 	if err != nil {
@@ -310,6 +316,7 @@ func (sb *ServiceBroker) CheckServiceInstancesExist(serviceName ServiceName) boo
 	exist := false
 	log := sb.logger.Session("check-service-instances-exist", lager.Data{"service-name": serviceName})
 	log.Debug("starting")
+	defer log.Debug("finished")
 
 	token, err := sb.tokenGenerator.GetToken()
 	if err != nil {
@@ -370,6 +377,7 @@ func (sb *ServiceBroker) CheckServiceInstancesExist(serviceName ServiceName) boo
 func (sb *ServiceBroker) Delete(name BrokerName) error {
 	log := sb.logger.Session("delete-broker", lager.Data{"name": name})
 	log.Debug("starting")
+	defer log.Debug("finished")
 
 	guid, err := sb.GetServiceBrokerGUIDByName(name)
 	if err != nil {

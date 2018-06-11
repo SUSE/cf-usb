@@ -73,6 +73,7 @@ func NewServicePlan(client httpclient.HTTPClient, token uaaapi.GetTokenInterface
 func (sp *ServicePlan) Update(serviceGUID ServiceGUID) error {
 	log := sp.logger.Session("update-service-plans", lager.Data{"service-broker": serviceGUID})
 	log.Debug("starting")
+	defer log.Debug("finished")
 
 	token, err := sp.tokenGenerator.GetToken()
 	if err != nil {
@@ -121,6 +122,7 @@ func (sp *ServicePlan) Update(serviceGUID ServiceGUID) error {
 func (sp *ServicePlan) GetServiceGUIDByLabel(serviceLabel ServiceName, token uaaapi.BearerToken) (ServiceGUID, error) {
 	log := sp.logger.Session("get-service-guid-by-label", lager.Data{"service-label": serviceLabel})
 	log.Debug("starting")
+	defer log.Debug("finished")
 
 	path := fmt.Sprintf("/v2/services?q=label:%s", serviceLabel)
 
@@ -162,6 +164,7 @@ func (sp *ServicePlan) GetServiceGUIDByLabel(serviceLabel ServiceName, token uaa
 func (sp *ServicePlan) GetServicePlans(serviceGUID ServiceGUID, token uaaapi.BearerToken) (*PlanResources, error) {
 	log := sp.logger.Session("get-service-plans", lager.Data{"service-guid": serviceGUID})
 	log.Debug("starting")
+	defer log.Debug("finished")
 
 	path := fmt.Sprintf("/v2/service_plans?q=service_guid:%s", serviceGUID)
 
