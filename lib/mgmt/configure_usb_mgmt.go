@@ -301,7 +301,7 @@ func ConfigureAPI(api *operations.UsbMgmtAPI, auth authentication.Authentication
 		if instance == nil {
 			return &operations.UnregisterDriverInstanceNotFound{}
 		}
-		if ccServiceBroker.CheckServiceInstancesExist(ccapi.ServiceName(instance.Service.Name)) == true {
+		if ccServiceBroker.CheckServiceInstancesExist(ccapi.ServiceName(instance.Name)) == true {
 			return &operations.UnregisterDriverInstanceInternalServerError{Payload: fmt.Sprintf("Cannot delete instance '%s', it still has provisioned service instances", instance.Name)}
 		}
 		err = configProvider.DeleteInstance(params.DriverEndpointID)
