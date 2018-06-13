@@ -12,9 +12,9 @@ import (
 
 //ServicePlanInterface defines a service plan actions
 type ServicePlanInterface interface {
-	Update(serviceGUID string) error
-	GetServiceGUIDByLabel(string, string) (string, error)
-	GetServicePlans(string, string) (*PlanResources, error)
+	Update(ServiceGUID) error
+	GetServiceGUIDByLabel(ServiceName, uaaapi.BearerToken) (ServiceGUID, error)
+	GetServicePlans(ServiceGUID, uaaapi.BearerToken) (*PlanResources, error)
 }
 
 //ServicePlan holds details for ServicePlan
@@ -25,40 +25,39 @@ type ServicePlan struct {
 	logger         lager.Logger
 }
 
-//PlanValues describes the plan values - json mapped
-type PlanValues struct {
-	Name        string `json:"name"`
-	Free        bool   `json:"free"`
-	Description string `json:"description"`
-	Public      bool   `json:"public"`
-	ServiceGUID string `json:"service_guid"`
-}
-
 //PlanResources holds the resources for the plan
 type PlanResources struct {
-	Resources []PlanResource `json:"resources"`
+	Resources []struct {
+		Metadata struct {
+			GUID PlanGUID `json:"guid"`
+		} `json:"metadata"`
+		Entity struct {
+			Name        string `json:"name"`
+			Free        bool   `json:"free"`
+			Description string `json:"description"`
+			Public      bool   `json:"public"`
+			ServiceGUID string `json:"service_guid"`
+		} `json:"entity"`
+	} `json:"resources"`
 }
 
-//PlanResource defines a resource to be used in a plan, mapped to json
-type PlanResource struct {
-	Values PlanMetadata `json:"metadata"`
-	Entity PlanValues   `json:"entity"`
-}
-
-//PlanMetadata holds the GUID metadata - mapped to json
-type PlanMetadata struct {
-	GUID string `json:"guid"`
-}
+// A PlanGUID is the unique identifier for a service plan
+type PlanGUID string
 
 //ServiceResources holds the resources for the service
 type ServiceResources struct {
-	Resources []ServiceResource `json:"resources"`
+	Resources []struct {
+		Metadata struct {
+			GUID ServiceGUID `json:"guid"`
+		} `json:"metadata"`
+	} `json:"resources"`
 }
 
-//ServiceResource defines  resource to be used by a service
-type ServiceResource struct {
-	Values BrokerMetadata `json:"metadata"`
-}
+// A ServiceName is the name of a service (~= sidecar deployment)
+type ServiceName string
+
+// A ServiceGUID is the GUID of a service (~= sidecar deployment)
+type ServiceGUID string
 
 //NewServicePlan instantiates and returns a service plan
 func NewServicePlan(client httpclient.HTTPClient, token uaaapi.GetTokenInterface, ccAPI string, logger lager.Logger) ServicePlanInterface {
@@ -71,22 +70,14 @@ func NewServicePlan(client httpclient.HTTPClient, token uaaapi.GetTokenInterface
 }
 
 //Update updates a service to use this plan
-func (sp *ServicePlan) Update(serviceName string) error {
-	log := sp.logger.Session("update-service-plans", lager.Data{"service-name": serviceName})
+func (sp *ServicePlan) Update(serviceGUID ServiceGUID) error {
+	log := sp.logger.Session("update-service-plans", lager.Data{"service-broker": serviceGUID})
 	log.Debug("starting")
+	defer log.Debug("finished")
 
 	token, err := sp.tokenGenerator.GetToken()
 	if err != nil {
 		return err
-	}
-
-	serviceGUID, err := sp.GetServiceGUIDByLabel(serviceName, token)
-	if err != nil {
-		return err
-	}
-
-	if serviceGUID == "" {
-		return fmt.Errorf("Service %s not found", serviceName)
 	}
 
 	servicePlans, err := sp.GetServicePlans(serviceGUID, token)
@@ -94,15 +85,17 @@ func (sp *ServicePlan) Update(serviceName string) error {
 		return err
 	}
 
-	headers := make(map[string]string)
-	headers["Authorization"] = token
+	headers := map[string]string{
+		"Authorization": string(token),
+	}
 
-	log.Debug("initializing", lager.Data{"service guid": serviceGUID})
+	log.Debug("initializing")
 
 	for _, value := range servicePlans.Resources {
-		path := fmt.Sprintf("/v2/service_plans/%s", value.Values.GUID)
+		path := fmt.Sprintf("/v2/service_plans/%s", value.Metadata.GUID)
 
-		body := PlanValues{Name: value.Entity.Name, Free: value.Entity.Free, Description: value.Entity.Description, Public: true, ServiceGUID: value.Entity.ServiceGUID}
+		body := value.Entity
+		body.Public = true
 		values, err := json.Marshal(body)
 		if err != nil {
 			return err
@@ -125,17 +118,19 @@ func (sp *ServicePlan) Update(serviceName string) error {
 	return nil
 }
 
-//GetServiceGUIDByLabel returns a service GUID from its label
-func (sp *ServicePlan) GetServiceGUIDByLabel(serviceLabel, token string) (string, error) {
+//GetServiceGUIDByLabel returns a cloud controller service GUID by its label
+func (sp *ServicePlan) GetServiceGUIDByLabel(serviceLabel ServiceName, token uaaapi.BearerToken) (ServiceGUID, error) {
 	log := sp.logger.Session("get-service-guid-by-label", lager.Data{"service-label": serviceLabel})
 	log.Debug("starting")
+	defer log.Debug("finished")
 
 	path := fmt.Sprintf("/v2/services?q=label:%s", serviceLabel)
 
-	headers := make(map[string]string)
-	headers["Authorization"] = token
-	headers["Content-Type"] = "application/x-www-form-urlencoded; charset=UTF-8"
-	headers["Accept"] = "application/json; charset=utf-8"
+	headers := map[string]string{
+		"Authorization": string(token),
+		"Content-Type":  "application/x-www-form-urlencoded; charset=UTF-8",
+		"Accept":        "application/json; charset=utf-8",
+	}
 
 	findRequest := httpclient.Request{Verb: "GET", Endpoint: sp.ccAPI, APIURL: path, Headers: headers, StatusCode: 200}
 
@@ -159,23 +154,25 @@ func (sp *ServicePlan) GetServiceGUIDByLabel(serviceLabel, token string) (string
 		return "", nil
 	}
 
-	guid := resources.Resources[0].Values.GUID
+	guid := resources.Resources[0].Metadata.GUID
 	log.Debug("found", lager.Data{"service-guid": guid})
 
 	return guid, nil
 }
 
-//GetServicePlans returns the service plans for a serviceGUID and token
-func (sp *ServicePlan) GetServicePlans(serviceGUID, token string) (*PlanResources, error) {
+//GetServicePlans returns the service plans for a cloud controller service GUID and token
+func (sp *ServicePlan) GetServicePlans(serviceGUID ServiceGUID, token uaaapi.BearerToken) (*PlanResources, error) {
 	log := sp.logger.Session("get-service-plans", lager.Data{"service-guid": serviceGUID})
 	log.Debug("starting")
+	defer log.Debug("finished")
 
 	path := fmt.Sprintf("/v2/service_plans?q=service_guid:%s", serviceGUID)
 
-	headers := make(map[string]string)
-	headers["Authorization"] = token
-	headers["Content-Type"] = "application/x-www-form-urlencoded; charset=UTF-8"
-	headers["Accept"] = "application/json; charset=utf-8"
+	headers := map[string]string{
+		"Authorization": string(token),
+		"Content-Type":  "application/x-www-form-urlencoded; charset=UTF-8",
+		"Accept":        "application/json; charset=utf-8",
+	}
 
 	findRequest := httpclient.Request{Verb: "GET", Endpoint: sp.ccAPI, APIURL: path, Headers: headers, StatusCode: 200}
 

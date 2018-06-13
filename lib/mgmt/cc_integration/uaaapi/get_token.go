@@ -10,9 +10,12 @@ import (
 	"github.com/pivotal-golang/lager"
 )
 
+// A BearerToken is a string that can be set in a HTTP header as proof of the token
+type BearerToken string
+
 //GetTokenInterface is the interface used to obtain token from uaa api
 type GetTokenInterface interface {
-	GetToken() (string, error)
+	GetToken() (BearerToken, error)
 }
 
 //Token defines auth token basic struct
@@ -42,9 +45,10 @@ func NewTokenGenerator(tokenURL, clientID, clientSecret string, client httpclien
 }
 
 //GetToken obtains the token from the generator
-func (generator *Generator) GetToken() (string, error) {
+func (generator *Generator) GetToken() (BearerToken, error) {
 	log := generator.logger.Session("fetch-token", lager.Data{"uaa-api": generator.tokenURL})
 	log.Debug("starting")
+	defer log.Debug("finished")
 
 	valuesBody := url.Values{}
 	valuesBody.Add("grant_type", "client_credentials")
@@ -74,5 +78,5 @@ func (generator *Generator) GetToken() (string, error) {
 	}
 
 	bearerToken := fmt.Sprintf("bearer %v", token.AccessToken)
-	return bearerToken, nil
+	return BearerToken(bearerToken), nil
 }
