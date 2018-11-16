@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/codegangsta/cli"
 	"github.com/SUSE/cf-usb/lib/config"
+	"github.com/codegangsta/cli"
 
 	"github.com/SUSE/cf-usb/lib/config/redis"
 )

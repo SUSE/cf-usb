@@ -4,8 +4,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/codegangsta/cli"
 	"github.com/SUSE/cf-usb/lib/config"
+	"github.com/codegangsta/cli"
 )
 
 //FileConfigProvider provides a configuration from a config file

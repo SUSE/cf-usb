@@ -11,7 +11,7 @@ printf "${OK_COLOR}==> Generating CSM client ${NO_COLOR}\n"
 rm -rf ${GIT_ROOT}/lib/csm/models/ ${GIT_ROOT}/lib/csm/client/
 
 ${GIT_ROOT}/.tools/swagger generate client \
-	-f ${GOPATH}/src/github.com/hpcloud/catalog-service-manager/docs/swagger-spec/api.yml \
+	-f ${GOPATH}/src/github.com/SUSE/cf-usb-sidecar/docs/swagger-spec/api.yml \
 	-t ${GIT_ROOT}/lib/csm
 	
 printf "${OK_COLOR}==> Generating management API ${NO_COLOR}\n"

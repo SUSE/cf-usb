@@ -4,8 +4,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/codegangsta/cli"
 	"github.com/SUSE/cf-usb/lib/config"
+	"github.com/codegangsta/cli"
 )
 
 //MysqlConfigProvider provides a mysql config
@@ -66,7 +66,7 @@ func mysqlConfigProviderCommand(app Usb) func(c *cli.Context) {
 		mysqlPass := c.String("password")
 		configPath := c.String("config")
 
-		configuration, err := config.NewMysqlConfig(mysqlAddress, mysqlUser, mysqlPass, mysqlDatabase, configPath)
+		configuration, err := config.NewMysqlConfig(mysqlAddress, mysqlUser, mysqlPass, mysqlDatabase, configPath, logger)
 		if err != nil {
 			logger.Fatal("mysql-config-provider-init", err)
 		}

@@ -5,9 +5,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	loads "github.com/go-openapi/loads"
 	"github.com/SUSE/cf-usb/lib/config"
 	"github.com/SUSE/cf-usb/lib/config/mocks"
+	loads "github.com/go-openapi/loads"
 	//"github.com/SUSE/cf-usb/lib/csm"
 	csmMocks "github.com/SUSE/cf-usb/lib/csm/mocks"
 	"github.com/SUSE/cf-usb/lib/genmodel"

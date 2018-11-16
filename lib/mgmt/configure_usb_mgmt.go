@@ -9,9 +9,6 @@ import (
 
 	uuid "github.com/satori/go.uuid"
 
-	errors "github.com/go-openapi/errors"
-	runtime "github.com/go-openapi/runtime"
-	middleware "github.com/go-openapi/runtime/middleware"
 	"github.com/SUSE/cf-usb/lib/brokermodel"
 	"github.com/SUSE/cf-usb/lib/config"
 	"github.com/SUSE/cf-usb/lib/csm"
@@ -19,12 +16,15 @@ import (
 	"github.com/SUSE/cf-usb/lib/mgmt/authentication"
 	"github.com/SUSE/cf-usb/lib/mgmt/cc_integration/ccapi"
 	"github.com/SUSE/cf-usb/lib/mgmt/operations"
+	errors "github.com/go-openapi/errors"
+	runtime "github.com/go-openapi/runtime"
+	middleware "github.com/go-openapi/runtime/middleware"
 	"github.com/pivotal-golang/lager"
 )
 
 // This file is safe to edit. Once it exists it will not be overwritten
 
-const defaultBrokerName string = "usb"
+const defaultBrokerName ccapi.BrokerName = "usb"
 
 //ConfigureAPI configures UsbMgmtApi with Interface, config Provider, USBServiceBroker, Logger and a version string
 func ConfigureAPI(api *operations.UsbMgmtAPI, auth authentication.Authentication,
@@ -159,7 +159,7 @@ func ConfigureAPI(api *operations.UsbMgmtAPI, auth authentication.Authentication
 			return &operations.RegisterDriverEndpointInternalServerError{Payload: err.Error()}
 		}
 
-		serviceNameExist, err := ccServiceBroker.CheckServiceNameExists(*params.DriverEndpoint.Name)
+		serviceNameExist, err := ccServiceBroker.CheckServiceNameExists(ccapi.ServiceName(*params.DriverEndpoint.Name))
 		if err != nil {
 			return &operations.RegisterDriverEndpointInternalServerError{Payload: err.Error()}
 		}
@@ -255,26 +255,33 @@ func ConfigureAPI(api *operations.UsbMgmtAPI, auth authentication.Authentication
 
 		brokerName := defaultBrokerName
 		if len(config.ManagementAPI.BrokerName) > 0 {
-			brokerName = config.ManagementAPI.BrokerName
+			brokerName = ccapi.BrokerName(config.ManagementAPI.BrokerName)
 		}
 
-		guid, err := ccServiceBroker.GetServiceBrokerGUIDByName(brokerName)
+		brokerGUID, err := ccServiceBroker.GetServiceBrokerGUIDByName(brokerName)
 		if err != nil {
 			log.Error("get-service-broker-failed", err)
 			return &operations.RegisterDriverEndpointInternalServerError{Payload: err.Error()}
 		}
+		log.Info("create-or-update-service-broker", lager.Data{"guid": brokerGUID})
 
-		if guid == "" {
+		if brokerGUID == "" {
 			err = ccServiceBroker.Create(brokerName, config.BrokerAPI.ExternalURL, config.BrokerAPI.Credentials.Username, config.BrokerAPI.Credentials.Password)
 		} else {
-			err = ccServiceBroker.Update(guid, brokerName, config.BrokerAPI.ExternalURL, config.BrokerAPI.Credentials.Username, config.BrokerAPI.Credentials.Password)
+			err = ccServiceBroker.Update(brokerGUID, brokerName, config.BrokerAPI.ExternalURL, config.BrokerAPI.Credentials.Username, config.BrokerAPI.Credentials.Password)
 		}
 		if err != nil {
 			log.Error("create-or-update-service-broker-failed", err)
 			return &operations.RegisterDriverEndpointInternalServerError{Payload: err.Error()}
 		}
 
-		err = ccServiceBroker.EnableServiceAccess(*params.DriverEndpoint.Name)
+		serviceGUID, err := ccServiceBroker.GetServiceGUIDByName(ccapi.ServiceName(*params.DriverEndpoint.Name))
+		if err != nil {
+			log.Error("get-service-guid-by-name-failed", err)
+			return &operations.RegisterDriverEndpointInternalServerError{Payload: err.Error()}
+		}
+
+		err = ccServiceBroker.EnableServiceAccess(serviceGUID)
 		if err != nil {
 			log.Error("enable-service-access-failed", err)
 			return &operations.RegisterDriverEndpointInternalServerError{Payload: err.Error()}
@@ -294,7 +301,7 @@ func ConfigureAPI(api *operations.UsbMgmtAPI, auth authentication.Authentication
 		if instance == nil {
 			return &operations.UnregisterDriverInstanceNotFound{}
 		}
-		if ccServiceBroker.CheckServiceInstancesExist(instance.Service.Name) == true {
+		if ccServiceBroker.CheckServiceInstancesExist(ccapi.ServiceName(instance.Name)) == true {
 			return &operations.UnregisterDriverInstanceInternalServerError{Payload: fmt.Sprintf("Cannot delete instance '%s', it still has provisioned service instances", instance.Name)}
 		}
 		err = configProvider.DeleteInstance(params.DriverEndpointID)
@@ -314,7 +321,7 @@ func ConfigureAPI(api *operations.UsbMgmtAPI, auth authentication.Authentication
 
 		brokerName := defaultBrokerName
 		if len(config.ManagementAPI.BrokerName) > 0 {
-			brokerName = config.ManagementAPI.BrokerName
+			brokerName = ccapi.BrokerName(config.ManagementAPI.BrokerName)
 		}
 
 		if instanceCount == 0 {
@@ -351,25 +358,30 @@ func ConfigureAPI(api *operations.UsbMgmtAPI, auth authentication.Authentication
 
 		brokerName := defaultBrokerName
 		if len(config.ManagementAPI.BrokerName) > 0 {
-			brokerName = config.ManagementAPI.BrokerName
+			brokerName = ccapi.BrokerName(config.ManagementAPI.BrokerName)
 		}
 
-		guid, err := ccServiceBroker.GetServiceBrokerGUIDByName(brokerName)
+		brokerGUID, err := ccServiceBroker.GetServiceBrokerGUIDByName(brokerName)
 		if err != nil {
 			log.Error("get-service-broker-failed", err)
 			return &operations.UpdateCatalogInternalServerError{Payload: err.Error()}
 		}
 
-		if guid == "" {
+		if brokerGUID == "" {
 			return &operations.UpdateCatalogInternalServerError{Payload: fmt.Sprintf("Broker %s guid not found", brokerName)}
 		}
-		err = ccServiceBroker.Update(guid, brokerName, config.BrokerAPI.ExternalURL, config.BrokerAPI.Credentials.Username, config.BrokerAPI.Credentials.Password)
+		err = ccServiceBroker.Update(brokerGUID, brokerName, config.BrokerAPI.ExternalURL, config.BrokerAPI.Credentials.Username, config.BrokerAPI.Credentials.Password)
 		if err != nil {
 			return &operations.UpdateCatalogInternalServerError{Payload: err.Error()}
 		}
 
 		for _, instance := range config.Instances {
-			err = ccServiceBroker.EnableServiceAccess(instance.Service.Name)
+			serviceGUID, err := ccServiceBroker.GetServiceGUIDByName(ccapi.ServiceName(instance.Name))
+			if err != nil {
+				log.Error("get-service-guid-by-name-failed", err)
+				return &operations.UpdateCatalogInternalServerError{Payload: err.Error()}
+			}
+			err = ccServiceBroker.EnableServiceAccess(serviceGUID)
 			if err != nil {
 				log.Error("enable-service-access-failed", err)
 				return &operations.UpdateCatalogInternalServerError{Payload: err.Error()}

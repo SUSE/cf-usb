@@ -11,6 +11,7 @@ import (
 	"github.com/mattes/migrate"
 	"github.com/mattes/migrate/database/mysql"
 	bindata "github.com/mattes/migrate/source/go-bindata"
+	"github.com/pivotal-golang/lager"
 )
 
 type mysqlConfig struct {
@@ -20,6 +21,8 @@ type mysqlConfig struct {
 	username   string
 	password   string
 	address    string
+
+	logger lager.Logger
 }
 
 type generalConfig struct {
@@ -29,12 +32,15 @@ type generalConfig struct {
 }
 
 //NewMysqlConfig generates and returns a new mysql config provider
-func NewMysqlConfig(address, username, password, database, configPath string) (Provider, error) {
+func NewMysqlConfig(address, username, password, database, configPath string, logger lager.Logger) (Provider, error) {
+	log := logger.Session("mysql", lager.Data{"host": address, "database": database})
 	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s)/?multiStatements=true", username, password, address))
 	if err != nil {
+		log.Debug("open-failed", lager.Data{"username": username})
 		return nil, err
 	}
 	if err = db.Ping(); err != nil {
+		log.Debug("ping-failed")
 		return nil, err
 	}
 
@@ -45,6 +51,7 @@ func NewMysqlConfig(address, username, password, database, configPath string) (P
 		username:   username,
 		password:   password,
 		address:    address,
+		logger:     log,
 	}, nil
 }
 
@@ -95,6 +102,10 @@ func (c *mysqlConfig) LoadConfiguration() (*Config, error) {
 	var configuration *Config
 	var err error
 
+	log := c.logger.Session("load")
+	log.Debug("starting")
+	defer log.Debug("finished")
+
 	if c.configPath != "" {
 		// Load it via the file provider
 		configuration, err = NewFileConfig(c.configPath).LoadConfiguration()
@@ -139,6 +150,10 @@ func (c *mysqlConfig) LoadConfiguration() (*Config, error) {
 }
 
 func (c *mysqlConfig) SaveConfiguration(config Config, overwrite bool) error {
+	log := c.logger.Session("save")
+	log.Debug("starting")
+	defer log.Debug("finished")
+
 	if overwrite == true {
 		transaction, err := c.db.Begin()
 		if err != nil {
@@ -194,6 +209,10 @@ func (c *mysqlConfig) SaveConfiguration(config Config, overwrite bool) error {
 func (c *mysqlConfig) LoadDriverInstance(driverInstanceID string) (*Instance, error) {
 	var driver Instance
 	driver.Dials = make(map[string]Dial)
+
+	log := c.logger.Session("load-instance", lager.Data{"guid": driverInstanceID})
+	log.Debug("starting")
+	defer log.Debug("finished")
 
 	result, err := c.db.Query("SELECT * FROM Instances WHERE Guid=?", driverInstanceID)
 	if err != nil {
