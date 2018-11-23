@@ -1,8 +1,12 @@
 #!/bin/bash
 set -e -x
 
+mkdir "${BUILD_DIR}/cf-usb/"
+
 pushd $RELEASE_DIR/..
-source ./make/include/versioning.sh
+    source ./make/include/versioning.sh
+    cp -r * "${BUILD_DIR}/cf-usb/"
 popd
 
 echo -e "#!/bin/sh\n\nexport APP_VERSION=${APP_VERSION}" > "${BUILD_DIR}/cf-usb/version.sh"
+
