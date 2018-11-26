@@ -1,8 +1,18 @@
 #!/bin/bash
 set -e -x
 
+mkdir "${BUILD_DIR}/cf-usb/"
+
 pushd $RELEASE_DIR/..
-source ./make/include/versioning.sh
+    source ./make/include/versioning.sh
+
+    cp -r ./Godeps   "${BUILD_DIR}/cf-usb/"
+    cp -r ./lib      "${BUILD_DIR}/cf-usb/"
+    cp -r ./make     "${BUILD_DIR}/cf-usb/"
+    cp -r ./cmd      "${BUILD_DIR}/cf-usb/"
+    cp -r ./vendor   "${BUILD_DIR}/cf-usb/"
+    cp    ./Makefile "${BUILD_DIR}/cf-usb/"
 popd
 
 echo -e "#!/bin/sh\n\nexport APP_VERSION=${APP_VERSION}" > "${BUILD_DIR}/cf-usb/version.sh"
+

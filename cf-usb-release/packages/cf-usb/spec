@@ -1,13 +1,7 @@
 ---
 name: cf-usb
 
-files:
-  - cf-usb/Godeps/**/*
-  - cf-usb/Makefile
-  - cf-usb/lib/**/*
-  - cf-usb/make/**/*
-  - cf-usb/cmd/**/*
-  - cf-usb/vendor/**/*
+files: []
 
 dependencies:
   - golang1.9
