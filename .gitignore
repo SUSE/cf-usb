@@ -8,4 +8,5 @@ cf-usb-release/.dev_builds
 cf-usb-release/blobs
 cf-usb-release/.blobs
 cf-usb-release/config/dev.yml
+cf-usb-release/config/private.yml
 /lib/config/mysql/migrations/*.go
